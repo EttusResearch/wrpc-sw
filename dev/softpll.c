@@ -48,6 +48,7 @@ struct softpll_config {
 	int dpll_ld_samples;
 	int dpll_ld_threshold;
 	int dpll_delock_threshold;
+	int dpll_dac_bias;
 };	
 	
 	
@@ -59,23 +60,25 @@ const struct softpll_config pll_cfg =
 16,					// setpoint
 1000, 				// lock detect freq samples
 2, 					// lock detect freq threshold
-1.0*32*16,			// p_kp
-0.03*32*16,			// p_ki
+2.0*32*16,			// p_kp
+0.05*32*16,			// p_ki
 1000,				// lock detect phase samples
-220,				// lock detect phase threshold
+300,				// lock detect phase threshold
 500,				// delock threshold
 32000,				// HPLL dac bias
 
 /* DMTD PLL */
 
-0,					// f_kp
-0,                  // f_ki
+100,  				// f_kp
+600,                // f_ki
 
-0,					// p_kp
-0,					// p_ki
+1304,					// p_kp
+10,					// p_ki
 
-0,					// lock detect samples
-0					// lock detect threshold
+1000,					// lock detect samples
+300,					// lock detect threshold
+500,				// delock threshold
+32000				// DPLL dac bias
 };
 
 struct softpll_state {
@@ -85,8 +88,27 @@ struct softpll_state {
  	int h_p_setpoint;
  	int h_freq_mode;
  	int h_locked;
+
+	int d_dac_bias;
+ 	int d_tag_ref_d0;
+ 	int d_tag_fb_d0;
+ 	int d_tag_ref_ready;
+ 	int d_tag_fb_ready;
+ 	
+ 	int d_period_ref;
+ 	int d_period_fb;
+ 	int d_freq_mode;
+ 	int d_lock_counter;
+ 	
+ 	int d_i;
+ 	
+ 	int d_p_setpoint;
+ 	int d_phase_shift;
+ 	int d_locked;
 };
 
+
+int eee, dve;
 
 static volatile struct softpll_state pstate;
 
@@ -168,40 +190,145 @@ void _irq_entry()
 			{
 				SPLL->CSR |= SPLL_CSR_TAG_EN_W(CHAN_FB); /* enable feedback channel and start DMPLL */
 				pstate.h_locked = 1;
+				pstate.d_tag_ref_d0 = -1;
+				pstate.d_tag_fb_d0 = -1;
+				pstate.d_freq_mode = 1;
+				pstate.d_p_setpoint = 0;
+				pstate.d_lock_counter = 0;
+				pstate.d_i = 0;
+				pstate.d_locked = 0;
 			}
            
 		}
 	}
  
     /* DMPLL */
-	if ((tag_ref_ready || tag_fb_ready) && pstate.h_locked)
+	if(pstate.h_locked && pstate.d_freq_mode)
 	{
-	
-	}
-	
-	clear_irq();
+		int freq_err;
+		if(tag_ref_ready)
+		{
+			if(pstate.d_tag_ref_d0 > 0)
+			{
+			  	int tmp  = tag_ref - pstate.d_tag_ref_d0;
+			 	if(tmp < 0) tmp += (1<<TAG_BITS)-1;
+			 	pstate.d_period_ref = tmp;
+			 }
+			 pstate.d_tag_ref_d0 = tag_ref;
+		}
+
+		if(tag_fb_ready)
+		{
+			if(pstate.d_tag_fb_d0 > 0)
+			{
+			 	int tmp  = tag_fb - pstate.d_tag_fb_d0;
+			 	if(tmp < 0) tmp += (1<<TAG_BITS)-1;
+			 	pstate.d_period_fb = tmp;
+			}
+			pstate.d_tag_fb_d0 = tag_fb;
+    	}
+    	
+    	freq_err = - pstate.d_period_fb + pstate.d_period_ref;
+    	pstate.d_i += freq_err;
+		dv = ((pstate.d_i * pll_cfg.dpll_f_ki + freq_err * pll_cfg.dpll_f_kp) >> PI_FRACBITS) + pll_cfg.dpll_dac_bias;
+		SPLL->DAC_DMPLL = dv;
+
+		if(abs(freq_err) <= pll_cfg.dpll_ld_threshold)
+			pstate.d_lock_counter++;
+		else
+			pstate.d_lock_counter=0;
+
+		/* frequency has been stable for quite a while? switch to phase branch */
+		if(pstate.d_lock_counter == pll_cfg.dpll_ld_samples)
+		{
+			pstate.d_freq_mode = 0;
+			pstate.d_dac_bias = dv;
+			pstate.d_i = 0;
+			pstate.d_lock_counter = 0;
+			pstate.d_tag_ref_ready = 0;
+			pstate.d_tag_fb_ready = 0;
+			pstate.d_p_setpoint = 0;
+		}
+    }
+
+	/* DMPLL phase-lock */
+ 	if(pstate.h_locked && !pstate.d_freq_mode)
+ 	{
+ 		int phase_err = 0;
+ 		 		
+ 		if(tag_ref_ready)
+ 			pstate.d_tag_ref_d0 = tag_ref;
+ 		
+ 		tag_ref = pstate.d_tag_ref_d0 ;
+
+ 		tag_fb += pstate.d_p_setpoint;
+ 		
+ 		if(tag_fb > (1<<TAG_BITS)) tag_fb -= (1<<TAG_BITS);
+ 		if(tag_fb < 0) tag_fb += (1<<TAG_BITS);
+ 				
+ 		if(tag_fb_ready)
+		{
+			while (tag_ref > 16384 ) tag_ref-=16384;
+			while (tag_fb > 16384  ) tag_fb-=16384;
+			
+ 		    phase_err = tag_ref-tag_fb;
+
+    		pstate.d_i += phase_err;
+			dv = ((pstate.d_i * pll_cfg.dpll_p_ki + phase_err * pll_cfg.dpll_p_kp) >> PI_FRACBITS) + pll_cfg.dpll_dac_bias;
+			SPLL->DAC_DMPLL = dv;
+
+ 		    eee=phase_err;
+		} 	
+ 	
+ 		if(pstate.d_p_setpoint < pstate.d_phase_shift)
+	 		pstate.d_p_setpoint++;
+ 		else if(pstate.d_p_setpoint > pstate.d_phase_shift)
+ 			pstate.d_p_setpoint--;
+		
+		
+		if(abs(phase_err) <= pll_cfg.dpll_ld_threshold && !pstate.d_locked)
+            	pstate.d_lock_counter++;
+			else
+				pstate.d_lock_counter = 0;
+				
+			if(pstate.d_lock_counter == pll_cfg.dpll_ld_samples)
+				pstate.d_locked = 1;
+ 	}
+
+    clear_irq();
 }
 
 void softpll_enable()
 {
-	pstate.h_dac_bias = HPLL_DAC_BIAS;
-	SPLL->DAC_HPLL = pstate.h_dac_bias;
+	SPLL->DAC_HPLL = pll_cfg.hpll_dac_bias;
+	SPLL->DAC_DMPLL = pll_cfg.dpll_dac_bias;
 
 	pstate.h_p_setpoint = -1;
 	pstate.h_i = 0;
 	pstate.h_freq_mode = 1;
 	pstate.h_lock_counter = 0;
 	pstate.h_locked = 0;
-	  	
+		  	
 	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);
 	SPLL->EIC_IER = 1;
 	
 	enable_irq();
+//	softpll_test();
 }
 
 int softpll_check_lock()
 {
- 	return pstate.h_locked;
+ 	return pstate.h_locked && pstate.d_locked;
+}
+
+int softpll_busy()
+{
+ 	return pstate.d_p_setpoint != pstate.d_phase_shift;
+}
+
+void softpll_set_phase(int ps)
+{
+	pstate.d_phase_shift = ps;
 }
 
 void softpll_disable()
