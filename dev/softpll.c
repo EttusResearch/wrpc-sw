@@ -10,10 +10,16 @@
 #define HPLL_DAC_BIAS 30000
 #define PI_FRACBITS 12
 
+#define CHAN_FB 8
 #define CHAN_REF 4
 #define CHAN_PERIOD 2
 #define CHAN_HPLL 1
 
+#define READY_FB (8<<4)
+#define READY_REF (4<<4)
+#define READY_PERIOD (2<<4)
+#define READY_HPLL (1<<4)
+             
 static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
 
 struct softpll_config {
@@ -45,7 +51,6 @@ struct softpll_config {
 };	
 	
 	
-
 const struct softpll_config pll_cfg =
 {
 /* Helper PLL */
@@ -88,6 +93,22 @@ static volatile struct softpll_state pstate;
 void _irq_entry()
 {
 	int dv;
+	int tag_ref_ready = 0;
+	int tag_fb_ready = 0;
+	int tag_ref;
+	int tag_fb;
+	
+	if(SPLL->CSR & READY_REF)
+	{
+	 	tag_ref = SPLL->TAG_REF;
+	 	tag_ref_ready = 1;
+	}
+	
+	if(SPLL->CSR & READY_FB)
+	{
+	 	tag_fb = SPLL->TAG_FB;
+	 	tag_fb_ready = 1;
+	}
 	
 	/* HPLL: active frequency branch */
 	if(pstate.h_freq_mode)
@@ -119,13 +140,13 @@ void _irq_entry()
 		}
 
 	/* HPLL: active phase branch */
-	} else {
+	} else if (tag_ref_ready) {
 	    if(pstate.h_p_setpoint < 0) 		/* we don't have yet any phase samples? */
-	     	pstate.h_p_setpoint = SPLL->TAG_REF & 0x3fff;
+	     	pstate.h_p_setpoint = tag_ref & 0x3fff;
 	 	else {
 	 		int phase_err;
 	 		
-         	phase_err = (SPLL->TAG_REF & 0x3fff) - pstate.h_p_setpoint;
+         	phase_err = (tag_ref & 0x3fff) - pstate.h_p_setpoint;
 			pstate.h_i += phase_err;
 			dv = ((pstate.h_i * pll_cfg.hpll_p_ki + phase_err * pll_cfg.hpll_p_kp) >> PI_FRACBITS) + pstate.h_dac_bias;
          
@@ -133,6 +154,7 @@ void _irq_entry()
             
             if(abs(phase_err) >= pll_cfg.hpll_delock_threshold && pstate.h_locked)
             {
+            	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD); /* fall back to freq mode */
              	pstate.h_locked = 0;
              	pstate.h_freq_mode = 1;
             }
@@ -143,11 +165,20 @@ void _irq_entry()
 				pstate.h_lock_counter = 0;
 				
 			if(pstate.h_lock_counter == pll_cfg.hpll_ld_p_samples)
+			{
+				SPLL->CSR |= SPLL_CSR_TAG_EN_W(CHAN_FB); /* enable feedback channel and start DMPLL */
 				pstate.h_locked = 1;
+			}
            
 		}
 	}
  
+    /* DMPLL */
+	if ((tag_ref_ready || tag_fb_ready) && pstate.h_locked)
+	{
+	
+	}
+	
 	clear_irq();
 }
 
