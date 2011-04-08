@@ -5,6 +5,8 @@
 
 #define TAG_BITS 17
 
+#define HPLL_N 14
+
 #define HPLL_DAC_BIAS 30000
 #define PI_FRACBITS 12
 
@@ -27,6 +29,10 @@ struct softpll_config {
 	int hpll_ld_p_samples;
 	int hpll_ld_p_threshold;
 
+	int hpll_delock_threshold;
+	
+	int hpll_dac_bias;
+
 	int dpll_f_kp;
 	int dpll_f_ki;
 
@@ -35,6 +41,7 @@ struct softpll_config {
 
 	int dpll_ld_samples;
 	int dpll_ld_threshold;
+	int dpll_delock_threshold;
 };	
 	
 	
@@ -51,6 +58,8 @@ const struct softpll_config pll_cfg =
 0.03*32*16,			// p_ki
 1000,				// lock detect phase samples
 220,				// lock detect phase threshold
+500,				// delock threshold
+32000,				// HPLL dac bias
 
 /* DMTD PLL */
 
@@ -70,85 +79,102 @@ struct softpll_state {
  	int h_dac_bias;
  	int h_p_setpoint;
  	int h_freq_mode;
-}
+ 	int h_locked;
+};
 
-static int hpll_lock_count = 0;
-static int hpll_i = 0;
-static int hpll_dac_bias = 0;
-static int hpll_perr_setpoint;
-int hpll_freq_mode = 1;
 
-volatile int freq_err, eee;
-volatile int phase_err;
-volatile int hpll_tag;
-int hpll_prev_tag;
-
-volatile int dv;
+static volatile struct softpll_state pstate;
 
 void _irq_entry()
 {
+	int dv;
 	
-	if(hpll_freq_mode)
+	/* HPLL: active frequency branch */
+	if(pstate.h_freq_mode)
 	{
-    	freq_err =	SPLL->PER_HPLL;// >> 1;
+    	int freq_err =	SPLL->PER_HPLL;
+		if(freq_err & 0x100) freq_err |= 0xffffff00; /* sign-extend */
+		freq_err += pll_cfg.hpll_f_setpoint;
 
-	if(freq_err & 0x100) freq_err |= 0xffffff00;
-//		freq_err = - freq_err;
+		/* PI control */
+   		pstate.h_i += freq_err;
+		dv = ((pstate.h_i * pll_cfg.hpll_f_ki + freq_err * pll_cfg.hpll_f_kp) >> PI_FRACBITS) + pll_cfg.hpll_dac_bias;
 
-		freq_err += hpll_ferr_setpoint;
+		SPLL->DAC_HPLL = dv; /* update DAC */
 
-		hpll_i += freq_err;
-
-		eee=freq_err;
-
-		dv = ((hpll_i * hpll_ki + freq_err * hpll_kp) >> PI_FRACBITS) + hpll_dac_bias;
-		SPLL->DAC_HPLL = dv;
-
-		if(freq_err >= -hpll_ld_threshold && freq_err <= hpll_ld_threshold)
-			hpll_lock_count++;
+		/* lock detection */
+		if(freq_err >= -pll_cfg.hpll_ld_f_threshold && freq_err <= pll_cfg.hpll_ld_f_threshold)
+			pstate.h_lock_counter++;
 		else
-			hpll_lock_count=0;
+			pstate.h_lock_counter=0;
 
-		if(hpll_lock_count == hpll_ld_samples)
+		/* frequency has been stable for quite a while? switch to phase branch */
+		if(pstate.h_lock_counter == pll_cfg.hpll_ld_f_samples)
 		{
-			hpll_freq_mode = 0;
-			hpll_dac_bias = dv;
-			hpll_i = 0;
+			pstate.h_freq_mode = 0;
+			pstate.h_dac_bias = dv;
+			pstate.h_i = 0;
+			pstate.h_lock_counter = 0;
 			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_REF);
 		}
+
+	/* HPLL: active phase branch */
 	} else {
-	    if(hpll_perr_setpoint < 0)
-	    {
-	     	hpll_perr_setpoint = SPLL->TAG_REF & 0x3fff;
-	    } else {
-         	phase_err = (SPLL->TAG_REF & 0x3fff) - hpll_perr_setpoint;
-			hpll_i += phase_err;
-			dv = ((hpll_i * hpll_pki + phase_err * hpll_pkp) >> PI_FRACBITS) + hpll_dac_bias;
-            SPLL->DAC_HPLL = dv;
+	    if(pstate.h_p_setpoint < 0) 		/* we don't have yet any phase samples? */
+	     	pstate.h_p_setpoint = SPLL->TAG_REF & 0x3fff;
+	 	else {
+	 		int phase_err;
+	 		
+         	phase_err = (SPLL->TAG_REF & 0x3fff) - pstate.h_p_setpoint;
+			pstate.h_i += phase_err;
+			dv = ((pstate.h_i * pll_cfg.hpll_p_ki + phase_err * pll_cfg.hpll_p_kp) >> PI_FRACBITS) + pstate.h_dac_bias;
+         
+            SPLL->DAC_HPLL = dv; /* Update DAC */
+            
+            if(abs(phase_err) >= pll_cfg.hpll_delock_threshold && pstate.h_locked)
+            {
+             	pstate.h_locked = 0;
+             	pstate.h_freq_mode = 1;
+            }
+            
+            if(abs(phase_err) <= pll_cfg.hpll_ld_p_threshold && !pstate.h_locked)
+            	pstate.h_lock_counter++;
+			else
+				pstate.h_lock_counter = 0;
+				
+			if(pstate.h_lock_counter == pll_cfg.hpll_ld_p_samples)
+				pstate.h_locked = 1;
+           
 		}
 	}
  
 	clear_irq();
 }
 
-void softpll_init()
+void softpll_enable()
 {
-	hpll_dac_bias = HPLL_DAC_BIAS;
-	SPLL->DAC_HPLL = HPLL_DAC_BIAS;
-	hpll_perr_setpoint = -1;
-	hpll_i = 0;
-  	hpll_freq_mode = 1;
-	hpll_lock_count = 0;
+	pstate.h_dac_bias = HPLL_DAC_BIAS;
+	SPLL->DAC_HPLL = pstate.h_dac_bias;
+
+	pstate.h_p_setpoint = -1;
+	pstate.h_i = 0;
+	pstate.h_freq_mode = 1;
+	pstate.h_lock_counter = 0;
+	pstate.h_locked = 0;
 	  	
 	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);
 	SPLL->EIC_IER = 1;
 	
-	
 	enable_irq();
+}
 
-	
-	for(;;)
-	{		
-		mprintf("err %07d ldc %07d tag %07d dv %07d\n", eee, hpll_lock_count, phase_err, dv);
-	}
+int softpll_check_lock()
+{
+ 	return pstate.h_locked;
+}
+
+void softpll_disable()
+{
+ 	SPLL->CSR = 0;
+ 	disable_irq();
 }
