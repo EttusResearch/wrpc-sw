@@ -13,12 +13,12 @@
 #define CHAN_FB 8
 #define CHAN_REF 4
 #define CHAN_PERIOD 2
-#define CHAN_HPLL 1
+//#define CHAN_HPLL 1
 
 #define READY_FB (8<<4)
 #define READY_REF (4<<4)
 #define READY_PERIOD (2<<4)
-#define READY_HPLL (1<<4)
+//#define READY_HPLL (1<<4)
              
 static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
 
@@ -49,6 +49,7 @@ struct softpll_config {
 	int dpll_ld_threshold;
 	int dpll_delock_threshold;
 	int dpll_dac_bias;
+	int dpll_deglitcher_threshold;
 };	
 	
 	
@@ -78,7 +79,8 @@ const struct softpll_config pll_cfg =
 1000,					// lock detect samples
 300,					// lock detect threshold
 500,				// delock threshold
-32000				// DPLL dac bias
+32000,				// DPLL dac bias
+1000  				// deglitcher threshold
 };
 
 struct softpll_state {
@@ -302,7 +304,8 @@ void softpll_enable()
 {
 	SPLL->DAC_HPLL = pll_cfg.hpll_dac_bias;
 	SPLL->DAC_DMPLL = pll_cfg.dpll_dac_bias;
-
+	SPLL->DEGLITCH_THR = pll_cfg.dpll_deglitcher_threshold;
+	
 	pstate.h_p_setpoint = -1;
 	pstate.h_i = 0;
 	pstate.h_freq_mode = 1;
