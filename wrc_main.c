@@ -6,35 +6,100 @@
 #include "endpoint.h"
 #include "minic.h"
 #include "pps_gen.h"
+#include "ptpd-noposix/PTPWRd/ptpd.h"
+//#include "ptpd-noposix/PTPWRd/datatypes.h"
+
+
+
+RunTimeOpts rtOpts = {
+   .announceInterval = DEFAULT_ANNOUNCE_INTERVAL,
+   .syncInterval = DEFAULT_SYNC_INTERVAL,
+   .clockQuality.clockAccuracy = DEFAULT_CLOCK_ACCURACY,
+   .clockQuality.clockClass = DEFAULT_CLOCK_CLASS,
+   .clockQuality.offsetScaledLogVariance = DEFAULT_CLOCK_VARIANCE,
+   .priority1 = DEFAULT_PRIORITY1,
+   .priority2 = DEFAULT_PRIORITY2,
+   .domainNumber = DEFAULT_DOMAIN_NUMBER,
+   .slaveOnly = SLAVE_ONLY,
+   .currentUtcOffset = DEFAULT_UTC_OFFSET,
+   .noResetClock = DEFAULT_NO_RESET_CLOCK,
+   .noAdjust = NO_ADJUST,
+   .inboundLatency.nanoseconds = DEFAULT_INBOUND_LATENCY,
+   .outboundLatency.nanoseconds = DEFAULT_OUTBOUND_LATENCY,
+   .s = DEFAULT_DELAY_S,
+   .ap = DEFAULT_AP,
+   .ai = DEFAULT_AI,
+   .max_foreign_records = DEFAULT_MAX_FOREIGN_RECORDS,
+
+   /**************** White Rabbit *************************/
+   .portNumber 		= NUMBER_PORTS,
+   .wrNodeMode 		= NON_WR,
+   .calibrationPeriod     = WR_DEFAULT_CAL_PERIOD,
+   .calibrationPattern    = WR_DEFAULT_CAL_PATTERN,
+   .calibrationPatternLen = WR_DEFAULT_CAL_PATTERN_LEN,
+   .E2E_mode 		= TRUE,
+   /********************************************************/
+};
+static   PtpClock *ptpclock;
+
+	const uint8_t mac_addr[] = {0x00, 0x50, 0xde, 0xad, 0xba, 0xbe};
+	const uint8_t dst_mac_addr[] = {0x00, 0x00, 0x12, 0x24, 0x46, 0x11};
+
 
 volatile int count = 0;
 
 uint32_t tag_prev;
 
 uint32_t tics_last;
-void _irq_entry()
+
+void silly_minic_test()
 {
-	volatile uint32_t dummy_tag;
-	dummy_tag= *(volatile uint32_t*) 0x40004;
-//	mprintf("tag %d\n", dummy_tag-tag_prev);
-    count++;
-    
-    if(timer_get_tics() - tics_last > 1000)
+	uint8_t hdr[14];
+
+    uint8_t buf_hdr[18], buf[256];
+    for(;;)
     {
-     	tics_last = timer_get_tics();
-     	mprintf("cnt: %d delta %d\n", count, tag_prev-dummy_tag);
-     	count = 0;
+	memcpy(buf_hdr, dst_mac_addr, 6);
+	memset(buf_hdr+6, 0, 6);
+	buf_hdr[12] = 0xc0;
+	buf_hdr[13] = 0xef;
+	
+	minic_tx_frame(buf_hdr, buf, 64, buf);
+	mprintf("Send\n");
+	timer_delay(1000);
+
     }
-	tag_prev=dummy_tag;
-    	
+}
+
+
+void test_transition()
+{
+
+    int phase = 0;
+    
+   softpll_enable();
+   while(!softpll_check_lock()) timer_delay(1000);
+
+    for(;;)
+    {	struct hw_timestamp hwts;
+        uint8_t buf_hdr[18], buf[128];
+	
+	if(minic_rx_frame(buf_hdr, buf, 128, &hwts) > 0)
+	{
+	    printf("phase %d ahead %d\n", phase, hwts.ahead);
+	    phase+=100;
+	    softpll_set_phase(phase);
+	    timer_delay(10);
+	}
+    }
+
+
 }
 
 int main(void)
 {
 	int rx, tx;
-	const uint8_t mac_addr[] = {0x00, 0x00, 0xde, 0xad, 0xba, 0xbe};
-	const uint8_t dst_mac_addr[] = {0x00, 0x00, 0x12, 0x24, 0x46, 0x11};
-	uint8_t hdr[14];
+  int16_t ret;
 
 	uart_init();
   
@@ -43,39 +108,59 @@ int main(void)
 	gpio_dir(GPIO_PIN_LED, 1);
 
 	ep_init(mac_addr);
-	ep_enable(1, 1);
+	ep_enable(1, 0);
 
 
+  mprintf("is link up ?\n");
 	while(!ep_link_up());
+  mprintf("yes it is\n");
 
 	ep_get_deltas(&tx, &rx);
 	mprintf("delta: tx = %d, rx=%d\n", tx, rx);
 
 	minic_init();
+  //minic_disable();
 	pps_gen_init();
+	    
+//	test_transition();
 
-//(unsigned int *)(0x40000) = 0x1;
+	netStartup();
+
+  ptpclock = ptpdStartup(0, NULL, &ret, &rtOpts);
+
+  toState(PTP_INITIALIZING, &rtOpts, ptpclock);
+  for(;;)
+  {
+    //mprintf("\n\n\n");
+    protocol_nonblock(&rtOpts, ptpclock);
+
+    update_rx_queues();
+    timer_delay(10);
+  }
+  
+    //(unsigned int *)(0x40000) = 0x1;
 //	*(unsigned int *)(0x40024) = 0x1;
 
-	for(;;)
-	  {
-	    struct hw_timestamp hwts;
-	    uint32_t utc, nsec;
-	    uint8_t buf[1024];
+	//for(;;)
+	//  {
+	//    struct hw_timestamp hwts;
+	//    uint32_t utc, nsec;
+	//    uint8_t buf[1024];
 
 
-	    memcpy(hdr, dst_mac_addr, 6);
-	    hdr[12] = 0x88;
-	    hdr[13] = 0xf7;
-		
-	    minic_tx_frame(hdr, buf, 500, &hwts);
+	//    memcpy(hdr, dst_mac_addr, 6);
+	//    hdr[12] = 0x88;
+	//    hdr[13] = 0xf7;
+	//	
+	//    minic_tx_frame(hdr, buf, 500, &hwts);
 
-	    mprintf("TxTs: utc %d nsec %d\n", hwts.utc, hwts.nsec);
-	    
-	   	delay(1000000);
+	//    mprintf("TxTs: utc %d nsec %d\n", hwts.utc, hwts.nsec);
+	//    
+	//   	delay(1000000);
  
-		mprintf("cnt:%d\n", count);
-	  }
+	//	mprintf("cnt:%d\n", count);
+	//  }
 }
+
 
 

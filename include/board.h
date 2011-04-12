@@ -7,6 +7,7 @@
 #define BASE_PPSGEN 0x50000
 #define BASE_EP   	0x20000 
 #define BASE_MINIC  0x10000
+#define BASE_SOFTPLL   	0x40000 
 
 #define CPU_CLOCK 62500000ULL
 

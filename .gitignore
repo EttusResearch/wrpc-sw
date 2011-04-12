@@ -1,0 +1,9 @@
+*.o
+*.elf
+*.ram
+*.bin
+*.*~
+tools/zpu-loader
+tools/vuart_console
+tools/genraminit
+wrc_disasm.S

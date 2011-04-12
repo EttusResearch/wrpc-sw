@@ -24,7 +24,7 @@ void pps_gen_init()
   
   ppsg_writel( PPSG_REG_CR, cr);
 
-  ppsg_writel( PPSG_REG_ADJ_UTCLO, 1285700840);
+  ppsg_writel( PPSG_REG_ADJ_UTCLO, 100 );
   ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
   ppsg_writel( PPSG_REG_ADJ_NSEC, 0);
 
@@ -36,24 +36,30 @@ void pps_gen_adjust_nsec(int32_t how_much)
 {
   uint32_t cr;
 
-  mprintf("AdjustPPS: %d nanoseconds\n", how_much);
+  TRACE_DEV("ADJ: nsec %d nanoseconds\n", how_much);
+ #if 1
   ppsg_writel( PPSG_REG_ADJ_UTCLO, 0);
   ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
 
   ppsg_writel( PPSG_REG_ADJ_NSEC, ( how_much / 8 ));
 
   ppsg_writel( PPSG_REG_CR,   PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH) | PPSG_CR_CNT_ADJ);
+#endif
+
 }
 
-void shw_pps_gen_adjust_utc(int32_t how_much)
+void pps_gen_adjust_utc(int32_t how_much)
 {
   uint32_t cr;
 
-  mprintf("AdjustUTC: %d seconds\n", how_much);
+#if 1
+  TRACE_DEV("ADJ: utc %d seconds\n", how_much);
   ppsg_writel( PPSG_REG_ADJ_UTCLO, how_much);
   ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
   ppsg_writel( PPSG_REG_ADJ_NSEC, 0);
   ppsg_writel( PPSG_REG_CR,   PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH) | PPSG_CR_CNT_ADJ);
+  #endif
+  
 }
 
 int pps_gen_busy()

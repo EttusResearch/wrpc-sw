@@ -3,7 +3,10 @@
 
 #include "types.h"
 
+#define ETH_HEADER_SIZE 14
+
 void minic_init();
+void minic_disable();
 int minic_poll_rx();
 
 int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_timestamp *hwts);
