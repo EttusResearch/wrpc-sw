@@ -77,7 +77,7 @@ const struct softpll_config pll_cfg =
 10,					// p_ki
 
 1000,					// lock detect samples
-300,					// lock detect threshold
+500,					// lock detect threshold
 500,				// delock threshold
 32000,				// DPLL dac bias
 1000  				// deglitcher threshold
@@ -263,10 +263,12 @@ void _irq_entry()
  		
  		tag_ref = pstate.d_tag_ref_d0 ;
 
- 		tag_fb += pstate.d_p_setpoint;
+ 		tag_fb += pstate.d_p_setpoint;  // was tag_fb
  		
- 		if(tag_fb > (1<<TAG_BITS)) tag_fb -= (1<<TAG_BITS);
- 		if(tag_fb < 0) tag_fb += (1<<TAG_BITS);
+ 		tag_fb &= (1<<TAG_BITS)-1;
+ 		
+ 		//if(tag_ref > (1<<TAG_BITS)) tag_ref -= (1<<TAG_BITS);
+ 		//if(tag_ref < 0) tag_ref += (1<<TAG_BITS);
  				
  		if(tag_fb_ready)
 		{
@@ -321,6 +323,10 @@ void softpll_enable()
 
 int softpll_check_lock()
 {
+	TRACE_DEV("LCK h:f%d l%d d: f%d l%d\n",
+	pstate.h_freq_mode ,pstate.h_locked,
+	pstate.d_freq_mode, pstate.d_locked);
+
  	return pstate.h_locked && pstate.d_locked;
 }
 
@@ -331,11 +337,18 @@ int softpll_busy()
 
 void softpll_set_phase(int ps)
 {
-	pstate.d_phase_shift = ps;
+	pstate.d_phase_shift = (int32_t) (((int64_t)ps * 16384LL) / 8000LL);
+	TRACE_DEV("ADJ: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
+
 }
 
 void softpll_disable()
 {
  	SPLL->CSR = 0;
  	disable_irq();
+}
+
+int softpll_get_setpoint()
+{
+  return pstate.d_p_setpoint;
 }

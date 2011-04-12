@@ -37,8 +37,8 @@
   fc = (raw >> 28) & 0xf;
 
 
-static volatile uint32_t dma_tx_buf[MINIC_DMA_RX_BUF_SIZE / 4];
-static volatile uint32_t dma_rx_buf[MINIC_DMA_TX_BUF_SIZE / 4];
+static volatile uint32_t dma_tx_buf[MINIC_DMA_TX_BUF_SIZE / 4];
+static volatile uint32_t dma_rx_buf[MINIC_DMA_RX_BUF_SIZE / 4];
 
 struct wr_minic {
   volatile uint32_t *rx_head, *rx_base; 
@@ -72,6 +72,7 @@ static void minic_new_rx_buffer()
   minic_writel(MINIC_REG_MCR, 0);
   minic_writel(MINIC_REG_RX_ADDR, (uint32_t) minic.rx_base);
   minic_writel(MINIC_REG_RX_AVAIL, (minic.rx_size - MINIC_MTU) >> 2);
+ // TRACE_DEV("Sizeof: %d Size : %d Avail: %d\n", minic.rx_size, (minic.rx_size - MINIC_MTU) >> 2);
   minic_writel(MINIC_REG_MCR, MINIC_MCR_RX_EN);
 
 }
@@ -87,7 +88,10 @@ static void minic_new_tx_buffer()
 
 
 void minic_init()
+
 {
+    minic_writel(MINIC_REG_EIC_IDR, MINIC_EIC_IDR_RX);
+    minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
   minic.rx_base = dma_rx_buf;
   minic.rx_size = sizeof(dma_rx_buf);
 
@@ -99,13 +103,18 @@ void minic_init()
   minic_writel(MINIC_REG_EIC_IER, MINIC_EIC_IER_RX);
 }
 
+void minic_disable()
+{
+  minic_writel(MINIC_REG_MCR, 0);
+}
+
 int minic_poll_rx()
 {
   uint32_t isr;
 
   isr = minic_readl(MINIC_REG_EIC_ISR);
 
-  return isr;
+  return (isr & MINIC_EIC_ISR_RX) ? 1 : 0;//>>1;
 }
 
 int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_timestamp *hwts)
@@ -121,10 +130,12 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
     return 0;
 
   desc_hdr = *minic.rx_head;
+   
+   // TRACE_DEV("RX_FRAME_ENTER\n\nRxHead %x buffer at %x\n", minic.rx_head, minic.rx_base);
 
   if(!RX_DESC_VALID(desc_hdr)) /* invalid descriptor? Weird, the RX_ADDR seems to be saying something different. Ignore the packet and purge the RX buffer. */
     {
-      //      mprintf("weird, invalid RX descriptor (%x, head %x)\n", desc_hdr, rx_head);
+            TRACE_DEV("weird, invalid RX descriptor (%x, head %x)\n", desc_hdr, minic.rx_head);
       minic_new_rx_buffer();
       return 0;
     }
@@ -132,6 +143,8 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   payload_size = RX_DESC_SIZE(desc_hdr);
   num_words = ((payload_size + 3) >> 2) + 1;
 
+
+//    TRACE_DEV("NWords %d\n", num_words);
   /* valid packet */	
   if(!RX_DESC_ERROR(desc_hdr))
     {   
@@ -161,7 +174,11 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	  else
 	    hwts->ahead = 0;
   
+  
+	    
 	  hwts->nsec = counter_r * 8;
+	  
+	  TRACE_DEV("TS minic_rx_frame: %d.%d\n", hwts->utc, hwts->nsec);
 	}
 
       n_recvd = (buf_size < payload_size ? buf_size : payload_size);
@@ -169,14 +186,23 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       /* FIXME: VLAN support */
 
       memcpy(hdr, (void*)minic.rx_head + 4, ETH_HEADER_SIZE);
+      //TRACE_DEV("%s: packet: ", __FUNCTION__);
+      //for(i=0; i<ETH_HEADER_SIZE; i++) TRACE_DEV("%x ", *(hdr+i));
       memcpy(payload, (void*)minic.rx_head + 4 + ETH_HEADER_SIZE, n_recvd - ETH_HEADER_SIZE);
+      //for(i=0; i<n_recvd-ETH_HEADER_SIZE; i++) TRACE_DEV("%x ", *(payload+i));
 
-      /*      for(i=0;i<n_recvd;i++)
-	mprintf("%x ", buf[i]);
-	mprintf("---\n");*/
-
+/*            for(i=0;i<n_recvd-14;i++)
+	TRACE_DEV("%x ", payload[i]);
+	TRACE_DEV("---\n");
+  */
+  
+//	TRACE_DEV("nwords_avant: %d\n", num_words);
+  
       minic.rx_head += num_words;
     } else    { // RX_DESC_ERROR
+
+//	TRACE_DEV("nwords_avant_err: %d\n", num_words);
+
     minic.rx_head += num_words;  
   }
 
@@ -184,6 +210,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 
   if(rx_addr_cur < (uint32_t)minic.rx_head)  /* nothing new in the buffer? */
     {
+  //      TRACE_DEV("MoreData? %x, head %x\n", rx_addr_cur, minic.rx_head);
 
       if(minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
 	minic_new_rx_buffer();
@@ -201,11 +228,20 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
 {
   uint32_t d_hdr, mcr, nwords;
   minic_new_tx_buffer();
-  nwords = ((size + 1) >> 1) - 1;
+
+
 
   memset(minic.tx_head, 0x0, size + 16);
+  memset((void*)minic.tx_head + 4, 0, size < 60 ? 60 : size);
   memcpy((void*)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
   memcpy((void*)minic.tx_head + 4 + ETH_HEADER_SIZE, payload, size - ETH_HEADER_SIZE);
+
+    if(size < 60)
+	size = 60;
+
+  nwords = ((size + 1) >> 1) - 1;
+
+
 
   if(hwts)
     {
@@ -249,6 +285,9 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       hwts->utc = utc;
       hwts->ahead = 0;
       hwts->nsec = counter_r * 8;
+
+    TRACE_DEV("TS minic_tx_frame: %d.%d\n", hwts->utc, hwts->nsec);
+
     }
 
   tx_oob_val++;

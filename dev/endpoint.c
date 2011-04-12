@@ -1,12 +1,10 @@
 #include <stdio.h>
 
 #include "board.h"
+#include<endpoint.h>
 
 #include <hw/endpoint_regs.h>
 #include <hw/endpoint_mdio.h>
-
-#define DMTD_AVG_SAMPLES 256
-#define DMTD_MAX_PHASE 16384
 
 #define UIS_PER_SERIAL_BIT 800
 
@@ -34,14 +32,24 @@ static void pcs_write(int location,
 }
 
 static void set_mac_addr(uint8_t dev_addr[])
-{
-  EP->MACL = ((uint32_t)dev_addr[3] << 24)
-    | ((uint32_t)dev_addr[2] << 16)
-    | ((uint32_t)dev_addr[1] << 8)
-    | ((uint32_t)dev_addr[0]);
+{                                
+  EP->MACL = ((uint32_t)dev_addr[2] << 24)
+    | ((uint32_t)dev_addr[3] << 16)
+    | ((uint32_t)dev_addr[4] << 8)
+    | ((uint32_t)dev_addr[5]);
 
-  EP->MACH = ((uint32_t)dev_addr[5] << 8)
-    | ((uint32_t)dev_addr[4]);
+  EP->MACH = ((uint32_t)dev_addr[0] << 8)
+    | ((uint32_t)dev_addr[1]);
+}
+
+void get_mac_addr(uint8_t dev_addr[])
+{
+  dev_addr[5] = (uint8_t)(EP->MACL & 0x000000ff);
+  dev_addr[4] = (uint8_t)(EP->MACL & 0x0000ff00) >> 8;
+  dev_addr[3] = (uint8_t)(EP->MACL & 0x00ff0000) >> 16; 
+  dev_addr[2] = (uint8_t)(EP->MACL & 0xff000000) >> 24; 
+  dev_addr[1] = (uint8_t)(EP->MACH & 0x000000ff);
+  dev_addr[0] = (uint8_t)(EP->MACH & 0x0000ff00) >> 8;
 }
 
 
@@ -71,8 +79,13 @@ int ep_enable(int enabled, int autoneg)
   EP->ECR =  EP_ECR_TX_EN_FRA | EP_ECR_RX_EN_FRA | EP_ECR_RST_CNT;
   
   autoneg_enabled = autoneg;
-  pcs_write(MDIO_REG_MCR, MDIO_MCR_RESET);  /* reset the PHY */
-
+ #if 1
+  pcs_write(MDIO_REG_MCR, MDIO_MCR_PDOWN); /* reset the PHY */
+  timer_delay(2000);
+  pcs_write(MDIO_REG_MCR, 0);  /* reset the PHY */
+ // pcs_write(MDIO_REG_MCR, MDIO_MCR_RESET);  /* reset the PHY */
+   #endif
+   
   pcs_write(MDIO_REG_ADVERTISE, 0);
 
   mcr = MDIO_MCR_SPEED1000_MASK | MDIO_MCR_FULLDPLX_MASK;
@@ -98,6 +111,7 @@ int ep_link_up()
   return (msr & flags) == flags ? 1 : 0;
 }
 
+
 int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 {
 	*delta_tx = 0;
@@ -108,5 +122,36 @@ void ep_show_counters()
 {
   int i;
   for(i=0;i<16;i++)
-    mprintf("cntr%d = %d\n", i, EP->RMON_RAM[i]);
+    TRACE_DEV("cntr%d = %d\n", i, EP->RMON_RAM[i]);
+}
+
+int ep_get_psval(int32_t *psval)
+{
+  uint32_t val;
+  val = EP->DMSR;
+  
+  if(val & EP_DMSR_PS_RDY)
+    *psval =  EP_DMSR_PS_VAL_R(val);
+  else
+    *psval = 0;
+
+  return val & EP_DMSR_PS_RDY;
+}
+
+int ep_cal_pattern_enable()
+{
+  uint32_t val;
+  val = pcs_read(MDIO_REG_WR_SPEC);   
+  val |= MDIO_WR_SPEC_TX_CAL;
+  pcs_write(MDIO_REG_WR_SPEC, val);
+
+  return 0;
+}
+
+int ep_cal_pattern_disable()
+{
+  uint32_t val;
+  val = pcs_read(MDIO_REG_WR_SPEC);
+  val &= (~MDIO_WR_SPEC_TX_CAL);
+  pcs_write(MDIO_REG_WR_SPEC, val);
 }
