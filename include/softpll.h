@@ -6,6 +6,7 @@ int softpll_check_lock();
 void softpll_disable();
 int softpll_busy();
 void softpll_set_phase(int ps);
+int softpll_get_setpoint();
 
 #endif
 
