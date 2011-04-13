@@ -90,6 +90,7 @@ struct softpll_state {
  	int h_p_setpoint;
  	int h_freq_mode;
  	int h_locked;
+ 	
 
 	int d_dac_bias;
  	int d_tag_ref_d0;
@@ -101,6 +102,7 @@ struct softpll_state {
  	int d_period_fb;
  	int d_freq_mode;
  	int d_lock_counter;
+ 	int d_freq_error;
  	
  	int d_i;
  	
@@ -231,6 +233,9 @@ void _irq_entry()
     	}
     	
     	freq_err = - pstate.d_period_fb + pstate.d_period_ref;
+
+    	pstate.d_freq_error = freq_err;
+    	
     	pstate.d_i += freq_err;
 		dv = ((pstate.d_i * pll_cfg.dpll_f_ki + freq_err * pll_cfg.dpll_f_kp) >> PI_FRACBITS) + pll_cfg.dpll_dac_bias;
 		SPLL->DAC_DMPLL = dv;
@@ -304,6 +309,9 @@ void _irq_entry()
 
 void softpll_enable()
 {
+ 	SPLL->CSR = 0;
+ 	disable_irq();
+
 	SPLL->DAC_HPLL = pll_cfg.hpll_dac_bias;
 	SPLL->DAC_DMPLL = pll_cfg.dpll_dac_bias;
 	SPLL->DEGLITCH_THR = pll_cfg.dpll_deglitcher_threshold;
@@ -313,6 +321,9 @@ void softpll_enable()
 	pstate.h_freq_mode = 1;
 	pstate.h_lock_counter = 0;
 	pstate.h_locked = 0;
+	pstate.d_p_setpoint = 0;
+	pstate.d_phase_shift = 0;
+	
 		  	
 	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);
 	SPLL->EIC_IER = 1;
@@ -323,9 +334,10 @@ void softpll_enable()
 
 int softpll_check_lock()
 {
-	TRACE_DEV("LCK h:f%d l%d d: f%d l%d\n",
+/*	TRACE_DEV("LCK h:f%d l%d d: f%d l%d err %d\n", 
 	pstate.h_freq_mode ,pstate.h_locked,
-	pstate.d_freq_mode, pstate.d_locked);
+	pstate.d_freq_mode, pstate.d_locked,
+	pstate.d_freq_error);*/
 
  	return pstate.h_locked && pstate.d_locked;
 }
@@ -337,9 +349,8 @@ int softpll_busy()
 
 void softpll_set_phase(int ps)
 {
-	pstate.d_phase_shift = (int32_t) (((int64_t)ps * 16384LL) / 8000LL);
-	TRACE_DEV("ADJ: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
-
+	pstate.d_phase_shift = (int32_t) ((int64_t)ps * 16384LL / 8000LL);
+	TRACE_WRSERVO("ADJdelta: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
 }
 
 void softpll_disable()
