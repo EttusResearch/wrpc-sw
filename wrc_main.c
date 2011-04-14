@@ -6,8 +6,7 @@
 #include "endpoint.h"
 #include "minic.h"
 #include "pps_gen.h"
-#include "ptpd-noposix/PTPWRd/ptpd.h"
-//#include "ptpd-noposix/PTPWRd/datatypes.h"
+#include "ptpd.h"
 
 
 
@@ -92,9 +91,20 @@ void test_transition()
 	    timer_delay(10);
 	}
     }
-
-
 }
+
+int last_btn0;
+
+int button_pressed()
+{
+	int p;
+	int btn0 = gpio_in(GPIO_PIN_BTN1);
+	p=!btn0 && last_btn0;
+	last_btn0 = btn0;
+	return p;
+}
+
+int enable_tracking = 1;
 
 int main(void)
 {
@@ -111,55 +121,33 @@ int main(void)
 	ep_enable(1, 0);
 
 
-  mprintf("is link up ?\n");
-	while(!ep_link_up());
-  mprintf("yes it is\n");
-
-	ep_get_deltas(&tx, &rx);
-	mprintf("delta: tx = %d, rx=%d\n", tx, rx);
-
 	minic_init();
-  //minic_disable();
 	pps_gen_init();
-	    
-//	test_transition();
 
 	netStartup();
 
-  ptpclock = ptpdStartup(0, NULL, &ret, &rtOpts);
+//    mi2c_init();
+//    mi2c_scan();
 
-  toState(PTP_INITIALIZING, &rtOpts, ptpclock);
-  for(;;)
-  {
-    //mprintf("\n\n\n");
-    protocol_nonblock(&rtOpts, ptpclock);
+    gpio_dir(GPIO_PIN_BTN1, 0);
 
-    update_rx_queues();
-    timer_delay(10);
-  }
+    ptpclock = ptpdStartup(0, NULL, &ret, &rtOpts);
+
+    toState(PTP_INITIALIZING, &rtOpts, ptpclock);
+    for(;;)
+	{
+		wr_mon_debug();
+		if(button_pressed())
+		{
+		 	enable_tracking = 1-enable_tracking;
+		 	wr_servo_enable_tracking(enable_tracking);
+		}	
+		
+	    protocol_nonblock(&rtOpts, ptpclock);
+	    update_rx_queues();
+	    timer_delay(10);
+	}
   
-    //(unsigned int *)(0x40000) = 0x1;
-//	*(unsigned int *)(0x40024) = 0x1;
-
-	//for(;;)
-	//  {
-	//    struct hw_timestamp hwts;
-	//    uint32_t utc, nsec;
-	//    uint8_t buf[1024];
-
-
-	//    memcpy(hdr, dst_mac_addr, 6);
-	//    hdr[12] = 0x88;
-	//    hdr[13] = 0xf7;
-	//	
-	//    minic_tx_frame(hdr, buf, 500, &hwts);
-
-	//    mprintf("TxTs: utc %d nsec %d\n", hwts.utc, hwts.nsec);
-	//    
-	//   	delay(1000000);
- 
-	//	mprintf("cnt:%d\n", count);
-	//  }
 }
 
 

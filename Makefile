@@ -1,8 +1,8 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/timer.o dev/softpll.o lib/mprintf.o
+OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/timer.o dev/softpll.o lib/mprintf.o dev/i2c.o monitor/monitor.o
 
-D = ptpd-noposix
+D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
@@ -39,7 +39,7 @@ endif
 CC=$(CROSS_COMPILE)gcc
 OBJCOPY=$(CROSS_COMPILE)objcopy
 OBJDUMP=$(CROSS_COMPILE)objdump
-CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS)
+CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -Iptp-noposix/PTPWRd
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude
 SIZE = $(CROSS_COMPILE)size
 OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_PTPD_FREE) 
