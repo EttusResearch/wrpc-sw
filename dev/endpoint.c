@@ -115,7 +115,7 @@ int ep_link_up()
 int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 {
 	*delta_tx = 0;
-	*delta_rx = 15000 + 195000 + UIS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
+	*delta_rx = 15000 - 7000 + 195000 + UIS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
 }
 
 void ep_show_counters()
