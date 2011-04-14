@@ -13,7 +13,12 @@
 
 #define UART_BAUDRATE 0 /* not a real UART */
 
-#define GPIO_PIN_LED (0)  
+#define GPIO_PIN_LED 0  
+#define GPIO_PIN_SCL_OUT 1  
+#define GPIO_PIN_SDA_OUT 2  
+#define GPIO_PIN_SDA_IN 3  
+#define GPIO_PIN_BTN1 4
+#define GPIO_PIN_BTN2 5
 
 static inline int delay(int x)
 {
