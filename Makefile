@@ -30,7 +30,8 @@ LDFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 OBJS_PLATFORM=
 else
 CROSS_COMPILE ?= /opt/gcc-lm32/bin/lm32-elf-
-CFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled  
+CFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -DPTPD_TRACE_MASK=0
+#"(TRACE_SERVO | TRACE_PROTO)"
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
 OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o
 endif

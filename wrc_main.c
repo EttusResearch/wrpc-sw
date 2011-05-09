@@ -132,8 +132,8 @@ int main(void)
     gpio_dir(GPIO_PIN_BTN1, 0);
 
     ptpclock = ptpdStartup(0, NULL, &ret, &rtOpts);
-
     toState(PTP_INITIALIZING, &rtOpts, ptpclock);
+
     for(;;)
 	{
 		wr_mon_debug();
