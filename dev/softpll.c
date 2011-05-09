@@ -334,10 +334,10 @@ void softpll_enable()
 
 int softpll_check_lock()
 {
-/*	TRACE_DEV("LCK h:f%d l%d d: f%d l%d err %d\n", 
+	TRACE_DEV("LCK h:f%d l%d d: f%d l%d err %d\n", 
 	pstate.h_freq_mode ,pstate.h_locked,
 	pstate.d_freq_mode, pstate.d_locked,
-	pstate.d_freq_error);*/
+	pstate.d_freq_error);
 
  	return pstate.h_locked && pstate.d_locked;
 }
@@ -349,8 +349,8 @@ int softpll_busy()
 
 void softpll_set_phase(int ps)
 {
-	pstate.d_phase_shift = (int32_t) ((int64_t)ps * 16384LL / 8000LL);
-	TRACE_WRSERVO("ADJdelta: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
+	pstate.d_phase_shift = -(int32_t) ((int64_t)ps * 16384LL / 8000LL);
+	TRACE_DEV("ADJdelta: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
 }
 
 void softpll_disable()
