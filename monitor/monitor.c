@@ -18,6 +18,8 @@ int64_t abs64(int64_t t)
   return t<0?(-t):t;
 }
 
+
+
 int wr_mon_debug(void)
 {
   static char* slave_states[] = {"Uninitialized", "SYNC_UTC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
@@ -31,15 +33,17 @@ int wr_mon_debug(void)
 
   m_term_clear();
 
-  m_pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 0.1");
+  m_pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 0.1 **** pre-alpha version ****");
 
   /*show_ports*/
   halexp_get_port_state(&ps, NULL);
-  m_pcprintf(3, 1, C_BLUE, "Switch ports:");
+  m_pcprintf(3, 1, C_BLUE, "Link status:");
 
   m_pcprintf(5, 1, C_WHITE, "%s: ", "wru1");
   if(ps.up)  m_cprintf(C_GREEN, "Link up    "); else  m_cprintf(C_RED, "Link down  ");
 
+	if(ps.up)
+	{
   m_cprintf(C_GREY, "mode: ");
 
   switch(ps.mode)
@@ -67,19 +71,15 @@ int wr_mon_debug(void)
 
   m_cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
-  m_cprintf(C_GREY, "Round-trip time (mu):      "); m_cprintf(C_WHITE, "%d.%u nsec\n", (int32_t)(cur_servo_state.mu/1000LL), (uint32_t)(cur_servo_state.mu%1000LL));
-  m_cprintf(C_GREY, "Master-slave delay:        "); m_cprintf(C_WHITE, "%d.%u nsec\n", (int32_t)(cur_servo_state.delay_ms/1000LL), (uint32_t)(cur_servo_state.delay_ms%1000LL));
-  //m_cprintf(C_GREY, "Link length:               "); m_cprintf(C_WHITE, "%.0f meters \n", cur_servo_state.delay_ms/193548387096774180864);
-  m_cprintf(C_GREY, "Master PHY delays:         "); m_cprintf(C_WHITE, "TX: %d.%u nsec, RX: %d.%u nsec\n", cur_servo_state.delta_tx_m/1000, cur_servo_state.delta_tx_m%1000, 
-                                                                                                           cur_servo_state.delta_rx_m/1000, cur_servo_state.delta_rx_m%1000);
-  m_cprintf(C_GREY, "Slave PHY delays:          "); m_cprintf(C_WHITE, "TX: %d.%u nsec, RX: %d.%u nsec\n", cur_servo_state.delta_tx_s/1000, cur_servo_state.delta_tx_s%1000,
-                                                                                                           cur_servo_state.delta_rx_s/1000, cur_servo_state.delta_rx_s%1000);
-  m_cprintf(C_GREY, "Total link asymmetry:      "); m_cprintf(C_WHITE, "%d.%u nsec\n", (int32_t)(cur_servo_state.total_asymmetry/1000LL), (int32_t)(abs64(cur_servo_state.total_asymmetry)%1000LL));
-
-  m_cprintf(C_GREY, "Clock offset:              "); m_cprintf(C_WHITE, "%d.%u nsec\n", (int32_t)(cur_servo_state.cur_offset/1000LL), (int32_t)(abs64(cur_servo_state.cur_offset%1000LL)));
-  m_cprintf(C_GREY, "Phase setpoint:            "); m_cprintf(C_WHITE, "%d.%u nsec\n", (int32_t)(cur_servo_state.cur_setpoint/1000LL), (int32_t)(abs64(cur_servo_state.cur_setpoint%1000LL)));
-  m_cprintf(C_GREY, "Skew:                      "); m_cprintf(C_WHITE, "%d.%u nsec\n", (int32_t)(cur_servo_state.cur_skew/1000LL), (int32_t)(abs64(cur_servo_state.cur_skew%1000LL)));
-
+  m_cprintf(C_GREY, "Round-trip time (mu):      "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.mu));
+  m_cprintf(C_GREY, "Master-slave delay:        "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.delay_ms));
+  m_cprintf(C_GREY, "Master PHY delays:         "); m_cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n", (int32_t)cur_servo_state.delta_tx_m, (int32_t)cur_servo_state.delta_rx_m);
+  m_cprintf(C_GREY, "Slave PHY delays:          "); m_cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n", (int32_t)cur_servo_state.delta_tx_s, (int32_t)cur_servo_state.delta_rx_s);
+  m_cprintf(C_GREY, "Total link asymmetry:      "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.total_asymmetry));
+  m_cprintf(C_GREY, "Clock offset:              "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_offset));
+  m_cprintf(C_GREY, "Phase setpoint:            "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_setpoint));
+  m_cprintf(C_GREY, "Skew:                      "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_skew));
+     }
 
 
   return 0;
