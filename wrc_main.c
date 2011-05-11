@@ -134,6 +134,7 @@ int main(void)
     ptpclock = ptpdStartup(0, NULL, &ret, &rtOpts);
     toState(PTP_INITIALIZING, &rtOpts, ptpclock);
 
+    wr_servo_man_adjust_phase(-11600 + 1700);
     for(;;)
 	{
 		wr_mon_debug();
