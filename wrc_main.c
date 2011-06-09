@@ -112,8 +112,6 @@ int main(void)
   int16_t ret;
 
 	uart_init();
-  
-	mprintf("Starting up\n");
 
 	gpio_dir(GPIO_PIN_LED, 1);
 
