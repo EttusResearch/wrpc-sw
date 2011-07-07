@@ -268,7 +268,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       uint32_t counter_r, counter_f;
       uint32_t utc;
       uint32_t nsec;
-      uint32_t ts_tout;
+      uint8_t ts_tout;
 
 
       ts_tout=0;
