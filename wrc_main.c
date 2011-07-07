@@ -44,10 +44,6 @@ RunTimeOpts rtOpts = {
    .deltasKnown		= WR_DEFAULT_DELTAS_KNOWN,
    .knownDeltaTx	= WR_DEFAULT_DELTA_TX,
    .knownDeltaRx	= WR_DEFAULT_DELTA_RX,
-/*by default set something for both Master and Slave modes*/
-//   .primarySource = FALSE,
-//   .wrConfig      = WR_M_AND_S, //WR_M_ONLY, /*NON_WR, WR_MODE_AUTO, WR_M_ONLY, WR_S_ONLY, WR_M_AND_S*/
-//   .masterOnly		= FALSE,
 /*SLAVE only or MASTER only*/
 #ifdef WRPC_SLAVE
    .primarySource = FALSE,
@@ -150,25 +146,18 @@ int main(void)
 //    mi2c_init();
 //    mi2c_scan();
 
-    gpio_dir(GPIO_PIN_BTN1, 0);
+  gpio_dir(GPIO_PIN_BTN1, 0);
 
-    ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+  ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
 
-    initDataClock(&rtOpts, &ptpClockDS);
-    toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
+  initDataClock(&rtOpts, &ptpClockDS);
+  toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
 
-    wr_servo_man_adjust_phase(-11600 + 1700);
+  wr_servo_man_adjust_phase(-11600 + 1700);
 
-    displayConfigINFO(&rtOpts);
+  displayConfigINFO(&rtOpts);
 
-#ifdef WRPC_SLAVE
-    mprintf("SLAVE\n");
-#endif
-#ifdef WRPC_MASTER
-    mprintf("MASTER\n");
-#endif
-
-    for(;;)
+  for(;;)
 	{
 		//wr_mon_debug();
 		if(button_pressed())
