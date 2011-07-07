@@ -268,10 +268,12 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       uint32_t counter_r, counter_f;
       uint32_t utc;
       uint32_t nsec;
+      uint32_t ts_tout;
 
 
-      while(minic_readl(MINIC_REG_TSFIFO_CSR) & MINIC_TSFIFO_CSR_EMPTY);
-
+      ts_tout=0;
+      while( (minic_readl(MINIC_REG_TSFIFO_CSR) & MINIC_TSFIFO_CSR_EMPTY ) && ts_tout<10)
+        ts_tout++;
 
       raw_ts = minic_readl(MINIC_REG_TSFIFO_R0);
       fid = (minic_readl(MINIC_REG_TSFIFO_R1) >> 5) & 0xffff;
