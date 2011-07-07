@@ -19,7 +19,6 @@ RunTimeOpts rtOpts = {
    .priority1 = DEFAULT_PRIORITY1,
    .priority2 = DEFAULT_PRIORITY2,
    .domainNumber = DEFAULT_DOMAIN_NUMBER,
-   .slaveOnly = SLAVE_ONLY,
    .currentUtcOffset = DEFAULT_UTC_OFFSET,
    .noResetClock = DEFAULT_NO_RESET_CLOCK,
    .noAdjust = NO_ADJUST,
@@ -29,17 +28,41 @@ RunTimeOpts rtOpts = {
    .ap = DEFAULT_AP,
    .ai = DEFAULT_AI,
    .max_foreign_records = DEFAULT_MAX_FOREIGN_RECORDS,
+#ifdef WRPC_SLAVE
+   .slaveOnly = TRUE,
+#else
+   .slaveOnly = FALSE,
+#endif
 
    /**************** White Rabbit *************************/
-   .portNumber 		= NUMBER_PORTS,
-   .wrNodeMode 		= NON_WR,
-   .calibrationPeriod     = WR_DEFAULT_CAL_PERIOD,
-   .calibrationPattern    = WR_DEFAULT_CAL_PATTERN,
-   .calibrationPatternLen = WR_DEFAULT_CAL_PATTERN_LEN,
-   .E2E_mode 		= TRUE,
+   .autoPortDiscovery = FALSE,     /*if TRUE: automagically discovers how many ports we have (and how many up-s); else takes from .portNumber*/
+   .portNumber 		= 1,
+   .calPeriod     = WR_DEFAULT_CAL_PERIOD,
+   .E2E_mode 		  = TRUE,
+   .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
+   .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
+   .deltasKnown		= WR_DEFAULT_DELTAS_KNOWN,
+   .knownDeltaTx	= WR_DEFAULT_DELTA_TX,
+   .knownDeltaRx	= WR_DEFAULT_DELTA_RX,
+/*by default set something for both Master and Slave modes*/
+//   .primarySource = FALSE,
+//   .wrConfig      = WR_M_AND_S, //WR_M_ONLY, /*NON_WR, WR_MODE_AUTO, WR_M_ONLY, WR_S_ONLY, WR_M_AND_S*/
+//   .masterOnly		= FALSE,
+/*SLAVE only or MASTER only*/
+#ifdef WRPC_SLAVE
+   .primarySource = FALSE,
+   .wrConfig      = WR_S_ONLY,
+   .masterOnly    = FALSE,
+#endif
+#ifdef WRPC_MASTER
+   .primarySource = TRUE,
+   .wrConfig      = WR_M_ONLY,
+   .masterOnly    = TRUE,
+#endif
    /********************************************************/
 };
-static   PtpClock *ptpclock;
+static   PtpPortDS *ptpPortDS;
+static   PtpClockDS ptpClockDS;
 
 	const uint8_t mac_addr[] = {0x00, 0x50, 0xde, 0xad, 0xba, 0xbe};
 	const uint8_t dst_mac_addr[] = {0x00, 0x00, 0x12, 0x24, 0x46, 0x11};
@@ -129,22 +152,37 @@ int main(void)
 
     gpio_dir(GPIO_PIN_BTN1, 0);
 
-    ptpclock = ptpdStartup(0, NULL, &ret, &rtOpts);
-    toState(PTP_INITIALIZING, &rtOpts, ptpclock);
+    ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+
+    initDataClock(&rtOpts, &ptpClockDS);
+    toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
 
     wr_servo_man_adjust_phase(-11600 + 1700);
+
+    displayConfigINFO(&rtOpts);
+
+#ifdef WRPC_SLAVE
+    mprintf("SLAVE\n");
+#endif
+#ifdef WRPC_MASTER
+    mprintf("MASTER\n");
+#endif
+
     for(;;)
 	{
-		wr_mon_debug();
+		//wr_mon_debug();
 		if(button_pressed())
 		{
+      mprintf("button pressed\n");
 		 	enable_tracking = 1-enable_tracking;
 		 	wr_servo_enable_tracking(enable_tracking);
 		}	
-		
-	    protocol_nonblock(&rtOpts, ptpclock);
-	    update_rx_queues();
-	    timer_delay(10);
+	
+    //mprintf("before state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
+	  protocol_nonblock(&rtOpts, ptpPortDS);
+    //mprintf("after state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
+	  update_rx_queues();
+	  timer_delay(10);
 	}
   
 }

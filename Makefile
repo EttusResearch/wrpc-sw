@@ -6,7 +6,7 @@ D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
-	-include $D/compat.h -include $D/libposix/ptpd-wrappers.h
+	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
 PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM #-DPTPD_DBGMSG
 
 OBJS_PTPD = $D/PTPWRd/arith.o
@@ -30,8 +30,14 @@ LDFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 OBJS_PLATFORM=
 else
 CROSS_COMPILE ?= /opt/gcc-lm32/bin/lm32-elf-
-CFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -DPTPD_TRACE_MASK=0
-#"(TRACE_SERVO | TRACE_PROTO)"
+CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled -DPTPD_TRACE_MASK=0x2804
+
+####################################################################
+## Select here WR_MASTER (primary clock) or WR_SLAVE mode of WRPC ##
+####################################################################
+#CFLAGS_PLATFORM += -DWRPC_MASTER
+CFLAGS_PLATFORM += -DWRPC_SLAVE
+
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
 OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o
 endif
@@ -50,7 +56,7 @@ all: 		$(OBJS)
 				$(SIZE) -t $(OBJS)
 				${CC} -o $(OUTPUT).elf $(OBJS) $(LDFLAGS) 
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
-				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
+#				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
 
 clean:	
