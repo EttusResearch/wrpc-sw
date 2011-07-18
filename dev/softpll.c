@@ -57,15 +57,15 @@ const struct softpll_config pll_cfg =
 {
 /* Helper PLL */
 28*32*16, 			// f_kp
-20*32*16,			// f_ki
+50*32*16,			// f_ki
 16,					// setpoint
-1000, 				// lock detect freq samples
+2000, 				// lock detect freq samples
 2, 					// lock detect freq threshold
 2.0*32*16,			// p_kp
 0.05*32*16,			// p_ki
 1000,				// lock detect phase samples
-300,				// lock detect phase threshold
-500,				// delock threshold
+1000,				// lock detect phase threshold
+2000,				// delock threshold
 32000,				// HPLL dac bias
 
 /* DMTD PLL */
@@ -80,7 +80,7 @@ const struct softpll_config pll_cfg =
 500,					// lock detect threshold
 500,				// delock threshold
 32000,				// DPLL dac bias
-1000  				// deglitcher threshold
+2000  				// deglitcher threshold
 };
 
 struct softpll_state {
@@ -90,6 +90,9 @@ struct softpll_state {
  	int h_p_setpoint;
  	int h_freq_mode;
  	int h_locked;
+ 	int h_dac_val;
+ 	int h_freq_err;
+ 	int h_tag;
  	
 
 	int d_dac_bias;
@@ -142,12 +145,23 @@ void _irq_entry()
     	int freq_err =	SPLL->PER_HPLL;
 		if(freq_err & 0x100) freq_err |= 0xffffff00; /* sign-extend */
 		freq_err += pll_cfg.hpll_f_setpoint;
+		
+		pstate.h_freq_err = freq_err;
 
 		/* PI control */
+		if(pstate.h_dac_val > 0 && pstate.h_dac_val < 65530)
    		pstate.h_i += freq_err;
 		dv = ((pstate.h_i * pll_cfg.hpll_f_ki + freq_err * pll_cfg.hpll_f_kp) >> PI_FRACBITS) + pll_cfg.hpll_dac_bias;
 
+        if(dv >= 65530) dv = 65530;
+		if(dv < 0) dv = 0;
+
+        pstate.h_dac_val = dv;
+    
+
 		SPLL->DAC_HPLL = dv; /* update DAC */
+		
+		pstate.h_dac_val = dv;
 
 		/* lock detection */
 		if(freq_err >= -pll_cfg.hpll_ld_f_threshold && freq_err <= pll_cfg.hpll_ld_f_threshold)
@@ -162,21 +176,37 @@ void _irq_entry()
 			pstate.h_dac_bias = dv;
 			pstate.h_i = 0;
 			pstate.h_lock_counter = 0;
+			pstate.h_p_setpoint = -1;
 			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_REF);
 		}
 
 	/* HPLL: active phase branch */
 	} else if (tag_ref_ready) {
 	    if(pstate.h_p_setpoint < 0) 		/* we don't have yet any phase samples? */
-	     	pstate.h_p_setpoint = tag_ref & 0x3fff;
+	     	pstate.h_p_setpoint = tag_ref; // & 0x3fff;
 	 	else {
 	 		int phase_err;
 	 		
-         	phase_err = (tag_ref & 0x3fff) - pstate.h_p_setpoint;
+//	 		if(tag_ref > 16384) tag_ref -= 16384;
+//			tag_ref &x7fff;
+
+         	phase_err = tag_ref - pstate.h_p_setpoint;
+
+			if(pstate.h_dac_val > 0 && pstate.h_dac_val < 65530)
 			pstate.h_i += phase_err;
+			
+			pstate.h_p_setpoint += 16384;
+			pstate.h_p_setpoint &= ((1<<TAG_BITS)-1);
+
 			dv = ((pstate.h_i * pll_cfg.hpll_p_ki + phase_err * pll_cfg.hpll_p_kp) >> PI_FRACBITS) + pstate.h_dac_bias;
-         
+                   
+            if(dv >= 65530) dv = 65530;
+			if(dv < 0) dv = 0;
+
+            pstate.h_dac_val = dv;
             SPLL->DAC_HPLL = dv; /* Update DAC */
+
+            pstate.h_tag = tag_ref;
             
             if(abs(phase_err) >= pll_cfg.hpll_delock_threshold && pstate.h_locked)
             {
@@ -192,6 +222,7 @@ void _irq_entry()
 				
 			if(pstate.h_lock_counter == pll_cfg.hpll_ld_p_samples)
 			{
+#if 1
 				SPLL->CSR |= SPLL_CSR_TAG_EN_W(CHAN_FB); /* enable feedback channel and start DMPLL */
 				pstate.h_locked = 1;
 				pstate.d_tag_ref_d0 = -1;
@@ -200,7 +231,8 @@ void _irq_entry()
 				pstate.d_p_setpoint = 0;
 				pstate.d_lock_counter = 0;
 				pstate.d_i = 0;
-				pstate.d_locked = 0;
+				pstate.d_locked = 0;      
+#endif
 			}
            
 		}
@@ -307,6 +339,8 @@ void _irq_entry()
     clear_irq();
 }
 
+static int prev_lck = 0;
+
 void softpll_enable()
 {
  	SPLL->CSR = 0;
@@ -323,23 +357,37 @@ void softpll_enable()
 	pstate.h_locked = 0;
 	pstate.d_p_setpoint = 0;
 	pstate.d_phase_shift = 0;
+	pstate.h_dac_val = pll_cfg.hpll_dac_bias;
 	
 		  	
-	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);
+	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);// | SPLL_CSR_TAG_EN_W(CHAN_REF);
+;
 	SPLL->EIC_IER = 1;
 	
 	enable_irq();
 //	softpll_test();
+	prev_lck = 0;
+		TRACE_DEV("[softpll]: enabled\n");
+
 }
+
 
 int softpll_check_lock()
 {
-	TRACE_DEV("LCK h:f%d l%d d: f%d l%d err %d\n", 
+/*	TRACE_DEV("LCK h:f%d l%d d: f%d l%d err %d                %d dac %d\n", 
 	pstate.h_freq_mode ,pstate.h_locked,
 	pstate.d_freq_mode, pstate.d_locked,
-	pstate.d_freq_error);
+	pstate.h_tag, pstate.h_tag & 0x3fff, pstate.h_dac_val);*/
+	
+	int lck = pstate.h_locked && pstate.d_locked;
+	
+	if(lck && !prev_lck)
+		TRACE_DEV("[softpll]: got lock\n");
+	else if (!lck && prev_lck)
+		TRACE_DEV("[softpll]: lost lock\n");
 
- 	return pstate.h_locked && pstate.d_locked;
+	prev_lck = lck;
+ 	return lck;
 }
 
 int softpll_busy()

@@ -7,7 +7,7 @@ PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF 
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
 	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
-PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM #-DPTPD_DBGMSG
+PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=32
 
 OBJS_PTPD = $D/PTPWRd/arith.o
 OBJS_PTPD += $D/PTPWRd/bmc.o

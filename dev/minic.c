@@ -10,7 +10,7 @@
 #define MINIC_DMA_TX_BUF_SIZE 1024
 #define MINIC_DMA_RX_BUF_SIZE 2048
 
-#define MINIC_MTU 1540
+#define MINIC_MTU 256
 
 #define F_COUNTER_BITS 4
 #define F_COUNTER_MASK ((1<<F_COUNTER_BITS)-1)
@@ -135,7 +135,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 
   if(!RX_DESC_VALID(desc_hdr)) /* invalid descriptor? Weird, the RX_ADDR seems to be saying something different. Ignore the packet and purge the RX buffer. */
     {
-            TRACE_DEV("weird, invalid RX descriptor (%x, head %x)\n", desc_hdr, minic.rx_head);
+      TRACE_DEV("weird, invalid RX descriptor (%x, head %x)\n", desc_hdr, minic.rx_head);
       minic_new_rx_buffer();
       return 0;
     }
@@ -162,9 +162,9 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 
 	  pps_gen_get_time(&utc, &counter_ppsg);
 
-	  if(counter_r > (3*REFCLK_FREQ/4) && counter_ppsg < REFCLK_FREQ/4)
+      if(counter_r > 3*125000000/4 && counter_ppsg < 125000000/4)
 	    utc--; 
-
+      
 	  hwts->utc = utc & 0x7fffffff ;
 
 	  cntr_diff = (counter_r & F_COUNTER_MASK) - counter_f;
@@ -178,7 +178,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	    
 	  hwts->nsec = counter_r * 8;
 	  
-	  TRACE_DEV("TS minic_rx_frame: %d.%d\n", hwts->utc, hwts->nsec);
+//	  TRACE_DEV("TS minic_rx_frame: %d.%d\n", hwts->utc, hwts->nsec);
 	}
 
       n_recvd = (buf_size < payload_size ? buf_size : payload_size);
@@ -278,17 +278,22 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       raw_ts = minic_readl(MINIC_REG_TSFIFO_R0);
       fid = (minic_readl(MINIC_REG_TSFIFO_R1) >> 5) & 0xffff;
 
+
+		if(fid != tx_oob_val)
+		{
+		 	TRACE_DEV("minic_tx_frame: unmatched fid %d vs %d\n", fid, tx_oob_val);
+		}
       EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
       pps_gen_get_time(&utc, &nsec);
 
-      if(counter_r > (3*REFCLK_FREQ/4) && nsec < REFCLK_FREQ/4)
-	utc--;
+      if(counter_r > 3*125000000/4 && nsec < 125000000/4)
+		utc--;
 
       hwts->utc = utc;
       hwts->ahead = 0;
       hwts->nsec = counter_r * 8;
 
-    TRACE_DEV("TS minic_tx_frame: %d.%d\n", hwts->utc, hwts->nsec);
+	 // TRACE_DEV("TS minic_tx_frame: %d.%d\n", hwts->utc, hwts->nsec);
 
     }
 

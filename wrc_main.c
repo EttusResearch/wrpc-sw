@@ -41,9 +41,9 @@ RunTimeOpts rtOpts = {
    .E2E_mode 		  = TRUE,
    .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
    .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
-   .deltasKnown		= WR_DEFAULT_DELTAS_KNOWN,
-   .knownDeltaTx	= WR_DEFAULT_DELTA_TX,
-   .knownDeltaRx	= WR_DEFAULT_DELTA_RX,
+   .deltasKnown		= TRUE, //WR_DEFAULT_DELTAS_KNOWN,
+   .knownDeltaTx	= 0,//WR_DEFAULT_DELTA_TX,
+   .knownDeltaRx	= 0,//WR_DEFAULT_DELTA_RX,
 /*SLAVE only or MASTER only*/
 #ifdef WRPC_SLAVE
    .primarySource = FALSE,
@@ -128,14 +128,15 @@ int enable_tracking = 1;
 int main(void)
 {
 	int rx, tx;
+	int link_went_up, link_went_down;
+	int prev_link_state= 0, link_state;
+	
   int16_t ret;
 
 	uart_init();
 
-	gpio_dir(GPIO_PIN_LED, 1);
-
 	ep_init(mac_addr);
-	ep_enable(1, 0);
+	ep_enable(1, 1);
 
 
 	minic_init();
@@ -148,30 +149,43 @@ int main(void)
 
   gpio_dir(GPIO_PIN_BTN1, 0);
 
-  ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-
-  initDataClock(&rtOpts, &ptpClockDS);
-  toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
+//	softpll_enable();
+//	for(;;) softpll_check_lock();
 
   wr_servo_man_adjust_phase(-11600 + 1700);
 
   displayConfigINFO(&rtOpts);
 
+	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+	initDataClock(&rtOpts, &ptpClockDS);
+    	
   for(;;)
 	{
-		//wr_mon_debug();
-		if(button_pressed())
+		link_state = ep_link_up();
+		
+		link_went_up = !prev_link_state && link_state;
+		prev_link_state = link_state;
+		
+		if(link_went_up)
 		{
-      mprintf("button pressed\n");
-		 	enable_tracking = 1-enable_tracking;
-		 	wr_servo_enable_tracking(enable_tracking);
-		}	
+			uint32_t dtxm, drxm;
+			TRACE_DEV("LINK UP\n");
+//			toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
+	
+		}
+
+			//wr_mon_debug();
+			if(button_pressed())
+			{
+			 	enable_tracking = 1-enable_tracking;
+			 	wr_servo_enable_tracking(enable_tracking);
+			}	
 	
     //mprintf("before state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
-	  protocol_nonblock(&rtOpts, ptpPortDS);
+		  protocol_nonblock(&rtOpts, ptpPortDS);
     //mprintf("after state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
-	  update_rx_queues();
-	  timer_delay(10);
+		  update_rx_queues();
+		  timer_delay(10);
 	}
   
 }

@@ -18,4 +18,6 @@ void uart_write_byte(unsigned char x)
 {
 	while(uart->SR & UART_SR_TX_BUSY);
 	uart->TDR = x;
+	if(x == '\n')
+		uart_write_byte('\r');
 }

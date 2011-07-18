@@ -78,6 +78,8 @@ void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
   cyc_after = ppsg_readl(PPSG_REG_CNTR_NSEC) & 0xfffffff;
   } while (cyc_after < cyc_before);
 
+	delay(100000);
+
   if(utc) *utc = utc_lo;
   if(cntr_nsec) *cntr_nsec = cyc_after;
 }
