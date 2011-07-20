@@ -7,7 +7,7 @@ PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF 
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
 	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
-PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=32
+PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0x2804
 
 OBJS_PTPD = $D/PTPWRd/arith.o
 OBJS_PTPD += $D/PTPWRd/bmc.o
@@ -30,7 +30,7 @@ LDFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 OBJS_PLATFORM=
 else
 CROSS_COMPILE ?= /opt/gcc-lm32/bin/lm32-elf-
-CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled -DPTPD_TRACE_MASK=0x2804
+CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 
 ####################################################################
 ## Select here WR_MASTER (primary clock) or WR_SLAVE mode of WRPC ##
