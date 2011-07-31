@@ -81,7 +81,7 @@ void silly_minic_test()
 	memset(buf_hdr+6, 0, 6);
 	buf_hdr[12] = 0xc0;
 	buf_hdr[13] = 0xef;
-	
+
 	minic_tx_frame(buf_hdr, buf, 64, buf);
 	mprintf("Send\n");
 	timer_delay(1000);
@@ -94,14 +94,14 @@ void test_transition()
 {
 
     int phase = 0;
-    
+
    softpll_enable();
    while(!softpll_check_lock()) timer_delay(1000);
 
     for(;;)
     {	struct hw_timestamp hwts;
         uint8_t buf_hdr[18], buf[128];
-	
+
 	if(minic_rx_frame(buf_hdr, buf, 128, &hwts) > 0)
 	{
 	    printf("phase %d ahead %d\n", phase, hwts.ahead);
@@ -130,7 +130,7 @@ int main(void)
 	int rx, tx;
 	int link_went_up, link_went_down;
 	int prev_link_state= 0, link_state;
-	
+
   int16_t ret;
 
 	uart_init();
@@ -158,20 +158,20 @@ int main(void)
 
 	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
 	initDataClock(&rtOpts, &ptpClockDS);
-    	
+
   for(;;)
 	{
 		link_state = ep_link_up();
-		
+
 		link_went_up = !prev_link_state && link_state;
 		prev_link_state = link_state;
-		
+
 		if(link_went_up)
 		{
 			uint32_t dtxm, drxm;
 			TRACE_DEV("LINK UP\n");
 //			toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
-	
+
 		}
 
 			//wr_mon_debug();
@@ -179,15 +179,15 @@ int main(void)
 			{
 			 	enable_tracking = 1-enable_tracking;
 			 	wr_servo_enable_tracking(enable_tracking);
-			}	
-	
+			}
+
     //mprintf("before state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
 		  protocol_nonblock(&rtOpts, ptpPortDS);
     //mprintf("after state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
 		  update_rx_queues();
 		  timer_delay(10);
 	}
-  
+
 }
 
 
