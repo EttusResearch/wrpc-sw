@@ -4,6 +4,7 @@
 int mprintf(char const *format, ...);
 
 void uart_init();
-void uart_write_byte(unsigned char x);
-  
+void uart_write_byte(int b);
+void uart_write_string(char *s);
+
 #endif
