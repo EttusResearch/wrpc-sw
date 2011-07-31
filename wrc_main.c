@@ -135,6 +135,8 @@ int main(void)
 
 	uart_init();
 
+	uart_write_string(__FILE__ " is up (compiled on "
+			  __DATE__ " " __TIME__ ")\n");
 	ep_init(mac_addr);
 	ep_enable(1, 1);
 
