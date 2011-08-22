@@ -10,12 +10,12 @@ STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
 
-all: zpu-loader genraminit vuart_console
+all: lm32-loader genraminit vuart_console
 
-OBJS_LOADER = zpu-loader.o rr_io.o
+OBJS_LOADER = lm32-loader.o rr_io.o
 
-zpu-loader:	$(OBJS_LOADER)
-				${CC} -o zpu-loader $(OBJS_LOADER)
+lm32-loader:	$(OBJS_LOADER)
+				${CC} -o lm32-loader $(OBJS_LOADER)
 				
 genraminit: genraminit.o
 				${CC} -o genraminit genraminit.o
