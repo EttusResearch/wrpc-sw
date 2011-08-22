@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
 
+#include <stdarg.h>
+
 #include "gpio.h"
 #include "uart.h"
 #include "endpoint.h"
@@ -125,69 +127,160 @@ int button_pressed()
 
 int enable_tracking = 1;
 
-int main(void)
+void wrc_initialize()
 {
-	int rx, tx;
-	int link_went_up, link_went_down;
-	int prev_link_state= 0, link_state;
-	
-  int16_t ret;
-
+	int ret;
 	uart_init();
 
+	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
 	ep_init(mac_addr);
 	ep_enable(1, 1);
-
 
 	minic_init();
 	pps_gen_init();
 
 	netStartup();
 
-//    mi2c_init();
-//    mi2c_scan();
+	gpio_dir(GPIO_PIN_BTN1, 0);
+	gpio_dir(GPIO_PIN_LED_LINK, 1);
+	gpio_out(GPIO_PIN_LED_LINK, 0);
+	gpio_dir(GPIO_PIN_LED_STATUS, 1);
 
-  gpio_dir(GPIO_PIN_BTN1, 0);
+	wr_servo_man_adjust_phase(-11600 + 1700);
 
-//	softpll_enable();
-//	for(;;) softpll_check_lock();
-
-  wr_servo_man_adjust_phase(-11600 + 1700);
-
-  displayConfigINFO(&rtOpts);
+	displayConfigINFO(&rtOpts);
 
 	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
 	initDataClock(&rtOpts, &ptpClockDS);
-    	
-  for(;;)
-	{
-		link_state = ep_link_up();
-		
-		link_went_up = !prev_link_state && link_state;
-		prev_link_state = link_state;
-		
-		if(link_went_up)
-		{
-			uint32_t dtxm, drxm;
-			TRACE_DEV("LINK UP\n");
-//			toState(PTP_INITIALIZING, &rtOpts, ptpPortDS);
-	
-		}
+}
 
-			//wr_mon_debug();
-			if(button_pressed())
-			{
-			 	enable_tracking = 1-enable_tracking;
-			 	wr_servo_enable_tracking(enable_tracking);
-			}	
+#define LINK_UP 1
+#define LINK_DOWN 2
+
+int wrc_check_link()
+{
+	static int prev_link_state = -1;
+	int link_state = ep_link_up();
+	int rv = 0;
+
+	if(!prev_link_state && link_state)
+	{
+		TRACE_DEV("Link up.\n");
+		gpio_out(GPIO_PIN_LED_LINK, 1);
+		rv = LINK_UP;
+	} else if(prev_link_state && !link_state)
+	{
+		TRACE_DEV("Link down.\n");
+		gpio_out(GPIO_PIN_LED_LINK, 0);
+		rv = LINK_DOWN;
+	} 
+	prev_link_state = link_state;
 	
-    //mprintf("before state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
-		  protocol_nonblock(&rtOpts, ptpPortDS);
-    //mprintf("after state=%d, wrState=%d\n", ptpPortDS->portState, ptpPortDS->wrPortState);
-		  update_rx_queues();
-		  timer_delay(10);
+	return rv;
+}
+
+int wrc_extra_debug = 0;
+int wrc_gui_mode = 0;
+
+void wrc_debug_printf(int subsys, const char *fmt, ...)
+{
+	va_list ap;
+	
+	if(wrc_gui_mode) return;
+	
+	va_start(ap, fmt);
+	
+	if(wrc_extra_debug || (!wrc_extra_debug && (subsys & TRACE_SERVO)))
+	 	vprintf(fmt, ap);
+	
+	va_end(ap);
+}
+
+static int wrc_enable_tracking = 1;
+int wrc_man_phase = 0;
+
+void wrc_handle_input()
+{
+ 	if(uart_poll())
+ 	{
+ 		int x = uart_read_byte();
+ 		
+ 		switch(x)
+ 		{
+ 		 	case 'g':
+ 		 		wrc_gui_mode = 1 - wrc_gui_mode;
+ 		 		if(!wrc_gui_mode)
+ 		 		{
+ 		 			m_term_clear();
+ 		 			wrc_debug_printf(0, "Exiting GUI mode\n");
+ 		 		}
+ 		 	break;
+ 		 	
+ 		 	case 'd':
+ 		 		wrc_extra_debug =  1 - wrc_extra_debug;
+
+				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
+				break;
+ 		 		
+ 		 	
+ 		 	case 't':
+ 		 		wrc_enable_tracking = 1 - wrc_enable_tracking;
+			 	wr_servo_enable_tracking(wrc_enable_tracking);
+
+				wrc_debug_printf(0,"Phase tracking %s.\n", wrc_enable_tracking ? "enabled" : "disabled");
+				break;
+
+			case '+':
+			case '-':
+				wrc_man_phase += (x=='+' ? 100 : -100);
+				wrc_debug_printf(0,"Manual phase adjust: %d\n", wrc_man_phase);
+				wr_servo_man_adjust_phase(wrc_man_phase);
+				break;
+
+                      
+ 		 		
+ 		}
+ 	}
+}
+
+int dupa(int a)
+{
+ 	return a;
+}
+
+extern volatile int irq_cnt;
+
+int main(void)
+{
+	int rx, tx;
+	int link_went_up, link_went_down;
+	int prev_link_state= 0, link_state;
+	
+	int16_t ret;
+
+	wrc_initialize();
+	softpll_enable();
+	for(;;)
+	{
+		wrc_check_link();
+		wrc_handle_input();
+		
+		if(wrc_gui_mode)
+			wrc_mon_gui();
+			
+//		printf("irq_cnt %d sp %x\n", dupa(irq_cnt), _get_sp());
+/*		if(button_pressed())
+		{
+		 	enable_tracking = 1-enable_tracking;
+		 	wr_servo_enable_tracking(enable_tracking);
+		}	
+	                                          */
+		protocol_nonblock(&rtOpts, ptpPortDS);
+		update_rx_queues();
+//		softpll_check_lock();
+		timer_delay(10);                      
+
 	}
-  
 }
 
 
