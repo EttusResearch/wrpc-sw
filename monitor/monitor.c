@@ -3,7 +3,7 @@
 #include "hal_exports.h"
 
 extern ptpdexp_sync_state_t cur_servo_state;
-
+extern int wrc_man_phase;
 #define C_DIM 0x80                                                                                                    
 #define C_WHITE 7
 
@@ -20,11 +20,13 @@ int64_t abs64(int64_t t)
 
 
 
-int wr_mon_debug(void)
+
+int wrc_mon_gui(void)
 {
   static char* slave_states[] = {"Uninitialized", "SYNC_UTC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
   static uint32_t last = 0;
   hexp_port_state_t ps;
+  int tx, rx;
     
   if(timer_get_tics() - last < 1000)
     return 0;
@@ -33,18 +35,20 @@ int wr_mon_debug(void)
 
   m_term_clear();
 
-  m_pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 0.1 **** pre-alpha version ****");
+  m_pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 0.2");
+  m_pcprintf(2, 1, C_GREY, "g = exit, t = enable/disable phase tracking, +/- = increase/decrease phase by 100ps");
 
   /*show_ports*/
   halexp_get_port_state(&ps, NULL);
-  m_pcprintf(3, 1, C_BLUE, "Link status:");
+  m_pcprintf(4, 1, C_BLUE, "Link status:");
 
-  m_pcprintf(5, 1, C_WHITE, "%s: ", "wru1");
-  if(ps.up)  m_cprintf(C_GREEN, "Link up    "); else  m_cprintf(C_RED, "Link down  ");
+  m_pcprintf(6, 1, C_WHITE, "%s: ", "wru1");
+  if(ps.up)  m_cprintf(C_GREEN, "Link up   "); else  m_cprintf(C_RED, "Link down ");
 
 	if(ps.up)
 	{
-  m_cprintf(C_GREY, "mode: ");
+	 minic_get_stats(&tx, &rx);
+	 m_cprintf(C_GREY, "(RX: %d, TX: %d), mode: ", rx, tx);
 
   switch(ps.mode)
   {   
@@ -79,8 +83,12 @@ int wr_mon_debug(void)
   m_cprintf(C_GREY, "Clock offset:              "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_offset));
   m_cprintf(C_GREY, "Phase setpoint:            "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_setpoint));
   m_cprintf(C_GREY, "Skew:                      "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_skew));
-     }
+  m_cprintf(C_GREY, "Manual phase adjustment:   "); m_cprintf(C_WHITE, "%d ps\n", (int32_t)(wrc_man_phase));
 
+
+    }
+
+ m_cprintf(C_GREY, "--");
 
   return 0;
 }
