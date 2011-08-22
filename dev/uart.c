@@ -21,3 +21,13 @@ void uart_write_byte(unsigned char x)
 	if(x == '\n')
 		uart_write_byte('\r');
 }
+
+int uart_poll()
+{
+ 	return uart->SR & UART_SR_RX_RDY;
+}
+
+int uart_read_byte()
+{
+ 	return uart ->RDR & 0xff;
+}
