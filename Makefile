@@ -7,7 +7,7 @@ PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF 
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
 	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
-PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0x2804
+PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=TRACE_SERVO
 
 OBJS_PTPD = $D/PTPWRd/arith.o
 OBJS_PTPD += $D/PTPWRd/bmc.o
@@ -56,7 +56,7 @@ all: 		$(OBJS)
 				$(SIZE) -t $(OBJS)
 				${CC} -o $(OUTPUT).elf $(OBJS) $(LDFLAGS) 
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
-#				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
+				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
 
 clean:	
@@ -66,7 +66,7 @@ clean:
 				${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $^ -o $@
 
 load:	all
-		./tools/zpu-loader $(OUTPUT).bin
+		./tools/lm32-loader $(OUTPUT).bin
 
 tools:
 			make -C tools
