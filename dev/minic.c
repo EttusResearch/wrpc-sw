@@ -49,6 +49,8 @@ struct wr_minic {
   int synced;
   int syncing_counters;
   int iface_up;
+  
+  int tx_count, rx_count;
 
   uint32_t cur_rx_desc;
 };
@@ -92,12 +94,15 @@ void minic_init()
 {
     minic_writel(MINIC_REG_EIC_IDR, MINIC_EIC_IDR_RX);
     minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
-  minic.rx_base = dma_rx_buf;
-  minic.rx_size = sizeof(dma_rx_buf);
+	minic.rx_base = dma_rx_buf;
+	minic.rx_size = sizeof(dma_rx_buf);
 
   minic.tx_base = dma_tx_buf;
   minic.tx_size = sizeof(dma_tx_buf);
 
+	minic.tx_count = 0;
+	minic.rx_count = 0;
+	
 
   minic_new_rx_buffer();
   minic_writel(MINIC_REG_EIC_IER, MINIC_EIC_IER_RX);
@@ -178,25 +183,14 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	    
 	  hwts->nsec = counter_r * 8;
 	  
-//	  TRACE_DEV("TS minic_rx_frame: %d.%d\n", hwts->utc, hwts->nsec);
 	}
 
       n_recvd = (buf_size < payload_size ? buf_size : payload_size);
-      
-      /* FIXME: VLAN support */
+      TRACE_DEV("minic_rx_frame [%d bytes] TS: %d.%d\n", n_recvd, hwts->utc, hwts->nsec);
+	  minic.rx_count++;
 
       memcpy(hdr, (void*)minic.rx_head + 4, ETH_HEADER_SIZE);
-      //TRACE_DEV("%s: packet: ", __FUNCTION__);
-      //for(i=0; i<ETH_HEADER_SIZE; i++) TRACE_DEV("%x ", *(hdr+i));
       memcpy(payload, (void*)minic.rx_head + 4 + ETH_HEADER_SIZE, n_recvd - ETH_HEADER_SIZE);
-      //for(i=0; i<n_recvd-ETH_HEADER_SIZE; i++) TRACE_DEV("%x ", *(payload+i));
-
-/*            for(i=0;i<n_recvd-14;i++)
-	TRACE_DEV("%x ", payload[i]);
-	TRACE_DEV("---\n");
-  */
-  
-//	TRACE_DEV("nwords_avant: %d\n", num_words);
   
       minic.rx_head += num_words;
     } else    { // RX_DESC_ERROR
@@ -230,7 +224,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
   minic_new_tx_buffer();
 
 
-
+  TRACE_DEV("minic_tx_frame: head %x size %d\n", minic.tx_head, size);
   memset(minic.tx_head, 0x0, size + 16);
   memset((void*)minic.tx_head + 4, 0, size < 60 ? 60 : size);
   memcpy((void*)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
@@ -293,11 +287,18 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       hwts->ahead = 0;
       hwts->nsec = counter_r * 8;
 
-	 // TRACE_DEV("TS minic_tx_frame: %d.%d\n", hwts->utc, hwts->nsec);
+	  TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d\n", size, hwts->utc, hwts->nsec);
+	  minic.tx_count++;
 
     }
 
   tx_oob_val++;
 
   return size;
+}
+
+void minic_get_stats(int *tx_frames, int *rx_frames)
+{
+ 	*tx_frames = minic.tx_count;
+ 	*rx_frames = minic.rx_count;
 }
