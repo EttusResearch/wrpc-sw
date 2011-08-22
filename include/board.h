@@ -13,8 +13,8 @@
 
 #define UART_BAUDRATE 115200ULL /* not a real UART */
 
-#define GPIO_PIN_LED1 0  
-#define GPIO_PIN_LED2 1
+#define GPIO_PIN_LED_LINK 0  
+#define GPIO_PIN_LED_STATUS 1
 #define GPIO_PIN_SCL_OUT 2
 #define GPIO_PIN_SDA_OUT 3
 #define GPIO_PIN_SDA_IN 4 
