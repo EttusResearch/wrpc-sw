@@ -3,7 +3,9 @@
 
 #include <hw/softpll_regs.h>
 
-#define TAG_BITS 17
+#include "gpio.h"
+
+#define TAG_BITS 20
 
 #define HPLL_N 14
 
@@ -119,6 +121,8 @@ int eee, dve;
 
 static volatile struct softpll_state pstate;
 
+volatile int irq_cnt = 0;
+volatile int sp_limit = 0xffff;
 void _irq_entry()
 {
 	int dv;
@@ -126,7 +130,11 @@ void _irq_entry()
 	int tag_fb_ready = 0;
 	int tag_ref;
 	int tag_fb;
+//	int sp = _get_sp();
 	
+	irq_cnt ++;
+	
+	gpio_out(GPIO_PIN_LED_STATUS, 1);
 	if(SPLL->CSR & READY_REF)
 	{
 	 	tag_ref = SPLL->TAG_REF;
@@ -336,6 +344,8 @@ void _irq_entry()
 				pstate.d_locked = 1;
  	}
 
+	gpio_out(GPIO_PIN_LED_STATUS, 0);
+	
     clear_irq();
 }
 
@@ -361,7 +371,6 @@ void softpll_enable()
 	
 		  	
 	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);// | SPLL_CSR_TAG_EN_W(CHAN_REF);
-;
 	SPLL->EIC_IER = 1;
 	
 	enable_irq();
@@ -374,10 +383,9 @@ void softpll_enable()
 
 int softpll_check_lock()
 {
-/*	TRACE_DEV("LCK h:f%d l%d d: f%d l%d err %d                %d dac %d\n", 
-	pstate.h_freq_mode ,pstate.h_locked,
-	pstate.d_freq_mode, pstate.d_locked,
-	pstate.h_tag, pstate.h_tag & 0x3fff, pstate.h_dac_val);*/
+	TRACE_DEV("[softpll] Helper: lock %d freqmode %d, Main: lock %d freqmode %d\n", 
+	pstate.h_locked, pstate.h_freq_mode,
+	pstate.d_locked,pstate.d_freq_mode); 
 	
 	int lck = pstate.h_locked && pstate.d_locked;
 	

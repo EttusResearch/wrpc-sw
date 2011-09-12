@@ -35,21 +35,29 @@ int rst_zpu(int spec, int rst);
 int copy(int spec, int srcbin, unsigned int baseaddr);
 int verify(int spec, int srcbin, unsigned int baseaddr);
 int conv_endian(int x);
+int dump_to_file(int spec, char *filename, unsigned int baseaddr);
 
 int main(int argc, char **argv)
 {
   unsigned int addr = 0x80000;
   int spec, srcbin;
   unsigned int bytes;
+  char *dumpfile =NULL;
 
   if(argc<2)
   {
     fprintf(stderr, "No parameters specified !\n");
-    fprintf(stderr, "Usage:\n\t./loadsw <binary file> [base address]\n");
+    fprintf(stderr, "Usage:\n\t./%s [-r] <binary file> [base address]\n", argv[0]);
+    fprintf(stderr, "-r options dumps the memory contents to a given file.\n\n");
     return -1;
   }
-  if(argc==3)
+
+  if(!strcmp(argv[1], "-r"))
+   		dumpfile = argv[2];
+	else if(argc==3)
     addr = atoi(argv[2]);
+   		
+
 
   spec = open(DEVNAME, O_RDWR);
   if(spec < 0)
@@ -57,6 +65,12 @@ int main(int argc, char **argv)
     perror("Could not open device");
     return -1;
   }
+
+	if(dumpfile)
+	{
+	 	dump_to_file(spec, dumpfile, addr);
+	 	return 0;
+	}
 
   srcbin = open(argv[1], O_RDONLY);
   if(srcbin < 0)
@@ -123,6 +137,38 @@ int copy(int spec, int srcbin, unsigned int baseaddr)
 
   return bytes;
 }
+
+
+int dump_to_file(int spec, char *filename, unsigned int baseaddr)
+{
+  unsigned int bytes, word;
+  struct rr_iocmd iocmd;
+  int ret;
+  FILE *f= fopen(filename,"wb");
+  
+  if(!f)
+  return -1;
+
+  bytes=0;
+  while(bytes < 0x10000)
+  {
+
+    iocmd.address = baseaddr+bytes;
+  //  bytes += ret;                     //address shift for next write
+    iocmd.address |= __RR_SET_BAR(0); //bar0
+    iocmd.datasize = 4;
+    iocmd.data32 = 0;
+    ret = ioctl(spec, RR_READ, &iocmd);
+	word = conv_endian(iocmd.data32);
+	fwrite(&word, 4, 1, f);
+	
+	bytes+=4;
+
+  }
+
+	fclose(f);
+}
+
 
 int verify(int spec, int srcbin, unsigned int baseaddr)
 {

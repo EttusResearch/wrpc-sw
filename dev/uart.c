@@ -30,3 +30,13 @@ void uart_write_string(char *s)
 	while (*s)
 		uart_write_byte(*(s++));
 }
+
+int uart_poll()
+{
+ 	return uart->SR & UART_SR_RX_RDY;
+}
+
+int uart_read_byte()
+{
+ 	return uart ->RDR & 0xff;
+}
