@@ -246,11 +246,6 @@ void wrc_handle_input()
  	}
 }
 
-int dupa(int a)
-{
- 	return a;
-}
-
 extern volatile int irq_cnt;
 
 int main(void)
@@ -271,7 +266,6 @@ int main(void)
 		if(wrc_gui_mode)
 			wrc_mon_gui();
 			
-//		printf("irq_cnt %d sp %x\n", dupa(irq_cnt), _get_sp());
 /*		if(button_pressed())
 		{
 		 	enable_tracking = 1-enable_tracking;
