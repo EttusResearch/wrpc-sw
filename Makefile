@@ -32,11 +32,18 @@ else
 CROSS_COMPILE ?= /opt/gcc-lm32/bin/lm32-elf-
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 
-####################################################################
-## Select here WR_MASTER (primary clock) or WR_SLAVE mode of WRPC ##
-####################################################################
-#CFLAGS_PLATFORM += -DWRPC_MASTER
+########################################################################
+## Select WR_MASTER (primary clock) or WR_SLAVE by setting the WRMODE ##
+## variable with make execution eg.																		##
+## 		> make WRMODE=master			  																		##
+## by default Slave is built																				  ##
+########################################################################
+WRMODE = slave
+ifeq ($(WRMODE), master)
+CFLAGS_PLATFORM += -DWRPC_MASTER
+else
 CFLAGS_PLATFORM += -DWRPC_SLAVE
+endif
 
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
 OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o
