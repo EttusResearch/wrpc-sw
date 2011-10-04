@@ -49,6 +49,9 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T targ
 OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o
 endif
 
+# Comment this out if you don't want debugging
+OBJS_PLATFORM+=target/lm32/debug.o
+
 
 CC=$(CROSS_COMPILE)gcc
 OBJCOPY=$(CROSS_COMPILE)objcopy
