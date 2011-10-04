@@ -88,8 +88,9 @@
         .section    .boot, "ax", @progbits
 	
         .global	_start  
+        .weak _debug_unit
 _start: 
-	   
+_debug_unit:	   
         .global _reset_handler
         .type 	_reset_handler, @function
 _reset_handler:
@@ -127,6 +128,12 @@ _interrupt_handler:
 _crt0:
     /* Clear r0 */
     xor     r0, r0, r0
+
+    /* Setup the debug ROM if it's linked in */
+    mvhi    r1, hi(_debug_unit)
+    ori     r1, r1, lo(_debug_unit)
+    wcsr    DEBA
+
     /* Setup stack and global pointer */
     mvhi    sp, hi(_fstack)
     ori     sp, sp, lo(_fstack)
