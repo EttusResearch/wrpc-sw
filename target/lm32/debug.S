@@ -10,6 +10,7 @@
 
 .section    .boot, "ax", @progbits
 .global     _debug_unit
+.align      256
 
 _debug_unit:
 _reset_handler:
