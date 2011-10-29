@@ -18,12 +18,14 @@
 #define CHAN_FB 8
 #define CHAN_REF 4
 #define CHAN_PERIOD 2
-//#define CHAN_HPLL 1
+#define CHAN_AUX 1
 
 #define READY_FB (8<<4)
 #define READY_REF (4<<4)
 #define READY_PERIOD (2<<4)
-//#define READY_HPLL (1<<4)
+#define READY_AUX (1<<4)
+     
+#define SETPOINT_FRACBITS 1
              
 static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
 
@@ -113,7 +115,7 @@ struct spll_helper_state {
  	int freq_mode;
 };
 
-struct dmpll_state {
+struct spll_dmpll_state {
  	spll_pi_t pi_freq, pi_phase;
  	spll_lock_det_t ld_freq, ld_phase;
  	int setpoint;
@@ -181,15 +183,15 @@ void helper_init(struct spll_helper_state *s)
 	/* Phase branch PI controller */
 	s->pi_phase.y_min = 5;
 	s->pi_phase.y_max = 65530;
-   	s->pi_phase.kp = (int)(2.0 * 32.0 * 4.0);
-	s->pi_phase.ki = (int)(0.05 * 32.0 * 0.1);
+   	s->pi_phase.kp = (int)(2.0 * 32.0 * 16.0);
+	s->pi_phase.ki = (int)(0.05 * 32.0 * 3.0);
 	s->pi_phase.anti_windup = 0;
 	s->pi_phase.bias = 32000;
 	
 	/* Phase branch lock detection */
 	s->ld_phase.threshold = 500;
-	s->ld_phase.lock_samples = 1000;
-	s->ld_phase.delock_samples = 990;
+	s->ld_phase.lock_samples = 10000;
+	s->ld_phase.delock_samples = 9900;
 	
 	s->freq_mode = 1;
 	s->f_setpoint = 16;
@@ -200,8 +202,53 @@ void helper_init(struct spll_helper_state *s)
 	ld_init(&s->ld_phase);
 }
 
+void main_init(struct spll_dmpll_state *s)
+{
+	/* Frequency branch PI controller */
+	s->pi_freq.y_min = 5;
+	s->pi_freq.y_max = 65530;
+	s->pi_freq.anti_windup = 0;
+	s->pi_freq.kp = 100;
+	s->pi_freq.ki = 600;
+	s->pi_freq.bias = 32000;
+
+	/* Freqency branch lock detection */
+	s->ld_freq.threshold = 500;
+	s->ld_freq.lock_samples = 1000;
+	s->ld_freq.delock_samples = 990;
+	
+	/* Phase branch PI controller */
+	s->pi_phase.y_min = 5;
+	s->pi_phase.y_max = 65530;
+   	s->pi_phase.kp = 1304;
+	s->pi_phase.ki = 10;
+	s->pi_phase.anti_windup = 0;
+	s->pi_phase.bias = 32000;
+	
+	/* Phase branch lock detection */
+	s->ld_phase.threshold = 500;
+	s->ld_phase.lock_samples = 1000;
+	s->ld_phase.delock_samples = 990;
+	
+
+	s->freq_mode = 1;
+ 	s->setpoint=0;
+	s->phase_shift=0;
+	s->tag_ref_d0 = -1;
+	s->tag_fb_d0 = -1;
+	s->period_ref = 0 ; 	
+	s->period_fb = 0 ; 	
+
+	pi_init(&s->pi_freq);
+	ld_init(&s->ld_freq);
+	pi_init(&s->pi_phase);
+	ld_init(&s->ld_phase);
+
+
+}
 
 static struct spll_helper_state helper;
+static struct spll_dmpll_state main, aux;
 static volatile int irq_cnt = 0;
 
 #define HELPER_PERIOD_BITS 8
@@ -232,7 +279,7 @@ static inline void helper_irq(struct spll_helper_state *hpll, int tag_ref)
 			ld_init(&hpll->ld_phase);
 			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_REF);
 		}
-	} else { 	/* HPLL: active phase branch */
+	} else if (tag_ref >= 0) { 	/* HPLL: active phase branch */
 		if(hpll->p_setpoint < 0)
 		{
 		 	hpll->p_setpoint = tag_ref;
@@ -245,8 +292,85 @@ static inline void helper_irq(struct spll_helper_state *hpll, int tag_ref)
 		y = pi_update(&hpll->pi_phase, err);
 		SPLL->DAC_HPLL = y;
 		
-		ld_update(&hpll->ld_phase, err);
+		if(ld_update(&hpll->ld_phase, err))
+		{
+		  	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_FB | CHAN_REF);
+		};
 	}
+}
+
+void dmpll_irq(struct spll_dmpll_state *dmpll, int tag_ref, int tag_fb)
+{
+	int err, tmp, y, fb_ready;
+	
+	fb_ready = (tag_fb >= 0 ? 1 : 0);
+
+	if(dmpll->freq_mode)
+	{
+		if(tag_ref >= 0)
+		{
+			if(dmpll->tag_ref_d0 >= 0)
+			{
+			  	tmp = tag_ref - dmpll->tag_ref_d0;
+			 	if(tmp < 0) 
+			 		tmp += (1<<TAG_BITS)-1;
+			 	dmpll->period_ref = tmp;
+			 }
+			 dmpll->tag_ref_d0 = tag_ref;
+		}
+
+		if(tag_fb >= 0)
+		{
+			if(dmpll->tag_fb_d0 > 0)
+			{
+			 	tmp  = tag_fb - dmpll->tag_fb_d0;
+			 	if(tmp < 0) 
+			 		tmp += (1<<TAG_BITS)-1;
+			 	dmpll->period_fb = tmp;
+			}
+			dmpll->tag_fb_d0 = tag_fb;
+    	}
+    	
+    	err = dmpll->period_ref - dmpll->period_fb;
+		y = pi_update(&dmpll->pi_freq, err);
+		
+ 		SPLL->DAC_DMPLL = y;
+		if(ld_update(&dmpll->ld_freq, err))
+		{
+	 	/* frequency has been stable for quite a while? switch to phase branch */
+			dmpll->freq_mode = 0;
+			dmpll->pi_phase.bias = y;//dmpll->pi_freq.bias;
+			pi_init(&dmpll->pi_phase);
+			ld_init(&dmpll->ld_phase);
+	
+			dmpll->setpoint = 0;
+			dmpll->phase_shift = 0;
+   		}
+    } else {
+    
+    	if(tag_ref >= 0) 
+ 			dmpll->tag_ref_d0 = tag_ref;
+ 		
+ 		tag_ref = dmpll->tag_ref_d0 ;
+ 		tag_fb += (dmpll->setpoint >> SETPOINT_FRACBITS);  
+ 		tag_fb &= (1<<TAG_BITS) - 1;
+ 		
+ 		if(fb_ready)
+		{
+			while (tag_ref > 16384 ) tag_ref-=16384; /* fixme */
+			while (tag_fb > 16384  ) tag_fb-=16384;
+			
+ 		    err = tag_ref - tag_fb;
+ 		    y = pi_update(&dmpll->pi_phase, err);
+			SPLL->DAC_DMPLL = y;
+			ld_update(&dmpll->ld_phase, err);
+	 		if(dmpll->setpoint < dmpll->phase_shift)
+		 		dmpll->setpoint++;
+ 			else if(dmpll->setpoint > dmpll->phase_shift)
+ 				dmpll->setpoint--;
+		} 	
+	}
+
 }
 
 void _irq_entry()
@@ -267,166 +391,9 @@ void _irq_entry()
 	
 	helper_irq(&helper, tag_ref);
 	
-
-#if 0
-	/* HPLL: active phase branch */
-	} else if (tag_ref_ready) {
-	    if(pstate.h_p_setpoint < 0) 		/* we don't have yet any phase samples? */
-	     	pstate.h_p_setpoint = tag_ref; // & 0x3fff;
-	 	else {
-	 		int phase_err;
-	 		
-//	 		if(tag_ref > 16384) tag_ref -= 16384;
-//			tag_ref &x7fff;
-
-         	phase_err = tag_ref - pstate.h_p_setpoint;
-
-			if(pstate.h_dac_val > 0 && pstate.h_dac_val < 65530)
-			pstate.h_i += phase_err;
-			
-			pstate.h_p_setpoint += 16384;
-			pstate.h_p_setpoint &= ((1<<TAG_BITS)-1);
-
-			dv = ((pstate.h_i * pll_cfg.hpll_p_ki + phase_err * pll_cfg.hpll_p_kp) >> PI_FRACBITS) + pstate.h_dac_bias;
-                   
-            if(dv >= 65530) dv = 65530;
-			if(dv < 0) dv = 0;
-
-            pstate.h_dac_val = dv;
-            SPLL->DAC_HPLL = dv; /* Update DAC */
-
-            pstate.h_tag = tag_ref;
-            
-            if(abs(phase_err) >= pll_cfg.hpll_delock_threshold && pstate.h_locked)
-            {
-            	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD); /* fall back to freq mode */
-             	pstate.h_locked = 0;
-             	pstate.h_freq_mode = 1;
-            }
-            
-            if(abs(phase_err) <= pll_cfg.hpll_ld_p_threshold && !pstate.h_locked)
-            	pstate.h_lock_counter++;
-			else
-				pstate.h_lock_counter = 0;
-				
-			if(pstate.h_lock_counter == pll_cfg.hpll_ld_p_samples)
-			{
-#if 1
-				SPLL->CSR |= SPLL_CSR_TAG_EN_W(CHAN_FB); /* enable feedback channel and start DMPLL */
-				pstate.h_locked = 1;
-				pstate.d_tag_ref_d0 = -1;
-				pstate.d_tag_fb_d0 = -1;
-				pstate.d_freq_mode = 1;
-				pstate.d_p_setpoint = 0;
-				pstate.d_lock_counter = 0;
-				pstate.d_i = 0;
-				pstate.d_locked = 0;      
-#endif
-			}
-           
-		}
-	}
- 
-    /* DMPLL */
-	if(pstate.h_locked && pstate.d_freq_mode)
-	{
-		int freq_err;
-		if(tag_ref_ready)
-		{
-			if(pstate.d_tag_ref_d0 > 0)
-			{
-			  	int tmp  = tag_ref - pstate.d_tag_ref_d0;
-			 	if(tmp < 0) tmp += (1<<TAG_BITS)-1;
-			 	pstate.d_period_ref = tmp;
-			 }
-			 pstate.d_tag_ref_d0 = tag_ref;
-		}
-
-		if(tag_fb_ready)
-		{
-			if(pstate.d_tag_fb_d0 > 0)
-			{
-			 	int tmp  = tag_fb - pstate.d_tag_fb_d0;
-			 	if(tmp < 0) tmp += (1<<TAG_BITS)-1;
-			 	pstate.d_period_fb = tmp;
-			}
-			pstate.d_tag_fb_d0 = tag_fb;
-    	}
-    	
-    	freq_err = - pstate.d_period_fb + pstate.d_period_ref;
-
-    	pstate.d_freq_error = freq_err;
-    	
-    	pstate.d_i += freq_err;
-		dv = ((pstate.d_i * pll_cfg.dpll_f_ki + freq_err * pll_cfg.dpll_f_kp) >> PI_FRACBITS) + pll_cfg.dpll_dac_bias;
-		SPLL->DAC_DMPLL = dv;
-
-		if(abs(freq_err) <= pll_cfg.dpll_ld_threshold)
-			pstate.d_lock_counter++;
-		else
-			pstate.d_lock_counter=0;
-
-		/* frequency has been stable for quite a while? switch to phase branch */
-		if(pstate.d_lock_counter == pll_cfg.dpll_ld_samples)
-		{
-			pstate.d_freq_mode = 0;
-			pstate.d_dac_bias = dv;
-			pstate.d_i = 0;
-			pstate.d_lock_counter = 0;
-			pstate.d_tag_ref_ready = 0;
-			pstate.d_tag_fb_ready = 0;
-			pstate.d_p_setpoint = 0;
-		}
-    }
-
-	/* DMPLL phase-lock */
- 	if(pstate.h_locked && !pstate.d_freq_mode)
- 	{
- 		int phase_err = 0;
- 		 		
- 		if(tag_ref_ready)
- 			pstate.d_tag_ref_d0 = tag_ref;
- 		
- 		tag_ref = pstate.d_tag_ref_d0 ;
-
- 		tag_fb += pstate.d_p_setpoint;  // was tag_fb
- 		
- 		tag_fb &= (1<<TAG_BITS)-1;
- 		
- 		//if(tag_ref > (1<<TAG_BITS)) tag_ref -= (1<<TAG_BITS);
- 		//if(tag_ref < 0) tag_ref += (1<<TAG_BITS);
- 				
- 		if(tag_fb_ready)
-		{
-			while (tag_ref > 16384 ) tag_ref-=16384;
-			while (tag_fb > 16384  ) tag_fb-=16384;
-			
- 		    phase_err = tag_ref-tag_fb;
-
-    		pstate.d_i += phase_err;
-			dv = ((pstate.d_i * pll_cfg.dpll_p_ki + phase_err * pll_cfg.dpll_p_kp) >> PI_FRACBITS) + pll_cfg.dpll_dac_bias;
-			SPLL->DAC_DMPLL = dv;
-
- 		    eee=phase_err;
-		} 	
- 	
- 		if(pstate.d_p_setpoint < pstate.d_phase_shift)
-	 		pstate.d_p_setpoint++;
- 		else if(pstate.d_p_setpoint > pstate.d_phase_shift)
- 			pstate.d_p_setpoint--;
+	if(helper.ld_phase.locked)
+		dmpll_irq(&main, tag_ref, tag_fb);
 		
-		
-		if(abs(phase_err) <= pll_cfg.dpll_ld_threshold && !pstate.d_locked)
-            	pstate.d_lock_counter++;
-			else
-				pstate.d_lock_counter = 0;
-				
-			if(pstate.d_lock_counter == pll_cfg.dpll_ld_samples)
-				pstate.d_locked = 1;
- 	}
-
-	gpio_out(GPIO_PIN_LED_STATUS, 0);
-#endif
 
     clear_irq();
 }
@@ -439,6 +406,7 @@ void softpll_enable()
  	disable_irq();
  	
  	helper_init(&helper);
+ 	main_init(&main);
 
 	SPLL->DAC_HPLL = 0;
 	SPLL->DEGLITCH_THR = 2000; 
@@ -454,28 +422,30 @@ void softpll_enable()
 
 int softpll_check_lock()
 {
-	TRACE_DEV("[softpll] Helper: lock %d freqmode %d x %d y %d\n", helper.ld_phase.locked, helper.freq_mode, helper.pi_freq.x, helper.pi_phase.y) ; 
 	
-/*nt lck = pstate.h_locked && pstate.d_locked;
+	int lck = !helper.freq_mode && helper.ld_phase.locked && !main.freq_mode && main.ld_phase.locked;
+
+	if(!lck) 
 	
-	if(lck && !prev_lck)
+		TRACE_DEV("%d%d%d%d\n", helper.freq_mode, helper.ld_phase.locked, main.freq_mode, main.ld_phase.locked) ; 
+	
+	if(lck && !prev_lck) {
 		TRACE_DEV("[softpll]: got lock\n");
-	else if (!lck && prev_lck)
-		TRACE_DEV("[softpll]: lost lock\n");*/
+	}else if (!lck && prev_lck)
+		TRACE_DEV("[softpll]: lost lock\n");
 
-//	prev_lck = lck;
-// 	return lck;
+ 	return lck;
 }
 
-int softpll_busy()
+int softpll_busy(int channel)
 {
-// 	return pstate.d_p_setpoint != pstate.d_phase_shift;
+ 	return main.setpoint != main.phase_shift;
 }
 
-void softpll_set_phase(int ps)
+void softpll_set_phase(int channel, int ps)
 {
-//	pstate.d_phase_shift = -(int32_t) ((int64_t)ps * 16384LL / 8000LL);
-//	TRACE_DEV("ADJdelta: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
+	main.phase_shift = -(int32_t) ((int64_t)ps * 16384LL / 8000LL) << SETPOINT_FRACBITS;
+	mprintf("PSSet: %d\n", main.phase_shift);
 }
 
 void softpll_disable()
