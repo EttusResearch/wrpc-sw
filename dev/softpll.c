@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "board.h"
 #include "irq.h"
 
@@ -23,6 +26,108 @@
 //#define READY_HPLL (1<<4)
              
 static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
+
+
+typedef struct {
+  	int ki, kp;
+  	int integrator;
+  	int bias;
+	int anti_windup;
+	int y_min;
+	int y_max;
+	int x,y;
+} spll_pi_t;
+
+static inline int pi_update(spll_pi_t *pi, int x)
+{
+	int i_new, y;
+	pi->x = x;
+	i_new = pi->integrator + x;
+	
+	y = ((i_new * pi->ki + x * pi->kp) >> PI_FRACBITS) + pi->bias;
+	
+    if(y < pi->y_min)
+    {
+       	y = pi->y_min;
+       	if((pi->anti_windup && (i_new > pi->integrator)) || !pi->anti_windup)
+       		pi->integrator = i_new;
+	} else if (y > pi->y_max) {
+       	y = pi->y_max;
+      	if((pi->anti_windup && (i_new < pi->integrator)) || !pi->anti_windup)
+       		pi->integrator = i_new;
+	} else
+		pi->integrator = i_new;
+
+    pi->y = y;
+    return y;
+   
+}
+
+static inline void pi_init(spll_pi_t *pi)
+{
+ 	pi->integrator = 0;
+}
+
+typedef struct {
+  	int lock_cnt;
+  	int lock_samples;
+  	int delock_samples;
+  	int threshold;
+  	int locked;
+} spll_lock_det_t;
+
+
+static inline int ld_update(spll_lock_det_t *ld, int y)
+{
+	if (abs(y) <= ld->threshold)
+	{
+		if(ld->lock_cnt < ld->lock_samples)
+			ld->lock_cnt++;
+		
+		if(ld->lock_cnt == ld->lock_samples)
+			ld->locked = 1;
+	} else {
+	 	if(ld->lock_cnt > ld->delock_samples)
+	 		ld->lock_cnt--;
+		
+		if(ld->lock_cnt == ld->delock_samples)
+		{
+		 	ld->lock_cnt=  0;
+		 	ld->locked = 0;
+		}
+	}
+	return ld->locked;
+}
+
+static void ld_init(spll_lock_det_t *ld)
+{
+ 	ld->locked = 0;
+ 	ld->lock_cnt = 0;
+}
+
+struct spll_helper_state {
+ 	spll_pi_t pi_freq, pi_phase;
+ 	spll_lock_det_t ld_freq, ld_phase;
+ 	int f_setpoint;
+ 	int p_setpoint;
+ 	int freq_mode;
+};
+
+struct dmpll_state {
+ 	spll_pi_t pi_freq, pi_phase;
+ 	spll_lock_det_t ld_freq, ld_phase;
+ 	int setpoint;
+ 	int freq_mode;
+
+ 	int tag_ref_d0;
+ 	int tag_fb_d0;
+ 	
+ 	int period_ref;
+ 	int period_fb;
+ 	
+ 	int phase_shift;
+};
+
 
 struct softpll_config {
 	int hpll_f_kp;
@@ -55,139 +160,115 @@ struct softpll_config {
 };	
 	
 	
-const struct softpll_config pll_cfg =
+	
+	
+void helper_init(struct spll_helper_state *s)
 {
-/* Helper PLL */
-28*32*16, 			// f_kp
-50*32*16,			// f_ki
-16,					// setpoint
-2000, 				// lock detect freq samples
-2, 					// lock detect freq threshold
-2.0*32*16,			// p_kp
-0.05*32*16,			// p_ki
-1000,				// lock detect phase samples
-1000,				// lock detect phase threshold
-2000,				// delock threshold
-32000,				// HPLL dac bias
+	
+	/* Frequency branch PI controller */
+	s->pi_freq.y_min = 5;
+	s->pi_freq.y_max = 65530;
+	s->pi_freq.anti_windup = 0;
+	s->pi_freq.kp = 28*32*16;
+	s->pi_freq.ki = 50*32*16;
+	s->pi_freq.bias = 32000;
 
-/* DMTD PLL */
+	/* Freqency branch lock detection */
+	s->ld_freq.threshold = 2;
+	s->ld_freq.lock_samples = 1000;
+	s->ld_freq.delock_samples = 990;
+	
+	/* Phase branch PI controller */
+	s->pi_phase.y_min = 5;
+	s->pi_phase.y_max = 65530;
+   	s->pi_phase.kp = (int)(2.0 * 32.0 * 4.0);
+	s->pi_phase.ki = (int)(0.05 * 32.0 * 0.1);
+	s->pi_phase.anti_windup = 0;
+	s->pi_phase.bias = 32000;
+	
+	/* Phase branch lock detection */
+	s->ld_phase.threshold = 500;
+	s->ld_phase.lock_samples = 1000;
+	s->ld_phase.delock_samples = 990;
+	
+	s->freq_mode = 1;
+	s->f_setpoint = 16;
 
-100,  				// f_kp
-600,                // f_ki
-
-1304,					// p_kp
-10,					// p_ki
-
-1000,					// lock detect samples
-500,					// lock detect threshold
-500,				// delock threshold
-32000,				// DPLL dac bias
-2000  				// deglitcher threshold
-};
-
-struct softpll_state {
- 	int h_lock_counter;
- 	int h_i;
- 	int h_dac_bias;
- 	int h_p_setpoint;
- 	int h_freq_mode;
- 	int h_locked;
- 	int h_dac_val;
- 	int h_freq_err;
- 	int h_tag;
- 	
-
-	int d_dac_bias;
- 	int d_tag_ref_d0;
- 	int d_tag_fb_d0;
- 	int d_tag_ref_ready;
- 	int d_tag_fb_ready;
- 	
- 	int d_period_ref;
- 	int d_period_fb;
- 	int d_freq_mode;
- 	int d_lock_counter;
- 	int d_freq_error;
- 	
- 	int d_i;
- 	
- 	int d_p_setpoint;
- 	int d_phase_shift;
- 	int d_locked;
-};
+	pi_init(&s->pi_freq);
+	ld_init(&s->ld_freq);
+	pi_init(&s->pi_phase);
+	ld_init(&s->ld_phase);
+}
 
 
-int eee, dve;
+static struct spll_helper_state helper;
+static volatile int irq_cnt = 0;
 
-static volatile struct softpll_state pstate;
+#define HELPER_PERIOD_BITS 8
 
-volatile int irq_cnt = 0;
-volatile int sp_limit = 0xffff;
+static inline void helper_irq(struct spll_helper_state *hpll, int tag_ref)
+{
+	int err, y;
+
+	/* HPLL: active frequency branch */
+	if(hpll->freq_mode)
+	{
+     	err = SPLL->PER_HPLL;
+
+		if (err & (1<<HELPER_PERIOD_BITS)) 
+			err |= ~ ((1<<HELPER_PERIOD_BITS) - 1); /* sign-extend the freq error */
+
+		err += hpll->f_setpoint;
+		y = pi_update(&hpll->pi_freq, err);
+
+		SPLL->DAC_HPLL = y;
+		
+		if(ld_update(&hpll->ld_freq, err))
+		{
+			hpll->freq_mode = 0;
+			hpll->p_setpoint = -1;
+			hpll->pi_phase.bias = y;
+			pi_init(&hpll->pi_phase);
+			ld_init(&hpll->ld_phase);
+			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_REF);
+		}
+	} else { 	/* HPLL: active phase branch */
+		if(hpll->p_setpoint < 0)
+		{
+		 	hpll->p_setpoint = tag_ref;
+		 	return;
+		}
+		err = tag_ref - hpll->p_setpoint;
+        hpll->p_setpoint += 16384;
+		hpll->p_setpoint &= ((1<<TAG_BITS)-1);
+
+		y = pi_update(&hpll->pi_phase, err);
+		SPLL->DAC_HPLL = y;
+		
+		ld_update(&hpll->ld_phase, err);
+	}
+}
+
 void _irq_entry()
 {
-	int dv;
-	int tag_ref_ready = 0;
-	int tag_fb_ready = 0;
-	int tag_ref;
-	int tag_fb;
-//	int sp = _get_sp();
+	volatile uint32_t csr;
+	int tag_ref = -1;
+	int tag_fb = -1;
 	
 	irq_cnt ++;
 	
-	gpio_out(GPIO_PIN_LED_STATUS, 1);
-	if(SPLL->CSR & READY_REF)
-	{
+	csr = SPLL->CSR;
+	
+	if(csr & READY_REF)
 	 	tag_ref = SPLL->TAG_REF;
-	 	tag_ref_ready = 1;
-	}
 	
-	if(SPLL->CSR & READY_FB)
-	{
+	if(csr & READY_FB)
 	 	tag_fb = SPLL->TAG_FB;
-	 	tag_fb_ready = 1;
-	}
 	
-	/* HPLL: active frequency branch */
-	if(pstate.h_freq_mode)
-	{
-    	int freq_err =	SPLL->PER_HPLL;
-		if(freq_err & 0x100) freq_err |= 0xffffff00; /* sign-extend */
-		freq_err += pll_cfg.hpll_f_setpoint;
-		
-		pstate.h_freq_err = freq_err;
+	helper_irq(&helper, tag_ref);
+	
 
-		/* PI control */
-		if(pstate.h_dac_val > 0 && pstate.h_dac_val < 65530)
-   		pstate.h_i += freq_err;
-		dv = ((pstate.h_i * pll_cfg.hpll_f_ki + freq_err * pll_cfg.hpll_f_kp) >> PI_FRACBITS) + pll_cfg.hpll_dac_bias;
-
-        if(dv >= 65530) dv = 65530;
-		if(dv < 0) dv = 0;
-
-        pstate.h_dac_val = dv;
-    
-
-		SPLL->DAC_HPLL = dv; /* update DAC */
-		
-		pstate.h_dac_val = dv;
-
-		/* lock detection */
-		if(freq_err >= -pll_cfg.hpll_ld_f_threshold && freq_err <= pll_cfg.hpll_ld_f_threshold)
-			pstate.h_lock_counter++;
-		else
-			pstate.h_lock_counter=0;
-
-		/* frequency has been stable for quite a while? switch to phase branch */
-		if(pstate.h_lock_counter == pll_cfg.hpll_ld_f_samples)
-		{
-			pstate.h_freq_mode = 0;
-			pstate.h_dac_bias = dv;
-			pstate.h_i = 0;
-			pstate.h_lock_counter = 0;
-			pstate.h_p_setpoint = -1;
-			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_REF);
-		}
-
+#if 0
 	/* HPLL: active phase branch */
 	} else if (tag_ref_ready) {
 	    if(pstate.h_p_setpoint < 0) 		/* we don't have yet any phase samples? */
@@ -345,7 +426,8 @@ void _irq_entry()
  	}
 
 	gpio_out(GPIO_PIN_LED_STATUS, 0);
-	
+#endif
+
     clear_irq();
 }
 
@@ -355,58 +437,45 @@ void softpll_enable()
 {
  	SPLL->CSR = 0;
  	disable_irq();
+ 	
+ 	helper_init(&helper);
 
-	SPLL->DAC_HPLL = pll_cfg.hpll_dac_bias;
-	SPLL->DAC_DMPLL = pll_cfg.dpll_dac_bias;
-	SPLL->DEGLITCH_THR = pll_cfg.dpll_deglitcher_threshold;
+	SPLL->DAC_HPLL = 0;
+	SPLL->DEGLITCH_THR = 2000; 
 	
-	pstate.h_p_setpoint = -1;
-	pstate.h_i = 0;
-	pstate.h_freq_mode = 1;
-	pstate.h_lock_counter = 0;
-	pstate.h_locked = 0;
-	pstate.d_p_setpoint = 0;
-	pstate.d_phase_shift = 0;
-	pstate.h_dac_val = pll_cfg.hpll_dac_bias;
-	
-		  	
-	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);// | SPLL_CSR_TAG_EN_W(CHAN_REF);
+	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);
 	SPLL->EIC_IER = 1;
 	
 	enable_irq();
-//	softpll_test();
+	TRACE_DEV("[softpll]: enabled\n");
 	prev_lck = 0;
-		TRACE_DEV("[softpll]: enabled\n");
-
 }
 
 
 int softpll_check_lock()
 {
-	TRACE_DEV("[softpll] Helper: lock %d freqmode %d, Main: lock %d freqmode %d\n", 
-	pstate.h_locked, pstate.h_freq_mode,
-	pstate.d_locked,pstate.d_freq_mode); 
+	TRACE_DEV("[softpll] Helper: lock %d freqmode %d x %d y %d\n", helper.ld_phase.locked, helper.freq_mode, helper.pi_freq.x, helper.pi_phase.y) ; 
 	
-	int lck = pstate.h_locked && pstate.d_locked;
+/*nt lck = pstate.h_locked && pstate.d_locked;
 	
 	if(lck && !prev_lck)
 		TRACE_DEV("[softpll]: got lock\n");
 	else if (!lck && prev_lck)
-		TRACE_DEV("[softpll]: lost lock\n");
+		TRACE_DEV("[softpll]: lost lock\n");*/
 
-	prev_lck = lck;
- 	return lck;
+//	prev_lck = lck;
+// 	return lck;
 }
 
 int softpll_busy()
 {
- 	return pstate.d_p_setpoint != pstate.d_phase_shift;
+// 	return pstate.d_p_setpoint != pstate.d_phase_shift;
 }
 
 void softpll_set_phase(int ps)
 {
-	pstate.d_phase_shift = -(int32_t) ((int64_t)ps * 16384LL / 8000LL);
-	TRACE_DEV("ADJdelta: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
+//	pstate.d_phase_shift = -(int32_t) ((int64_t)ps * 16384LL / 8000LL);
+//	TRACE_DEV("ADJdelta: phase %d [ps], %d units\n", ps, pstate.d_phase_shift);
 }
 
 void softpll_disable()
@@ -417,5 +486,6 @@ void softpll_disable()
 
 int softpll_get_setpoint()
 {
-  return pstate.d_p_setpoint;
+//  return pstate.d_p_setpoint;
 }
+
