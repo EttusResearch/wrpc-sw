@@ -23,6 +23,7 @@ void pps_gen_init()
 	cr = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH);
   
   ppsg_writel( PPSG_REG_CR, cr);
+  ppsg_writel( PPSG_REG_ESCR, 0);
 
   ppsg_writel( PPSG_REG_ADJ_UTCLO, 100 );
   ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
@@ -83,3 +84,13 @@ void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
   if(utc) *utc = utc_lo;
   if(cntr_nsec) *cntr_nsec = cyc_after;
 }
+
+
+void pps_gen_enable_output(int enable)
+{
+ 	if(enable)
+		ppsg_writel(PPSG_REG_ESCR, PPSG_ESCR_PPS_VALID  | PPSG_ESCR_TM_VALID);
+	else
+		ppsg_writel(PPSG_REG_ESCR, 0);
+}
+
