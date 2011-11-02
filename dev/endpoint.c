@@ -1,12 +1,13 @@
 #include <stdio.h>
 
 #include "board.h"
-#include<endpoint.h>
+#include <endpoint.h>
 
 #include <hw/endpoint_regs.h>
 #include <hw/endpoint_mdio.h>
 
 #define UIS_PER_SERIAL_BIT 800
+#define DMTD_AVG_SAMPLES 256
 
 static int autoneg_enabled;
 
@@ -17,8 +18,8 @@ static volatile struct EP_WB *EP = (volatile struct EP_WB *) BASE_EP;
 static uint16_t pcs_read(int location)
 {
   EP->MDIO_CR = EP_MDIO_CR_ADDR_W(location >> 2);
-  while ((EP->MDIO_SR & EP_MDIO_SR_READY) == 0);
-  return EP_MDIO_SR_RDATA_R(EP->MDIO_SR) & 0xffff;
+  while ((EP->MDIO_ASR & EP_MDIO_ASR_READY) == 0);
+  return EP_MDIO_ASR_RDATA_R(EP->MDIO_ASR) & 0xffff;
 }
 
 static void pcs_write(int location,
@@ -28,8 +29,8 @@ static void pcs_write(int location,
 		| EP_MDIO_CR_DATA_W(value)
 		| EP_MDIO_CR_RW;
 
-  while ((EP->MDIO_SR & EP_MDIO_SR_READY) == 0);
-}
+  while ((EP->MDIO_ASR & EP_MDIO_ASR_READY) == 0);
+}                  
 
 static void set_mac_addr(uint8_t dev_addr[])
 {                                
@@ -58,11 +59,16 @@ void ep_init(uint8_t mac_addr[])
   int i;
   set_mac_addr(mac_addr);
 
+	*(unsigned int *)(0x62000) = 0x2; // reset network stuff (cleanup!)
+	*(unsigned int *)(0x62000) = 0;
+	
+
   EP->ECR = 0;
-  EP->DMCR =  EP_DMCR_EN | EP_DMCR_N_AVG_W(DMTD_AVG_SAMPLES);
-  EP->RFCR =  3 << EP_RFCR_QMODE_SHIFT;
+  EP->VCR0 = EP_VCR0_QMODE_W(3); // disable VLAN unit
+  EP->RFCR = EP_RFCR_MRU_W(1518);
   EP->TSCR = EP_TSCR_EN_TXTS | EP_TSCR_EN_RXTS;
-  EP->FCR = 0;
+  EP->DMCR =  EP_DMCR_EN | EP_DMCR_N_AVG_W(DMTD_AVG_SAMPLES);
+  
 }
   
 
@@ -76,7 +82,9 @@ int ep_enable(int enabled, int autoneg)
       return;
     }
 
-  EP->ECR =  EP_ECR_TX_EN_FRA | EP_ECR_RX_EN_FRA | EP_ECR_RST_CNT;
+  EP->ECR = 0;
+  pfilter_init_default();
+  EP->ECR =  EP_ECR_TX_EN | EP_ECR_RX_EN | EP_ECR_RST_CNT;
   
   autoneg_enabled = autoneg;
  #if 1
@@ -96,7 +104,7 @@ int ep_enable(int enabled, int autoneg)
   pcs_write(MDIO_REG_MCR, mcr);
 }
 
-int ep_link_up()
+int ep_link_up(uint16_t *lpa)
 {
   uint16_t flags = MDIO_MSR_LSTATUS;
 	volatile  uint16_t msr;
@@ -107,6 +115,8 @@ int ep_link_up()
 
 	msr = pcs_read(MDIO_REG_MSR);
 	msr = pcs_read(MDIO_REG_MSR);
+
+	if(lpa) *lpa = pcs_read(MDIO_REG_LPA);
 
   return (msr & flags) == flags ? 1 : 0;
 }
@@ -129,14 +139,16 @@ void ep_show_counters()
 int ep_get_psval(int32_t *psval)
 {
   uint32_t val;
+
   val = EP->DMSR;
   
   if(val & EP_DMSR_PS_RDY)
     *psval =  EP_DMSR_PS_VAL_R(val);
   else
     *psval = 0;
-
-  return val & EP_DMSR_PS_RDY;
+  
+  	mprintf("PSVAL:%d RDY:%d\n", *psval, val & EP_DMSR_PS_RDY ? 1 : 0);
+   return val & EP_DMSR_PS_RDY ? 1 : 0;
 }
 
 int ep_cal_pattern_enable()
