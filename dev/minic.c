@@ -18,7 +18,7 @@
 #define RX_DESC_VALID(d) ((d) & (1<<31) ? 1 : 0)
 #define RX_DESC_ERROR(d) ((d) & (1<<30) ? 1 : 0)
 #define RX_DESC_HAS_OOB(d)  ((d) & (1<<29) ? 1 : 0)
-#define RX_DESC_SIZE(d)  (((d) & (1<<0) ? -1 : 0) + (d & 0xfffe))
+#define RX_DESC_SIZE(d)  (((d) & (1<<0) ? -1 : 0) + (d & 0xffe))
 
 #define TX_DESC_VALID (1<<31)
 #define TX_DESC_WITH_OOB (1<<30)
@@ -76,6 +76,8 @@ static void minic_new_rx_buffer()
   minic_writel(MINIC_REG_RX_AVAIL, (minic.rx_size - MINIC_MTU) >> 2);
  // TRACE_DEV("Sizeof: %d Size : %d Avail: %d\n", minic.rx_size, (minic.rx_size - MINIC_MTU) >> 2);
   minic_writel(MINIC_REG_MCR, MINIC_MCR_RX_EN);
+  
+  mprintf("Base : %x Avail: %d\n", minic_readl(MINIC_REG_RX_ADDR), minic_readl(MINIC_REG_RX_AVAIL));
 
 }
 
@@ -90,15 +92,25 @@ static void minic_new_tx_buffer()
 
 
 void minic_init()
-
 {
+	uint32_t lo , hi;
+	
     minic_writel(MINIC_REG_EIC_IDR, MINIC_EIC_IDR_RX);
     minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
 	minic.rx_base = dma_rx_buf;
 	minic.rx_size = sizeof(dma_rx_buf);
 
-  minic.tx_base = dma_tx_buf;
-  minic.tx_size = sizeof(dma_tx_buf);
+	lo = (uint32_t)minic.rx_base >> 2;
+	hi = ((uint32_t)minic.rx_base >> 2) + (sizeof(dma_rx_buf)>>2);
+	lo = 0;
+	hi = 0xffff;
+	minic_writel(MINIC_REG_MPROT, MINIC_MPROT_LO_W(lo) | MINIC_MPROT_HI_W(hi));
+
+	mprintf("Prot: lo 0x%x hi 0x%x\n", lo, hi);
+    mprintf("RXSize %d\n", minic.rx_size);
+
+	minic.tx_base = dma_tx_buf;
+	minic.tx_size = sizeof(dma_tx_buf);
 
 	minic.tx_count = 0;
 	minic.rx_count = 0;
@@ -144,6 +156,8 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       minic_new_rx_buffer();
       return 0;
     }
+    
+//   mprintf("dhdr %x\n", desc_hdr);
   
   payload_size = RX_DESC_SIZE(desc_hdr);
   num_words = ((payload_size + 3) >> 2) + 1;
@@ -186,7 +200,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	}
 
       n_recvd = (buf_size < payload_size ? buf_size : payload_size);
-      TRACE_DEV("minic_rx_frame [%d bytes] TS: %d.%d\n", n_recvd, hwts->utc, hwts->nsec);
+     TRACE_DEV("minic_rx_frame [%d bytes] TS: %d.%d\n", n_recvd, hwts->utc, hwts->nsec);
 	  minic.rx_count++;
 
       memcpy(hdr, (void*)minic.rx_head + 4, ETH_HEADER_SIZE);
@@ -207,10 +221,17 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   //      TRACE_DEV("MoreData? %x, head %x\n", rx_addr_cur, minic.rx_head);
 
       if(minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
-	minic_new_rx_buffer();
-
+		minic_new_rx_buffer();
+   
       minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
-    }
+
+   }
+         mprintf("HDR:");
+	for(i=0;i<14;i++)
+	{
+	 	mprintf("%02x ", hdr[i]);
+	}
+	mprintf("\n");
 
   return n_recvd;
 }
@@ -230,21 +251,15 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
   memcpy((void*)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
   memcpy((void*)minic.tx_head + 4 + ETH_HEADER_SIZE, payload, size - ETH_HEADER_SIZE);
 
-    if(size < 60)
+  if(size < 60)
 	size = 60;
 
-  nwords = ((size + 1) >> 1) - 1;
+  nwords = ((size + 1) >> 1);
 
-
+	d_hdr = 0;
 
   if(hwts)
-    {
-
-      memcpy((void *) minic.tx_head + 4 + size, &tx_oob_val, sizeof(uint16_t));
-      nwords++;
-      d_hdr = TX_DESC_WITH_OOB;
-    } else
-    d_hdr = 0;
+    d_hdr = TX_DESC_WITH_OOB | (tx_oob_val << 12);
 
   d_hdr |= TX_DESC_VALID | nwords;
   
@@ -254,7 +269,9 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
   mcr = minic_readl(MINIC_REG_MCR);
   minic_writel(MINIC_REG_MCR, mcr | MINIC_MCR_TX_START);
 
+  while((minic_readl(MINIC_REG_MCR) & MINIC_MCR_TX_IDLE) == 0);
 
+ #if 1
   if(hwts) /* wait for the timestamp */
     {
       uint32_t raw_ts;
@@ -264,14 +281,10 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       uint32_t nsec;
       uint8_t ts_tout;
 
+	  while((minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID) == 0);
 
-      ts_tout=0;
-      while( (minic_readl(MINIC_REG_TSFIFO_CSR) & MINIC_TSFIFO_CSR_EMPTY ) && ts_tout<10)
-        ts_tout++;
-
-      raw_ts = minic_readl(MINIC_REG_TSFIFO_R0);
-      fid = (minic_readl(MINIC_REG_TSFIFO_R1) >> 5) & 0xffff;
-
+      raw_ts = minic_readl(MINIC_REG_TSR1);
+      fid = MINIC_TSR0_FID_R(minic_readl(MINIC_REG_TSR0));
 
 		if(fid != tx_oob_val)
 		{
@@ -291,7 +304,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
 	  minic.tx_count++;
 
     }
-
+#endif
   tx_oob_val++;
 
   return size;
