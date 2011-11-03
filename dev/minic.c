@@ -100,24 +100,23 @@ void minic_init()
 	minic.rx_base = dma_rx_buf;
 	minic.rx_size = sizeof(dma_rx_buf);
 
+/* FIXME: now we have a temporary HW protection against accidentally overwriting the memory - there's some
+   very well hidden bug in Minic's RX logic which sometimes causes an overwrite of the memory outside
+   the buffer. */
+   
 	lo = (uint32_t)minic.rx_base >> 2;
-	hi = ((uint32_t)minic.rx_base >> 2) + (sizeof(dma_rx_buf)>>2);
-	lo = 0;
-	hi = 0xffff;
-	minic_writel(MINIC_REG_MPROT, MINIC_MPROT_LO_W(lo) | MINIC_MPROT_HI_W(hi));
+	hi = ((uint32_t)minic.rx_base >> 2) + (sizeof(dma_rx_buf)>>2) - 1;
 
-	mprintf("Prot: lo 0x%x hi 0x%x\n", lo, hi);
-    mprintf("RXSize %d\n", minic.rx_size);
+	minic_writel(MINIC_REG_MPROT, MINIC_MPROT_LO_W(lo) | MINIC_MPROT_HI_W(hi));
 
 	minic.tx_base = dma_tx_buf;
 	minic.tx_size = sizeof(dma_tx_buf);
 
 	minic.tx_count = 0;
 	minic.rx_count = 0;
-	
 
-  minic_new_rx_buffer();
-  minic_writel(MINIC_REG_EIC_IER, MINIC_EIC_IER_RX);
+	minic_new_rx_buffer();
+	minic_writel(MINIC_REG_EIC_IER, MINIC_EIC_IER_RX);
 }
 
 void minic_disable()
@@ -147,23 +146,16 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
     return 0;
 
   desc_hdr = *minic.rx_head;
-   
-   // TRACE_DEV("RX_FRAME_ENTER\n\nRxHead %x buffer at %x\n", minic.rx_head, minic.rx_base);
-
+ 
   if(!RX_DESC_VALID(desc_hdr)) /* invalid descriptor? Weird, the RX_ADDR seems to be saying something different. Ignore the packet and purge the RX buffer. */
     {
-      TRACE_DEV("weird, invalid RX descriptor (%x, head %x)\n", desc_hdr, minic.rx_head);
       minic_new_rx_buffer();
       return 0;
     }
     
-//   mprintf("dhdr %x\n", desc_hdr);
-  
   payload_size = RX_DESC_SIZE(desc_hdr);
   num_words = ((payload_size + 3) >> 2) + 1;
 
-
-//    TRACE_DEV("NWords %d\n", num_words);
   /* valid packet */	
   if(!RX_DESC_ERROR(desc_hdr))
     {   
@@ -192,25 +184,18 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	    hwts->ahead = 1;
 	  else
 	    hwts->ahead = 0;
-  
-  
 	    
 	  hwts->nsec = counter_r * 8;
-	  
 	}
 
       n_recvd = (buf_size < payload_size ? buf_size : payload_size);
-     TRACE_DEV("minic_rx_frame [%d bytes] TS: %d.%d\n", n_recvd, hwts->utc, hwts->nsec);
 	  minic.rx_count++;
 
       memcpy(hdr, (void*)minic.rx_head + 4, ETH_HEADER_SIZE);
       memcpy(payload, (void*)minic.rx_head + 4 + ETH_HEADER_SIZE, n_recvd - ETH_HEADER_SIZE);
   
       minic.rx_head += num_words;
-    } else    { // RX_DESC_ERROR
-
-//	TRACE_DEV("nwords_avant_err: %d\n", num_words);
-
+    } else { 
     minic.rx_head += num_words;  
   }
 
@@ -218,20 +203,11 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 
   if(rx_addr_cur < (uint32_t)minic.rx_head)  /* nothing new in the buffer? */
     {
-  //      TRACE_DEV("MoreData? %x, head %x\n", rx_addr_cur, minic.rx_head);
-
       if(minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
 		minic_new_rx_buffer();
-   
-      minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
 
+      minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
    }
-         mprintf("HDR:");
-	for(i=0;i<14;i++)
-	{
-	 	mprintf("%02x ", hdr[i]);
-	}
-	mprintf("\n");
 
   return n_recvd;
 }
