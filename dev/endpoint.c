@@ -147,7 +147,6 @@ int ep_get_psval(int32_t *psval)
   else
     *psval = 0;
   
-  	mprintf("PSVAL:%d RDY:%d\n", *psval, val & EP_DMSR_PS_RDY ? 1 : 0);
    return val & EP_DMSR_PS_RDY ? 1 : 0;
 }
 
