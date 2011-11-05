@@ -156,6 +156,8 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   payload_size = RX_DESC_SIZE(desc_hdr);
   num_words = ((payload_size + 3) >> 2) + 1;
 
+//	mprintf("Payload: %d\n", payload_size);
+
   /* valid packet */	
   if(!RX_DESC_ERROR(desc_hdr))
     {   
@@ -197,6 +199,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       minic.rx_head += num_words;
     } else { 
     minic.rx_head += num_words;  
+    n_recvd = -1;
   }
 
   rx_addr_cur = minic_readl(MINIC_REG_RX_ADDR) & 0xffff;
@@ -209,6 +212,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
    }
 
+//	mprintf("minic: num_rx %d\n", n_recvd);
   return n_recvd;
 }
 
