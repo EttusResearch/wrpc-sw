@@ -403,6 +403,7 @@ void _irq_entry()
 /* Aux channel - i.e. the oscillator on the FMC card */
 		if((csr & SPLL_CSR_AUX_EN) )
 		{
+			int shifting_done = 0;
 			if(!(csr & CHAN_AUX))
 			{
 				auxpll.ld_phase.locked =  0;
@@ -415,8 +416,8 @@ void _irq_entry()
 				//aux_en = 1;
 			}
 			dmpll_irq(&auxpll, tag_ref, tag_aux, &SPLL->DAC_AUX);
-			
-			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_FB | CHAN_REF | CHAN_AUX) | (auxpll.ld_phase.locked ? SPLL_CSR_AUX_LOCK : 0);
+			shifting_done = abs(auxpll.setpoint - auxpll.phase_shift) < 500 ? 1: 0;
+			SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_FB | CHAN_REF | CHAN_AUX) | ((shifting_done && auxpll.ld_phase.locked) ? SPLL_CSR_AUX_LOCK : 0);
 		
 		} else {
 			auxpll.ld_phase.locked =  0;
