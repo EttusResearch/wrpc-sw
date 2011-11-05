@@ -45,12 +45,12 @@ static void set_mac_addr(uint8_t dev_addr[])
 
 void get_mac_addr(uint8_t dev_addr[])
 {
-  dev_addr[5] = (uint8_t)(EP->MACL & 0x000000ff);
-  dev_addr[4] = (uint8_t)(EP->MACL & 0x0000ff00) >> 8;
-  dev_addr[3] = (uint8_t)(EP->MACL & 0x00ff0000) >> 16; 
-  dev_addr[2] = (uint8_t)(EP->MACL & 0xff000000) >> 24; 
-  dev_addr[1] = (uint8_t)(EP->MACH & 0x000000ff);
-  dev_addr[0] = (uint8_t)(EP->MACH & 0x0000ff00) >> 8;
+  dev_addr[5] = (EP->MACL & 0x000000ff);
+  dev_addr[4] = (EP->MACL & 0x0000ff00) >> 8;
+  dev_addr[3] = (EP->MACL & 0x00ff0000) >> 16; 
+  dev_addr[2] = (EP->MACL & 0xff000000) >> 24; 
+  dev_addr[1] = (EP->MACH & 0x000000ff);
+  dev_addr[0] = (EP->MACH & 0x0000ff00) >> 8;
 }
 
 
@@ -90,8 +90,8 @@ int ep_enable(int enabled, int autoneg)
  #if 1
   pcs_write(MDIO_REG_MCR, MDIO_MCR_PDOWN); /* reset the PHY */
   timer_delay(2000);
+  pcs_write(MDIO_REG_MCR, MDIO_MCR_RESET);  /* reset the PHY */
   pcs_write(MDIO_REG_MCR, 0);  /* reset the PHY */
- // pcs_write(MDIO_REG_MCR, MDIO_MCR_RESET);  /* reset the PHY */
    #endif
    
   pcs_write(MDIO_REG_ADVERTISE, 0);
@@ -147,6 +147,8 @@ int ep_get_psval(int32_t *psval)
   else
     *psval = 0;
   
+  
+//  mprintf("**** PhaseVal: %d\n", *psval);
    return val & EP_DMSR_PS_RDY ? 1 : 0;
 }
 
