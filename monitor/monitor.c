@@ -1,6 +1,7 @@
 #include "board.h"
 #include "ptpd_exports.h"
 #include "hal_exports.h"
+#include "softpll.h"
 
 extern ptpdexp_sync_state_t cur_servo_state;
 extern int wrc_man_phase;
@@ -27,6 +28,7 @@ int wrc_mon_gui(void)
   static uint32_t last = 0;
   hexp_port_state_t ps;
   int tx, rx;
+  int aux_stat;
     
   if(timer_get_tics() - last < 1000)
     return 0;
@@ -72,6 +74,16 @@ int wrc_mon_gui(void)
   m_cprintf(C_GREY, "Servo state:               "); m_cprintf(C_WHITE, "%s\n", cur_servo_state.slave_servo_state);
   m_cprintf(C_GREY, "Phase tracking:            "); if(cur_servo_state.tracking_enabled) m_cprintf(C_GREEN, "ON\n"); else m_cprintf(C_RED,"OFF\n");
   m_cprintf(C_GREY, "Synchronization source:    "); m_cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);
+
+  m_cprintf(C_GREY, "Aux clock status:          "); 
+  aux_stat = softpll_get_aux_status();
+
+  if(aux_stat & SOFTPLL_AUX_ENABLED)
+  	m_cprintf(C_GREEN,"enabled");
+
+  if(aux_stat & SOFTPLL_AUX_LOCKED)
+  	m_cprintf(C_GREEN,", locked");
+  mprintf("\n");
 
   m_cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
