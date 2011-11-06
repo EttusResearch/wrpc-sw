@@ -9,6 +9,7 @@
 #include "minic.h"
 #include "pps_gen.h"
 #include "ptpd.h"
+#include "ptpd_netif.h"
 
 
 
@@ -62,8 +63,6 @@ RunTimeOpts rtOpts = {
 static   PtpPortDS *ptpPortDS;
 static   PtpClockDS ptpClockDS;
 
-	const uint8_t mac_addr[] = {0x00, 0x50, 0xde, 0xad, 0xba, 0xbe};
-	const uint8_t dst_mac_addr[] = {0x00, 0x00, 0x12, 0x24, 0x46, 0x11};
 
 
 volatile int count = 0;
@@ -71,25 +70,6 @@ volatile int count = 0;
 uint32_t tag_prev;
 
 uint32_t tics_last;
-
-void silly_minic_test()
-{
-	uint8_t hdr[14];
-
-    uint8_t buf_hdr[18], buf[256];
-    for(;;)
-    {
-	memcpy(buf_hdr, dst_mac_addr, 6);
-	memset(buf_hdr+6, 0, 6);
-	buf_hdr[12] = 0xc0;
-	buf_hdr[13] = 0xef;
-	
-	minic_tx_frame(buf_hdr, buf, 64, buf);
-	mprintf("Send\n");
-	timer_delay(1000);
-
-    }
-}
 
 
 void test_transition()
@@ -127,20 +107,75 @@ int button_pressed()
 
 int enable_tracking = 1;
 
+void rx_test()
+{
+  uint8_t mac[]= {0x1, 0x1b, 0x19, 0,0,0};
+  uint16_t buf[100];
+  wr_socket_t *sock;
+  wr_sockaddr_t addr;
+
+  memcpy(addr.mac, mac, 6);
+  addr.ethertype = 0x88f7;
+
+  ptpd_netif_init();
+  sock = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &addr);
+  mprintf("Sock @ %x\n", sock);
+  wrc_extra_debug = 0;
+  for(;;)
+  {
+   	update_rx_queues();
+  	int n = ptpd_netif_recvfrom(sock, &addr, buf, sizeof(buf), NULL);
+  	if(n>0) 
+  	{
+  		uint16_t sum = 0 ,i, rx;
+  		rx=n;
+  		n= buf[0];
+	  	for(i=1;i<n;i++) sum+=buf[i]; 
+	  	mprintf("%x %x\n", sum, buf[n]);
+	  	if(sum != buf[n])
+	  	{
+	  		mprintf("****************** ERR: rxed %d size %d\n", rx, n);
+	  	}
+	  	
+    }
+    timer_delay(10);
+    mprintf(".");
+  	
+  }
+  
+  
+}
+
+
 void wrc_initialize()
 {
 	int ret;
+	uint32_t dna_lo, dna_hi;
+	uint8_t mac_addr[6];
+	
 	uart_init();
 
 	uart_write_string(__FILE__ " is up (compiled on "
 			  __DATE__ " " __TIME__ ")\n");
 
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
+	dna_read(&dna_lo, &dna_hi);
+	
+	mac_addr[0] = 0;
+	mac_addr[1] = 0x50;
+	mac_addr[2] = (dna_lo >> 24) & 0xff;
+	mac_addr[3] = (dna_lo >> 16) & 0xff;
+	mac_addr[4] = (dna_lo >> 8) & 0xff;
+	mac_addr[5] = (dna_lo >> 0) & 0xff;
+	
+	mprintf("wr_core: local MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
 	ep_init(mac_addr);
 	ep_enable(1, 1);
 
 	minic_init();
 	pps_gen_init();
+//	for(;;);
+//	rx_test();
 
 	netStartup();
 
@@ -157,8 +192,10 @@ void wrc_initialize()
 	initDataClock(&rtOpts, &ptpClockDS);
 }
 
-#define LINK_UP 1
-#define LINK_DOWN 2
+#define LINK_WENT_UP 1
+#define LINK_WENT_DOWN 2
+#define LINK_UP 3
+#define LINK_DOWN 4
 
 int wrc_check_link()
 {
@@ -170,19 +207,19 @@ int wrc_check_link()
 	{
 		TRACE_DEV("Link up.\n");
 		gpio_out(GPIO_PIN_LED_LINK, 1);
-		rv = LINK_UP;
+		rv = LINK_WENT_UP;
 	} else if(prev_link_state && !link_state)
 	{
 		TRACE_DEV("Link down.\n");
 		gpio_out(GPIO_PIN_LED_LINK, 0);
-		rv = LINK_DOWN;
-	} 
+		rv = LINK_WENT_DOWN;
+	}  else rv = (link_state ? LINK_UP : LINK_DOWN);
 	prev_link_state = link_state;
 	
 	return rv;
 }
 
-int wrc_extra_debug = 0;
+int wrc_extra_debug = 1;
 int wrc_gui_mode = 0;
 
 void wrc_debug_printf(int subsys, const char *fmt, ...)
@@ -248,6 +285,7 @@ void wrc_handle_input()
 
 extern volatile int irq_cnt;
 
+
 int main(void)
 {
 	int rx, tx;
@@ -257,25 +295,36 @@ int main(void)
 	int16_t ret;
 
 	wrc_initialize();
-	softpll_enable();
 	for(;;)
 	{
-		wrc_check_link();
 		wrc_handle_input();
-		
 		if(wrc_gui_mode)
 			wrc_mon_gui();
-			
-/*		if(button_pressed())
+	
+		int l_status = wrc_check_link();
+		switch (l_status)
 		{
-		 	enable_tracking = 1-enable_tracking;
-		 	wr_servo_enable_tracking(enable_tracking);
-		}	
-	                                          */
+			case LINK_WENT_UP:
+//				mprintf("**********************************S\n");
+/*				kill_sockets();
+				netStartup();
+		       	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+				initDataClock(&rtOpts, &ptpClockDS);
+				protocol_restart(&rtOpts, &ptpClockDS);*/
+				break;
+
+			case LINK_UP:
+			//	softpll_check_lock();
+				update_rx_queues();
+				break;
+
+			case LINK_WENT_DOWN:
+				softpll_disable();
+				break;
+		}        
+//		mprintf(".");
+
 		protocol_nonblock(&rtOpts, ptpPortDS);
-		update_rx_queues();
-//		softpll_check_lock();
-		timer_delay(10);                      
 
 	}
 }
