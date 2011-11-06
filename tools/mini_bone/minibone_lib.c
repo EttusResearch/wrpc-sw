@@ -15,7 +15,7 @@
 #define F_READBACK (1<<0)
 #define F_WRITE (1<<4)
 
-#define RX_TIMEOUT 100
+#define RX_TIMEOUT 10
 
 #define MBN_ETHERTYPE 0xa0a0
 
@@ -30,6 +30,7 @@ struct mb_device {
   mac_addr_t dest;
   uint16_t ethertype;
   wr_socket_t *sock;
+  int tx_packets, rx_packets, tx_retries, rx_retries;
 };
 
 typedef struct
@@ -74,7 +75,9 @@ void *mbn_open(const char *if_name, mac_addr_t target)
 
 	if(!dev)
 		return NULL;
-		
+	
+	memset(dev, 0, sizeof(struct mb_device));
+	
 	memcpy(dev->dest, target, 6);
 	strcpy(saddr.if_name, if_name);
 	memcpy(saddr.mac, target, 6);
@@ -91,6 +94,7 @@ void *mbn_open(const char *if_name, mac_addr_t target)
 	}
 	return (void *)dev;
 }
+
 
 static int mbn_send(void *priv, uint8_t *data, int size)
 {
@@ -115,29 +119,50 @@ static int mbn_recv(void *handle, uint8_t *data, int size, int timeout)
  	
  		if(n > 0 && from.ethertype == MBN_ETHERTYPE && !memcmp(from.mac, dev->dest, 6))
 	 	{
+	 		dev->rx_packets++;
  			return n;
 	 	}
+//	 	dev->rx_retries++;
  	} while(!tmo_expired(&rx_tmo));
     return 0;
 }
 
 void mbn_writel(void *handle, uint32_t d, uint32_t a)
 {
+	struct mb_device *dev = (struct mb_device *)handle;
 	int n_retries = 3;
 	struct mbn_packet pkt;
-	pkt.flags = htons(F_SEL(0xf) | F_WRITE);
-	pkt.a_d= htonl(a);
-	pkt.d=htonl(d);
 
 	while(n_retries--)
 	{
+		pkt.flags = htons(F_SEL(0xf) | F_WRITE);
+		pkt.a_d= htonl(a);
+		pkt.d=htonl(d);
+
 		mbn_send(handle, (uint8_t *)&pkt, sizeof(pkt));
 		int n = mbn_recv(handle, (uint8_t *)&pkt, sizeof(pkt), RX_TIMEOUT);
+
+
 		pkt.flags = ntohs(pkt.flags);
-		if(n == sizeof(pkt) && !(pkt.flags && F_READBACK) && !(pkt.flags & F_ERROR))
+		if(n == sizeof(pkt) && ! (!(pkt.flags && F_READBACK) && !(pkt.flags & F_ERROR)))
 		{
+			int i;
+			fprintf(stderr,"\nBadPacket:  ");
+			for(i=0;i<n; i++) fprintf(stderr,"%02x ", *(uint8_t*) (&pkt + i));
+			fprintf(stderr,"\n");
+			
+		} if(n == sizeof(pkt) && !(pkt.flags && F_READBACK) && !(pkt.flags & F_ERROR))
+		{
+			int i;
+//			fprintf(stderr,"GoodFlags: %x\n", pkt.flags);
+  			/*fprintf(stderr,"\nGoodPacket: ");
+			for(i=0;i<n; i++) fprintf(stderr,"%02x ", *(uint8_t*) (&pkt + i));
+			fprintf(stderr,"\n");*/
+
+			dev->tx_packets++;
 			return ;
 		}
+		dev->tx_retries++;
 	}
 
 	fprintf(stderr, "No ack.\n");
@@ -146,6 +171,7 @@ void mbn_writel(void *handle, uint32_t d, uint32_t a)
 uint32_t mbn_readl(void *handle, uint32_t a)
 {
 	int n_retries = 3;
+	struct mb_device *dev = (struct mb_device *)handle;
 	struct mbn_packet pkt;
 	pkt.flags = htons(F_SEL(0xf));
 	pkt.a_d= htonl(a);
@@ -159,9 +185,18 @@ uint32_t mbn_readl(void *handle, uint32_t a)
 		{
 			return ntohl(pkt.a_d);
 		}
+		dev->tx_retries++;
 	}
 
 	fprintf(stderr, "No ack.\n");
+}
+
+void mbn_stats(void *handle)
+{
+	struct mb_device *dev = (struct mb_device *)handle;
+	
+	fprintf(stderr,"Sent: %d [retries: %d], rcvd: %d [retries: %d]\n", dev->tx_packets, dev->tx_retries, dev->rx_packets, dev->rx_retries);
+
 }
 
 void mbn_close(void *handle)

@@ -13,13 +13,9 @@ main(int argc, char *argv[])
 	while(!feof(f))
 	{
 		fread(x,1,4,f);
-		printf("%d => x\"%02X%02X%02X%02X\",\n", i++, x[0],x[1],x[2],x[3]);
+		printf("write %x %02X%02X%02X%02X\n", i++, x[0], x[1], x[2], x[3]);
 	}
 	
-	for(;i<n;)
-	{
-		printf("%d => x\"%02X%02X%02X%02X\",\n", i++, 0,0,0,0);	
-	}
 	fclose(f);
 	return 0;
 }

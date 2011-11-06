@@ -176,8 +176,8 @@ int ptpd_netif_sendto(wr_socket_t *sock, wr_sockaddr_t *to, void *data,
 
 	size_t len = data_length + sizeof(struct ethhdr);
 
-	if(len < 64)
-		len = 64;
+	if(len < 72)
+		len = 72;
 
 	memset(&sll, 0, sizeof(struct sockaddr_ll));
 

@@ -37,7 +37,7 @@ static void *mb_handle = NULL;
 static void spec_writel(uint32_t value, uint32_t addr)
 {
  	if(mb_handle)
- 		mbn_writel(mb_handle, value, BASE_MBONE + addr);
+ 		mbn_writel(mb_handle, value, (BASE_MBONE + addr)>>2);
  	else
  		rr_writel(value, BASE_PCIE + addr);
 }
@@ -46,7 +46,7 @@ static uint32_t spec_readl(uint32_t addr)
 {
 	uint32_t rval;
  	if(mb_handle)
- 		rval = mbn_readl(mb_handle, BASE_MBONE + addr);
+ 		rval = mbn_readl(mb_handle, (BASE_MBONE + addr)>>2);
  	else
  		rval = rr_readl(BASE_PCIE + addr);
 
@@ -142,10 +142,16 @@ int main(int argc, char **argv)
    	buf = malloc(size + 4);
    	fread(buf, 1, size, f);
    	fclose(f);
-   	
-  rst_lm32(1);
-  copy_lm32(buf, (size + 3) / 4, 0);
-  rst_lm32(0);
+
+	rst_lm32(1);
+	rst_lm32(1);
+	rst_lm32(1);
+	rst_lm32(1);
+	copy_lm32(buf, (size + 3) / 4, 0);
+	rst_lm32(0);
+
+//	mbn_stats(mb_handle);
 
   return 0;
 }
+                                  
