@@ -216,6 +216,9 @@ void pfilter_load()
 - redirects broadcasts and PTP packets to the WR Core
 - redirects unicasts addressed to self with ethertype 0xa0a0 to the external fabric */
 
+#define R_CLASS(x) (24 + x)
+#define R_DROP 23
+
 void pfilter_init_default()
 {
  	pfilter_new();
@@ -230,14 +233,13 @@ void pfilter_init_default()
  	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, 3);
  	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, 3); /* r3 = 1 when the packet is unicast to our own MAC */
     pfilter_cmp(6, 0xa0a0, 0xffff, MOV, 4); /* r4 = 1 when ethertype = 0xa0a0 */
-    pfilter_cmp(5, 0x88f8, 0xffff, MOV, 5); /* r5 = 1 when ethertype = PTPv2 */
+    pfilter_cmp(6, 0x88f7, 0xffff, MOV, 5); /* r5 = 1 when ethertype = PTPv2 */
     
-    /* Classes 0-3 go to the minic, 4-7 - to the external fabric */
-    
-//	pfilter_logic3(R_CLASS(0), 2, AND, 5, OR, 3); // class 0: (PTP or broadcast)
-//	pfilter_logic2(R_CLASS(1), 1, AND, 6); // class 1: minibone probes
+    pfilter_logic3(7, 3, AND, 4, OR, 5); /* r5 = PTP or etherbone */
+    pfilter_logic2(R_DROP, 7, NOT, 0); /* Neither PTP or etherbone? drop */
+	pfilter_logic2(R_CLASS(7), 3, AND, 4); // class 7: minibone unicasts
+	pfilter_logic2(R_CLASS(0), 5, MOV, 0); // class 7: minibone unicasts
 
-	pfilter_logic2(30, 3, AND, 4); // class 7: minibone unicasts
   	pfilter_load();
  	
 }
