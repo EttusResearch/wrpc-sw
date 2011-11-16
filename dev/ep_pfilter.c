@@ -30,12 +30,12 @@
   will compare the 3rd word of the packet (bytes 6, 7) against 0xcafe and if the words are equal,
   1 will be written to Rd register.
   
-  * CMP 4, 0xbabe, 0xffff, MOV, Rd
+  * CMP 4, 0xbabe, 0xffff, AND, Rd
   will do the same with the 4th word and write to Rd its previous value ANDed with the result
   of the comparison. Effectively, Rd now will be 1 only if bytes [6..9] of the payload contain word
   0xcafebabe. 
   
-  Note that the mask value is nibble-granular. Thet means you can choose a particular 
+  Note that the mask value is nibble-granular. That means you can choose a particular 
   set of nibbles within a word to be compared, but not an arbitrary set of bits (e.g. 0xf00f, 0xff00
   and 0xf0f0 masks are ok, but 0x8001 is wrong.
   
@@ -63,8 +63,8 @@
   
   IMPORTANT:
   - the program counter is advanved each time a 16-bit words of the packet arrives. 
-  - the CPU doesn't have any interlocks to simplify the HW. That means that you can't compare a
-    10rd word when  PC = 2. Max comparison offset is always equal to the address of the instruction.
+  - the CPU doesn't have any interlocks to simplify the HW, so you can't compare the
+    10th word when  PC = 2. Max comparison offset is always equal to the address of the instruction.
   - Code may contain up to 64 operations, but it must classify shorter packets faster than in
     32 instructions (there's no flow throttling)
 */

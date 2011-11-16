@@ -218,8 +218,8 @@ void main_init(struct spll_dmpll_state *s)
 	/* Phase branch PI controller */
 	s->pi_phase.y_min = 5;
 	s->pi_phase.y_max = 65530;
-   	s->pi_phase.kp = 1304;
-	s->pi_phase.ki = 10;
+   	s->pi_phase.kp = 1304 / 2;
+	s->pi_phase.ki = 10 * 3;
 	s->pi_phase.anti_windup = 0;
 	s->pi_phase.bias = 32000;
 	
@@ -443,7 +443,7 @@ void softpll_enable()
  	main_init(&auxpll);
 
 	SPLL->DAC_HPLL = 0;
-	SPLL->DEGLITCH_THR = 2000; 
+	SPLL->DEGLITCH_THR = 3000; 
 	
 	SPLL->CSR = SPLL_CSR_TAG_EN_W(CHAN_PERIOD);
 	SPLL->EIC_IER = 1;
@@ -455,17 +455,6 @@ void softpll_enable()
 }
 
 
-void test_aux()
-{
- 	for(;;)
- 	{	SPLL->DAC_AUX = 0;
- 		timer_delay(100);
-	 	SPLL->DAC_AUX = 65500;
- 		timer_delay(100);
- 		mprintf(".");
- 	}
- 	
-}
 
 int softpll_check_lock()
 {
@@ -473,7 +462,8 @@ int softpll_check_lock()
 	int lck = !helper.freq_mode && helper.ld_phase.locked && !main.freq_mode && main.ld_phase.locked;
 
 //	if(!lck) 
-		TRACE_DEV("%d %d%d%d%d%d%d\n", irq_cnt, helper.freq_mode, helper.ld_phase.locked, main.freq_mode, main.ld_phase.locked, auxpll.freq_mode, auxpll.ld_phase.locked) ; 
+	TRACE_DEV("%d %d%d%d%d%d%d %d %d %d\n", irq_cnt, helper.freq_mode, helper.ld_phase.locked, main.freq_mode, main.ld_phase.locked, auxpll.freq_mode, auxpll.ld_phase.locked, main.pi_freq.y, main.pi_phase.y, main.pi_phase.x); 
+	irq_cnt = 0;
 	
 	if(lck && !prev_lck) {
 		TRACE_DEV("[softpll]: got lock\n");
