@@ -1,6 +1,6 @@
 #include "types.h"
 #include "board.h"
-#include "gpio.h"
+#include "syscon.h"
 
 #define I2C_DELAY 100
 
@@ -10,9 +10,9 @@ static void mi2c_delay()
     for(i=0;i<I2C_DELAY;i++) asm volatile ("nop");
 }
 
-#define M_SDA_OUT(x) { gpio_out(GPIO_PIN_SDA_OUT, x); mi2c_delay(); }
-#define M_SCL_OUT(x) { gpio_out(GPIO_PIN_SCL_OUT, x); mi2c_delay(); }
-#define M_SDA_IN gpio_in(GPIO_PIN_SDA_IN)
+#define M_SDA_OUT(x) { gpio_out(GPIO_SDA, x); mi2c_delay(); }
+#define M_SCL_OUT(x) { gpio_out(GPIO_SCL, x); mi2c_delay(); }
+#define M_SDA_IN gpio_in(GPIO_SDA)
 
 void mi2c_start()
 {
@@ -81,11 +81,6 @@ void mi2c_get_byte(unsigned char *data)
 
 void mi2c_init()
 {
-    gpio_dir(GPIO_PIN_SDA_OUT, 1);
-    gpio_dir(GPIO_PIN_SCL_OUT, 1);
-    gpio_dir(GPIO_PIN_SDA_IN, 0);
-        
-		
   M_SCL_OUT(1);
   M_SDA_OUT(1);
 }

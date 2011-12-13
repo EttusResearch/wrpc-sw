@@ -1,5 +1,5 @@
 #include "board.h"
-#include "gpio.h"
+#include "syscon.h"
 
 #define DNA_DATA 1
 #define DNA_CLK 4
