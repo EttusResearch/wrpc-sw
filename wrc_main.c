@@ -3,7 +3,7 @@
 
 #include <stdarg.h>
 
-#include "gpio.h"
+#include "syscon.h"
 #include "uart.h"
 #include "endpoint.h"
 #include "minic.h"
@@ -99,7 +99,7 @@ int last_btn0;
 int button_pressed()
 {
 	int p;
-	int btn0 = gpio_in(GPIO_PIN_BTN1);
+	int btn0 = gpio_in(GPIO_BTN1);
 	p=!btn0 && last_btn0;
 	last_btn0 = btn0;
 	return p;
@@ -179,11 +179,6 @@ void wrc_initialize()
 
 	netStartup();
 
-	gpio_dir(GPIO_PIN_BTN1, 0);
-	gpio_dir(GPIO_PIN_LED_LINK, 1);
-	gpio_out(GPIO_PIN_LED_LINK, 0);
-	gpio_dir(GPIO_PIN_LED_STATUS, 1);
-
 	wr_servo_man_adjust_phase(-11600 + 1700);
 
 	displayConfigINFO(&rtOpts);
@@ -206,12 +201,12 @@ int wrc_check_link()
 	if(!prev_link_state && link_state)
 	{
 		TRACE_DEV("Link up.\n");
-		gpio_out(GPIO_PIN_LED_LINK, 1);
+		gpio_out(GPIO_LED_LINK, 1);
 		rv = LINK_WENT_UP;
 	} else if(prev_link_state && !link_state)
 	{
 		TRACE_DEV("Link down.\n");
-		gpio_out(GPIO_PIN_LED_LINK, 0);
+		gpio_out(GPIO_LED_LINK, 0);
 		rv = LINK_WENT_DOWN;
 	}  else rv = (link_state ? LINK_UP : LINK_DOWN);
 	prev_link_state = link_state;
