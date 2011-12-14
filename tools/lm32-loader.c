@@ -26,7 +26,7 @@
 #define BASE_PCIE 0x80000
 #define BASE_MBONE 0x00000
 
-#define RST_ADDR 0x62000
+#define RST_ADDR 0xC0400
 #define MEM_ADDR 0x0
 
 #include "rr_io.h"
@@ -63,7 +63,7 @@ int conv_endian(int x)
 
 void rst_lm32(int rst)
 {
-  spec_writel(rst ? 1 : 0, RST_ADDR);
+  spec_writel(rst ? 0x1deadbee : 0x0deadbee, RST_ADDR);
 }
 
 void copy_lm32(uint32_t *buf, int buf_nwords, uint32_t base_addr)
