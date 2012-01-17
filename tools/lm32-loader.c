@@ -26,7 +26,7 @@
 #define BASE_PCIE 0x80000
 #define BASE_MBONE 0x00000
 
-#define RST_ADDR 0xC0400
+#define RST_ADDR 0x40400
 #define MEM_ADDR 0x0
 
 #include "rr_io.h"
