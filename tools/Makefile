@@ -15,7 +15,7 @@ all: lm32-loader genraminit vuart_console
 OBJS_LOADER = lm32-loader.o rr_io.o mini_bone/ptpd_netif.o mini_bone/minibone_lib.o
 
 lm32-loader:	$(OBJS_LOADER)
-#				make -C mini_bone
+				make -C mini_bone
 				${CC} -o lm32-loader $(OBJS_LOADER)
 				
 genraminit: genraminit.o
@@ -28,4 +28,4 @@ vuart_console: vuart_console.o rr_io.o
 				${CC} -c $^ $(CFLAGS) -O0
 
 clean:
-	rm -f $(ALL) *.o *~
+	rm -f $(ALL) *.o *~ mini_bone/*.o mini_bone/*~
