@@ -10,6 +10,7 @@
 #include "pps_gen.h"
 #include "ptpd.h"
 #include "ptpd_netif.h"
+#include "onewire.h"
 
 
 
@@ -150,8 +151,7 @@ void rx_test()
 void wrc_initialize()
 {
 	int ret;
-	uint32_t dna_lo, dna_hi;
-	uint8_t mac_addr[6];
+	uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
 	
 	uart_init();
 
@@ -159,15 +159,23 @@ void wrc_initialize()
 			  __DATE__ " " __TIME__ ")\n");
 
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
-	dna_read(&dna_lo, &dna_hi);
-	
-	mac_addr[0] = 0;
-	mac_addr[1] = 0x50;
-	mac_addr[2] = (dna_lo >> 24) & 0xff;
-	mac_addr[3] = (dna_lo >> 16) & 0xff;
-	mac_addr[4] = (dna_lo >> 8) & 0xff;
-	mac_addr[5] = (dna_lo >> 0) & 0xff;
-	
+
+  //Generate MAC address
+  ow_init();
+  if( ds18x_read_serial(ds18_id) == 0 ) 
+	  mprintf("Found DS18xx sensor: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+		                              ds18_id[7], ds18_id[6], ds18_id[5], ds18_id[4], 
+                                  ds18_id[3], ds18_id[2], ds18_id[1], ds18_id[0]);
+  else
+    mprintf("DS18B20 not found\n");
+
+	mac_addr[0] = 0x08;   //
+	mac_addr[1] = 0x00;   // CERN OUI
+	mac_addr[2] = 0x30;   //  
+	mac_addr[3] = ds18_id[3]; // www.maxim-ic.com
+	mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
+	mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
+  
 	mprintf("wr_core: local MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
 	ep_init(mac_addr);
 	ep_enable(1, 1);
