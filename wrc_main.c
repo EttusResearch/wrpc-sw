@@ -163,7 +163,7 @@ void wrc_initialize()
   //Generate MAC address
   ow_init();
   if( ds18x_read_serial(ds18_id) == 0 ) 
-	  mprintf("Found DS18xx sensor: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+	  mprintf("Found DS18xx sensor: %x:%x:%x:%x:%x:%x:%x:%x\n",
 		                              ds18_id[7], ds18_id[6], ds18_id[5], ds18_id[4], 
                                   ds18_id[3], ds18_id[2], ds18_id[1], ds18_id[0]);
   else
@@ -176,7 +176,7 @@ void wrc_initialize()
 	mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
 	mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
   
-	mprintf("wr_core: local MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+	mprintf("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
 	ep_init(mac_addr);
 	ep_enable(1, 1);
 
