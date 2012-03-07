@@ -19,10 +19,20 @@ struct SYSCON_WB
 /*GPIO pins*/
 #define GPIO_LED_LINK SYSC_GPSR_LED_LINK
 #define GPIO_LED_STAT SYSC_GPSR_LED_STAT
-#define GPIO_SCL      SYSC_GPSR_FMC_SCL
-#define GPIO_SDA      SYSC_GPSR_FMC_SDA
 #define GPIO_BTN1     SYSC_GPSR_BTN1
 #define GPIO_BTN2     SYSC_GPSR_BTN2
+#define GPIO_SFP_DET  SYSC_GPSR_SFP_DET
+
+#define WRPC_FMC_I2C  0
+#define WRPC_SFP_I2C  1
+
+struct s_i2c_if
+{
+  uint32_t scl;
+  uint32_t sda; 
+};
+
+struct s_i2c_if i2c_if[2];
 
 void timer_init(uint32_t enable);
 uint32_t timer_get_tics();

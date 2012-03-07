@@ -1,5 +1,8 @@
 #include "syscon.h"
 
+struct s_i2c_if i2c_if[2] = { {SYSC_GPSR_FMC_SCL, SYSC_GPSR_FMC_SDA}, 
+                              {SYSC_GPSR_SFP_SCL, SYSC_GPSR_SFP_SDA} };
+
 /****************************
  *        TIMER
  ***************************/

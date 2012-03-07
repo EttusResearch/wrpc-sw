@@ -2,99 +2,112 @@
 #include "board.h"
 #include "syscon.h"
 
-#define I2C_DELAY 100
+#define I2C_DELAY 300
 
-static void mi2c_delay()
+void mi2c_delay()
 {
     int i;
     for(i=0;i<I2C_DELAY;i++) asm volatile ("nop");
 }
 
-#define M_SDA_OUT(x) { gpio_out(GPIO_SDA, x); mi2c_delay(); }
-#define M_SCL_OUT(x) { gpio_out(GPIO_SCL, x); mi2c_delay(); }
-#define M_SDA_IN gpio_in(GPIO_SDA)
+#define M_SDA_OUT(i, x) { gpio_out(i2c_if[i].sda, x); mi2c_delay(); }
+#define M_SCL_OUT(i, x) { gpio_out(i2c_if[i].scl, x); mi2c_delay(); }
+#define M_SDA_IN(i) gpio_in(i2c_if[i].sda)
 
-void mi2c_start()
+void mi2c_start(uint8_t i2cif)
 {
-  M_SDA_OUT(0);
-  M_SCL_OUT(0);
+  M_SDA_OUT(i2cif, 0);
+  M_SCL_OUT(i2cif, 0);
 }
 
-void mi2c_repeat_start()
+void mi2c_repeat_start(uint8_t i2cif)
 {
-  M_SDA_OUT(1);
-  M_SCL_OUT(1);
-  M_SDA_OUT(0);
-  M_SCL_OUT(0);
+  M_SDA_OUT(i2cif, 1);
+  M_SCL_OUT(i2cif, 1);
+  M_SDA_OUT(i2cif, 0);
+  M_SCL_OUT(i2cif, 0);
 }
 
-void mi2c_stop()
+void mi2c_stop(uint8_t i2cif)
 {
-  M_SDA_OUT(0);
-  M_SCL_OUT(1);
-  M_SDA_OUT(1);
+  M_SDA_OUT(i2cif, 0);
+  M_SCL_OUT(i2cif, 1);
+  M_SDA_OUT(i2cif, 1);
 }
 
-unsigned char mi2c_put_byte(unsigned char data)
+unsigned char mi2c_put_byte(uint8_t i2cif, unsigned char data)
 {
   char i;
   unsigned char ack;
 
   for (i=0;i<8;i++, data<<=1)
     {
-      M_SDA_OUT(data&0x80);
-      M_SCL_OUT(1);
-      M_SCL_OUT(0);
+      M_SDA_OUT(i2cif, data&0x80);
+      M_SCL_OUT(i2cif, 1);
+      M_SCL_OUT(i2cif, 0);
     }
 
-  M_SDA_OUT(1);
-  M_SCL_OUT(1);
+  M_SDA_OUT(i2cif, 1);
+  M_SCL_OUT(i2cif, 1);
 
-  ack = M_SDA_IN;	/* ack: sda is pulled low ->success.	 */
+  ack = M_SDA_IN(i2cif);	/* ack: sda is pulled low ->success.	 */
 
-  M_SCL_OUT(0);
-  M_SDA_OUT(0);
+  M_SCL_OUT(i2cif, 0);
+  M_SDA_OUT(i2cif, 0);
 
   return ack!=0;
 }
 
-void mi2c_get_byte(unsigned char *data)
+void mi2c_get_byte(uint8_t i2cif, unsigned char *data, uint8_t last)
 {
 
   int i;
   unsigned char indata = 0;
 
+  M_SDA_OUT(i2cif, 1);
   /* assert: scl is low */
-  M_SCL_OUT(0);
+  M_SCL_OUT(i2cif, 0);
 
   for (i=0;i<8;i++)
     {
-      M_SCL_OUT(1);
+      M_SCL_OUT(i2cif, 1);
       indata <<= 1;
-      if ( M_SDA_IN ) indata |= 0x01;
-      M_SCL_OUT(0);
+      if ( M_SDA_IN(i2cif) ) indata |= 0x01;
+      M_SCL_OUT(i2cif, 0);
     }
 
-  M_SDA_OUT(1);
+  if(last)
+  {
+    M_SDA_OUT(i2cif, 1);  //noack
+    M_SCL_OUT(i2cif, 1);
+    M_SCL_OUT(i2cif, 0);
+  }
+  else
+  {
+    M_SDA_OUT(i2cif, 0);  //ack
+    M_SCL_OUT(i2cif, 1);
+    M_SCL_OUT(i2cif, 0);
+  }
+
   *data= indata;
 }
 
-void mi2c_init()
+void mi2c_init(uint8_t i2cif)
 {
-  M_SCL_OUT(1);
-  M_SDA_OUT(1);
+  M_SCL_OUT(i2cif, 1);
+  M_SDA_OUT(i2cif, 1);
 }
 
-void mi2c_scan()
+void mi2c_scan(uint8_t i2cif)
 {
     int i;
     
     for(i=0;i<0x80;i++)
     {
-	mi2c_start();
-	mprintf("scan %d\n",i);
-	if(!mi2c_put_byte(i<<1)) mprintf("found : %x\n", i);
-	mi2c_stop();
-	
+	    mi2c_start(i2cif);
+//	    mprintf("scan %x\n",i);
+	    if(!mi2c_put_byte(i2cif, i<<1)) mprintf("found : %x\n", i);
+	    mi2c_stop(i2cif);
+  
     }    
 }
