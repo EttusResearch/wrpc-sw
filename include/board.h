@@ -9,6 +9,8 @@
 #define BASE_UART 	  0x20500
 #define BASE_ONEWIRE  0x20600
 
+#define FMC_EEPROM_ADR 0x50
+
 #define CPU_CLOCK 62500000ULL
 
 #define UART_BAUDRATE 115200ULL /* not a real UART */
