@@ -61,35 +61,35 @@ int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, 
  	return size;
 }
 
-int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size)
-{
-	int i, busy;
-
-	for(i=0;i<size;i++)
-	{
-	 	mi2c_start(i2cif);
-
-	 	if(mi2c_put_byte(i2cif, i2c_addr << 1) < 0)
-	 	{
-		 	mi2c_stop(i2cif);
-	 	 	return -1;
-	  }
-		mi2c_put_byte(i2cif, (offset >> 8) & 0xff);
-		mi2c_put_byte(i2cif, offset & 0xff);
-		mi2c_put_byte(i2cif, *buf++);
-		offset++;
-		mi2c_stop(i2cif);
-
-		do /* wait until the chip becomes ready */
-		{
-      mi2c_start(i2cif);
-			busy = mi2c_put_byte(i2cif, i2c_addr << 1);
-			mi2c_stop(i2cif);
-		} while(busy);
-
-	}
- 	return size;
-}
+//int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size)
+//{
+//	int i, busy;
+//
+//	for(i=0;i<size;i++)
+//	{
+//	 	mi2c_start(i2cif);
+//
+//	 	if(mi2c_put_byte(i2cif, i2c_addr << 1) < 0)
+//	 	{
+//		 	mi2c_stop(i2cif);
+//	 	 	return -1;
+//	  }
+//		mi2c_put_byte(i2cif, (offset >> 8) & 0xff);
+//		mi2c_put_byte(i2cif, offset & 0xff);
+//		mi2c_put_byte(i2cif, *buf++);
+//		offset++;
+//		mi2c_stop(i2cif);
+//
+//		do /* wait until the chip becomes ready */
+//		{
+//      mi2c_start(i2cif);
+//			busy = mi2c_put_byte(i2cif, i2c_addr << 1);
+//			mi2c_stop(i2cif);
+//		} while(busy);
+//
+//	}
+// 	return size;
+//}
 
 
 int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16_t *section_sz)
