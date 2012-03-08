@@ -7,4 +7,7 @@ static inline void clear_irq()
   asm volatile ("wcsr ip, %0"::"r"(val));
 }
 
+void disable_irq();
+void enable_irq();
+
 #endif
