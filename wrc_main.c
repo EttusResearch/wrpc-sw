@@ -66,86 +66,74 @@ static   PtpClockDS ptpClockDS;
 
 
 
-volatile int count = 0;
 
-uint32_t tag_prev;
+//void test_transition()
+//{
+//
+//    int phase = 0;
+//    
+//   softpll_enable();
+//   while(!softpll_check_lock()) timer_delay(1000);
+//
+//    for(;;)
+//    {	struct hw_timestamp hwts;
+//        uint8_t buf_hdr[18], buf[128];
+//	
+//	if(minic_rx_frame(buf_hdr, buf, 128, &hwts) > 0)
+//	{
+//	    printf("phase %d ahead %d\n", phase, hwts.ahead);
+//	    phase+=100;
+//	    softpll_set_phase(phase);
+//	    timer_delay(10);
+//	}
+//    }
+//}
 
-uint32_t tics_last;
+//int last_btn0;
+//int button_pressed()
+//{
+//	int p;
+//	int btn0 = gpio_in(GPIO_BTN1);
+//	p=!btn0 && last_btn0;
+//	last_btn0 = btn0;
+//	return p;
+//}
 
-
-void test_transition()
-{
-
-    int phase = 0;
-    
-   softpll_enable();
-   while(!softpll_check_lock()) timer_delay(1000);
-
-    for(;;)
-    {	struct hw_timestamp hwts;
-        uint8_t buf_hdr[18], buf[128];
-	
-	if(minic_rx_frame(buf_hdr, buf, 128, &hwts) > 0)
-	{
-	    printf("phase %d ahead %d\n", phase, hwts.ahead);
-	    phase+=100;
-	    softpll_set_phase(phase);
-	    timer_delay(10);
-	}
-    }
-}
-
-int last_btn0;
-
-int button_pressed()
-{
-	int p;
-	int btn0 = gpio_in(GPIO_BTN1);
-	p=!btn0 && last_btn0;
-	last_btn0 = btn0;
-	return p;
-}
-
-int enable_tracking = 1;
-
-void rx_test()
-{
-  uint8_t mac[]= {0x1, 0x1b, 0x19, 0,0,0};
-  uint16_t buf[100];
-  wr_socket_t *sock;
-  wr_sockaddr_t addr;
-
-  memcpy(addr.mac, mac, 6);
-  addr.ethertype = 0x88f7;
-
-  ptpd_netif_init();
-  sock = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &addr);
-  mprintf("Sock @ %x\n", sock);
-  wrc_extra_debug = 0;
-  for(;;)
-  {
-   	update_rx_queues();
-  	int n = ptpd_netif_recvfrom(sock, &addr, buf, sizeof(buf), NULL);
-  	if(n>0) 
-  	{
-  		uint16_t sum = 0 ,i, rx;
-  		rx=n;
-  		n= buf[0];
-	  	for(i=1;i<n;i++) sum+=buf[i]; 
-	  	mprintf("%x %x\n", sum, buf[n]);
-	  	if(sum != buf[n])
-	  	{
-	  		mprintf("****************** ERR: rxed %d size %d\n", rx, n);
-	  	}
-	  	
-    }
-    timer_delay(10);
-    mprintf(".");
-  	
-  }
-  
-  
-}
+//void rx_test()
+//{
+//  uint8_t mac[]= {0x1, 0x1b, 0x19, 0,0,0};
+//  uint16_t buf[100];
+//  wr_socket_t *sock;
+//  wr_sockaddr_t addr;
+//
+//  memcpy(addr.mac, mac, 6);
+//  addr.ethertype = 0x88f7;
+//
+//  ptpd_netif_init();
+//  sock = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &addr);
+//  mprintf("Sock @ %x\n", sock);
+//  wrc_extra_debug = 0;
+//  for(;;)
+//  {
+//   	update_rx_queues();
+//  	int n = ptpd_netif_recvfrom(sock, &addr, buf, sizeof(buf), NULL);
+//  	if(n>0) 
+//  	{
+//  		uint16_t sum = 0 ,i, rx;
+//  		rx=n;
+//  		n= buf[0];
+//	  	for(i=1;i<n;i++) sum+=buf[i]; 
+//	  	mprintf("%x %x\n", sum, buf[n]);
+//	  	if(sum != buf[n])
+//	  	{
+//	  		mprintf("****************** ERR: rxed %d size %d\n", rx, n);
+//	  	}
+//	  	
+//    }
+//    timer_delay(10);
+//    mprintf(".");
+//  }
+//}
 
 
 void wrc_initialize()
@@ -291,11 +279,6 @@ extern volatile int irq_cnt;
 
 int main(void)
 {
-	int rx, tx;
-	int link_went_up, link_went_down;
-	int prev_link_state= 0, link_state;
-	
-	int16_t ret;
 
 	wrc_initialize();
 	for(;;)
@@ -325,12 +308,9 @@ int main(void)
 				softpll_disable();
 				break;
 		}        
-//		mprintf(".");
 
 		protocol_nonblock(&rtOpts, ptpPortDS);
 
 	}
 }
-
-
 
