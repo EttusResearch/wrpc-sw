@@ -271,7 +271,7 @@ int wrc_check_link()
 	return rv;
 }
 
-int wrc_extra_debug = 1;
+int wrc_extra_debug = 0;
 int wrc_gui_mode = 0;
 
 void wrc_debug_printf(int subsys, const char *fmt, ...)
