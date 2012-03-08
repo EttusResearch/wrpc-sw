@@ -92,7 +92,7 @@ int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf,
 }
 
 
-uint16_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16_t *section_sz)
+int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16_t *section_sz)
 {
   uint8_t c, match;
   uint16_t i;
@@ -101,7 +101,7 @@ uint16_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16
   match = 0x00;
   *section_sz = 0x0000;
   mi2c_start(i2cif);
-  if(mi2c_put_byte(i2cif, i2c_addr << 1) < 0)
+  if(mi2c_put_byte(i2cif, i2c_addr << 1) != 0)
   {
     mi2c_stop(i2cif);
     return -1;
@@ -181,13 +181,14 @@ int8_t access_eeprom(char *sfp_pn, int32_t *alpha, int32_t *deltaTx, int32_t *de
 {
   uint16_t i;
   uint8_t j;
-  uint16_t sfp_adr, sfp_sz;
+  uint16_t sfp_sz;
+  int32_t sfp_adr;
   struct s_sfpinfo sfpinfo[SFPINFO_MAX];
 
   mi2c_init(WRPC_FMC_I2C);
   
   sfp_adr = eeprom_sfp_section(WRPC_FMC_I2C, FMC_EEPROM_ADR, 64*1024, &sfp_sz);
-  if(sfp_sz == -1)
+  if(sfp_adr == -1)
   {
     mprintf("FMC EEPROM not found\n");
     return -1;
@@ -195,14 +196,14 @@ int8_t access_eeprom(char *sfp_pn, int32_t *alpha, int32_t *deltaTx, int32_t *de
   else if(sfp_sz > SFPINFO_MAX)
   {
     //Ooops, there are too many of them, print warning
-    mprintf("!!! Warning !!! not enough space for all SFP entries (%d SFPs in the EEPROM)\n", sfp_sz);
+    mprintf("! Warning ! too many SFP entries (%d)\n", sfp_sz);
     sfp_sz = SFPINFO_MAX;
   }
   mprintf("EEPROM: found SFP section at %d size %d\n", (uint32_t)sfp_adr, (uint32_t)sfp_sz);
 
   if( eeprom_get_sfpinfo(WRPC_FMC_I2C, FMC_EEPROM_ADR, sfp_adr, sfpinfo, sfp_sz))
   {
-    mprintf("eeprom_get_sfpinfo ERROR\n");
+    mprintf("EEPROM ERROR\n");
     return -1;
   }
 
@@ -219,7 +220,7 @@ int8_t access_eeprom(char *sfp_pn, int32_t *alpha, int32_t *deltaTx, int32_t *de
       mprintf("match SFP%d: pn=", i+1);
       for(j=0; j<16; ++j)
         mprintf("%c", sfpinfo[i].pn[j]);
-      mprintf(" alpha=%x deltaTx=%x deltaRx=%x\n", sfpinfo[i].alpha, sfpinfo[i].deltaTx, sfpinfo[i].deltaRx);
+      //mprintf(" alpha=%x deltaTx=%x deltaRx=%x\n", sfpinfo[i].alpha, sfpinfo[i].deltaTx, sfpinfo[i].deltaRx);
 
       *alpha   = sfpinfo[i].alpha;
       *deltaTx = sfpinfo[i].deltaTx;
