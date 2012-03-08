@@ -11,6 +11,7 @@ LGPL 2.1
 #include <stdio.h>
 
 #include "board.h"
+#include "syscon.h"
 #include <endpoint.h>
 
 #include <hw/endpoint_regs.h>
@@ -94,7 +95,7 @@ int ep_enable(int enabled, int autoneg)
     if(!enabled)
     {
         EP->ECR = 0;
-        return;
+        return  0;
     }
 
 /* Disable the endpoint */
@@ -193,4 +194,6 @@ int ep_cal_pattern_disable()
   val = pcs_read(MDIO_REG_WR_SPEC);
   val &= (~MDIO_WR_SPEC_TX_CAL);
   pcs_write(MDIO_REG_WR_SPEC, val);
+
+  return 0;
 }
