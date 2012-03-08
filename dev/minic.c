@@ -139,7 +139,6 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   uint32_t desc_hdr;
   uint32_t raw_ts;
   uint32_t rx_addr_cur;
-  int i;
   int n_recvd;
 
   if(! (minic_readl(MINIC_REG_EIC_ISR) & MINIC_EIC_ISR_RX))
@@ -259,7 +258,6 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       uint32_t counter_r, counter_f;
       uint32_t utc;
       uint32_t nsec;
-      uint8_t ts_tout;
 
 	  while((minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID) == 0);
 
