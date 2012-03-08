@@ -15,7 +15,7 @@
 
 #define UART_BAUDRATE 115200ULL /* not a real UART */
 
-static inline int delay(int x)
+static inline void delay(int x)
 {
   while(x--) asm volatile("nop");
 }
