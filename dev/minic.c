@@ -77,7 +77,7 @@ static void minic_new_rx_buffer()
  // TRACE_DEV("Sizeof: %d Size : %d Avail: %d\n", minic.rx_size, (minic.rx_size - MINIC_MTU) >> 2);
   minic_writel(MINIC_REG_MCR, MINIC_MCR_RX_EN);
   
-  mprintf("Base : %x Avail: %d\n", minic_readl(MINIC_REG_RX_ADDR), minic_readl(MINIC_REG_RX_AVAIL));
+  //mprintf("Base : %x Avail: %d\n", minic_readl(MINIC_REG_RX_ADDR), minic_readl(MINIC_REG_RX_AVAIL));
 
 }
 
