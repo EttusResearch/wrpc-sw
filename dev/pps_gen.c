@@ -35,8 +35,6 @@ void pps_gen_init()
 
 void pps_gen_adjust_nsec(int32_t how_much)
 {
-  uint32_t cr;
-
   TRACE_DEV("ADJ: nsec %d nanoseconds\n", how_much);
  #if 1
   ppsg_writel( PPSG_REG_ADJ_UTCLO, 0);
@@ -51,7 +49,6 @@ void pps_gen_adjust_nsec(int32_t how_much)
 
 void pps_gen_adjust_utc(int32_t how_much)
 {
-  uint32_t cr;
 
 #if 1
   TRACE_DEV("ADJ: utc %d seconds\n", how_much);
