@@ -10,6 +10,8 @@
 #include "pps_gen.h"
 #include "ptpd.h"
 #include "ptpd_netif.h"
+#include "i2c.h"
+#include "eeprom.h"
 #include "onewire.h"
 
 
@@ -65,6 +67,10 @@ static   PtpPortDS *ptpPortDS;
 static   PtpClockDS ptpClockDS;
 
 
+
+int32_t sfp_alpha = 0;
+int32_t sfp_deltaTx = 0;
+int32_t sfp_deltaRx = 0;
 
 
 //void test_transition()
@@ -135,11 +141,57 @@ static   PtpClockDS ptpClockDS;
 //  }
 //}
 
+#if 0
+uint8_t get_sfp_id(char *sfp_pn)
+{
+  uint8_t data, sum=0;
+  uint8_t i;
+
+  //wait until SFP signalizes its presence
+  while( gpio_in(GPIO_SFP_DET) );
+
+  //mprintf("wr_core: SFP present\n");
+  mi2c_init(WRPC_SFP_I2C);
+
+  mi2c_start(WRPC_SFP_I2C);
+  mi2c_put_byte(WRPC_SFP_I2C, 0xA0);
+  mi2c_put_byte(WRPC_SFP_I2C, 0x00);
+  mi2c_repeat_start(WRPC_SFP_I2C); 
+  mi2c_put_byte(WRPC_SFP_I2C, 0xA1);
+  mi2c_get_byte(WRPC_SFP_I2C, &data, 1);
+  mi2c_stop(WRPC_SFP_I2C);
+
+  //mprintf("SFP: id=0x%x\n", data);
+  sum = data;
+
+  mi2c_start(WRPC_SFP_I2C);
+  mi2c_put_byte(WRPC_SFP_I2C, 0xA1);
+  for(i=1; i<63; ++i)
+  {
+    mi2c_get_byte(WRPC_SFP_I2C, &data, 0);
+    sum = (uint8_t) ((uint16_t)sum + data) & 0xff;
+    if(i>=40 && i<=55)    //Part Number
+      sfp_pn[i-40] = data;
+  }
+  mi2c_get_byte(WRPC_SFP_I2C, &data, 1);  //final word, checksum
+  mi2c_stop(WRPC_SFP_I2C);
+
+  //mprintf("SFP: vendor PN: ");
+  //for(i=0; i<=15; ++i)
+  //  mprintf("%c", sfp_pn[i]);
+
+  if(sum == data) mprintf("\nSFP: DATA OK\n");
+  else mprintf("\nSFP: DATA FAULY\n");
+
+  return 0;
+}
+#endif
 
 void wrc_initialize()
 {
 	int ret;
 	uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
+  char sfp_pn[17];
 	
 	uart_init();
 
@@ -147,6 +199,15 @@ void wrc_initialize()
 			  __DATE__ " " __TIME__ ")\n");
 
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
+
+  //SFP
+#if 0
+  get_sfp_id(sfp_pn);
+  if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
+  {
+    mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
+  }
+#endif
 
   //Generate MAC address
   ow_init();
