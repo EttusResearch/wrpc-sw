@@ -59,7 +59,7 @@ all: 		$(OBJS)
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
-				./tools/genramvhd $(OUTPUT).bin > $(OUTPUT).vhd
+				./tools/genramvhd -s 65536 $(OUTPUT).bin > $(OUTPUT).vhd
 
 clean:	
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram

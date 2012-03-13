@@ -17,6 +17,7 @@ void help() {
   fprintf(stderr, "\n");
   fprintf(stderr, "  -w <width>     width of values in bytes [1/2/4/8/16]        (4)\n");
   fprintf(stderr, "  -p <package>   name of the output package            (filename)\n");
+  fprintf(stderr, "  -s <size>      pad the output up to size bytes       (filesize)\n");
   fprintf(stderr, "  -b             big-endian operation                         (*)\n");
   fprintf(stderr, "  -l             little-endian operation                         \n");
   fprintf(stderr, "  -v             verbose operation\n");
@@ -37,7 +38,7 @@ inline int my_isok(char c) {
 
 int main(int argc, char **argv) {
   int j, opt, error, i_width;
-  long i, elements, columns, entry_width;
+  long i, elements, size, columns, entry_width;
   char* value_end;
   unsigned char x[16]; /* Up to 128 bit */
   char buf[100];
@@ -49,9 +50,10 @@ int main(int argc, char **argv) {
   width = 4;
   bigendian = 1;
   verbose = 0;
+  size = -1; /* file size */
   
   /* Process the command-line */
-  while ((opt = getopt(argc, argv, "w:p:blvh")) != -1) {
+  while ((opt = getopt(argc, argv, "w:p:s:blvh")) != -1) {
     switch (opt) {
     case 'w':
       width = strtol(optarg, &value_end, 0);
@@ -65,6 +67,13 @@ int main(int argc, char **argv) {
       break;
     case 'p':
       package = optarg;
+      break;
+    case 's':
+      size = strtol(optarg, &value_end, 0);
+      if (*value_end) {
+        fprintf(stderr, "%s: invalid value size -- '%s'\n", program, optarg);
+        error = 1;
+      }
       break;
     case 'b':
       bigendian = 1;
@@ -106,11 +115,26 @@ int main(int argc, char **argv) {
   elements = ftell(f);
   rewind(f);
   
+  if (size == -1) {
+    size = elements;
+  }
+  
+  if (size < elements) {
+    fprintf(stderr, "%s: length of initialization file '%s' (%ld) exceeds specified size (%ld)\n", program, filename, elements, size);
+    return 1;
+  }
+  
   if (elements % width != 0) {
     fprintf(stderr, "%s: initialization file '%s' is not a multiple of %ld bytes\n", program, filename, width);
     return 1;
   }
   elements /= width;
+  
+  if (size % width != 0) {
+    fprintf(stderr, "%s: specified size '%ld' is not a multiple of %ld bytes\n", program, size, width);
+    return 1;
+  }
+  size /= width;
   
   /* Find a suitable package name */
   if (package == 0) {
@@ -151,9 +175,9 @@ int main(int argc, char **argv) {
     }
   }
   
-  /* Find how many digits it takes to fit 'elements' */
+  /* Find how many digits it takes to fit 'size' */
   i_width = 1;
-  for (i = 10; i <= elements; i *= 10)
+  for (i = 10; i <= size; i *= 10)
     ++i_width;
     
   /* How wide is an entry of the table? */
@@ -170,14 +194,18 @@ int main(int argc, char **argv) {
   printf("\n");
   
   printf("package %s_pkg is\n", package);
-  printf("  constant %s_init : t_meminit_array(%ld downto 0, %ld downto 0) := (\n", package, elements-1, (width*4)-1);
+  printf("  constant %s_init : t_meminit_array(%ld downto 0, %ld downto 0) := (\n", package, size-1, (width*8)-1);
   
-  for (i = 1; i <= elements; ++i) {
-    if (i % columns == 1) printf("    ");
+  for (i = 0; i < size; ++i) {
+    if (i % columns == 0) printf("    ");
     
-    if (fread(x, 1, width, f) != width) {
-      perror("fread");
-      return 1;
+    if (i < elements) {
+      if (fread(x, 1, width, f) != width) {
+        perror("fread");
+        return 1;
+      }
+    } else {
+      memset(x, 0, sizeof(x));
     }
     
     printf("%*ld => x\"", i_width, i);
@@ -190,8 +218,8 @@ int main(int argc, char **argv) {
     }
     printf("\"");
     
-    if (i == elements) printf(");\n");
-    else if (i % columns == 0) printf(",\n");
+    if ((i+1) == size) printf(");\n");
+    else if ((i+1) % columns == 0) printf(",\n");
     else printf(", ");
   }
   fclose(f);
