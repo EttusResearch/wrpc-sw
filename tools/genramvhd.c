@@ -130,7 +130,6 @@ int main(int argc, char **argv) {
         buf[i] = '_';
     }
     buf[i] = 0;
-    strcat(buf, "_pkg");
     
     if (i == 0) {
       fprintf(stderr, "%s: no appropriate characters in filename to use for package name -- '%s'\n", program, filename);
@@ -170,8 +169,8 @@ int main(int argc, char **argv) {
   printf("use work.memory_loader_pkg.all;\n");
   printf("\n");
   
-  printf("package %s is\n", package);
-  printf("  constant file_contents : t_meminit_array(%ld downto 0, %ld downto 0) := (\n", elements-1, (width*4)-1);
+  printf("package %s_pkg is\n", package);
+  printf("  constant %s_init : t_meminit_array(%ld downto 0, %ld downto 0) := (\n", package, elements-1, (width*4)-1);
   
   for (i = 1; i <= elements; ++i) {
     if (i % columns == 1) printf("    ");
@@ -197,7 +196,7 @@ int main(int argc, char **argv) {
   }
   fclose(f);
   
-  printf("end %s;\n", package);
+  printf("end %s_pkg;\n", package);
 
   return 0;
 }
