@@ -10,7 +10,7 @@ STRIP		= $(CROSS_COMPILE)strip
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 OBJDUMP		= $(CROSS_COMPILE)objdump
 
-all: lm32-loader genraminit vuart_console
+all: lm32-loader genraminit genramvhd vuart_console
 
 OBJS_LOADER = lm32-loader.o rr_io.o mini_bone/ptpd_netif.o mini_bone/minibone_lib.o
 
@@ -20,6 +20,9 @@ lm32-loader:	$(OBJS_LOADER)
 				
 genraminit: genraminit.o
 				${CC} -o genraminit genraminit.o
+
+genramvhd: genramvhd.o
+				${CC} -o genramvhd genramvhd.o
 
 vuart_console: vuart_console.o rr_io.o
 				${CC} -o vuart_console vuart_console.o rr_io.o

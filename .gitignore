@@ -6,5 +6,7 @@
 tools/zpu-loader
 tools/vuart_console
 tools/genraminit
+tools/genramvhd
+tools/lm32-loader
 wrc_disasm.S
 wrc.ram
