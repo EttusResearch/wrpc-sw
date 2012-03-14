@@ -1,6 +1,6 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/i2c.o dev/eeprom.o dev/onewire.o dev/softpll.o lib/mprintf.o monitor/monitor.o dev/ep_pfilter.o dev/dna.o
+OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o dev/ep_pfilter.o dev/dna.o
 
 D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG
@@ -9,20 +9,20 @@ PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
 PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0
 
-OBJS_PTPD = $D/PTPWRd/arith.o
-OBJS_PTPD += $D/PTPWRd/bmc.o
-OBJS_PTPD += $D/PTPWRd/dep/msg.o
-OBJS_PTPD += $D/PTPWRd/dep/net.o
-OBJS_PTPD += $D/PTPWRd/dep/servo.o
-OBJS_PTPD += $D/PTPWRd/dep/sys.o
-OBJS_PTPD += $D/PTPWRd/dep/timer.o
-OBJS_PTPD += $D/PTPWRd/dep/wr_servo.o
-OBJS_PTPD += $D/PTPWRd/protocol.o
-OBJS_PTPD += $D/PTPWRd/wr_protocol.o
-OBJS_PTPD_FREE   = $D/libposix/freestanding-startup.o
-OBJS_PTPD_FREE	+= $D/libposix/freestanding-display.o
-OBJS_PTPD_FREE	+= $D/libposix/wr_nolibs.o
-OBJS_PTPD_FREE	+= $D/libposix/freestanding-wrapper.o
+#OBJS_PTPD = $D/PTPWRd/arith.o
+#OBJS_PTPD += $D/PTPWRd/bmc.o
+#OBJS_PTPD += $D/PTPWRd/dep/msg.o
+#OBJS_PTPD += $D/PTPWRd/dep/net.o
+#OBJS_PTPD += $D/PTPWRd/dep/servo.o
+#OBJS_PTPD += $D/PTPWRd/dep/sys.o
+#OBJS_PTPD += $D/PTPWRd/dep/timer.o
+#OBJS_PTPD += $D/PTPWRd/dep/wr_servo.o
+#OBJS_PTPD += $D/PTPWRd/protocol.o
+#OBJS_PTPD += $D/PTPWRd/wr_protocol.o
+#OBJS_PTPD_FREE   = $D/libposix/freestanding-startup.o
+#OBJS_PTPD_FREE	+= $D/libposix/freestanding-display.o
+#OBJS_PTPD_FREE	+= $D/libposix/wr_nolibs.o
+#OBJS_PTPD_FREE	+= $D/libposix/freestanding-wrapper.o
 
 ifeq ($(PLATFORM), zpu)
 CFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
