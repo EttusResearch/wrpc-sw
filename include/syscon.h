@@ -32,7 +32,7 @@ struct s_i2c_if
   uint32_t sda; 
 };
 
-struct s_i2c_if i2c_if[2];
+extern struct s_i2c_if i2c_if[2];
 
 void timer_init(uint32_t enable);
 uint32_t timer_get_tics();
