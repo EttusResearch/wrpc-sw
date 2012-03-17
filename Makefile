@@ -29,7 +29,7 @@ CFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 LDFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 OBJS_PLATFORM=
 else
-CROSS_COMPILE ?= /opt/gcc-lm32/bin/lm32-elf-
+CROSS_COMPILE ?= lm32-elf-
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 
 ########################################################################
