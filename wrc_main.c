@@ -91,7 +91,6 @@ void silly_minic_test()
     }
 }
 
-
 void test_transition()
 {
 
