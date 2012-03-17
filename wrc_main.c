@@ -10,8 +10,8 @@
 #include "pps_gen.h"
 #include "ptpd.h"
 #include "ptpd_netif.h"
-#include "i2c.h"
-#include "eeprom.h"
+//#include "i2c.h"
+//#include "eeprom.h"
 #include "onewire.h"
 
 
