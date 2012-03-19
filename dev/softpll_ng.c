@@ -23,14 +23,13 @@ static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
 #include "spll_main.h"
 #include "spll_ptracker.h"
 
-static struct spll_helper_state helper;
-static struct spll_main_state mpll;
+static volatile struct spll_helper_state helper;
+static volatile struct spll_main_state mpll;
 
 void _irq_entry()
 {
 	volatile uint32_t trr;
 	int src = -1, tag;
-
 
 	if(! (SPLL->CSR & SPLL_TRR_CSR_EMPTY))
 	{
@@ -62,7 +61,6 @@ void spll_init()
   timer_delay(1000);
 	//GD timer_delay(100000);
   //GD
-  helper_init(&helper, 1);
   timer_delay(1000);
   TRACE_DEV("delay off\n");
 	
@@ -91,6 +89,7 @@ void spll_test()
 
   TRACE_DEV("running spll_init\n");
 	spll_init();
+  helper_init(&helper, 0);
   TRACE_DEV("spll_init\n");
 	helper_start(&helper);
   TRACE_DEV("helper start\n");
