@@ -20,7 +20,7 @@ struct spll_helper_state {
  	spll_pi_t pi; 
  	spll_lock_det_t ld;
 };
-	
+
 static void helper_init(struct spll_helper_state *s, int ref_channel)
 {
 	
@@ -72,7 +72,6 @@ static int helper_update(struct spll_helper_state *s, int tag, int source)
 		err = (tag + s->p_adder) - s->p_setpoint;
 
 //    if(s->tag_d0 - tag > -100000)
-      TRACE_DEV("%d\n", s->tag_d0 - tag);
       //spll_debug(DBG_ERR | DBG_HELPER, s->tag_d0-tag, 1);
 
 		if(HELPER_ERROR_CLAMP)
@@ -96,9 +95,9 @@ static int helper_update(struct spll_helper_state *s, int tag, int source)
 		y = pi_update(&s->pi, err);
 		SPLL->DAC_HPLL = y;
 
-		//spll_debug(DBG_SAMPLE_ID | DBG_HELPER, s->sample_n++, 0);
-		//spll_debug(DBG_Y | DBG_HELPER, y, 0);
-		//spll_debug(DBG_ERR | DBG_HELPER, err, 1);
+		spll_debug(DBG_SAMPLE_ID | DBG_HELPER, s->sample_n++, 0);
+		spll_debug(DBG_Y | DBG_HELPER, y, 0);
+		spll_debug(DBG_ERR | DBG_HELPER, err, 1);
 
 		if(ld_update(&s->ld, err))
 			return SPLL_LOCKED;
