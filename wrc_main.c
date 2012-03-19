@@ -342,8 +342,12 @@ int main(void)
 {
 	wrc_initialize();
 
+#ifdef WRPC_SLAVE
     softpll_set_mode(0);
-  //softpll_enable();
+#endif
+#ifdef WRPC_MASTER
+    softpll_set_mode(1);
+#endif
     
    // for(;;);
 	for(;;)
