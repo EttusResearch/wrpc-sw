@@ -36,3 +36,7 @@ WARNING: These parameters must be in sync with the generics of the HDL instantia
 /* Number of bits of the DAC(s) driving the oscillator(s). Must be the same for
    all the outputs. */
 #define DAC_BITS 16
+
+/* 1.0 / (Speed of the phase shifter) - the higher value, the slower phase shifting.
+   Used to prevent de-locking PLLs when shifting large offsets. */
+#define PHASE_SHIFTER_SPEED 1
