@@ -47,9 +47,9 @@ RunTimeOpts rtOpts = {
    .E2E_mode 		  = TRUE,
    .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
    .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
-   .deltasKnown		= TRUE, WR_DEFAULT_DELTAS_KNOWN,
-   .knownDeltaTx	= 0, WR_DEFAULT_DELTA_TX,
-   .knownDeltaRx	= 0, WR_DEFAULT_DELTA_RX,
+   .deltasKnown		= TRUE,// WR_DEFAULT_DELTAS_KNOWN,
+   .knownDeltaTx	= 0,// WR_DEFAULT_DELTA_TX,
+   .knownDeltaRx	= 0, //WR_DEFAULT_DELTA_RX,
 /*SLAVE only or MASTER only*/
 #ifdef WRPC_SLAVE
    .primarySource = FALSE,
@@ -72,28 +72,47 @@ int32_t sfp_alpha = 0;
 int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
 
+#include "ptp-noposix/libptpnetif/ptpd_netif.h"
 
-//void test_transition()
-//{
-//
-//    int phase = 0;
-//    
-//   softpll_enable();
-//   while(!softpll_check_lock()) timer_delay(1000);
-//
-//    for(;;)
-//    {	struct hw_timestamp hwts;
-//        uint8_t buf_hdr[18], buf[128];
-//	
+
+void test_transition()
+{
+    wr_socket_t *sock;
+    wr_sockaddr_t bindaddr;
+    const mac_addr_t PTP_MULTICAST_ADDR = {0x01, 0x1b, 0x19, 0, 0, 0};
+    
+    int phase = 0;
+    
+   softpll_enable();
+   
+   while(!softpll_check_lock()) timer_delay(1000);
+
+
+    bindaddr.family = PTPD_SOCK_RAW_ETHERNET;// socket type
+    bindaddr.ethertype = 0x88f7;         // PTPv2
+    memcpy(bindaddr.mac, PTP_MULTICAST_ADDR, sizeof(mac_addr_t));
+     
+    // Create one socket for event and general messages (WR lower level layer requires that
+    sock = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &bindaddr);
+         
+    for(;;)
+    {	struct hw_timestamp hwts;
+        wr_timestamp_t t_rx;
+        uint8_t buf_hdr[18], buf[128];
+       	update_rx_queues();
+	
+	    if(ptpd_netif_recvfrom(sock, &bindaddr, buf, 128, &t_rx) > 0)
+	
 //	if(minic_rx_frame(buf_hdr, buf, 128, &hwts) > 0)
-//	{
-//	    printf("phase %d ahead %d\n", phase, hwts.ahead);
-//	    phase+=100;
-//	    softpll_set_phase(phase);
-//	    timer_delay(10);
-//	}
-//    }
-//}
+	{
+	    printf("phase %d ahead %d TS %d:%d\n", phase,0,t_rx.nsec, t_rx.phase);
+	    phase+=100;
+	    softpll_set_phase(phase);
+	    timer_delay(10);
+	}
+//    	mprintf(".");
+    }
+}
 
 //int last_btn0;
 //int button_pressed()
@@ -141,8 +160,8 @@ int32_t sfp_deltaRx = 0;
 //  }
 //}
 
-#if 0
-uint8_t get_sfp_id(char *sfp_pn)
+#if 1
+int get_sfp_id(char *sfp_pn)
 {
   uint8_t data, sum=0;
   uint8_t i;
@@ -180,16 +199,16 @@ uint8_t get_sfp_id(char *sfp_pn)
   //for(i=0; i<=15; ++i)
   //  mprintf("%c", sfp_pn[i]);
 
-  if(sum == data) mprintf("\nSFP: DATA OK\n");
-  else mprintf("\nSFP: DATA FAULY\n");
-
-  return 0;
+  if(sum == data) 
+      return 0;
+  
+  return -1;
 }
 #endif
 
 void wrc_initialize()
 {
-	int ret;
+	int ret, i;
 	uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
   char sfp_pn[17];
 	
@@ -201,12 +220,18 @@ void wrc_initialize()
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
 
   //SFP
-#if 0
-  get_sfp_id(sfp_pn);
-  if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
+#if 1
+  if( get_sfp_id(sfp_pn) >= 0)
   {
-    mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
-  }
+      mprintf("Found SFP transceiver ID: ");
+      for(i=0;i<16;i++)
+        mprintf("%c", sfp_pn[i]);
+      mprintf("\n");
+/*      if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
+      {
+        mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
+      }*/
+    }
 #endif
 
   //Generate MAC address
@@ -236,12 +261,10 @@ void wrc_initialize()
 
 	netStartup();
 
-	wr_servo_man_adjust_phase(-11600 + 1700);
+  	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+    initDataClock(&rtOpts, &ptpClockDS);
 
 	displayConfigINFO(&rtOpts);
-
-	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-	initDataClock(&rtOpts, &ptpClockDS);
 }
 
 #define LINK_WENT_UP 1
@@ -348,8 +371,12 @@ int main(void)
 #ifdef WRPC_MASTER
     softpll_set_mode(1);
 #endif
-    
-   // for(;;);
+//    softpll_test();
+
+
+//    test_transition();
+//    wr_servo_rollover_test(1);
+          
 	for(;;)
 	{
 		wrc_handle_input();
@@ -360,14 +387,28 @@ int main(void)
 		switch (l_status)
 		{
 			case LINK_WENT_UP:
+			{
+			    uint32_t delta_tx, delta_rx, ret=0;
 //				mprintf("**********************************S\n");
 /*				kill_sockets();
 				netStartup();
 		       	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
 				initDataClock(&rtOpts, &ptpClockDS);
 				protocol_restart(&rtOpts, &ptpClockDS);*/
-				break;
 
+
+                ep_get_deltas(&delta_tx, &delta_rx);
+                ptpPortDS->knownDeltaTx.scaledPicoseconds.msb = delta_tx >> 16;
+                ptpPortDS->knownDeltaTx.scaledPicoseconds.lsb = delta_tx << 16;
+                ptpPortDS->knownDeltaRx.scaledPicoseconds.msb = delta_rx >> 16;
+                ptpPortDS->knownDeltaRx.scaledPicoseconds.lsb = delta_rx << 16;
+
+           //    	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+           // 	initDataClock(&rtOpts, &ptpClockDS);
+
+				break;
+            }
+            
 			case LINK_UP:
 			//	softpll_check_lock();
 				update_rx_queues();
