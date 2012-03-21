@@ -151,7 +151,7 @@ int softpll_busy(int channel)
 
 void softpll_set_phase( int ps)
 {
-	mpll.phase_shift_target = ((int32_t) ((int64_t)ps * (long long)(1<<HPLL_N) / 8000LL));
+    mpll_set_phase_shift(&mpll, ((int32_t) ((int64_t)ps * (long long)(1<<HPLL_N) / 8000LL)));
 }
 
 void softpll_disable()
@@ -164,3 +164,18 @@ int softpll_get_setpoint()
   return mpll.phase_shift_target;
 }
 
+
+void softpll_test()
+{
+    softpll_enable();
+    for(;;)
+    {
+        mprintf("L!\n\n");
+        softpll_set_phase(1000000);
+        while(softpll_busy(0)) mprintf("%d %d %d%d %d %d\n", mpll.phase_shift_current, mpll.phase_shift_target, mpll.ld.locked, helper.ld.locked, lerr, ly);
+        mprintf("R!\n\n");
+        softpll_set_phase(10000);
+        while(softpll_busy(0)) mprintf("%d %d %d%d %d\n", mpll.phase_shift_current, mpll.phase_shift_target, mpll.ld.locked, helper.ld.locked, lerr);
+        
+    }
+}
