@@ -1,6 +1,6 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/onewire.o dev/softpll.o lib/mprintf.o monitor/monitor.o dev/ep_pfilter.o dev/dna.o
+OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/onewire.o dev/softpll_ng.o lib/mprintf.o monitor/monitor.o dev/ep_pfilter.o dev/dna.o dev/i2c.o dev/eeprom.o
 
 D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG

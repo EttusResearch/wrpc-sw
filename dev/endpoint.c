@@ -151,8 +151,8 @@ int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 {
     /* fixme: these values should be stored in calibration block in the EEPROM on the FMC. Also, the TX/RX delays of a particular SFP 
        should be added here */
-	*delta_tx = 0; 
-	*delta_rx = 15000 - 7000 + 195000 + 32000 + PICOS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC)) + 2800 - 9000 - 40000 + 2700;
+	*delta_tx = 46407; 
+	*delta_rx = 273593 + PICOS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
 	return 0;
 }
 
