@@ -258,6 +258,14 @@ void wrc_initialize()
     initDataClock(&rtOpts, &ptpClockDS);
 
 	displayConfigINFO(&rtOpts);
+
+  //initialize sockets
+  if(!netInit(&ptpPortDS->netPath, &rtOpts, ptpPortDS))
+  {
+      PTPD_TRACE(TRACE_WRPC, NULL,"failed to initialize network\n");
+      return;
+  }
+  ptpPortDS->linkUP = FALSE;
 }
 
 #define LINK_WENT_UP 1
