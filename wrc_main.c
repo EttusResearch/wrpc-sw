@@ -34,11 +34,6 @@ RunTimeOpts rtOpts = {
    .ap = DEFAULT_AP,
    .ai = DEFAULT_AI,
    .max_foreign_records = DEFAULT_MAX_FOREIGN_RECORDS,
-#ifdef WRPC_SLAVE
-   .slaveOnly = TRUE,
-#else
-   .slaveOnly = FALSE,
-#endif
 
    /**************** White Rabbit *************************/
    .autoPortDiscovery = FALSE,     /*if TRUE: automagically discovers how many ports we have (and how many up-s); else takes from .portNumber*/
@@ -47,9 +42,6 @@ RunTimeOpts rtOpts = {
    .E2E_mode 		  = TRUE,
    .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
    .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
-   .deltasKnown		= TRUE,// WR_DEFAULT_DELTAS_KNOWN,
-   .knownDeltaTx	= 0,// WR_DEFAULT_DELTA_TX,
-   .knownDeltaRx	= 0, //WR_DEFAULT_DELTA_RX,
 /*SLAVE only or MASTER only*/
 #ifdef WRPC_SLAVE
    .primarySource = FALSE,
@@ -397,11 +389,6 @@ int main(void)
 				protocol_restart(&rtOpts, &ptpClockDS);*/
 
 
-                ep_get_deltas(&delta_tx, &delta_rx);
-                ptpPortDS->knownDeltaTx.scaledPicoseconds.msb = delta_tx >> 16;
-                ptpPortDS->knownDeltaTx.scaledPicoseconds.lsb = delta_tx << 16;
-                ptpPortDS->knownDeltaRx.scaledPicoseconds.msb = delta_rx >> 16;
-                ptpPortDS->knownDeltaRx.scaledPicoseconds.lsb = delta_rx << 16;
 
            //    	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
            // 	initDataClock(&rtOpts, &ptpClockDS);
