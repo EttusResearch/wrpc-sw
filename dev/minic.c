@@ -221,6 +221,7 @@ static uint16_t tx_oob_val = 0;
 int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_timestamp *hwts)
 {
   uint32_t d_hdr, mcr, nwords;
+  uint8_t ts_valid;
   minic_new_tx_buffer();
 
 
@@ -259,7 +260,8 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       uint32_t utc;
       uint32_t nsec;
 
-	  while((minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID) == 0);
+	  //while((minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID) == 0);
+      ts_valid = (uint8_t) (minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID);
 
       raw_ts = minic_readl(MINIC_REG_TSR1);
       fid = MINIC_TSR0_FID_R(minic_readl(MINIC_REG_TSR0));
@@ -274,6 +276,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       if(counter_r > 3*125000000/4 && nsec < 125000000/4)
 		utc--;
 
+      hwts->valid = ts_valid;
       hwts->utc = utc;
       hwts->ahead = 0;
       hwts->nsec = counter_r * 8;
