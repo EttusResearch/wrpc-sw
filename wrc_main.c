@@ -13,6 +13,7 @@
 //#include "i2c.h"
 //#include "eeprom.h"
 #include "onewire.h"
+#include "softpll_ng.h"
 
 
 
@@ -357,13 +358,15 @@ int main(void)
 {
 	wrc_initialize();
 
-#ifdef WRPC_SLAVE
-    softpll_set_mode(0);
-#endif
-#ifdef WRPC_MASTER
-    softpll_set_mode(1);
-#endif
-//    softpll_test();
+  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
+  //spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+  spll_init(SPLL_MODE_SLAVE, 0, 1);
+
+  //for(;;)
+  //{
+  //  //mprintf("%d\n", timer_get_tics());
+  //  spll_show_stats();
+  //}
 
 
 //    test_transition();
@@ -402,7 +405,6 @@ int main(void)
 				break;
 
 			case LINK_WENT_DOWN:
-				softpll_disable();
 				break;
 		}        
 
