@@ -153,7 +153,7 @@ int32_t sfp_deltaRx = 0;
 //  }
 //}
 
-#if 1
+#if 0
 int get_sfp_id(char *sfp_pn)
 {
   uint8_t data, sum=0;
@@ -213,7 +213,7 @@ void wrc_initialize()
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
 
   //SFP
-#if 1
+#if 0
   if( get_sfp_id(sfp_pn) >= 0)
   {
       mprintf("Found SFP transceiver ID: ");
@@ -228,6 +228,7 @@ void wrc_initialize()
 #endif
 
   //Generate MAC address
+#if 0
   ow_init();
   if( ds18x_read_serial(ds18_id) == 0 ) 
 	  TRACE_DEV("Found DS18xx sensor: %x:%x:%x:%x:%x:%x:%x:%x\n",
@@ -235,6 +236,7 @@ void wrc_initialize()
                                  ds18_id[3], ds18_id[2], ds18_id[1], ds18_id[0]);
   else
     TRACE_DEV("DS18B20 not found\n");
+#endif
 
 	mac_addr[0] = 0x08;   //
 	mac_addr[1] = 0x00;   // CERN OUI
