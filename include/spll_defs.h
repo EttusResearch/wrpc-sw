@@ -34,7 +34,7 @@ WARNING: These parameters must be in sync with the generics of the HDL instantia
 #define MAX_CHAN_AUX 1
 
 /* Max. allowed number of phase trackers */
-#define MAX_PTRACKERS 6
+#define MAX_PTRACKERS 1
 
 /* Number of bits of the DAC(s) driving the oscillator(s). Must be the same for
    all the outputs. */

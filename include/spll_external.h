@@ -1,6 +1,5 @@
 
 #include <timer.h>
-#include <hw/pps_gen_regs.h>
 
 /* Number of bits of the BB phase detector error counter. Bit [BB_ERROR_BITS] is the wrap-around bit */
 #define BB_ERROR_BITS 16
@@ -43,21 +42,6 @@ Internal PPS               __________________________________|^^^^^^^^^|________
 /* Realignment done */
 #define REALIGN_DONE 7
 
-
-//GGDD
-PACKED struct PPSG_WB
-{
-  uint32_t CR;
-  uint32_t CNTR_NSEC;
-  uint32_t CNTR_UTCLO;
-  uint32_t CNTR_UTCHI;
-  uint32_t ADJ_NSEC;
-  uint32_t ADJ_UTCLO;
-  uint32_t ADJ_UTCHI;
-  uint32_t ESCR;
-};
-//volatile struct temp_ppsg_regs *PPSG = BASE_PPSGEN;
-//
 
 struct spll_external_state {
 	int ref_src;

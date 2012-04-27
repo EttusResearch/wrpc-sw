@@ -153,7 +153,7 @@ int32_t sfp_deltaRx = 0;
 //  }
 //}
 
-#if 0
+#if 1
 int get_sfp_id(char *sfp_pn)
 {
   uint8_t data, sum=0;
@@ -207,16 +207,17 @@ void wrc_initialize()
 	
 	uart_init();
 
-	uart_write_string(__FILE__ " is up (compiled on "
-			  __DATE__ " " __TIME__ ")\n");
+//	uart_write_string(__FILE__ " is up (compiled on "
+//			  __DATE__ " " __TIME__ ")\n");
 
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
 
   //SFP
-#if 0
+#if 1
+//  mprintf("Detecting transceiver...");
   if( get_sfp_id(sfp_pn) >= 0)
   {
-      mprintf("Found SFP transceiver ID: ");
+  //    mprintf("Found SFP transceiver ID: ");
       for(i=0;i<16;i++)
         mprintf("%c", sfp_pn[i]);
       mprintf("\n");
@@ -245,9 +246,11 @@ void wrc_initialize()
 	mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
 	mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
   
-	TRACE_DEV("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+//	TRACE_DEV("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
 	ep_init(mac_addr);
 	ep_enable(1, 1);
+
+//    for(;;);
 
 	minic_init();
 	pps_gen_init();
@@ -337,7 +340,7 @@ void wrc_handle_input()
  		 	case 'd':
  		 		wrc_extra_debug =  1 - wrc_extra_debug;
 
-				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
+//				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
 				break;
  		 		
  		 	
@@ -345,13 +348,13 @@ void wrc_handle_input()
  		 		wrc_enable_tracking = 1 - wrc_enable_tracking;
 			 	wr_servo_enable_tracking(wrc_enable_tracking);
 
-				wrc_debug_printf(0,"Phase tracking %s.\n", wrc_enable_tracking ? "enabled" : "disabled");
+//				wrc_debug_printf(0,"Phase tracking %s.\n", wrc_enable_tracking ? "enabled" : "disabled");
 				break;
 
 			case '+':
 			case '-':
 				wrc_man_phase += (x=='+' ? 100 : -100);
-				wrc_debug_printf(0,"Manual phase adjust: %d\n", wrc_man_phase);
+//				wrc_debug_printf(0,"Manual phase adjust: %d\n", wrc_man_phase);
 				wr_servo_man_adjust_phase(wrc_man_phase);
 				break;
 
@@ -369,8 +372,7 @@ int main(void)
 	wrc_initialize();
 
   //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
-  //spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-  spll_init(SPLL_MODE_SLAVE, 0, 1);
+  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 
   //for(;;)
   //{
@@ -387,7 +389,8 @@ int main(void)
 		wrc_handle_input();
 		if(wrc_gui_mode)
 			wrc_mon_gui();
-	
+
+#if 1
 		int l_status = wrc_check_link();
 		switch (l_status)
 		{
@@ -415,11 +418,18 @@ int main(void)
 				break;
 
 			case LINK_WENT_DOWN:
+                  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+			
 				break;
 		}        
 
-		protocol_nonblock(&rtOpts, ptpPortDS);
-
+	    singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
+        sharedPortsLoop(ptpPortDS);
+  
+        delay(100000);	
+//		protocol_nonblock(&rtOpts, ptpPortDS);
+ #endif
+ 
 	}
 }
 
