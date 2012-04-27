@@ -6,63 +6,46 @@
 
 #define PPS_PULSE_WIDTH 100000
 
-static inline void ppsg_writel(uint32_t reg,uint32_t data)
-{
-  *(volatile uint32_t *) (BASE_PPSGEN + reg) = data;
-}
- 
-static inline uint32_t ppsg_readl(uint32_t reg)
-{
-  return *(volatile uint32_t *)(BASE_PPSGEN + reg);
-}
-    
+static volatile struct PPSG_WB *PPSG = (volatile struct PPS_GEN_WB *) BASE_PPS_GEN;
+
 void pps_gen_init()
 {
 	uint32_t cr;
 	
 	cr = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH);
   
-  ppsg_writel( PPSG_REG_CR, cr);
-  ppsg_writel( PPSG_REG_ESCR, 0);
+   PPSG->CR = cr;
+   PPSG->ESCR = 0;
 
-  ppsg_writel( PPSG_REG_ADJ_UTCLO, 100 );
-  ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
-  ppsg_writel( PPSG_REG_ADJ_NSEC, 0);
+   PPSG->ADJ_UTCLO = 100;
+   PPSG->ADJ_UTCHI = 0;
+   PPSG->ADJ_NSEC = 0;
 
-  ppsg_writel( PPSG_REG_CR, cr | PPSG_CR_CNT_SET);
-  ppsg_writel( PPSG_REG_CR, cr);
+   PPSG->CR = cr | PPSG_CR_CNT_SET;
+   PPSG->CR = cr;
 }
 
 void pps_gen_adjust_nsec(int32_t how_much)
 {
   TRACE_DEV("ADJ: nsec %d nanoseconds\n", how_much);
- #if 1
-  ppsg_writel( PPSG_REG_ADJ_UTCLO, 0);
-  ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
-
-  ppsg_writel( PPSG_REG_ADJ_NSEC, ( how_much / 8 ));
-
-  ppsg_writel( PPSG_REG_CR,   PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH) | PPSG_CR_CNT_ADJ);
-#endif
-
+  PPSG->ADJ_UTCLO = 0;
+  PPSG->ADJ_UTCHI = 0;
+  PPSG->ADJ_NSEC = ( how_much / 8 );
+  PPSG->CR =  PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH) | PPSG_CR_CNT_ADJ;
 }
 
 void pps_gen_adjust_utc(int32_t how_much)
 {
-
-#if 1
-  TRACE_DEV("ADJ: utc %d seconds\n", how_much);
-  ppsg_writel( PPSG_REG_ADJ_UTCLO, how_much);
-  ppsg_writel( PPSG_REG_ADJ_UTCHI, 0);
-  ppsg_writel( PPSG_REG_ADJ_NSEC, 0);
-  ppsg_writel( PPSG_REG_CR,   PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH) | PPSG_CR_CNT_ADJ);
-  #endif
-  
+   TRACE_DEV("ADJ: utc %d seconds\n", how_much);
+   PPSG->ADJ_UTCLO = how_much;
+   PPSG->ADJ_UTCHI = 0;
+   PPSG->ADJ_NSEC = 0;
+   PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH) | PPSG_CR_CNT_ADJ;
 }
 
 int pps_gen_busy()
 {
-  return ppsg_readl(PPSG_REG_CR) & PPSG_CR_CNT_ADJ ? 0 : 1;
+  return PPSG->CR & PPSG_CR_CNT_ADJ ? 0 : 1;
 }
 
 void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
@@ -71,12 +54,12 @@ void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
   uint32_t utc_lo;
 
   do {
-  cyc_before =ppsg_readl(PPSG_REG_CNTR_NSEC) & 0xfffffff;
-  utc_lo = ppsg_readl(PPSG_REG_CNTR_UTCLO) ;
-  cyc_after = ppsg_readl(PPSG_REG_CNTR_NSEC) & 0xfffffff;
+  cyc_before = PPSG->CNTR_NSEC & 0xfffffff;
+  utc_lo = PPSG->CNTR_UTCLO ;
+  cyc_after = PPSG->CNTR_NSEC & 0xfffffff;
   } while (cyc_after < cyc_before);
 
-	delay(100000);
+//	delay(100000);
 
   if(utc) *utc = utc_lo;
   if(cntr_nsec) *cntr_nsec = cyc_after;
@@ -86,8 +69,8 @@ void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
 void pps_gen_enable_output(int enable)
 {
  	if(enable)
-		ppsg_writel(PPSG_REG_ESCR, PPSG_ESCR_PPS_VALID  | PPSG_ESCR_TM_VALID);
+		PPSG->ESCR = PPSG_ESCR_PPS_VALID  | PPSG_ESCR_TM_VALID;
 	else
-		ppsg_writel(PPSG_REG_ESCR, 0);
+		PPSG->ESCR = 0;
 }
 

@@ -14,7 +14,9 @@
 volatile int irq_count = 0;
 
 static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
-static volatile struct PPSG_WB *PPSG = (volatile struct PPSG_WB *) BASE_PPSGEN;
+static volatile struct PPSG_WB *PPSG = (volatile struct PPSG_WB *) BASE_PPS_GEN;
+
+#define TRACE TRACE_DEV
 
 /* The includes below contain code (not only declarations) to enable the compiler
    to inline functions where necessary and save some CPU cycles */
@@ -53,6 +55,7 @@ struct softpll_state {
 
 static volatile struct softpll_state softpll;
 
+static volatile int ptracker_mask = 0; /* fixme: should be done by spll_init() but spll_init is called to switch modes (and we won't like messing around with ptrackers there) */
 
 void _irq_entry()
 {
@@ -61,7 +64,10 @@ void _irq_entry()
 	struct softpll_state *s = (struct softpll_state *) &softpll;
 
 /* check if there are more tags in the FIFO */
-	if(! (SPLL->CSR & SPLL_TRR_CSR_EMPTY))
+
+//    softpll.seq_state = SEQ_WAIT_CLEAR_DACS;
+  
+	if(! (SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY))
 	{
 		trr = SPLL->TRR_R0;
 		src = SPLL_TRR_R0_CHAN_ID_R(trr);
@@ -73,13 +79,13 @@ void _irq_entry()
             case SEQ_CLEAR_DACS:
                 SPLL->DAC_HPLL = 65535;
                 SPLL->DAC_MAIN = softpll.default_dac_main;
-                SPLL->OCER |= 1;
+//                SPLL->OCER |= 1;
                 softpll.seq_state = SEQ_WAIT_CLEAR_DACS;
                 softpll.dac_timeout = timer_get_tics();
                 break;
 
             case SEQ_WAIT_CLEAR_DACS:
-                if(timer_get_tics() - softpll.dac_timeout > 10000)
+                if(timer_get_tics() - softpll.dac_timeout > TICS_PER_SECOND/20)
                     softpll.seq_state = (softpll.mode == SPLL_MODE_GRAND_MASTER ? SEQ_START_EXT : SEQ_START_HELPER);
                 break;
 
@@ -112,7 +118,8 @@ void _irq_entry()
 						softpll.seq_state = SEQ_START_MAIN;
 					else {
 						for(i=0;i<n_chan_ref; i++)
-							ptracker_start((struct spll_ptracker_state *) &s->ptrackers[i]);
+							if(ptracker_mask & (1<<i))
+								ptracker_start((struct spll_ptracker_state *) &s->ptrackers[i]);
 						softpll.seq_state = SEQ_READY;
 					}
 				}
@@ -129,7 +136,8 @@ void _irq_entry()
 					softpll.seq_state = SEQ_READY;
 
 					for(i=0;i<n_chan_ref; i++)
-						ptracker_start((struct spll_ptracker_state *) &s->ptrackers[i]);
+						if(ptracker_mask & (1<<i))
+							ptracker_start((struct spll_ptracker_state *) &s->ptrackers[i]);
 				}
 				break;
 
@@ -175,7 +183,8 @@ void _irq_entry()
 					mpll_update((struct spll_main_state *) &s->mpll, tag, src);
 
 					for(i=0;i<n_chan_ref; i++)
-						ptracker_update((struct spll_ptracker_state *) &s->ptrackers[i], tag, src);
+						if(ptracker_mask & (1<<i))
+							ptracker_update((struct spll_ptracker_state *) &s->ptrackers[i], tag, src);
 
 				break;
 
@@ -238,7 +247,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 			strcpy(mode_str, "Grand Master");
 
 			softpll.seq_state = SEQ_CLEAR_DACS;
- 
+			
 			external_init(&softpll.ext, n_chan_ref + n_chan_out, align_pps);
 			helper_init(&softpll.helper, n_chan_ref);
 
@@ -261,7 +270,6 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 				mpll_init(&softpll.aux[i], slave_ref_channel, n_chan_ref + i + 1);
 
 			PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
-
 			break;
 
 		case SPLL_MODE_SLAVE:
@@ -273,6 +281,9 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 
 			for(i=0;i<n_chan_out-1;i++)
 				mpll_init(&softpll.aux[i], slave_ref_channel, n_chan_ref + i + 1);
+
+//			PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
+
 			break;
 	}
 
@@ -280,7 +291,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 		ptracker_init(&softpll.ptrackers[i], n_chan_ref, i, PTRACKER_AVERAGE_SAMPLES);
 
 
-	TRACE_DEV("SPLL_Init: running as %s, %d ref channels, %d out channels\n", mode_str, n_chan_ref, n_chan_out);
+	TRACE("SPLL_Init: running as %s, %d ref channels, %d out channels\n", mode_str, n_chan_ref, n_chan_out);
 
 	/* Purge tag buffer */
 	while(! (SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY)) dummy = SPLL->TRR_R0;
@@ -288,7 +299,16 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 
 	SPLL->EIC_IER = 1;
 
-	_irq_entry();
+//	_irq_entry();
+
+    SPLL->OCER |= 1;
+//    SPLL->RCER |= 1;
+    
+/*    for(;;)
+    {
+        TRACE_DEV("OCER %x TRR_CSR %x %x\n", SPLL->OCER, SPLL->TRR_CSR, SPLL->TRR_R0);
+    }*/
+    
 
 	enable_irq();
 
@@ -362,7 +382,7 @@ void spll_get_phase_shift(int channel, int32_t *current, int32_t *target)
 	if(target) *target = to_picos(st->phase_shift_target);
 }
 
-int spll_read_ptracker(int channel, int32_t *phase_ps)
+int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled)
 {
 	volatile struct spll_ptracker_state *st = &softpll.ptrackers[channel];
     int phase = st->phase_val;
@@ -370,6 +390,8 @@ int spll_read_ptracker(int channel, int32_t *phase_ps)
     else if (phase >= (1<<HPLL_N)) phase -= (1<<HPLL_N);
 
 	*phase_ps = to_picos(phase);
+	if(enabled)
+		*enabled = ptracker_mask & (1<<st->id_b) ? 1 : 0;
 	return st->ready;
 }
 
@@ -382,7 +404,7 @@ void spll_get_num_channels(int *n_ref, int *n_out)
 void spll_show_stats()
 {
     if(softpll.mode > 0)
-    TRACE_DEV("Irq_count %d Sequencer_state %d mode %d Alignment_state %d HL%d EL%d ML%d HY=%d MY=%d\n",
+    TRACE("Irq_count %d Sequencer_state %d mode %d Alignment_state %d HL%d EL%d ML%d HY=%d MY=%d\n",
             irq_count, softpll.seq_state, softpll.mode, softpll.ext.realign_state,
             softpll.helper.ld.locked, softpll.ext.ld.locked, softpll.mpll.ld.locked,
             softpll.helper.pi.y, softpll.mpll.pi.y);
@@ -396,3 +418,20 @@ int spll_shifter_busy(int channel)
 		else
 			return mpll_shifter_busy(&softpll.aux[channel-1]);
 }
+
+void spll_enable_ptracker(int ref_channel, int enable)
+{
+	if(enable) {
+		spll_enable_tagger(ref_channel, 1);
+		ptracker_start((struct spll_ptracker_state *) &softpll.ptrackers[ref_channel]);
+		ptracker_mask |= (1<<ref_channel);
+		TRACE("Enabling ptracker channel: %d\n", ref_channel);
+
+	} else {
+		ptracker_mask &= ~(1<<ref_channel);
+		if(ref_channel != softpll.mpll.id_ref)
+			spll_enable_tagger(ref_channel, 0);
+		TRACE("Disabling ptracker tagger: %d\n", ref_channel);
+	}
+}
+

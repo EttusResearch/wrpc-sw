@@ -1,6 +1,6 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o monitor/monitor.o dev/ep_pfilter.o dev/dna.o #dev/onewire.o dev/i2c.o #dev/eeprom.o
+OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o #dev/onewire.o dev/i2c.o #dev/eeprom.o 
 
 D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG
@@ -75,7 +75,7 @@ clean:
 %.o:		%.c
 				${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $^ -o $@
 
-load:	all
+load:	#all
 		./tools/lm32-loader $(OUTPUT).bin
 
 tools:

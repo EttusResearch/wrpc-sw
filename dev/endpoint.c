@@ -101,6 +101,8 @@ int ep_enable(int enabled, int autoneg)
 /* Disable the endpoint */
     EP->ECR = 0;
 
+    mprintf("ID: %x", EP->IDCODE);
+
 /* Load default packet classifier rules - see ep_pfilter.c for details */
     pfilter_init_default();
 
