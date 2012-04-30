@@ -269,6 +269,9 @@ void wrc_initialize()
   //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
   //spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
   spll_init(SPLL_MODE_SLAVE, 0, 1);
+
+  //Enable Ptracker
+  spll_enable_ptracker(0, 1);
 }
 
 #define LINK_WENT_UP 1
