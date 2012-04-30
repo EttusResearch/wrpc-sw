@@ -10,7 +10,7 @@
 #include "pps_gen.h"
 #include "ptpd.h"
 #include "ptpd_netif.h"
-//#include "i2c.h"
+#include "i2c.h"
 //#include "eeprom.h"
 #include "onewire.h"
 #include "softpll_ng.h"
@@ -173,7 +173,6 @@ int get_sfp_id(char *sfp_pn)
   mi2c_get_byte(WRPC_SFP_I2C, &data, 1);
   mi2c_stop(WRPC_SFP_I2C);
 
-  //mprintf("SFP: id=0x%x\n", data);
   sum = data;
 
   mi2c_start(WRPC_SFP_I2C);
@@ -188,10 +187,6 @@ int get_sfp_id(char *sfp_pn)
   mi2c_get_byte(WRPC_SFP_I2C, &data, 1);  //final word, checksum
   mi2c_stop(WRPC_SFP_I2C);
 
-  //mprintf("SFP: vendor PN: ");
-  //for(i=0; i<=15; ++i)
-  //  mprintf("%c", sfp_pn[i]);
-
   if(sum == data) 
       return 0;
   
@@ -201,76 +196,79 @@ int get_sfp_id(char *sfp_pn)
 
 void wrc_initialize()
 {
-	int ret, i;
-	uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
+  int ret, i;
+  uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
   char sfp_pn[17];
-	
-	uart_init();
 
-//	uart_write_string(__FILE__ " is up (compiled on "
-//			  __DATE__ " " __TIME__ ")\n");
+  uart_init();
 
-	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
+  uart_write_string(__FILE__ " is up (compiled on "
+      __DATE__ " " __TIME__ ")\n");
+
+  mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
 
   //SFP
 #if 1
-//  mprintf("Detecting transceiver...");
   if( get_sfp_id(sfp_pn) >= 0)
   {
-  //    mprintf("Found SFP transceiver ID: ");
-      for(i=0;i<16;i++)
-        mprintf("%c", sfp_pn[i]);
-      mprintf("\n");
-/*      if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
-      {
-        mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
-      }*/
-    }
+    //mprintf("Found SFP transceiver ID: ");
+    for(i=0;i<16;i++)
+      mprintf("%c", sfp_pn[i]);
+    mprintf("\n");
+    /* 
+     * if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
+     * {
+     *   mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
+     * }
+     */
+  }
 #endif
 
+#if 1
   //Generate MAC address
-#if 0
   ow_init();
   if( ds18x_read_serial(ds18_id) == 0 ) 
-	  TRACE_DEV("Found DS18xx sensor: %x:%x:%x:%x:%x:%x:%x:%x\n",
-	                             ds18_id[7], ds18_id[6], ds18_id[5], ds18_id[4], 
-                                 ds18_id[3], ds18_id[2], ds18_id[1], ds18_id[0]);
+    TRACE_DEV("Found DS18xx sensor: %x:%x:%x:%x:%x:%x:%x:%x\n",
+        ds18_id[7], ds18_id[6], ds18_id[5], ds18_id[4], 
+        ds18_id[3], ds18_id[2], ds18_id[1], ds18_id[0]);
   else
     TRACE_DEV("DS18B20 not found\n");
 #endif
 
-	mac_addr[0] = 0x08;   //
-	mac_addr[1] = 0x00;   // CERN OUI
-	mac_addr[2] = 0x30;   //  
-	mac_addr[3] = ds18_id[3]; // www.maxim-ic.com
-	mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
-	mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
-  
-//	TRACE_DEV("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
-	ep_init(mac_addr);
-	ep_enable(1, 1);
+  mac_addr[0] = 0x08;   //
+  mac_addr[1] = 0x00;   // CERN OUI
+  mac_addr[2] = 0x30;   //  
+  mac_addr[3] = ds18_id[3]; // www.maxim-ic.com
+  mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
+  mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
 
-//    for(;;);
+  TRACE_DEV("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+  ep_init(mac_addr);
+  ep_enable(1, 1);
 
-	minic_init();
-	pps_gen_init();
-//	for(;;);
-//	rx_test();
+  minic_init();
+  pps_gen_init();
 
-	netStartup();
+  netStartup();
 
-  	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-    initDataClock(&rtOpts, &ptpClockDS);
+  ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
+  initDataClock(&rtOpts, &ptpClockDS);
 
-	displayConfigINFO(&rtOpts);
+  displayConfigINFO(&rtOpts);
 
   //initialize sockets
   if(!netInit(&ptpPortDS->netPath, &rtOpts, ptpPortDS))
   {
-      PTPD_TRACE(TRACE_WRPC, NULL,"failed to initialize network\n");
-      return;
+    PTPD_TRACE(TRACE_WRPC, NULL,"failed to initialize network\n");
+    return;
   }
   ptpPortDS->linkUP = FALSE;
+
+
+  //initialize SoftPLL
+  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
+  //spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+  spll_init(SPLL_MODE_SLAVE, 0, 1);
 }
 
 #define LINK_WENT_UP 1
@@ -280,24 +278,25 @@ void wrc_initialize()
 
 int wrc_check_link()
 {
-	static int prev_link_state = -1;
-	int link_state = ep_link_up();
-	int rv = 0;
+  static int prev_link_state = -1;
+  int link_state = ep_link_up();
+  int rv = 0;
 
-	if(!prev_link_state && link_state)
-	{
-		TRACE_DEV("Link up.\n");
-		gpio_out(GPIO_LED_LINK, 1);
-		rv = LINK_WENT_UP;
-	} else if(prev_link_state && !link_state)
-	{
-		TRACE_DEV("Link down.\n");
-		gpio_out(GPIO_LED_LINK, 0);
-		rv = LINK_WENT_DOWN;
-	}  else rv = (link_state ? LINK_UP : LINK_DOWN);
-	prev_link_state = link_state;
-	
-	return rv;
+  if(!prev_link_state && link_state)
+  {
+    TRACE_DEV("Link up.\n");
+    gpio_out(GPIO_LED_LINK, 1);
+    rv = LINK_WENT_UP;
+  } 
+  else if(prev_link_state && !link_state)
+  {
+    TRACE_DEV("Link down.\n");
+    gpio_out(GPIO_LED_LINK, 0);
+    rv = LINK_WENT_DOWN;
+  }  else rv = (link_state ? LINK_UP : LINK_DOWN);
+  prev_link_state = link_state;
+
+  return rv;
 }
 
 int wrc_extra_debug = 1;
@@ -340,7 +339,7 @@ void wrc_handle_input()
  		 	case 'd':
  		 		wrc_extra_debug =  1 - wrc_extra_debug;
 
-//				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
+				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
 				break;
  		 		
  		 	
@@ -371,18 +370,14 @@ int main(void)
 {
 	wrc_initialize();
 
-  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
-  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-
   //for(;;)
   //{
   //  //mprintf("%d\n", timer_get_tics());
   //  spll_show_stats();
   //}
 
-
-//    test_transition();
-//    wr_servo_rollover_test(1);
+  //test_transition();
+  //wr_servo_rollover_test(1);
           
 	for(;;)
 	{
@@ -391,44 +386,27 @@ int main(void)
 			wrc_mon_gui();
 
 #if 1
-		int l_status = wrc_check_link();
-		switch (l_status)
-		{
-			case LINK_WENT_UP:
-			{
-			    uint32_t delta_tx, delta_rx, ret=0;
-//				mprintf("**********************************S\n");
-/*				kill_sockets();
-				netStartup();
-		       	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-				initDataClock(&rtOpts, &ptpClockDS);
-				protocol_restart(&rtOpts, &ptpClockDS);*/
+    int l_status = wrc_check_link();
+    switch (l_status)
+    {
+      case LINK_WENT_UP:
+        break;
 
+      case LINK_UP:
+        //	softpll_check_lock();
+        update_rx_queues();
+        break;
 
+      case LINK_WENT_DOWN:
+        spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+        break;
+    }        
 
-           //    	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-           // 	initDataClock(&rtOpts, &ptpClockDS);
-
-				break;
-            }
-            
-			case LINK_UP:
-			//	softpll_check_lock();
-				update_rx_queues();
-				break;
-
-			case LINK_WENT_DOWN:
-                  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-			
-				break;
-		}        
-
-	    singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
-        sharedPortsLoop(ptpPortDS);
+	  singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
+    sharedPortsLoop(ptpPortDS);
   
-        delay(100000);	
-//		protocol_nonblock(&rtOpts, ptpPortDS);
- #endif
+    delay(100000);	
+#endif
  
 	}
 }
