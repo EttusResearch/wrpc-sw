@@ -20,6 +20,8 @@
 #define RX_DESC_HAS_OOB(d)  ((d) & (1<<29) ? 1 : 0)
 #define RX_DESC_SIZE(d)  (((d) & (1<<0) ? -1 : 0) + (d & 0xffe))
 
+#define RXOOB_TS_INCORRECT (1<<11)
+
 #define TX_DESC_VALID (1<<31)
 #define TX_DESC_WITH_OOB (1<<30)
 #define TX_DESC_HAS_OWN_MAC (1<<28)
@@ -140,9 +142,12 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   uint32_t raw_ts;
   uint32_t rx_addr_cur;
   int n_recvd;
+//	mprintf("erxf\n");
 
   if(! (minic_readl(MINIC_REG_EIC_ISR) & MINIC_EIC_ISR_RX))
     return 0;
+
+//TRACE_DEV("minic: got sthx \n");
 
   desc_hdr = *minic.rx_head;
  
@@ -165,11 +170,12 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	{
 	  uint32_t counter_r, counter_f, counter_ppsg, utc;
 	  int cntr_diff;
+	  uint16_t dhdr;
 
 	  payload_size -= RX_OOB_SIZE;
 
 	  memcpy(&raw_ts, (uint8_t *)minic.rx_head + payload_size + 6, 4); /* fixme: ugly way of doing unaligned read */
-
+	  memcpy(&dhdr, (uint8_t *)minic.rx_head + payload_size + 4, 2);
 	  EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
 
 	  pps_gen_get_time(&utc, &counter_ppsg);
@@ -187,6 +193,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	    hwts->ahead = 0;
 	    
 	  hwts->nsec = counter_r * 8;
+	  hwts->valid = (dhdr & RXOOB_TS_INCORRECT) ? 0 : 1;
 	}
 
       n_recvd = (buf_size < payload_size ? buf_size : payload_size);
@@ -211,7 +218,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
    }
 
-//	mprintf("minic: num_rx %d\n", n_recvd);
+//	TRACE_DEV("minic: num_rx %d\n", n_recvd);
   return n_recvd;
 }
 
@@ -225,7 +232,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
   minic_new_tx_buffer();
 
 
-  TRACE_DEV("minic_tx_frame: head %x size %d\n", minic.tx_head, size);
+//  TRACE_DEV("minic_tx_frame: head %x size %d\n", minic.tx_head, size);
   memset(minic.tx_head, 0x0, size + 16);
   memset((void*)minic.tx_head + 4, 0, size < 60 ? 60 : size);
   memcpy((void*)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
@@ -281,7 +288,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       hwts->ahead = 0;
       hwts->nsec = counter_r * 8;
 
-	  TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d\n", size, hwts->utc, hwts->nsec);
+//	  TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
 	  minic.tx_count++;
 
     }
