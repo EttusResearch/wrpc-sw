@@ -10,6 +10,10 @@
 #define SPLL_MODE_SLAVE 3
 #define SPLL_MODE_DISABLED 4
 
+#define SPLL_ALL_CHANNELS 0xffff
+
+#define SPLL_AUX_ENABLED (1<<0)
+#define SPLL_AUX_LOCKED (1<<1)
 
 void spll_init(int mode, int slave_ref_channel, int align_pps);
 void spll_shutdown();
@@ -21,6 +25,9 @@ void spll_get_phase_shift(int channel, int32_t *current, int32_t *target);
 int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled);
 void spll_get_num_channels(int *n_ref, int *n_out);
 int spll_shifter_busy(int channel);
+int spll_get_delock_count();
+int spll_update_aux_clocks();
+int spll_get_aux_status(int channel);
 
 #endif
 

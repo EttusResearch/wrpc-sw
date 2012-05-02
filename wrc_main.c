@@ -18,6 +18,7 @@
 
 
 RunTimeOpts rtOpts = {
+    .ifaceName = { "wr0" },
    .announceInterval = DEFAULT_ANNOUNCE_INTERVAL,
    .syncInterval = DEFAULT_SYNC_INTERVAL,
    .clockQuality.clockAccuracy = DEFAULT_CLOCK_ACCURACY,
@@ -43,6 +44,9 @@ RunTimeOpts rtOpts = {
    .E2E_mode 		  = TRUE,
    .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
    .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
+   .phyCalibrationRequired = FALSE,
+	.disableFallbackIfWRFails = TRUE,
+         
 /*SLAVE only or MASTER only*/
 #ifdef WRPC_SLAVE
    .primarySource = FALSE,
@@ -202,8 +206,8 @@ void wrc_initialize()
 
   uart_init();
 
-  uart_write_string(__FILE__ " is up (compiled on "
-      __DATE__ " " __TIME__ ")\n");
+//  uart_write_string(__FILE__ " is up (compiled on "
+//      __DATE__ " " __TIME__ ")\n");
 
   mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
 
@@ -281,9 +285,9 @@ void wrc_initialize()
 
 int wrc_check_link()
 {
-  static int prev_link_state = -1;
-  int link_state = ep_link_up();
-  int rv = 0;
+	static int prev_link_state = -1;
+	int link_state = ep_link_up(NULL);
+	int rv = 0;
 
   if(!prev_link_state && link_state)
   {
@@ -342,7 +346,7 @@ void wrc_handle_input()
  		 	case 'd':
  		 		wrc_extra_debug =  1 - wrc_extra_debug;
 
-				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
+//				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
 				break;
  		 		
  		 	
@@ -359,9 +363,6 @@ void wrc_handle_input()
 //				wrc_debug_printf(0,"Manual phase adjust: %d\n", wrc_man_phase);
 				wr_servo_man_adjust_phase(wrc_man_phase);
 				break;
-
-                      
- 		 		
  		}
  	}
 }
@@ -371,32 +372,22 @@ extern volatile int irq_cnt;
 
 int main(void)
 {
-	wrc_initialize();
 
-  //for(;;)
-  //{
-  //  //mprintf("%d\n", timer_get_tics());
-  //  spll_show_stats();
-  //}
+  wrc_initialize();
 
-  //test_transition();
-  //wr_servo_rollover_test(1);
-          
-	for(;;)
-	{
-		wrc_handle_input();
-		if(wrc_gui_mode)
-			wrc_mon_gui();
+  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 
-#if 1
+  for(;;)
+  {
+    wrc_handle_input();
+    if(wrc_gui_mode)
+      wrc_mon_gui();
+
     int l_status = wrc_check_link();
+
     switch (l_status)
     {
-      case LINK_WENT_UP:
-        break;
-
       case LINK_UP:
-        //	softpll_check_lock();
         update_rx_queues();
         break;
 
@@ -405,12 +396,11 @@ int main(void)
         break;
     }        
 
-	  singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
+    singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
     sharedPortsLoop(ptpPortDS);
-  
-    delay(100000);	
-#endif
- 
-	}
+
+    spll_update_aux_clocks();
+    // 		delay(1000);
+  }
 }
 
