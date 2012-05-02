@@ -545,3 +545,16 @@ int spll_update_aux_clocks()
 	 	}
 	}
 }
+
+int spll_get_aux_status(int channel)
+{
+	int rval = 0;
+
+ 	if(softpll.aux_fsm[channel].state != AUX_DISABLED)
+ 		rval |= SPLL_AUX_ENABLED;
+
+ 	if(softpll.aux_fsm[channel].state == AUX_READY)
+ 		rval |= SPLL_AUX_LOCKED;
+
+	return rval;
+}

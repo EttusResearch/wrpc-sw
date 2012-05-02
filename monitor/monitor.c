@@ -76,13 +76,14 @@ int wrc_mon_gui(void)
   m_cprintf(C_GREY, "Synchronization source:    "); m_cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);
 
   m_cprintf(C_GREY, "Aux clock status:          "); 
-  //aux_stat = spll_check_lock(1); //GGDD softpll_get_aux_status();
 
-  //if(aux_stat & SOFTPLL_AUX_ENABLED)
-  //	m_cprintf(C_GREEN,"enabled");
+	aux_stat = spll_get_aux_status(0);
 
-  //if(aux_stat & SOFTPLL_AUX_LOCKED)
-  //	m_cprintf(C_GREEN,", locked");
+  if(aux_stat & SPLL_AUX_ENABLED)
+  	m_cprintf(C_GREEN,"enabled");
+
+  if(aux_stat & SPLL_AUX_LOCKED)
+  	m_cprintf(C_GREEN,", locked");
   mprintf("\n");
 
   m_cprintf(C_BLUE, "\nTiming parameters:\n\n");
