@@ -30,14 +30,14 @@ static int autoneg_enabled;
 static volatile struct EP_WB *EP = (volatile struct EP_WB *) BASE_EP;
 
 /* functions for accessing PCS (MDIO) registers */
-static uint16_t pcs_read(int location)
+uint16_t pcs_read(int location)
 {
     EP->MDIO_CR = EP_MDIO_CR_ADDR_W(location >> 2);
     while ((EP->MDIO_ASR & EP_MDIO_ASR_READY) == 0);
     return EP_MDIO_ASR_RDATA_R(EP->MDIO_ASR) & 0xffff;
 }
 
-static void pcs_write(int location, int value)
+void pcs_write(int location, int value)
 {
     EP->MDIO_CR = EP_MDIO_CR_ADDR_W(location >> 2)
                 |  EP_MDIO_CR_DATA_W(value)
@@ -100,8 +100,6 @@ int ep_enable(int enabled, int autoneg)
 
 /* Disable the endpoint */
     EP->ECR = 0;
-
-    mprintf("ID: %x", EP->IDCODE);
 
 /* Load default packet classifier rules - see ep_pfilter.c for details */
     pfilter_init_default();
