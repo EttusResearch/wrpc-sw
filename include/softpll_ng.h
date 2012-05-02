@@ -11,6 +11,8 @@
 #define SPLL_MODE_DISABLED 4
 
 
+#define SPLL_ALL_CHANNELS 0xffff
+
 void spll_init(int mode, int slave_ref_channel, int align_pps);
 void spll_shutdown();
 void spll_start_channel(int channel);
@@ -21,6 +23,7 @@ void spll_get_phase_shift(int channel, int32_t *current, int32_t *target);
 int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled);
 void spll_get_num_channels(int *n_ref, int *n_out);
 int spll_shifter_busy(int channel);
+int spll_get_delock_count();
 
 #endif
 

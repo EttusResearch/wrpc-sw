@@ -40,16 +40,30 @@ static volatile struct PPSG_WB *PPSG = (volatile struct PPSG_WB *) BASE_PPS_GEN;
 #define SEQ_CLEAR_DACS 9
 #define SEQ_WAIT_CLEAR_DACS 10
 
+#define AUX_DISABLED 1
+#define AUX_LOCK_PLL 2
+#define AUX_ALIGN_PHASE 3
+#define AUX_READY 4
+
+struct spll_aux_state {
+    int state;
+    int32_t phase_target;
+};
+
 struct softpll_state {
 	int mode;
 	int seq_state;
 	int helper_locked;
 	int dac_timeout;
 	int default_dac_main;
+	int delock_count;
+	int32_t mpll_shift_ps;
+
 	struct spll_helper_state helper;
 	struct spll_external_state ext;
 	struct spll_main_state mpll;
 	struct spll_main_state aux[MAX_CHAN_AUX];
+	struct spll_aux_state aux_fsm[MAX_CHAN_AUX];
 	struct spll_ptracker_state ptrackers[MAX_PTRACKERS];
 };
 
@@ -67,7 +81,7 @@ void _irq_entry()
 
 //    softpll.seq_state = SEQ_WAIT_CLEAR_DACS;
   
-	if(! (SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY))
+	while(! (SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY))
 	{
 		trr = SPLL->TRR_R0;
 		src = SPLL_TRR_R0_CHAN_ID_R(trr);
@@ -147,15 +161,18 @@ void _irq_entry()
 //					SPLL->OCER = 0;
 //					SPLL->RCER = 0;
 					softpll.seq_state = SEQ_CLEAR_DACS;
+					softpll.delock_count++;
 				} else if (softpll.mode == SPLL_MODE_GRAND_MASTER && !external_locked((struct spll_external_state *) &s->ext))
 				{
 //					SPLL->OCER = 0;
 //					SPLL->RCER = 0;
 //					SPLL->ECCR = 0;
 					softpll.seq_state = SEQ_START_EXT;
+					softpll.delock_count++;
 				} else if (softpll.mode == SPLL_MODE_SLAVE && !softpll.mpll.ld.locked)
 				{
 					softpll.seq_state = SEQ_CLEAR_DACS;
+					softpll.delock_count++;
 				};
 				break;
 		};
@@ -185,6 +202,9 @@ void _irq_entry()
 					for(i=0;i<n_chan_ref; i++)
 						if(ptracker_mask & (1<<i))
 							ptracker_update((struct spll_ptracker_state *) &s->ptrackers[i], tag, src);
+					for(i=0;i<n_chan_out-1;i++)
+						mpll_update(&softpll.aux[i], tag, src);
+
 
 				break;
 
@@ -219,6 +239,8 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	softpll.helper_locked = 0;
 	softpll.mode = mode;
 	softpll.default_dac_main = 0;
+	softpll.delock_count = 0;
+//	softpll.occr_prev = 0;
 
 	SPLL->DAC_HPLL = 0;
 	SPLL->DAC_MAIN = 0;
@@ -231,6 +253,8 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	SPLL->ECCR = 0;
 	SPLL->RCGER = 0;
 	SPLL->DCCR = 0;
+	SPLL->OCCR = 0;
+	
 	SPLL->DEGLITCH_THR = 1000;
 
 	PPSG->ESCR = 0;
@@ -254,7 +278,10 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 			mpll_init(&softpll.mpll, slave_ref_channel, n_chan_ref);
 
 			for(i=0;i<n_chan_out-1;i++)
+			{
 				mpll_init(&softpll.aux[i], slave_ref_channel, n_chan_ref + i + 1);
+				softpll.aux_fsm[i].state = AUX_DISABLED;
+			}
 			break;
 
 		case SPLL_MODE_FREE_RUNNING_MASTER:
@@ -267,7 +294,10 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 			mpll_init(&softpll.mpll, slave_ref_channel, n_chan_ref);
 
 			for(i=0;i<n_chan_out-1;i++)
+			{
 				mpll_init(&softpll.aux[i], slave_ref_channel, n_chan_ref + i + 1);
+				softpll.aux_fsm[i].state = AUX_DISABLED;
+			}
 
 			PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
 			break;
@@ -280,7 +310,11 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 			mpll_init(&softpll.mpll, slave_ref_channel, n_chan_ref);
 
 			for(i=0;i<n_chan_out-1;i++)
+			{
 				mpll_init(&softpll.aux[i], slave_ref_channel, n_chan_ref + i + 1);
+				softpll.aux_fsm[i].state = AUX_DISABLED;
+			}
+
 
 //			PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
 
@@ -299,16 +333,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 
 	SPLL->EIC_IER = 1;
 
-//	_irq_entry();
-
     SPLL->OCER |= 1;
-//    SPLL->RCER |= 1;
-    
-/*    for(;;)
-    {
-        TRACE_DEV("OCER %x TRR_CSR %x %x\n", SPLL->OCER, SPLL->TRR_CSR, SPLL->TRR_R0);
-    }*/
-    
 
 	enable_irq();
 
@@ -337,8 +362,10 @@ void spll_shutdown()
 void spll_start_channel(int channel)
 {
 	if (softpll.seq_state != SEQ_READY || !channel)
+	{
+		TRACE("Can't start channel %d, the PLL is not ready\n", channel);
 		return;
-
+    }
 	mpll_start(&softpll.aux[channel-1]);
 }
 
@@ -369,17 +396,33 @@ static int32_t to_picos(int32_t units)
 }
 
 /* Channel 0 = local PLL reference, 1...N = aux oscillators */
-void spll_set_phase_shift(int channel, int32_t value_picoseconds)
+static void set_phase_shift(int channel, int32_t value_picoseconds)
 {
 	volatile struct spll_main_state *st = (!channel ? &softpll.mpll : &softpll.aux[channel-1]);
-	mpll_set_phase_shift(st, from_picos(value_picoseconds));
+	int div = (DIVIDE_DMTD_CLOCKS_BY_2 ? 2: 1);
+	mpll_set_phase_shift(st, from_picos(value_picoseconds) / div);
+	softpll.mpll_shift_ps = value_picoseconds;
+}
+
+void spll_set_phase_shift(int channel, int32_t value_picoseconds)
+{
+	int i;
+	if(channel == SPLL_ALL_CHANNELS)
+	{
+		spll_set_phase_shift(0, value_picoseconds);
+		for(i=0;i<n_chan_out-1;i++)
+			if(softpll.aux_fsm[i].state == AUX_READY) 
+				set_phase_shift(i+1, value_picoseconds);
+	} else
+		set_phase_shift(channel, value_picoseconds);
 }
 
 void spll_get_phase_shift(int channel, int32_t *current, int32_t *target)
 {
 	volatile struct spll_main_state *st = (!channel ? &softpll.mpll : &softpll.aux[channel-1]);
-    if(current) *current = to_picos(st->phase_shift_current);
-	if(target) *target = to_picos(st->phase_shift_target);
+	int div = (DIVIDE_DMTD_CLOCKS_BY_2 ? 2: 1);
+    if(current) *current = to_picos(st->phase_shift_current * div);
+	if(target) *target = to_picos(st->phase_shift_target * div);
 }
 
 int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled)
@@ -388,7 +431,13 @@ int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled)
     int phase = st->phase_val;
     if(phase < 0) phase += (1<<HPLL_N);
     else if (phase >= (1<<HPLL_N)) phase -= (1<<HPLL_N);
-
+    
+	if(DIVIDE_DMTD_CLOCKS_BY_2)
+	{
+		phase <<= 1;
+		phase &= (1<<HPLL_N)-1;
+	}
+		
 	*phase_ps = to_picos(phase);
 	if(enabled)
 		*enabled = ptracker_mask & (1<<st->id_b) ? 1 : 0;
@@ -404,10 +453,10 @@ void spll_get_num_channels(int *n_ref, int *n_out)
 void spll_show_stats()
 {
     if(softpll.mode > 0)
-    TRACE("Irq_count %d Sequencer_state %d mode %d Alignment_state %d HL%d EL%d ML%d HY=%d MY=%d\n",
+    TRACE("Irq_count %d Sequencer_state %d mode %d Alignment_state %d HL%d EL%d ML%d HY=%d MY=%d DelCnt=%d\n",
             irq_count, softpll.seq_state, softpll.mode, softpll.ext.realign_state,
             softpll.helper.ld.locked, softpll.ext.ld.locked, softpll.mpll.ld.locked,
-            softpll.helper.pi.y, softpll.mpll.pi.y);
+            softpll.helper.pi.y, softpll.mpll.pi.y, softpll.delock_count);
 
 }
 
@@ -435,3 +484,64 @@ void spll_enable_ptracker(int ref_channel, int enable)
 	}
 }
 
+int spll_get_delock_count()
+{
+ 	return softpll.delock_count;
+}
+
+int spll_update_aux_clocks()
+{
+	uint32_t occr_aux_en = SPLL_OCCR_OUT_EN_R(SPLL->OCCR);
+	int i;
+	
+	for(i=0;i<n_chan_out-1;i++)
+	{
+		struct spll_aux_state *s = &softpll.aux_fsm[i];
+		
+		if((! (occr_aux_en & (1<<(i+1))) && s->state != AUX_DISABLED)) 
+		{
+	 	 	TRACE("[aux] disabled channel %d\n", i);
+			spll_stop_channel(i+1);
+ 			SPLL->OCCR &= ~ (SPLL_OCCR_OUT_LOCK_W((1<<(i+1))));
+			s->state = AUX_DISABLED;
+			
+	 	} else switch(s->state)
+	 	{
+	 	 	case AUX_DISABLED:
+	 	 	if(occr_aux_en & (1<<(i+1)) && softpll.mpll.ld.locked)
+	 	 	{
+	 	 		TRACE("[aux] enabled channel %d\n", i);
+	 	 		s->state = AUX_LOCK_PLL;
+	 	 		spll_start_channel(i+1);
+	 	 	}
+	 	 	break;
+
+	 	 	case AUX_LOCK_PLL:
+	 	 		if(softpll.aux[i].ld.locked)
+	 	 		{
+	 	 			TRACE("[aux] channel %d locked [aligning @ %d ps]\n", i, softpll.mpll_shift_ps);
+					set_phase_shift(i+1, softpll.mpll_shift_ps);
+					s->state = AUX_ALIGN_PHASE;
+	 	 		}
+	 	 		
+	 	 	break;
+
+	 	 	case AUX_ALIGN_PHASE:
+	 	 		if(!mpll_shifter_busy(&softpll.aux[i]))
+	 	 		{
+	 	 			TRACE("[aux] channel %d phase aligned\n", i);
+	 	 			SPLL->OCCR |= SPLL_OCCR_OUT_LOCK_W((1<<(i+1)));
+					s->state = AUX_READY;
+	 	 		}
+	 	 	break;
+	 	
+	 	 	case AUX_READY:
+	 	 		if(!softpll.mpll.ld.locked)
+	 	 		{
+	 	 			SPLL->OCCR &= ~ (SPLL_OCCR_OUT_LOCK_W((1<<(i+1))));
+	 	 			s->state = AUX_DISABLED;
+	 	 		}
+	 	 	break;
+	 	}
+	}
+}
