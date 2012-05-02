@@ -18,6 +18,7 @@
 
 
 RunTimeOpts rtOpts = {
+    .ifaceName = { "wr0" },
    .announceInterval = DEFAULT_ANNOUNCE_INTERVAL,
    .syncInterval = DEFAULT_SYNC_INTERVAL,
    .clockQuality.clockAccuracy = DEFAULT_CLOCK_ACCURACY,
@@ -43,6 +44,9 @@ RunTimeOpts rtOpts = {
    .E2E_mode 		  = TRUE,
    .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
    .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
+   .phyCalibrationRequired = FALSE,
+	.disableFallbackIfWRFails = TRUE,
+         
 /*SLAVE only or MASTER only*/
 #ifdef WRPC_SLAVE
    .primarySource = FALSE,
@@ -206,12 +210,12 @@ void wrc_initialize()
   char sfp_pn[17];
 	
 	uart_init();
+	timer_init(1);
 
 //	uart_write_string(__FILE__ " is up (compiled on "
 //			  __DATE__ " " __TIME__ ")\n");
-
+    
 	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
-
   //SFP
 #if 1
 //  mprintf("Detecting transceiver...");
@@ -229,7 +233,7 @@ void wrc_initialize()
 #endif
 
   //Generate MAC address
-#if 0
+#if 1
   ow_init();
   if( ds18x_read_serial(ds18_id) == 0 ) 
 	  TRACE_DEV("Found DS18xx sensor: %x:%x:%x:%x:%x:%x:%x:%x\n",
@@ -249,9 +253,7 @@ void wrc_initialize()
 //	TRACE_DEV("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
 	ep_init(mac_addr);
 	ep_enable(1, 1);
-
 //    for(;;);
-
 	minic_init();
 	pps_gen_init();
 //	for(;;);
@@ -281,7 +283,7 @@ void wrc_initialize()
 int wrc_check_link()
 {
 	static int prev_link_state = -1;
-	int link_state = ep_link_up();
+	int link_state = ep_link_up(NULL);
 	int rv = 0;
 
 	if(!prev_link_state && link_state)
@@ -369,67 +371,34 @@ extern volatile int irq_cnt;
 
 int main(void)
 {
-	wrc_initialize();
+  wrc_initialize();
 
-  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
   spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 
-  //for(;;)
-  //{
-  //  //mprintf("%d\n", timer_get_tics());
-  //  spll_show_stats();
-  //}
-
-
-//    test_transition();
-//    wr_servo_rollover_test(1);
-          
 	for(;;)
 	{
 		wrc_handle_input();
 		if(wrc_gui_mode)
 			wrc_mon_gui();
 
-#if 1
 		int l_status = wrc_check_link();
+
 		switch (l_status)
 		{
-			case LINK_WENT_UP:
-			{
-			    uint32_t delta_tx, delta_rx, ret=0;
-//				mprintf("**********************************S\n");
-/*				kill_sockets();
-				netStartup();
-		       	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-				initDataClock(&rtOpts, &ptpClockDS);
-				protocol_restart(&rtOpts, &ptpClockDS);*/
-
-
-
-           //    	ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-           // 	initDataClock(&rtOpts, &ptpClockDS);
-
-				break;
-            }
-            
 			case LINK_UP:
-			//	softpll_check_lock();
 				update_rx_queues();
 				break;
 
 			case LINK_WENT_DOWN:
-                  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-			
+                spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 				break;
 		}        
 
 	    singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
         sharedPortsLoop(ptpPortDS);
-  
-        delay(100000);	
-//		protocol_nonblock(&rtOpts, ptpPortDS);
- #endif
- 
+        
+        spll_update_aux_clocks();
+// 		delay(1000);
 	}
 }
 
