@@ -203,8 +203,9 @@ void wrc_initialize()
   int ret, i;
   uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
   char sfp_pn[17];
-
-  uart_init();
+	
+	uart_init();
+	timer_init(1);
 
 //  uart_write_string(__FILE__ " is up (compiled on "
 //      __DATE__ " " __TIME__ ")\n");
@@ -267,15 +268,6 @@ void wrc_initialize()
     return;
   }
   ptpPortDS->linkUP = FALSE;
-
-
-  //initialize SoftPLL
-  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
-  //spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-  spll_init(SPLL_MODE_SLAVE, 0, 1);
-
-  //Enable Ptracker
-  spll_enable_ptracker(0, 1);
 }
 
 #define LINK_WENT_UP 1
@@ -372,7 +364,6 @@ extern volatile int irq_cnt;
 
 int main(void)
 {
-
   wrc_initialize();
 
   spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
