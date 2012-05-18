@@ -536,8 +536,9 @@ int spll_update_aux_clocks()
 	 	 	break;
 	 	
 	 	 	case AUX_READY:
-	 	 		if(!softpll.mpll.ld.locked)
+	 	 		if(!softpll.mpll.ld.locked || !softpll.aux[i].ld.locked)
 	 	 		{
+	 	 			TRACE("[aux] aux channel or mpll lost lock\n");
 	 	 			SPLL->OCCR &= ~ (SPLL_OCCR_OUT_LOCK_W((1<<(i+1))));
 	 	 			s->state = AUX_DISABLED;
 	 	 		}
@@ -557,4 +558,15 @@ int spll_get_aux_status(int channel)
  		rval |= SPLL_AUX_LOCKED;
 
 	return rval;
+}
+
+int spll_get_dac(int index)
+{
+ 	if(index < 0)
+ 		return softpll.helper.pi.y;
+	else if (index == 0)
+ 		return softpll.mpll.pi.y;
+	else if (index > 0)
+ 		return softpll.aux[index-1].pi.y;
+ 	return 0;
 }
