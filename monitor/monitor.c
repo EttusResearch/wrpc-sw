@@ -108,3 +108,45 @@ int wrc_mon_gui(void)
 
   return 0;
 }
+
+int wrc_log_stats(void)
+{
+  static char* slave_states[] = {"Uninitialized", "SYNC_UTC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
+  static uint32_t last = 0;
+  hexp_port_state_t ps;
+  int tx, rx;
+  int aux_stat;
+    
+  if(timer_get_tics() - last < 1000)
+    return 0;
+
+  last = timer_get_tics();
+
+  halexp_get_port_state(&ps, NULL);
+  minic_get_stats(&tx, &rx);
+  mprintf("-->STAT Link:%d rx:%d tx:%d ", ps.up, rx, tx);
+  mprintf("Lock:%d ", ps.is_locked?1:0);
+  
+  mprintf("ServoValid:%d ", cur_servo_state.valid?1:0);
+  mprintf("ServoState:'%s' ", cur_servo_state.slave_servo_state);
+  aux_stat = spll_get_aux_status(0);
+  mprintf("aux:%x ", aux_stat);
+  mprintf("mu:%d ", cur_servo_state.mu);
+  mprintf("dms:%d ", cur_servo_state.delay_ms);
+  mprintf("dtxm:%d drxm:%d ", (int32_t)cur_servo_state.delta_tx_m, (int32_t)cur_servo_state.delta_rx_m);
+  mprintf("dtxs:%d drxs:%d ", (int32_t)cur_servo_state.delta_tx_s, (int32_t)cur_servo_state.delta_rx_s);
+  mprintf("asym:%d ", (int32_t)(cur_servo_state.total_asymmetry));
+  mprintf("cable_rtt:%d ", 
+    (int32_t)(cur_servo_state.mu) - (int32_t)cur_servo_state.delta_tx_m - (int32_t)cur_servo_state.delta_rx_m - 
+    (int32_t)cur_servo_state.delta_tx_s - (int32_t)cur_servo_state.delta_rx_s);
+  mprintf("ckoffs:%d ", (int32_t)(cur_servo_state.cur_offset));
+  mprintf("setpoint:%d ", (int32_t)(cur_servo_state.cur_setpoint));
+  mprintf("HDAC:%d MDAC:%d ADAC:%d ",
+    spll_get_dac(-1),
+    spll_get_dac(0),
+    spll_get_dac(1)
+  );
+
+	mprintf("\n");
+  return 0;
+}
