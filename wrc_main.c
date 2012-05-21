@@ -207,11 +207,10 @@ void wrc_initialize()
 	uart_init();
 	timer_init(1);
 
-//  uart_write_string(__FILE__ " is up (compiled on "
-//      __DATE__ " " __TIME__ ")\n");
-
-  mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
-
+	uart_write_string(__FILE__ " is up (compiled on "
+			  __DATE__ " " __TIME__ ")\n");
+    
+	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
   //SFP
 #if 1
   if( get_sfp_id(sfp_pn) >= 0)
@@ -298,8 +297,8 @@ int wrc_check_link()
   return rv;
 }
 
-int wrc_extra_debug = 1;
-int wrc_gui_mode = 0;
+int wrc_extra_debug = 0;
+int wrc_gui_mode = 1;
 
 void wrc_debug_printf(int subsys, const char *fmt, ...)
 {
@@ -361,18 +360,22 @@ void wrc_handle_input()
 
 extern volatile int irq_cnt;
 
-
 int main(void)
 {
   wrc_initialize();
 
+  wrc_extra_debug = 1;
+  wrc_gui_mode = 0;
+
   spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 
-  for(;;)
-  {
-    wrc_handle_input();
-    if(wrc_gui_mode)
-      wrc_mon_gui();
+	for(;;)
+	{
+		wrc_handle_input();
+		if(wrc_gui_mode)
+			wrc_mon_gui();
+		else
+			wrc_log_stats();
 
     int l_status = wrc_check_link();
 
