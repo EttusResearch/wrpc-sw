@@ -367,7 +367,12 @@ int main(void)
   wrc_extra_debug = 1;
   wrc_gui_mode = 0;
 
+#if WRPC_MASTER
   spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
+#else
+  spll_init(SPLL_MODE_SLAVE, 0, 1);
+#endif
 
 	for(;;)
 	{
@@ -386,7 +391,12 @@ int main(void)
         break;
 
       case LINK_WENT_DOWN:
+#if WRPC_MASTER
         spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+        //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
+#else
+        spll_init(SPLL_MODE_SLAVE, 0, 1);
+#endif
         break;
     }        
 
