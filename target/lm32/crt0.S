@@ -89,11 +89,9 @@
 	
         .global	_start  
 _start: 
-        .weak _debug_unit
+	   
         .global _reset_handler
         .type 	_reset_handler, @function
-        .align  256
-_debug_unit:
 _reset_handler:
     xor r0, r0, r0
     wcsr    IE, r0
@@ -104,46 +102,11 @@ _reset_handler:
     calli   _crt0
     nop
         .size	_reset_handler, .-_reset_handler
-
-.extern _breakpoint_handler
-        .global _breakpoint_handler
-        .type 	_breakpoint_handler, @function
-        .align  32
-_breakpoint_handler:
-    bret
-
-.extern _instruction_bus_error_handler
-        .global _instruction_bus_error_handler
-        .type   _instruction_bus_error_handler, @function
-        .align  32
-_instruction_bus_error_handler:
-    eret
-
-.extern _watchpoint_handler
-        .global _watchpoint_handler
-        .type   _watchpoint_handler, @function
-        .align  32
-_watchpoint_handler:
-    bret
-
-.extern _data_bus_error_handler
-        .global _data_bus_error_handler
-        .type   _data_bus_error_handler, @function
-        .align  32
-_data_bus_error_handler:
-    eret
-
-.extern _divide_by_zero_handler
-        .global _divide_by_zero_handler
-        .type   _divide_by_zero_handler, @function
-        .align  32
-_divide_by_zero_handler:
-    eret
-
+	
 .extern _irq_entry
+.org 0xc0
         .global _interrupt_handler
         .type 	_interrupt_handler, @function
-        .align  32
 _interrupt_handler:
     sw      (sp+0), ra
     calli   _save_all
@@ -158,25 +121,12 @@ _interrupt_handler:
     nop
     nop
 
-.extern _system_call_handler
-        .global _system_call_handler
-        .type   _system_call_handler, @function
-        .align  32
-_system_call_handler:
-    eret
-
 .org 0x100
         .global _crt0
         .type 	_crt0, @function
 _crt0:
     /* Clear r0 */
     xor     r0, r0, r0
-
-    /* Setup the debug ROM if it's linked in */
-    mvhi    r1, hi(_debug_unit)
-    ori     r1, r1, lo(_debug_unit)
-    wcsr    DEBA, r1
-
     /* Setup stack and global pointer */
     mvhi    sp, hi(_fstack)
     ori     sp, sp, lo(_fstack)

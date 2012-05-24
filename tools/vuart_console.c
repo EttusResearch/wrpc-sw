@@ -2,15 +2,23 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "wb_vuart.h"
+#include "wb_uart.h"
 
 #include "rr_io.h"
 
-#define BASE_VUART (0x80000 + 0x60800)
+#define BASE_VUART (0xc0000 + 0x20500)
 
-main()
+main(int argc, char *argv[])
 {
-	if(rr_init())
+	if(argc<3)
+	{
+	 	fprintf(stderr,"Usage: %s <bus> <dev/func>\n", argv[0]);
+	 	return 0;
+	}
+
+	
+
+	if(rr_init(atoi(argv[1]), atoi(argv[2])))
 	{
 		perror("rr_init");
 		return -1;
@@ -21,12 +29,11 @@ main()
 
 		int csr ;
 		
-		csr = rr_readl(BASE_VUART + UART_REG_DEBUG_CSR);
-
-		if(! (csr & UART_DEBUG_CSR_EMPTY))
+		csr = rr_readl(BASE_VUART + UART_REG_HOST_RDR);
+//		fprintf(stderr,"csr %x\n", csr);
+		if(csr & UART_HOST_RDR_RDY)
 		{
-			char c = rr_readl(BASE_VUART + UART_REG_DEBUG_R0) & 0xff;
-			fprintf(stderr, "%c", c);
+			fprintf(stderr, "%c", UART_HOST_RDR_DATA_R(csr));
 		} else
 		
 		usleep(1000);

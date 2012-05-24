@@ -1,13 +1,13 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/timer.o dev/softpll.o lib/mprintf.o monitor/monitor.o
+OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
 
 D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
 	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
-PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=TRACE_SERVO
+PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0
 
 OBJS_PTPD = $D/PTPWRd/arith.o
 OBJS_PTPD += $D/PTPWRd/bmc.o
@@ -29,7 +29,7 @@ CFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 LDFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
 OBJS_PLATFORM=
 else
-CROSS_COMPILE ?= /opt/gcc-lm32/bin/lm32-elf-
+CROSS_COMPILE ?= lm32-elf-
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 
 ########################################################################
@@ -75,7 +75,7 @@ clean:
 %.o:		%.c
 				${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $^ -o $@
 
-load:	all
+load:	#all
 		./tools/lm32-loader $(OUTPUT).bin
 
 tools:
