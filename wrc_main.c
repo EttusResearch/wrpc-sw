@@ -65,7 +65,7 @@ static   PtpClockDS ptpClockDS;
 
 
 
-int32_t sfp_alpha = 0;
+int32_t sfp_alpha = -73622176;  //default value if could not read EEPROM
 int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
 
@@ -219,12 +219,12 @@ void wrc_initialize()
     for(i=0;i<16;i++)
       mprintf("%c", sfp_pn[i]);
     mprintf("\n");
-    /* 
-     * if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
-     * {
-     *   mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
-     * }
-     */
+    
+    if( !access_eeprom(sfp_pn, &sfp_alpha, &sfp_deltaTx, &sfp_deltaRx) )
+    {
+      mprintf("SFP: alpha=%d, deltaTx=%d, deltaRx=%d\n", sfp_alpha, sfp_deltaTx, sfp_deltaRx);
+    }
+    
   }
 #endif
 
@@ -362,10 +362,11 @@ extern volatile int irq_cnt;
 
 int main(void)
 {
-  wrc_initialize();
-
   wrc_extra_debug = 1;
   wrc_gui_mode = 0;
+
+  wrc_initialize();
+
 
 #if WRPC_MASTER
   spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
