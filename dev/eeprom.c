@@ -199,6 +199,11 @@ int8_t access_eeprom(char *sfp_pn, int32_t *alpha, int32_t *deltaTx, int32_t *de
     mprintf("! Warning ! too many SFP entries (%d)\n", sfp_sz);
     sfp_sz = SFPINFO_MAX;
   }
+  else if(sfp_sz == 0)
+  {
+    mprintf("EEPROM: could no find SFP section, staring with defaults\n");
+    return -1;
+  }
   mprintf("EEPROM: found SFP section at %d size %d\n", (uint32_t)sfp_adr, (uint32_t)sfp_sz);
 
   if( eeprom_get_sfpinfo(WRPC_FMC_I2C, FMC_EEPROM_ADR, sfp_adr, sfpinfo, sfp_sz))
