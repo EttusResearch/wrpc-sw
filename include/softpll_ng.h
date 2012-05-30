@@ -29,5 +29,9 @@ int spll_get_delock_count();
 int spll_update_aux_clocks();
 int spll_get_aux_status(int channel);
 
+void spll_set_dac(int index, int value);
+int spll_get_dac(int index);
+
+
 #endif
 

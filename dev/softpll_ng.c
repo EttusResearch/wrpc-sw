@@ -16,7 +16,7 @@ volatile int irq_count = 0;
 static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
 static volatile struct PPSG_WB *PPSG = (volatile struct PPSG_WB *) BASE_PPS_GEN;
 
-#define TRACE TRACE_DEV
+#define TRACE(...) TRACE_DEV(__VA_ARGS__)
 
 /* The includes below contain code (not only declarations) to enable the compiler
    to inline functions where necessary and save some CPU cycles */
@@ -282,6 +282,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 				mpll_init(&softpll.aux[i], slave_ref_channel, n_chan_ref + i + 1);
 				softpll.aux_fsm[i].state = AUX_DISABLED;
 			}
+
 			break;
 
 		case SPLL_MODE_FREE_RUNNING_MASTER:
@@ -289,7 +290,8 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 
 			softpll.seq_state = SEQ_CLEAR_DACS;
 			softpll.default_dac_main = 32000;
-			helper_init(&softpll.helper, n_chan_ref);
+			helper_init(&softpll.helper, n_chan_ref + slave_ref_channel);
+
 
 			mpll_init(&softpll.mpll, slave_ref_channel, n_chan_ref);
 
@@ -568,4 +570,21 @@ int spll_get_dac(int index)
 	else if (index > 0)
  		return softpll.aux[index-1].pi.y;
  	return 0;
+}
+
+void spll_set_dac(int index, int value)
+{
+ 	if(index < 0)
+ 	{
+ 		softpll.helper.pi.y = value;
+ 		SPLL->DAC_HPLL = value;
+ 	}
+	else {
+		SPLL->DAC_MAIN = SPLL_DAC_MAIN_DAC_SEL_W(index) | (value & 0xffff);
+		
+		if (index == 0)
+			softpll.mpll.pi.y = value;
+		else if (index > 0)
+ 			softpll.aux[index-1].pi.y = value;
+	}
 }
