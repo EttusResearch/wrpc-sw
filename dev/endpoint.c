@@ -158,27 +158,6 @@ int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 	return 0;
 }
 
-/* Prints out the RMON statistic counters */
-void ep_show_counters()
-{
-    int i;
-    for(i=0;i<16;i++)
-        TRACE_DEV("cntr%d = %d\n", i, EP->RMON_RAM[i]);
-}
-
-int ep_get_psval(int32_t *psval)
-{
-    uint32_t val;
-
-    val = EP->DMSR;
-
-    if(val & EP_DMSR_PS_RDY)
-        *psval =  EP_DMSR_PS_VAL_R(val);
-    else
-        *psval = 0;
-
-    return val & EP_DMSR_PS_RDY ? 1 : 0;
-}
 
 int ep_cal_pattern_enable()
 {
