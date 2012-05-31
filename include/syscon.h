@@ -55,6 +55,11 @@ static inline int gpio_in(int pin)
 {
   return syscon->GPSR & pin ? 1: 0;
 }
+
+static inline int sysc_get_memsize()
+{
+	return (SYSC_HWFR_MEMSIZE_R(syscon->HWFR) + 1) * 16;
+}
         
 #endif
         
