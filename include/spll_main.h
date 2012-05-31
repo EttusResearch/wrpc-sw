@@ -49,8 +49,6 @@ static void mpll_init(struct spll_main_state *s, int id_ref, int id_out)
 	s->id_out = id_out;
 	s->dac_index = id_out - n_chan_ref;
 	
-	mprintf("DACindex : %d\n", s->dac_index);
-
 	pi_init(&s->pi);
 	ld_init(&s->ld);
 }
