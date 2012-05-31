@@ -15,54 +15,7 @@
 #include "onewire.h"
 #include "softpll_ng.h"
 
-
-
-RunTimeOpts rtOpts = {
-    .ifaceName = { "wr0" },
-   .announceInterval = DEFAULT_ANNOUNCE_INTERVAL,
-   .syncInterval = DEFAULT_SYNC_INTERVAL,
-   .clockQuality.clockAccuracy = DEFAULT_CLOCK_ACCURACY,
-   .clockQuality.clockClass = DEFAULT_CLOCK_CLASS,
-   .clockQuality.offsetScaledLogVariance = DEFAULT_CLOCK_VARIANCE,
-   .priority1 = DEFAULT_PRIORITY1,
-   .priority2 = DEFAULT_PRIORITY2,
-   .domainNumber = DEFAULT_DOMAIN_NUMBER,
-   .currentUtcOffset = DEFAULT_UTC_OFFSET,
-   .noResetClock = DEFAULT_NO_RESET_CLOCK,
-   .noAdjust = NO_ADJUST,
-   .inboundLatency.nanoseconds = DEFAULT_INBOUND_LATENCY,
-   .outboundLatency.nanoseconds = DEFAULT_OUTBOUND_LATENCY,
-   .s = DEFAULT_DELAY_S,
-   .ap = DEFAULT_AP,
-   .ai = DEFAULT_AI,
-   .max_foreign_records = DEFAULT_MAX_FOREIGN_RECORDS,
-
-   /**************** White Rabbit *************************/
-   .autoPortDiscovery = FALSE,     /*if TRUE: automagically discovers how many ports we have (and how many up-s); else takes from .portNumber*/
-   .portNumber 		= 1,
-   .calPeriod     = WR_DEFAULT_CAL_PERIOD,
-   .E2E_mode 		  = TRUE,
-   .wrStateRetry	= WR_DEFAULT_STATE_REPEAT,
-   .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
-   .phyCalibrationRequired = FALSE,
-	.disableFallbackIfWRFails = TRUE,
-         
-/*SLAVE only or MASTER only*/
-#ifdef WRPC_SLAVE
-   .primarySource = FALSE,
-   .wrConfig      = WR_S_ONLY,
-   .masterOnly    = FALSE,
-#endif
-#ifdef WRPC_MASTER
-   .primarySource = TRUE,
-   .wrConfig      = WR_M_ONLY,
-   .masterOnly    = TRUE,
-#endif
-   /********************************************************/
-};
-static   PtpPortDS *ptpPortDS;
-static   PtpClockDS ptpClockDS;
-
+#include "wrc_ptp.h"
 
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)
@@ -208,14 +161,13 @@ void wrc_initialize()
   char sfp_pn[17];
 	
 	uart_init();
-	timer_init(1);
 
-	uart_write_string(__FILE__ " is up (compiled on "
-			  __DATE__ " " __TIME__ ")\n");
+	mprintf("WR Core: starting up...\n");
+
+	timer_init(1);
     
-	mprintf("wr_core: starting up (press G to launch the GUI and D for extra debug messages)....\n");
   //SFP
-#if 1
+#if 0
   if( get_sfp_id(sfp_pn) >= 0)
   {
     //mprintf("Found SFP transceiver ID: ");
@@ -249,27 +201,14 @@ void wrc_initialize()
   mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
   mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
 
-  TRACE_DEV("wr_core: local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
+  TRACE_DEV("Local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
   ep_init(mac_addr);
   ep_enable(1, 1);
 
   minic_init();
   pps_gen_init();
 
-  netStartup();
-
-  ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
-  initDataClock(&rtOpts, &ptpClockDS);
-
-  displayConfigINFO(&rtOpts);
-
-  //initialize sockets
-  if(!netInit(&ptpPortDS->netPath, &rtOpts, ptpPortDS))
-  {
-    PTPD_TRACE(TRACE_WRPC, NULL,"failed to initialize network\n");
-    return;
-  }
-  ptpPortDS->linkUP = FALSE;
+	wrc_ptp_init();
 }
 
 #define LINK_WENT_UP 1
@@ -301,7 +240,7 @@ int wrc_check_link()
 }
 
 int wrc_extra_debug = 0;
-int wrc_gui_mode = 1;
+int wrc_gui_mode = 0;
 
 void wrc_debug_printf(int subsys, const char *fmt, ...)
 {
@@ -318,50 +257,25 @@ void wrc_debug_printf(int subsys, const char *fmt, ...)
 }
 
 static int wrc_enable_tracking = 1;
+static int ptp_enabled = 1;
 int wrc_man_phase = 0;
 
-void wrc_handle_input()
+static void ui_update()
 {
- 	if(uart_poll())
- 	{
- 		int x = uart_read_byte();
- 		
- 		switch(x)
- 		{
- 		 	case 'g':
- 		 		wrc_gui_mode = 1 - wrc_gui_mode;
- 		 		if(!wrc_gui_mode)
- 		 		{
- 		 			m_term_clear();
- 		 			wrc_debug_printf(0, "Exiting GUI mode\n");
- 		 		}
- 		 	break;
- 		 	
- 		 	case 'd':
- 		 		wrc_extra_debug =  1 - wrc_extra_debug;
 
-//				wrc_debug_printf(0,"Verbose debug %s.\n", wrc_extra_debug ? "enabled" : "disabled");
-				break;
- 		 		
- 		 	
- 		 	case 't':
- 		 		wrc_enable_tracking = 1 - wrc_enable_tracking;
-			 	wr_servo_enable_tracking(wrc_enable_tracking);
+		if(wrc_gui_mode)
+		{
+			wrc_mon_gui();
+			if(uart_read_byte() == 27)
+			{
+				shell_init();
+				wrc_gui_mode = 0;
+			}	
+		}
+		else
+			shell_interactive();
 
-//				wrc_debug_printf(0,"Phase tracking %s.\n", wrc_enable_tracking ? "enabled" : "disabled");
-				break;
-
-			case '+':
-			case '-':
-				wrc_man_phase += (x=='+' ? 100 : -100);
-//				wrc_debug_printf(0,"Manual phase adjust: %d\n", wrc_man_phase);
-				wr_servo_man_adjust_phase(wrc_man_phase);
-				break;
- 		}
- 	}
 }
-
-extern volatile int irq_cnt;
 
 int main(void)
 {
@@ -370,22 +284,14 @@ int main(void)
 
   wrc_initialize();
 
+	shell_init();
 
-#if WRPC_MASTER
-  spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-  //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
-#else
-  spll_init(SPLL_MODE_SLAVE, 0, 1);
-#endif
+	wrc_ptp_set_mode(WRC_MODE_SLAVE);
+	wrc_ptp_start();
 
 	for(;;)
 	{
-		wrc_handle_input();
-		if(wrc_gui_mode)
-			wrc_mon_gui();
-		else
-			wrc_log_stats();
-
+	
     int l_status = wrc_check_link();
 
     switch (l_status)
@@ -395,20 +301,14 @@ int main(void)
         break;
 
       case LINK_WENT_DOWN:
-#if WRPC_MASTER
         spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-        //spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
-#else
-        spll_init(SPLL_MODE_SLAVE, 0, 1);
-#endif
+
         break;
     }        
 
-    singlePortLoop(&rtOpts, ptpPortDS, 0);// RunTimeOpts *rtOpts, PtpPortDS *ptpPortDS, int portIndex)
-    sharedPortsLoop(ptpPortDS);
-
+		ui_update();
+		wrc_ptp_update();
     spll_update_aux_clocks();
-    // 		delay(1000);
   }
 }
 

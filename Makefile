@@ -1,9 +1,9 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
+OBJS_WRC = revision.o wrc_main.o wrc_ptp.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
 
 D = ptp-noposix
-PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG
+PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG 
 PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
 	-I$D/libptpnetif -I$D/PTPWRd \
 	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
@@ -24,43 +24,27 @@ OBJS_PTPD_FREE	+= $D/libposix/freestanding-display.o
 OBJS_PTPD_FREE	+= $D/libposix/wr_nolibs.o
 OBJS_PTPD_FREE	+= $D/libposix/freestanding-wrapper.o
 
-ifeq ($(PLATFORM), zpu)
-CFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
-LDFLAGS_PLATFORM = -abel -Wl,--relax -Wl,--gc-sections
-OBJS_PLATFORM=
-else
 CROSS_COMPILE ?= lm32-elf-
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
-
-########################################################################
-## Select WR_MASTER (primary clock) or WR_SLAVE by setting the WRMODE ##
-## variable with make execution eg.																		##
-## 		> make WRMODE=master			  																		##
-## by default Slave is built																				  ##
-########################################################################
-WRMODE = slave
-ifeq ($(WRMODE), master)
-CFLAGS_PLATFORM += -DWRPC_MASTER
-else
-CFLAGS_PLATFORM += -DWRPC_SLAVE
-endif
-
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
 OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o
-endif
 
 # Comment this out if you don't want debugging
 OBJS_PLATFORM+=target/lm32/debug.o
 
+include shell/shell.mk
+include tests/tests.mk
 
 CC=$(CROSS_COMPILE)gcc
 OBJCOPY=$(CROSS_COMPILE)objcopy
 OBJDUMP=$(CROSS_COMPILE)objdump
-CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -Iptp-noposix/PTPWRd
+CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -Iptp-noposix/PTPWRd -I.
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude
 SIZE = $(CROSS_COMPILE)size
-OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_PTPD_FREE) 
+OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_PTPD_FREE) $(OBJS_SHELL) $(OBJS_TESTS)
 OUTPUT=wrc
+REVISION=$(shell git rev-parse HEAD)
+
 
 all: 		$(OBJS)
 				$(SIZE) -t $(OBJS)
@@ -68,6 +52,11 @@ all: 		$(OBJS)
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
+
+revision.o:	
+				echo "const char *build_revision = \"$(REVISION)\";" > revision.c
+				echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
+				$(CC) $(CFLAGS) -c revision.c
 
 clean:	
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
