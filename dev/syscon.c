@@ -8,7 +8,6 @@ struct s_i2c_if i2c_if[2] = { {SYSC_GPSR_FMC_SCL, SYSC_GPSR_FMC_SDA},
  ***************************/
 void timer_init(uint32_t enable)
 {
-  mprintf("MEMSIZE %x\n", syscon->HWFR & 0xf);
   if(enable)
     syscon->TCR |= SYSC_TCR_ENABLE; 
   else
