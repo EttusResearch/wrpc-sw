@@ -197,13 +197,15 @@ void _irq_entry()
 				if(softpll.mode == SPLL_MODE_GRAND_MASTER)
 					external_update((struct spll_external_state *) &s->ext, tag, src);
 				if(softpll.mode == SPLL_MODE_SLAVE)
+				{
 					mpll_update((struct spll_main_state *) &s->mpll, tag, src);
-
-					for(i=0;i<n_chan_ref; i++)
-						if(ptracker_mask & (1<<i))
-							ptracker_update((struct spll_ptracker_state *) &s->ptrackers[i], tag, src);
 					for(i=0;i<n_chan_out-1;i++)
 						mpll_update(&softpll.aux[i], tag, src);
+				}
+
+				for(i=0;i<n_chan_ref; i++)
+					if(ptracker_mask & (1<<i))
+						ptracker_update((struct spll_ptracker_state *) &s->ptrackers[i], tag, src);
 
 
 				break;
