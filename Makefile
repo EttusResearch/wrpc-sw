@@ -1,6 +1,6 @@
 PLATFORM = lm32
 
-OBJS_WRC = revision.o wrc_main.o wrc_ptp.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
+OBJS_WRC = wrc_main.o wrc_ptp.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
 
 D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG 
@@ -47,16 +47,14 @@ REVISION=$(shell git rev-parse HEAD)
 
 
 all: 		$(OBJS)
-				$(SIZE) -t $(OBJS)
-				${CC} -o $(OUTPUT).elf $(OBJS) $(LDFLAGS) 
-				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
-				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
-				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
-
-revision.o:	
 				echo "const char *build_revision = \"$(REVISION)\";" > revision.c
 				echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
 				$(CC) $(CFLAGS) -c revision.c
+				$(SIZE) -t $(OBJS)
+				${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS) 
+				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
+				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
+				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
 
 clean:	
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
