@@ -12,6 +12,7 @@
 int cmd_mode(const char *args[])
 {
 	int mode;
+	static const char *modes[]={"unknown","grandmaster","master","slave"};
 		
 	if(!strcasecmp(args[0], "gm"))
 		mode = WRC_MODE_GM;
@@ -19,8 +20,9 @@ int cmd_mode(const char *args[])
 		mode = WRC_MODE_MASTER;
 	else if(!strcasecmp(args[0], "slave"))
 		mode = WRC_MODE_SLAVE;
-	else
-		return -EINVAL;
-
+	else {
+		mprintf("%s\n", modes[wrc_ptp_get_mode()]);
+		return 0;
+	}
 	return wrc_ptp_set_mode(mode);
 }
