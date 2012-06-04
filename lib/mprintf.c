@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "uart.h"
+#include "util.h"
 
 int vprintf(char const *format,va_list ap)
 {
@@ -232,11 +233,11 @@ CONVERSION_LOOP:
 int mprintf(char const *format, ...)
 {
 	int rval;
-  	va_list ap;
-  	va_start (ap, format);
-  	rval = vprintf(format,ap);
-  	va_end(ap);
-  	return rval;
+ 	va_list ap;
+ 	va_start (ap, format);
+ 	rval = vprintf(format,ap);
+ 	va_end(ap);
+ 	return rval;
   	
 }
 
@@ -248,29 +249,3 @@ int sprintf(char *dst, char const *format, ...)
 		return r;
 	
 }
-
-#define C_DIM 0x80                                                                                                    
-void m_cprintf(int color, const char *fmt, ...)                                                                    
-{
-  va_list ap;                                                                                                       
-  mprintf("\033[0%d;3%dm",color & C_DIM ? 2:1, color&0x7f);                                                          
-  va_start(ap, fmt);
-  vprintf(fmt, ap);                                                                                                 
-  va_end(ap);
-}
-
-void m_pcprintf(int row, int col, int color, const char *fmt, ...)                                                 
-{
-  va_list ap;                                                                                                       
-  mprintf("\033[%d;%df", row, col);
-  mprintf("\033[0%d;3%dm",color & C_DIM ? 2:1, color&0x7f); 
-  va_start(ap, fmt);                                                                                                
-  vprintf(fmt, ap);                                                                                                 
-  va_end(ap);
-}
-
-void m_term_clear()                                                                                                     
-{
-  mprintf("\033[2J\033[1;1H");                                                                                       
-}
-
