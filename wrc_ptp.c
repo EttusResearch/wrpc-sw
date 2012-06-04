@@ -7,6 +7,7 @@
 #include "timer.h"
 #include "softpll_ng.h"
 #include "wrc_ptp.h"
+#include "pps_gen.h"
 
 static RunTimeOpts rtOpts = {
    .ifaceName = { "wr1" },
@@ -47,7 +48,7 @@ static RunTimeOpts rtOpts = {
 
 static   PtpPortDS *ptpPortDS;
 static   PtpClockDS ptpClockDS;
-static int ptp_enabled = 0;
+static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN;
 
 int wrc_ptp_init()
 {
@@ -79,6 +80,8 @@ int wrc_ptp_set_mode(int mode)
 {
 	uint32_t start_tics, lock_timeout = 0;
 
+	ptp_mode = 0;
+	
 	ptp_enabled = 0;
 	
 	switch(mode)
@@ -112,6 +115,9 @@ int wrc_ptp_set_mode(int mode)
 	start_tics = timer_get_tics();
 	
 	mprintf("Locking PLL");
+
+	pps_gen_enable_output(0);
+
 	while(!spll_check_lock(0) && lock_timeout)
 	{
 		timer_delay(TICS_PER_SECOND);
@@ -126,8 +132,18 @@ int wrc_ptp_set_mode(int mode)
 			return -EINTR;
 		}
 	}
+	
+	if(mode == WRC_MODE_MASTER || mode == WRC_MODE_GM)
+		pps_gen_enable_output(1);
+	
 	mprintf("\n");
+	ptp_mode = mode;
 	return 0;
+}
+
+int wrc_ptp_get_mode()
+{
+	return ptp_mode;
 }
 
 int wrc_ptp_start()
