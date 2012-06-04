@@ -1,6 +1,6 @@
 PLATFORM = lm32
 
-OBJS_WRC = wrc_main.o wrc_ptp.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o lib/mprintf.o  dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
+OBJS_WRC = wrc_main.o wrc_ptp.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
 
 D = ptp-noposix
 PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG 
@@ -34,6 +34,7 @@ OBJS_PLATFORM+=target/lm32/debug.o
 
 include shell/shell.mk
 include tests/tests.mk
+include lib/lib.mk
 
 CC=$(CROSS_COMPILE)gcc
 OBJCOPY=$(CROSS_COMPILE)objcopy
@@ -41,7 +42,7 @@ OBJDUMP=$(CROSS_COMPILE)objdump
 CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -Iptp-noposix/PTPWRd -I.
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude
 SIZE = $(CROSS_COMPILE)size
-OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_PTPD_FREE) $(OBJS_SHELL) $(OBJS_TESTS)
+OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_PTPD_FREE) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB)
 OUTPUT=wrc
 REVISION=$(shell git rev-parse HEAD)
 
