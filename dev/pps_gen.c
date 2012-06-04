@@ -10,19 +10,7 @@ static volatile struct PPSG_WB *PPSG = (volatile struct PPS_GEN_WB *) BASE_PPS_G
 
 void pps_gen_init()
 {
-	uint32_t cr;
-	
-	cr = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH);
-  
-   PPSG->CR = cr;
-   PPSG->ESCR = 0;
-
-   PPSG->ADJ_UTCLO = 100;
-   PPSG->ADJ_UTCHI = 0;
-   PPSG->ADJ_NSEC = 0;
-
-   PPSG->CR = cr | PPSG_CR_CNT_SET;
-   PPSG->CR = cr;
+	pps_gen_set_time(0, 0);
 }
 
 void pps_gen_adjust_nsec(int32_t how_much)
@@ -48,6 +36,21 @@ int pps_gen_busy()
   return PPSG->CR & PPSG_CR_CNT_ADJ ? 0 : 1;
 }
 
+void pps_gen_set_time(uint32_t utc, uint32_t nsec)
+{
+	 uint32_t cr = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_PULSE_WIDTH);
+  
+   PPSG->CR = cr;
+   PPSG->ESCR = 0;
+
+   PPSG->ADJ_UTCLO = utc;
+   PPSG->ADJ_UTCHI = 0;
+   PPSG->ADJ_NSEC = nsec;
+
+   PPSG->CR = cr | PPSG_CR_CNT_SET;
+   PPSG->CR = cr;
+}
+
 void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
 {
   uint32_t cyc_before, cyc_after;
@@ -64,7 +67,6 @@ void pps_gen_get_time(uint32_t *utc, uint32_t *cntr_nsec)
   if(utc) *utc = utc_lo;
   if(cntr_nsec) *cntr_nsec = cyc_after;
 }
-
 
 void pps_gen_enable_output(int enable)
 {
