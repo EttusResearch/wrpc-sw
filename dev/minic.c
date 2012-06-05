@@ -69,36 +69,6 @@ static inline uint32_t minic_readl(uint32_t reg)
   return *(volatile uint32_t *)(BASE_MINIC + reg);
 }
 
-static void minic_new_rx_buffer()
-{
-  minic.rx_head = minic.rx_base;
-
-  mprintf("minic: new rx buffer\n");
-  minic_writel(MINIC_REG_MCR, 0);
-  minic_writel(MINIC_REG_RX_ADDR, (uint32_t) minic.rx_base);
-  minic_writel(MINIC_REG_RX_SIZE, minic.rx_size>>2); //(minic.rx_size - MINIC_MTU) >> 2);
- // TRACE_DEV("Sizeof: %d Size : %d Avail: %d\n", minic.rx_size, (minic.rx_size - MINIC_MTU) >> 2);
-  //new buffer allocated, clear any old RX interrupts
-  minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
-  minic_writel(MINIC_REG_MCR, MINIC_MCR_RX_EN);
-  
-  //mprintf("Base : %x Avail: %d\n", minic_readl(MINIC_REG_RX_ADDR), minic_readl(MINIC_REG_RX_AVAIL));
-
-}
-
-static void minic_rxbuf_free(uint32_t words)
-{
-  minic_writel(MINIC_REG_RX_AVAIL, words);
-}
-
-static void minic_new_tx_buffer()
-{
-  minic.tx_head = minic.tx_base;
-  minic.tx_avail = minic.tx_size>>2; //(minic.tx_size - MINIC_MTU) >> 2;
-	
-  minic_writel(MINIC_REG_TX_ADDR, (uint32_t) minic.tx_base);
-}
-
 static uint8_t * minic_rx_memcpy( uint8_t *dst, uint8_t *src, uint32_t size)
 {
   uint32_t part;
@@ -114,7 +84,49 @@ static uint8_t * minic_rx_memcpy( uint8_t *dst, uint8_t *src, uint32_t size)
   return dst;
 }
 
+static uint8_t *minic_rx_memset( uint8_t *mem, uint8_t c, uint32_t size)
+{
+  uint32_t part;
+  uint8_t *src;
+  //if src is outside the circular buffer, bring it back to the beginning
+  src = (uint32_t)minic.rx_base + ((uint32_t)mem - (uint32_t)minic.rx_base) % minic.rx_size;
 
+  if((uint32_t)src + size <= (uint32_t)minic.rx_base + minic.rx_size)
+    return memset(src, c, size);
+
+  part = (uint32_t)minic.rx_base + minic.rx_size - (uint32_t)src;
+  memset(src, c, part);
+  memset(minic.rx_base, c, size - part);
+
+  return src;
+}
+
+static void minic_new_rx_buffer()
+{
+  minic_writel(MINIC_REG_MCR, 0);
+  minic.rx_head = minic.rx_base;
+  minic_rx_memset((uint8_t*)minic.rx_base, 0x00, minic.rx_size);
+  memset(minic.rx_base, 0x0, minic.rx_size);
+  minic_writel(MINIC_REG_RX_ADDR, (uint32_t) minic.rx_base);
+  minic_writel(MINIC_REG_RX_SIZE, minic.rx_size>>2);
+  //new buffer allocated, clear any old RX interrupts
+  minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
+  minic_writel(MINIC_REG_MCR, MINIC_MCR_RX_EN);
+}
+
+static void minic_rxbuf_free(uint32_t words)
+{
+  minic_rx_memset((uint8_t*)minic.rx_head, 0x00, words<<2);
+  minic_writel(MINIC_REG_RX_AVAIL, words);
+}
+
+static void minic_new_tx_buffer()
+{
+  minic.tx_head = minic.tx_base;
+  minic.tx_avail = minic.tx_size>>2;
+	
+  minic_writel(MINIC_REG_TX_ADDR, (uint32_t) minic.tx_base);
+}
 
 void minic_init()
 {
@@ -155,7 +167,7 @@ int minic_poll_rx()
 
   isr = minic_readl(MINIC_REG_EIC_ISR);
 
-  return (isr & MINIC_EIC_ISR_RX) ? 1 : 0;//>>1;
+  return (isr & MINIC_EIC_ISR_RX) ? 1 : 0;
 }
 
 int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_timestamp *hwts)
@@ -165,7 +177,6 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   uint32_t raw_ts;
   uint32_t rx_addr_cur, cur_avail;
   int n_recvd;
-  //	mprintf("erxf\n");
 
   if(! (minic_readl(MINIC_REG_EIC_ISR) & MINIC_EIC_ISR_RX))
     return 0;
@@ -173,11 +184,6 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
   //TRACE_DEV("minic: got sthx \n");
 
   desc_hdr = *minic.rx_head;
-
-  //mprintf("%s: rx_base = %x\n", __FUNCTION__, (uint32_t)minic.rx_base>>2);
-  //mprintf("%s: rx_head= %x\n", __FUNCTION__, (uint32_t)minic.rx_head>>2);
-  //mprintf("%s: rx_size=%x\n", __FUNCTION__, (uint32_t)minic.rx_size>>2);
-  //mprintf("%s: rx_end = %x\n", __FUNCTION__, (((uint32_t)minic.rx_base)>>2) + (minic.rx_size>>2));
 
   if(!RX_DESC_VALID(desc_hdr)) /* invalid descriptor? Weird, the RX_ADDR seems to be saying something different. Ignore the packet and purge the RX buffer. */
   {
@@ -229,29 +235,23 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
     minic_rx_memcpy(hdr, (void*)minic.rx_head + 4, ETH_HEADER_SIZE);
     minic_rx_memcpy(payload, (void*)minic.rx_head + 4 + ETH_HEADER_SIZE, n_recvd - ETH_HEADER_SIZE);
 
-
-    //mprintf(" packet OK\n");
   } else { 
-    //mprintf(" error in packet\n");
     n_recvd = -1;
   }
   minic_rxbuf_free(num_words);
   minic.rx_head = (uint32_t)minic.rx_base + ((uint32_t)minic.rx_head+(num_words<<2) - (uint32_t)minic.rx_base) % minic.rx_size;
 
-  //rx_addr_cur = minic_readl(MINIC_REG_RX_ADDR) & 0xffff;
   cur_avail = minic_readl(MINIC_REG_RX_AVAIL);
 
-  //mprintf("minic: cur_avail=%d, minic.rx_size=%d\n", cur_avail, minic.rx_size>>2);
-  if( cur_avail == (minic.rx_size>>2) )  /*empty buffer->no more received packets*/
+  /*empty buffer->no more received packets, or packet reception in progress but not done*/
+  if( cur_avail == (minic.rx_size>>2) || !RX_DESC_VALID(*minic.rx_head))
   {
-    //mprintf("minic: nothing new in the buffer\n");
     if(minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
       minic_new_rx_buffer();
 
     minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
   }
 
-  //	TRACE_DEV("minic: num_rx %d\n", n_recvd);
   return n_recvd;
 }
 
