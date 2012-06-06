@@ -1,51 +1,55 @@
-PLATFORM = lm32
+CROSS_COMPILE = lm32-elf-
 
-OBJS_WRC = wrc_main.o wrc_ptp.o dev/uart.o dev/endpoint.o dev/minic.o dev/pps_gen.o dev/syscon.o dev/softpll_ng.o dev/ep_pfilter.o dev/dna.o dev/i2c.o monitor/monitor.o dev/onewire.o dev/eeprom.o 
+OBJS_WRC = 	wrc_main.o \
+						wrc_ptp.o \
+						monitor/monitor.o
 
-D = ptp-noposix
-PTPD_CFLAGS  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG 
-PTPD_CFLAGS += -Wall -ggdb -I$D/wrsw_hal \
-	-I$D/libptpnetif -I$D/PTPWRd \
-	-include $D/compat.h -include $D/PTPWRd/dep/trace.h -include $D/libposix/ptpd-wrappers.h
-PTPD_CFLAGS += -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0
+PTP_NOPOSIX = ptp-noposix
 
-OBJS_PTPD = $D/PTPWRd/arith.o
-OBJS_PTPD += $D/PTPWRd/bmc.o
-OBJS_PTPD += $D/PTPWRd/dep/msg.o
-OBJS_PTPD += $D/PTPWRd/dep/net.o
-OBJS_PTPD += $D/PTPWRd/dep/servo.o
-OBJS_PTPD += $D/PTPWRd/dep/sys.o
-OBJS_PTPD += $D/PTPWRd/dep/timer.o
-OBJS_PTPD += $D/PTPWRd/dep/wr_servo.o
-OBJS_PTPD += $D/PTPWRd/protocol.o
-OBJS_PTPD += $D/PTPWRd/wr_protocol.o
-OBJS_PTPD_FREE   = $D/libposix/freestanding-startup.o
-OBJS_PTPD_FREE	+= $D/libposix/freestanding-display.o
-OBJS_PTPD_FREE	+= $D/libposix/wr_nolibs.o
-OBJS_PTPD_FREE	+= $D/libposix/freestanding-wrapper.o
+INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal -I$(PTP_NOPOSIX)/libptpnetif -Isoftpll -Iinclude
+					 
+CFLAGS_PTPD  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG \
+							 -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0 \
+							 -include $(PTP_NOPOSIX)/compat.h \
+							 -include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
+							 -include $(PTP_NOPOSIX)/libposix/ptpd-wrappers.h
 
-CROSS_COMPILE ?= lm32-elf-
+OBJS_PTPD = $(PTP_NOPOSIX)/PTPWRd/arith.o \
+						$(PTP_NOPOSIX)/PTPWRd/bmc.o \
+						$(PTP_NOPOSIX)/PTPWRd/dep/msg.o \
+						$(PTP_NOPOSIX)/PTPWRd/dep/net.o \
+						$(PTP_NOPOSIX)/PTPWRd/dep/sys.o \
+						$(PTP_NOPOSIX)/PTPWRd/dep/timer.o \
+						$(PTP_NOPOSIX)/PTPWRd/dep/wr_servo.o \
+						$(PTP_NOPOSIX)/PTPWRd/dep/servo.o \
+						$(PTP_NOPOSIX)/PTPWRd/protocol.o \
+						$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
+						$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
+						$(PTP_NOPOSIX)/libposix/freestanding-display.o \
+						$(PTP_NOPOSIX)/libposix/wr_nolibs.o \
+						$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o
+
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
-OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o
 
-# Comment this out if you don't want debugging
-OBJS_PLATFORM+=target/lm32/debug.o
+OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o target/lm32/debug.o
 
 include shell/shell.mk
 include tests/tests.mk
 include lib/lib.mk
+include softpll/softpll.mk
+include dev/dev.mk
 
 CC=$(CROSS_COMPILE)gcc
-OBJCOPY=$(CROSS_COMPILE)objcopy
 OBJDUMP=$(CROSS_COMPILE)objdump
-CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -Iptp-noposix/PTPWRd -I.
-LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -Iinclude
-SIZE = $(CROSS_COMPILE)size
-OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_PTPD_FREE) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB)
+OBJCOPY=$(CROSS_COMPILE)objcopy
+SIZE=$(CROSS_COMPILE)size
+					 
+CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
+LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections --gc-sections -Os -Iinclude
+OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOFTPLL) $(OBJS_DEV)
 OUTPUT=wrc
 REVISION=$(shell git rev-parse HEAD)
-
 
 all: 		$(OBJS)
 				echo "const char *build_revision = \"$(REVISION)\";" > revision.c
