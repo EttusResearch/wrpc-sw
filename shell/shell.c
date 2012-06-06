@@ -44,6 +44,7 @@ static const struct shell_cmd cmds_list[] = {
 		{ "env",						cmd_env },
 		{ "saveenv",				cmd_saveenv },
 		{ "time",						cmd_time },
+		{ "sfp",						cmd_sfp },
 	
 		{ NULL,			NULL }
 	};

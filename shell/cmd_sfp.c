@@ -11,9 +11,25 @@
 
 #include "shell.h"
 
+#include "sfp.h"
 
 int cmd_sfp(const char *args[])
 {
-
+	if(args[0] && !strcasecmp(args[0], "detect"))
+	{
+		char pn[17];
+		if(!sfp_present())
+			mprintf("No SFP.\n");
+		else
+			sfp_read_part_id(pn);
+		pn[16]=0;
+		mprintf("%s\n",pn);
+		return 0;
+	} else if (args[3] && !strcasecmp(args[0], "add"))
+	{
+	
+	}
+			
+	
 	return 0;
 }
