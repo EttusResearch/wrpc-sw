@@ -97,16 +97,3 @@ void mi2c_init(uint8_t i2cif)
   M_SCL_OUT(i2cif, 1);
   M_SDA_OUT(i2cif, 1);
 }
-
-//void mi2c_scan(uint8_t i2cif)
-//{
-//    int i;
-//    
-//    for(i=0;i<0x80;i++)
-//    {
-//	    mi2c_start(i2cif);
-//	    if(!mi2c_put_byte(i2cif, i<<1)) mprintf("found : %x\n", i);
-//	    mi2c_stop(i2cif);
-//  
-//    }    
-//}

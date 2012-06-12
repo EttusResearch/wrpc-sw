@@ -65,9 +65,8 @@ static uint32_t slot(uint32_t port, uint32_t bit)
   return reg & CSR_DAT_MSK;
 }
 
-static uint32_t ow_read_bit(uint32_t port) { return slot(port, 0x1); }
-static uint32_t ow_write_bit(uint32_t port, uint32_t bit) { return slot(port, bit); }
-
+static inline uint32_t ow_read_bit(uint32_t port) { return slot(port, 0x1); }
+static inline uint32_t ow_write_bit(uint32_t port, uint32_t bit) { return slot(port, bit); }
 
 uint8_t ow_read_byte(uint32_t port) 
 {
