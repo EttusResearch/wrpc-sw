@@ -11,6 +11,8 @@
 #include "minic.h"
 #include "pps_gen.h"
 #include "softpll_ng.h"
+
+#undef PACKED
 #include "ptpd_netif.h"
 
 #include "ptpd.h"
@@ -72,7 +74,7 @@ static int meas_phase_range(wr_socket_t *sock, int phase_min, int phase_max, int
             results[i].phase_sync = ts_sync.phase;
             results[i].ahead = ts_sync.raw_ahead;
             results[i].delta_ns = fup.preciseOriginTimestamp.nanosecondsField - ts_sync.nsec;
-            results[i].delta_ns += (fup.preciseOriginTimestamp.secondsField.lsb - ts_sync.utc) * 1000000000;
+            results[i].delta_ns += (fup.preciseOriginTimestamp.secondsField.lsb - ts_sync.sec) * 1000000000;
             
 			setpoint += phase_step;
 			spll_set_phase_shift(0, setpoint);

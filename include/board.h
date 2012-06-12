@@ -13,6 +13,9 @@
 
 #define CPU_CLOCK 62500000ULL
 
+#define REF_CLOCK_PERIOD_PS 8000
+#define REF_CLOCK_FREQ_HZ 125000000
+
 #define UART_BAUDRATE 115200ULL /* not a real UART */
 
 static inline void delay(int x)

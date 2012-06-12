@@ -10,16 +10,17 @@
 #include <string.h>
 
 #include "shell.h"
+#include "util.h"
 #include "wrc_ptp.h"
 #include "pps_gen.h"
 
-extern char *format_time(uint32_t utc);
 
 int cmd_time(const char *args[])
 {
-	uint32_t utc, nsec;
+	uint64_t sec;
+	uint32_t nsec;
 
-	pps_gen_get_time(&utc, &nsec);
+	pps_gen_get_time(&sec, &nsec);
 	
 	if(args[2] && !strcasecmp(args[0], "set")) {
 		if(wrc_ptp_get_mode() != WRC_MODE_SLAVE)
@@ -30,11 +31,11 @@ int cmd_time(const char *args[])
 			return -EBUSY;
 	} else if(args[0] && !strcasecmp(args[0], "raw"))
 	{
-			mprintf("%d %d\n", utc, nsec);
+			mprintf("%d %d\n", sec, nsec);
 			return 0;
 	}
 
-	mprintf("%s +%d nanoseconds.\n", format_time(utc), nsec*8); /* fixme: clock freq is not always 125 MHz */
+	mprintf("%s +%d nanoseconds.\n", format_time(sec), nsec); /* fixme: clock freq is not always 125 MHz */
 	
 	return 0;	
 }

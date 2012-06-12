@@ -16,12 +16,13 @@ extern int wrc_man_phase;
 
 int wrc_mon_gui(void)
 {
-  static char* slave_states[] = {"Uninitialized", "SYNC_UTC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
+  static char* slave_states[] = {"Uninitialized", "SYNC_SEC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
   static uint32_t last = 0;
   hexp_port_state_t ps;
   int tx, rx;
   int aux_stat;
-  int32_t utc,nsec;
+  uint64_t sec;
+  uint32_t nsec;
     
   if(timer_get_tics() - last < UI_REFRESH_PERIOD)
     return 0;
@@ -33,10 +34,10 @@ int wrc_mon_gui(void)
   pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 1.0");
   pcprintf(2, 1, C_GREY, "Esc = exit");
 
-  pps_gen_get_time(&utc, &nsec);
+  pps_gen_get_time(&sec, &nsec);
 
-  cprintf(C_BLUE, "\n\nUTC Time:                  ");
-  cprintf(C_WHITE, "%s", format_time(utc));
+  cprintf(C_BLUE, "\n\nTAI Time:                  ");
+  cprintf(C_WHITE, "%s", format_time(sec));
 
   /*show_ports*/
   halexp_get_port_state(&ps, NULL);
@@ -114,14 +115,15 @@ int wrc_mon_gui(void)
 
 int wrc_log_stats(void)
 {
-  static char* slave_states[] = {"Uninitialized", "SYNC_UTC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
+  static char* slave_states[] = {"Uninitialized", "SYNC_SEC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
   static uint32_t last = 0;
   hexp_port_state_t ps;
   int tx, rx;
   int aux_stat;
-  uint32_t utc, nsec;
+  uint64_t sec;
+  uint32_t nsec;
     
-	pps_gen_get_time(&utc, &nsec);
+	pps_gen_get_time(&sec, &nsec);
   halexp_get_port_state(&ps, NULL);
   minic_get_stats(&tx, &rx);
   mprintf("lnk:%d rx:%d tx:%d ", ps.up, rx, tx);
@@ -130,7 +132,7 @@ int wrc_log_stats(void)
   mprintf("ss:'%s' ", cur_servo_state.slave_servo_state);
   aux_stat = spll_get_aux_status(0);
   mprintf("aux:%x ", aux_stat);
-  mprintf("utc:%d nsec:%d ", utc,nsec*8); /* fixme: clock is not always 125 MHz */
+  mprintf("sec:%d nsec:%d ", (uint32_t) sec, nsec); /* fixme: clock is not always 125 MHz */
   mprintf("mu:%d ", (int32_t)cur_servo_state.mu);
   mprintf("dms:%d ", (int32_t)cur_servo_state.delay_ms);
   mprintf("dtxm:%d drxm:%d ", (int32_t)cur_servo_state.delta_tx_m, (int32_t)cur_servo_state.delta_rx_m);

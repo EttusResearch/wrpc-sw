@@ -34,15 +34,15 @@ static const int _ytab[2][12] = {
      { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 };
 
-char *format_time(uint32_t utc)
+char *format_time(uint64_t sec)
 {
   struct tm t;
   static char buf[64];
   unsigned long dayclock, dayno;
   int year = EPOCH_YR;
  
-  dayclock = (unsigned long)utc % SECS_DAY;
-  dayno = (unsigned long)utc / SECS_DAY;
+  dayclock = (unsigned long)sec % SECS_DAY;
+  dayno = (unsigned long)sec / SECS_DAY;
  
   t.tm_sec = dayclock % 60;
   t.tm_min = (dayclock % 3600) / 60;

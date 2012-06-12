@@ -6,7 +6,7 @@
 struct hw_timestamp {
   uint8_t valid;
   int ahead;
-  uint32_t utc;
+  uint64_t sec;
   uint32_t nsec;
   uint32_t phase;
 };

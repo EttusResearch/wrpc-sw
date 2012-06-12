@@ -168,7 +168,8 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       
       if(RX_DESC_HAS_OOB(desc_hdr) && hwts != NULL)
 	{
-	  uint32_t counter_r, counter_f, counter_ppsg, utc;
+	  uint32_t counter_r, counter_f, counter_ppsg;
+	  uint64_t sec;
 	  int cntr_diff;
 	  uint16_t dhdr;
 
@@ -178,12 +179,14 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	  memcpy(&dhdr, (uint8_t *)minic.rx_head + payload_size + 4, 2);
 	  EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
 
-	  pps_gen_get_time(&utc, &counter_ppsg);
+	  pps_gen_get_time(&sec, &counter_ppsg);
 
-      if(counter_r > 3*125000000/4 && counter_ppsg < 125000000/4)
-	    utc--; 
+		counter_ppsg /= (REF_CLOCK_PERIOD_PS / 1000);
+
+    if(counter_r > 3*REF_CLOCK_FREQ_HZ/4 && counter_ppsg < REF_CLOCK_FREQ_HZ/4)
+	    sec--; 
       
-	  hwts->utc = utc & 0x7fffffff ;
+	  hwts->sec = sec & 0x7fffffff ;
 
 	  cntr_diff = (counter_r & F_COUNTER_MASK) - counter_f;
 
@@ -258,16 +261,14 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
 
   while((minic_readl(MINIC_REG_MCR) & MINIC_MCR_TX_IDLE) == 0);
 
- #if 1
   if(hwts) /* wait for the timestamp */
     {
       uint32_t raw_ts;
       uint16_t fid;
       uint32_t counter_r, counter_f;
-      uint32_t utc;
+      uint64_t sec;
       uint32_t nsec;
 
-	  //while((minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID) == 0);
       ts_valid = (uint8_t) (minic_readl(MINIC_REG_TSR0) & MINIC_TSR0_VALID);
 
       raw_ts = minic_readl(MINIC_REG_TSR1);
@@ -278,21 +279,21 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
 		 	TRACE_DEV("minic_tx_frame: unmatched fid %d vs %d\n", fid, tx_oob_val);
 		}
       EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
-      pps_gen_get_time(&utc, &nsec);
+      pps_gen_get_time(&sec, &nsec);
 
-      if(counter_r > 3*125000000/4 && nsec < 125000000/4)
-		utc--;
+      if(counter_r > 3*REF_CLOCK_FREQ_HZ/4 && nsec < REF_CLOCK_FREQ_HZ/4)
+				sec--;
 
       hwts->valid = ts_valid;
-      hwts->utc = utc;
+      hwts->sec = sec;
       hwts->ahead = 0;
       hwts->nsec = counter_r * 8;
 
 //	  TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
-	  minic.tx_count++;
+		  minic.tx_count++;
 
     }
-#endif
+
   tx_oob_val++;
 
   return size;
