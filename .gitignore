@@ -8,4 +8,3 @@ tools/vuart_console
 tools/genraminit
 wrc_disasm.S
 wrc.ram
-ptp-noposix
