@@ -2,6 +2,7 @@
 #include "pps_gen.h"
 
 #include "hw/pps_gen_regs.h"
+
 /* PPS Generator driver */
 
 /* Warning: references to "UTC" in the registers DO NOT MEAN actual UTC time, it's just a plain second counter
@@ -39,8 +40,8 @@ int pps_gen_adjust(int counter, int64_t how_much)
 {
   uint32_t cr;
 
-  TRACE_DEV("Adjust: counter = %s [%c%lld]", 
-  	counter == PPSG_ADJUST_SEC ? "seconds" : "nanoseconds", how_much<0?'-':'+', abs(how_much));
+  TRACE_DEV("Adjust: counter = %s [%c%d]\n", 
+  	counter == PPSG_ADJUST_SEC ? "seconds" : "nanoseconds", how_much<0?'-':'+', (int32_t)abs(how_much));
 
 	if(counter == PPSG_ADJUST_NSEC)
 	{

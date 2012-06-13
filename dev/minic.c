@@ -46,14 +46,8 @@ struct wr_minic {
   uint32_t rx_avail, rx_size;
   volatile uint32_t *tx_head, *tx_base;
   uint32_t tx_avail, tx_size;
-
-  int synced;
-  int syncing_counters;
-  int iface_up;
   
   int tx_count, rx_count;
-
-  uint32_t cur_rx_desc;
 };
 
 static struct wr_minic minic;

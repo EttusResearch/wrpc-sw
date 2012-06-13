@@ -59,8 +59,6 @@ int wrc_ptp_init()
   ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
   initDataClock(&rtOpts, &ptpClockDS);
 
-  displayConfigINFO(&rtOpts);
-
   //initialize sockets
   if(!netInit(&ptpPortDS->netPath, &rtOpts, ptpPortDS))
   {
