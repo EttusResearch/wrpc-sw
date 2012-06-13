@@ -1,3 +1,52 @@
+# choose your board here. 
+BOARD = spec
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# and don't touch the rest unless you know what you're doing.
+
 CROSS_COMPILE = lm32-elf-
 
 OBJS_WRC = 	wrc_main.o \
@@ -50,7 +99,11 @@ OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJ
 OUTPUT=wrc
 REVISION=$(shell git rev-parse HEAD)
 
-all: 		$(OBJS)
+$(shell ln -sf ../boards/$(BOARD)/board.h include/board.h) 
+
+all:		tools wrc
+
+wrc: 		$(OBJS)
 				echo "const char *build_revision = \"$(REVISION)\";" > revision.c
 				echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
 				$(CC) $(CFLAGS) -c revision.c
@@ -67,13 +120,5 @@ clean:
 %.o:		%.c
 				${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $^ -o $@
 
-load:	#all
-		./tools/lm32-loader $(OUTPUT).bin
-
 tools:
 			make -C tools
-		
-fpga:
-		- killall -9 vuart_console
-		../loadfile ../spec_top.bin
-		./tools/zpu-loader $(OUTPUT).bin
