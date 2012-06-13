@@ -25,9 +25,8 @@ OBJS_PTPD = $(PTP_NOPOSIX)/PTPWRd/arith.o \
 						$(PTP_NOPOSIX)/PTPWRd/protocol.o \
 						$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
 						$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
-						$(PTP_NOPOSIX)/libposix/freestanding-display.o \
-						$(PTP_NOPOSIX)/libposix/wr_nolibs.o \
-						$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o
+						$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o \
+						$(PTP_NOPOSIX)/libposix/net.o
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
