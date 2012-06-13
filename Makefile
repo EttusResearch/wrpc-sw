@@ -29,9 +29,9 @@ OBJS_PTPD = $(PTP_NOPOSIX)/PTPWRd/arith.o \
 						$(PTP_NOPOSIX)/libposix/net.o
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
-LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T target/lm32/ram.ld 
+LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T arch/lm32/ram.ld 
 
-OBJS_PLATFORM=target/lm32/crt0.o target/lm32/irq.o target/lm32/debug.o
+OBJS_PLATFORM=arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
 
 include shell/shell.mk
 include tests/tests.mk
@@ -59,7 +59,7 @@ all: 		$(OBJS)
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
-				./tools/genramvhd -s 65536 $(OUTPUT).bin > $(OUTPUT).vhd
+				./tools/genramvhd -s 81920 $(OUTPUT).bin > $(OUTPUT).vhd
 
 clean:	
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram

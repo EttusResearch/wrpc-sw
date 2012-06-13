@@ -1,5 +1,4 @@
-OBJS_DEV = 	dev/dna.o \
-						dev/eeprom.o \
+OBJS_DEV = 	dev/eeprom.o \
 						dev/endpoint.o \
 						dev/ep_pfilter.o \
 						dev/i2c.o \

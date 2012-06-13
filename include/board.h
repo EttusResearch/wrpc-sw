@@ -21,9 +21,5 @@
 #define NET_MAX_SOCKETS 3
 #define NET_SKBUF_SIZE 256
 
-static inline void delay(int x)
-{
-  while(x--) asm volatile("nop");
-}
-  
+ 
 #endif
