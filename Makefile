@@ -1,7 +1,8 @@
 # choose your board here. 
 BOARD = spec
 
-
+# 1 enables Etherbone support
+WITH_ETHERBONE=1
 
 
 
@@ -94,7 +95,7 @@ OBJCOPY=$(CROSS_COMPILE)objcopy
 SIZE=$(CROSS_COMPILE)size
 					 
 CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
-LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections --gc-sections -Os -Iinclude
+LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
 OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOFTPLL) $(OBJS_DEV)
 OUTPUT=wrc
 REVISION=$(shell git rev-parse HEAD)
