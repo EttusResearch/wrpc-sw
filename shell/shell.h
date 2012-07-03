@@ -11,6 +11,7 @@ int cmd_sfp(const char *args[]);
 int cmd_mode(const char *args[]);
 int cmd_measure_t24p(const char *args[]);
 int cmd_time(const char *args[]);
+int cmd_ip(const char *args[]);
 
 int cmd_env(const char *args[]);
 int cmd_saveenv(const char *args[]);
