@@ -1,5 +1,5 @@
 # choose your board here. 
-BOARD = spec
+BOARD = arria
 
 # 1 enables Etherbone support
 WITH_ETHERBONE=1
