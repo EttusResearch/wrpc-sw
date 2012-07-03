@@ -170,6 +170,7 @@ int main(void)
 		ui_update();
 		wrc_ptp_update();
     spll_update_aux_clocks();
+    ipv4_poll();
   }
 }
 
