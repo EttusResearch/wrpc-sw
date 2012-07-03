@@ -232,13 +232,25 @@ void pfilter_init_default()
  	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, 3); 
  	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, 3);
  	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, 3); /* r3 = 1 when the packet is unicast to our own MAC */
-    pfilter_cmp(6, 0xa0a0, 0xffff, MOV, 4); /* r4 = 1 when ethertype = 0xa0a0 */
-    pfilter_cmp(6, 0x88f7, 0xffff, MOV, 5); /* r5 = 1 when ethertype = PTPv2 */
-    
-    pfilter_logic3(7, 3, AND, 4, OR, 5); /* r5 = PTP or etherbone */
-    pfilter_logic2(R_DROP, 7, NOT, 0); /* Neither PTP or etherbone? drop */
-	pfilter_logic2(R_CLASS(7), 3, AND, 4); // class 7: minibone unicasts
-	pfilter_logic2(R_CLASS(0), 5, MOV, 0); // class 7: minibone unicasts
+ 	pfilter_cmp(6, 0x0800, 0xffff, MOV, 4); /* r4 = 1 when ethertype = IPv4 */ 
+ 	pfilter_cmp(6, 0x88f7, 0xffff, MOV, 5); /* r5 = 1 when ethertype = PTPv2 */
+ 	pfilter_cmp(6, 0x0806, 0xffff, MOV, 6); /* r6 = 1 when ethertype = ARP */
+
+ 	/* Ethernet = 14 bytes, Offset to type in IP: 8 bytes = 22/2 = 11 */
+ 	pfilter_cmp(11,0x0001, 0x00ff, MOV, 7); /* r7 = 1 when IP type = ICMP */
+ 	pfilter_cmp(11,0x0011, 0x00ff, MOV, 8); /* r8 = 1 when IP type = UDP */
+ 	
+ 	pfilter_logic3(10,  3, OR,   0, AND, 4); /* r10 = IP(unicast) */
+ 	pfilter_logic3(11,  1, OR,   3, AND, 4); /* r11 = IP(unicast+broadcast) */
+ 	
+ 	pfilter_logic3(14,  1, AND,  6, OR,  5); /* r14 = ARP(broadcast) or PTPv2 */
+ 	pfilter_logic3(15, 10, AND,  7, OR, 14); /* r15 = ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
+ 	
+ 	pfilter_logic3(20, 11, AND,  8, OR, 15); /* r16 = Something we accept */
+ 	pfilter_logic2(R_DROP, 20, NOT, 0);      /* None match? drop */
+ 	
+	pfilter_logic2(R_CLASS(7), 11, AND, 8); /* class 7: UDP/IP(unicast|broadcast) => external fabric */
+	pfilter_logic2(R_CLASS(0), 15, MOV, 0); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
 
   	pfilter_load();
  	

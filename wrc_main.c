@@ -65,7 +65,11 @@ void wrc_initialize()
 
   minic_init();
   pps_gen_init();
-	wrc_ptp_init();
+  wrc_ptp_init();
+  
+  /* Derive the IP from the MAC address (10.x.y.z) */
+  /* This will be done with BOOTP in the near future */
+  ipv4_init("wru1", 0x0A000000 | mac_addr[3] << 16 | mac_addr[4] << 8 | mac_addr[5]);
 }
 
 #define LINK_WENT_UP 1
