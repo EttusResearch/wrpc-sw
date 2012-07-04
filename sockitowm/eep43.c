@@ -6,6 +6,8 @@
 #define READ_MEM_CMD 0xf0
 #define E_READ_MEM_CMD 0xa5
 
+//#define DEBUG_EEP43 1
+
 int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 {
 	uchar rt=FALSE;
@@ -16,7 +18,9 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 
 	if(owAccess(portnum))
 	{
+#if DEBUG_EEP43
 		mprintf(" Writing Scratchpad...\n");
+#endif
 		if (!owWriteBytePower(portnum, WRITE_SCRATCH_CMD)) 
 			return FALSE;
 		setcrc16(portnum, 0);
@@ -33,8 +37,8 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 		for(i = 0; i < 32; i++)			//write 32 data bytes to scratchpad 
 		{	
 			owLevel(portnum,MODE_NORMAL);
-			owWriteBytePower(portnum, i);
-			lastcrc16 = docrc16(portnum,i);
+			owWriteBytePower(portnum, page_buffer[i]);
+			lastcrc16 = docrc16(portnum, page_buffer[i]);
 //			mprintf(" CRC16: %x\n", lastcrc16);
 
 		}
@@ -43,7 +47,9 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 			owLevel(portnum,MODE_NORMAL);
 			lastcrc16 = docrc16(portnum,(ushort)owReadBytePower(portnum));
 		}
+#if DEBUG_EEP43
 		mprintf(" CRC16: %x\n", lastcrc16);
+#endif
 		if(lastcrc16 == 0xb001)
 		{
 			//copy to mem
@@ -54,6 +60,7 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 		}
 	}
 
+	owLevel(portnum, MODE_NORMAL);
 	return rt;
 }
 
@@ -77,7 +84,7 @@ int Copy2Mem43(int portnum, uchar *SerialNum)
 		owLevel(portnum, MODE_NORMAL);
 		owWriteBytePower(portnum, 0x1f);	//write E/S
 
-		msDelay(500);
+		usleep(500000);
 				
 		
 		owLevel(portnum,MODE_NORMAL);		
@@ -87,6 +94,7 @@ int Copy2Mem43(int portnum, uchar *SerialNum)
 			rt=TRUE;
 	}
 
+	owLevel(portnum, MODE_NORMAL);
 	return rt;
 }
 
@@ -107,7 +115,9 @@ int ReadScratch43(int portnum, uchar *SerialNum, uchar *page_buffer)
 
 	if(owAccess(portnum))
 	{	
+#if DEBUG_EEP43
 		mprintf(" Reading Scratchpad...\n");
+#endif
 		if (!owWriteBytePower(portnum, READ_SCRATCH_CMD)) 
 			return FALSE;
 
@@ -130,7 +140,9 @@ int ReadScratch43(int portnum, uchar *SerialNum, uchar *page_buffer)
 		read_data = owReadBytePower(portnum);
 		lastcrc16 = docrc16(portnum, read_data);
 
+#if DEBUG_EEP43
 		mprintf("E/S: 0x%x\n", read_data);
+#endif
 		for(i = 0; i < 32; i++) 
 		{	
 			owLevel(portnum,MODE_NORMAL);
@@ -151,6 +163,7 @@ int ReadScratch43(int portnum, uchar *SerialNum, uchar *page_buffer)
 			rt=TRUE;
 	}
 
+	owLevel(portnum, MODE_NORMAL);
 	return rt;
 }
 
@@ -202,5 +215,6 @@ int ReadMem43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 			rt=TRUE;
 	}
 
+	owLevel(portnum, MODE_NORMAL);
 	return rt;
 }

@@ -37,6 +37,7 @@ void wrc_initialize()
   uart_init();
   mprintf("WR Core: starting up...\n");
   timer_init(1);
+  owInit();
   
   mac_addr[0] = 0x08;   //
   mac_addr[1] = 0x00;   // CERN OUI

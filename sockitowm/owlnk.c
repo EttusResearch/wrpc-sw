@@ -45,10 +45,8 @@
 //#define S_PWR 0 
 #define S_IEN 0
 #define S_OVD_E 1
-//#define CLK_DIV_NOR CPU_CLOCK/357     //clock divider for normal mode
-//#define CLK_DIV_OVD CPU_CLOCK/1008    //clock divider for overdrive mode
-#define CLK_DIV_NOR 624
-#define CLK_DIV_OVD 124
+#define CLK_DIV_NOR (CPU_CLOCK/200000-1)  //clock divider for normal mode
+#define CLK_DIV_OVD (CPU_CLOCK/1000000-1) //clock divider for overdrive mode
 
 // exportable link-level functions
 SMALLINT owTouchReset(int);

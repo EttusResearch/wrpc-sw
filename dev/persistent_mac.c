@@ -12,26 +12,33 @@ int get_persistent_mac(unsigned char* mac)
   unsigned char read_buffer[32];
   unsigned char portnum = ONEWIRE_PORT;
   int i, devices, out;
-
+  
   // Find the device(s)
   devices = 0;
   devices += FindDevices(portnum, &FamilySN[devices], 0x28, MAX_DEV1WIRE - devices); /* Temperature 28 sensor (SPEC) */
   devices += FindDevices(portnum, &FamilySN[devices], 0x42, MAX_DEV1WIRE - devices); /* Temperature 42 sensor (SCU) */
   devices += FindDevices(portnum, &FamilySN[devices], 0x43, MAX_DEV1WIRE - devices); /* EEPROM */
+#if DEBUG_PMAC
+  mprintf("Found %d onewire devices\n", devices);
+#endif
   
   out = -1;
   
   for (i = 0; i < devices; ++i) {
+#if DEBUG_PMAC
+    mprintf("Found device: %x:%x:%x:%x:%x:%x:%x:%x\n", 
+      FamilySN[i][7], FamilySN[i][6], FamilySN[i][5], FamilySN[i][4],
+      FamilySN[i][3], FamilySN[i][2], FamilySN[i][1], FamilySN[i][0]);
+#endif
+
     /* If there is a temperature sensor, use it for the low three MAC values */
     if (FamilySN[i][0] == 0x28 || FamilySN[i][0] == 0x42) {
       mac[3] = FamilySN[i][3];
       mac[4] = FamilySN[i][2];
       mac[5] = FamilySN[i][1];
       out = 0;
-#ifdef DEBUG_PMAC
-      mprintf("Using temperature sensor ID: %x:%x:%x:%x:%x:%x:%x:%x\n", 
-        FamilySN[i][7], FamilySN[i][6], FamilySN[i][5], FamilySN[i][4],
-        FamilySN[i][3], FamilySN[i][2], FamilySN[i][1], FamilySN[i][0]);
+#if DEBUG_PMAC
+      mprintf("Using temperature ID for MAC\n");
 #endif
     }
     
@@ -41,19 +48,17 @@ int get_persistent_mac(unsigned char* mac)
       if (ReadMem43(portnum, FamilySN[i], EEPROM_MAC_PAGE, &read_buffer) == TRUE) {
         if (read_buffer[0] == 0 && read_buffer[1] == 0 && read_buffer[2] == 0) {
           /* Skip the EEPROM since it has not been programmed! */
-#ifdef DEBUG_PMAC
-        mprintf("EEPROM %x:%x:%x:%x:%x:%x:%x:%x has not been programmed with a MAC\n", 
-          FamilySN[i][7], FamilySN[i][6], FamilySN[i][5], FamilySN[i][4],
-          FamilySN[i][3], FamilySN[i][2], FamilySN[i][1], FamilySN[i][0]);
+#if DEBUG_PMAC
+          mprintf("EEPROM has not been programmed with a MAC\n");
 #endif
         } else {
           memcpy(mac, read_buffer, 6);
           out = 0;
-#ifdef DEBUG_PMAC
+#if DEBUG_PMAC
           mprintf("Using EEPROM page: %x:%x:%x:%x:%x:%x\n", 
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-        }
 #endif
+        }
       }
     }
   }
@@ -76,6 +81,10 @@ int set_persistent_mac(unsigned char* mac)
   
   memset(write_buffer, 0, sizeof(write_buffer));
   memcpy(write_buffer, mac, 6);
+  
+#if DEBUG_PMAC
+  mprintf("Writing to EEPROM\n");
+#endif
   
   /* Write the last EEPROM with the MAC */
   owLevel(portnum, MODE_NORMAL);
