@@ -3,8 +3,8 @@ OBJS_DEV = 	dev/eeprom.o \
 						dev/ep_pfilter.o \
 						dev/i2c.o \
 						dev/minic.o \
-						dev/onewire.o \
 						dev/pps_gen.o \
 						dev/syscon.o \
 						dev/uart.o \
-						dev/sfp.o
+						dev/sfp.o \
+						dev/persistent_mac.o

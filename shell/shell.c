@@ -136,7 +136,7 @@ void shell_init()
 	env_init();
 	cmd_len = cmd_pos = 0;
 	state = SH_PROMPT;
-	mprintf("\033[2J\033[1;1H");
+//	mprintf("\033[2J\033[1;1H");
 }
 
 void shell_interactive()

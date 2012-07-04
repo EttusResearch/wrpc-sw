@@ -86,6 +86,7 @@ OBJS_PLATFORM=arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
 include shell/shell.mk
 include tests/tests.mk
 include lib/lib.mk
+include sockitowm/sockitowm.mk
 include softpll/softpll.mk
 include dev/dev.mk
 
@@ -96,7 +97,7 @@ SIZE=$(CROSS_COMPILE)size
 					 
 CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
-OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOFTPLL) $(OBJS_DEV)
+OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOCKITOWM) $(OBJS_SOFTPLL) $(OBJS_DEV)
 OUTPUT=wrc
 REVISION=$(shell git rev-parse HEAD)
 

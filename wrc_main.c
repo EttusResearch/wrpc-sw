@@ -12,8 +12,8 @@
 #include "ptpd_netif.h"
 #include "i2c.h"
 //#include "eeprom.h"
-#include "onewire.h"
 #include "softpll_ng.h"
+#include "persistent_mac.h"
 
 #include "wrc_ptp.h"
 
@@ -34,29 +34,20 @@ void wrc_initialize()
   uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
   char sfp_pn[17];
 	
-	uart_init();
-
-	mprintf("WR Core: starting up...\n");
-
-	timer_init(1);
-
-#if 1
-  //Generate MAC address
-  ow_init();
-  if( ds18x_read_serial(ds18_id) == 0 ) 
-    TRACE_DEV("Found DS18xx sensor: %x:%x:%x:%x:%x:%x:%x:%x\n",
-        ds18_id[7], ds18_id[6], ds18_id[5], ds18_id[4], 
-        ds18_id[3], ds18_id[2], ds18_id[1], ds18_id[0]);
-  else
-    TRACE_DEV("DS18B20 not found\n");
-#endif
-
+  uart_init();
+  mprintf("WR Core: starting up...\n");
+  timer_init(1);
+  
   mac_addr[0] = 0x08;   //
   mac_addr[1] = 0x00;   // CERN OUI
   mac_addr[2] = 0x30;   //  
-  mac_addr[3] = ds18_id[3]; // www.maxim-ic.com
-  mac_addr[4] = ds18_id[2]; // APPLICATION NOTE 186  
-  mac_addr[5] = ds18_id[1]; // Creating Global Identifiers Using 1-Wire® Devices
+  mac_addr[3] = 0xDE;   // fallback MAC if get_persistent_mac fails
+  mac_addr[4] = 0xAD;
+  mac_addr[5] = 0x42;
+  
+  if (get_persistent_mac(mac_addr) == -1) {
+    mprintf("Unable to determine MAC address\n");
+  }
 
   TRACE_DEV("Local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
 
