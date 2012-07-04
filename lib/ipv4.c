@@ -3,7 +3,6 @@
 #include "endpoint.h"
 #include "ipv4.h"
 
-uint8_t myMAC[6];
 uint8_t myIP[4];
 
 unsigned int ipv4_checksum(unsigned short* buf, int shorts) {
@@ -25,7 +24,6 @@ void ipv4_init(const char* if_name, uint32_t ip) {
   
   ip_bigendian = htonl(ip);
   memcpy(myIP, &ip_bigendian, 4);
-  get_mac_addr(myMAC);
   
   arp_init(if_name);
   icmp_init(if_name);

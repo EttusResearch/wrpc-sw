@@ -28,7 +28,7 @@ void icmp_init(const char* if_name) {
   /* Configure socket filter */
   memset(&saddr, 0, sizeof(saddr));
   strcpy(saddr.if_name, if_name);
-  memcpy(&saddr.mac, myMAC, 6); /* Unicast */
+  get_mac_addr(&saddr.mac); /* Unicast */
   saddr.ethertype = htons(0x0800); /* IPv4 */
   saddr.family = PTPD_SOCK_RAW_ETHERNET;
   
