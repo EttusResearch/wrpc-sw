@@ -6,7 +6,7 @@
 /* Board-specific parameters */
 
 /* WR Core system/CPU clock frequency in Hz */
-#define CPU_CLOCK 125000000ULL
+#define CPU_CLOCK 62500000ULL
 
 /* WR Reference clock period (picoseconds) and frequency (Hz) */
 #define REF_CLOCK_PERIOD_PS 8000
