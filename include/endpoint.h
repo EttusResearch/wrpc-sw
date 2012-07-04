@@ -19,6 +19,7 @@ NOT=7
 
 void ep_init(uint8_t mac_addr[]);
 void get_mac_addr(uint8_t dev_addr[]);
+void set_mac_addr(uint8_t dev_addr[]);
 int ep_enable(int enabled, int autoneg);
 int ep_link_up(uint16_t *lpa);
 int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx);

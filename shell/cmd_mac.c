@@ -17,7 +17,7 @@ static decode_mac(const char *str, unsigned char* mac) {
   }
 }
 
-int cmd_ip(const char *args[])
+int cmd_mac(const char *args[])
 {
   unsigned char mac[6];
   
@@ -26,6 +26,7 @@ int cmd_ip(const char *args[])
     get_mac_addr(mac);
   } else if (!strcasecmp(args[0], "getp")) {
     /* get persistent MAC */
+    get_mac_addr(mac);
     get_persistent_mac(mac);
   } else if (!strcasecmp(args[0], "set") && args[1]) {
     decode_mac(args[1], mac);

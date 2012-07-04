@@ -28,7 +28,7 @@ void ipv4_init(const char* if_name, uint32_t ip) {
   arp_init(if_name);
   icmp_init(if_name);
   
-  TRACE_DEV("My IP: %d.%d.%d.%d\n", myIP[0], myIP[1], myIP[2], myIP[3]);
+  // TRACE_DEV("My IP: %d.%d.%d.%d\n", myIP[0], myIP[1], myIP[2], myIP[3]);
 }
 
 void ipv4_poll(void) {

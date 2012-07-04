@@ -1,6 +1,9 @@
 #ifndef __SHELL_H
 #define __SHELL_H
 
+const char* fromhex(const char* hex, int* v);
+const char* fromdec(const char* dec, int* v);
+
 int cmd_gui(const char *args[]);
 int cmd_pll(const char *args[]);
 int cmd_sfp(const char *args[]);
@@ -12,6 +15,7 @@ int cmd_mode(const char *args[]);
 int cmd_measure_t24p(const char *args[]);
 int cmd_time(const char *args[]);
 int cmd_ip(const char *args[]);
+int cmd_mac(const char *args[]);
 
 int cmd_env(const char *args[]);
 int cmd_saveenv(const char *args[]);

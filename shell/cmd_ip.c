@@ -6,8 +6,31 @@
 #include "shell.h"
 #include "../lib/ipv4.h"
 
+static decode_ip(const char *str, unsigned char* ip) {
+  int i, x;
+  
+  /* Don't try to detect bad input; need small code */
+  for (i = 0; i < 4; ++i) {
+    str = fromdec(str, &x);
+    ip[i] = x;
+    if (*str == '.') ++str;
+  }
+}
+
 int cmd_ip(const char *args[])
 {
-	mprintf("My IP-address: %d.%d.%d.%d\n", 
-	  myIP[0], myIP[1], myIP[2], myIP[3]);
+  unsigned char ip[4];
+  
+  if (!args[0] || !strcasecmp(args[0], "get")) {
+    /* get current IP */
+    memcpy(ip, myIP, 4);
+  } else if (!strcasecmp(args[0], "set") && args[1]) {
+    decode_ip(args[1], ip);
+    memcpy(myIP, ip, 4);
+  } else {
+    return -EINVAL;
+  }
+  
+  mprintf("IP-address: %d.%d.%d.%d\n", 
+    ip[0], ip[1], ip[2], ip[3]);
 }

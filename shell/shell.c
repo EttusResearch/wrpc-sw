@@ -46,6 +46,7 @@ static const struct shell_cmd cmds_list[] = {
 		{ "time",						cmd_time },
 		{ "sfp",						cmd_sfp },
 		{ "ip",							cmd_ip },
+		{ "mac",						cmd_mac },
 	
 		{ NULL,			NULL }
 	};
@@ -136,7 +137,7 @@ void shell_init()
 	env_init();
 	cmd_len = cmd_pos = 0;
 	state = SH_PROMPT;
-//	mprintf("\033[2J\033[1;1H");
+	mprintf("\033[2J\033[1;1H");
 }
 
 void shell_interactive()
@@ -227,4 +228,38 @@ void shell_interactive()
 			state = SH_PROMPT;
 			break;
 	}
+}
+
+const char* fromhex(const char* hex, int* v) {
+  int o = 0;
+  
+  for (; *hex; ++hex) {
+    if (*hex >= '0' && *hex <= '9') {
+      o = (o << 4) + (*hex - '0');
+    } else if (*hex >= 'A' && *hex <= 'F') {
+      o = (o << 4) + (*hex - 'A') + 10;
+    } else if (*hex >= 'a' && *hex <= 'f') {
+      o = (o << 4) + (*hex - 'a') + 10;
+    } else {
+      break;
+    }
+  }
+  
+  *v = o;
+  return hex;
+}
+
+const char* fromdec(const char* dec, int* v) {
+  int o = 0;
+  
+  for (; *dec; ++dec) {
+    if (*dec >= '0' && *dec <= '9') {
+      o = (o * 10) + (*dec - '0');
+    } else {
+      break;
+    }
+  }
+  
+  *v = o;
+  return dec;
 }

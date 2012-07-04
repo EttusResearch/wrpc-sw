@@ -47,7 +47,7 @@ void pcs_write(int location, int value)
 }
 
 /* MAC address setting */
-static void set_mac_addr(uint8_t dev_addr[])
+void set_mac_addr(uint8_t dev_addr[])
 {
      EP->MACL   = ((uint32_t)dev_addr[2] << 24)
                 | ((uint32_t)dev_addr[3] << 16)
@@ -101,7 +101,7 @@ int ep_enable(int enabled, int autoneg)
 /* Disable the endpoint */
     EP->ECR = 0;
 
-    mprintf("ID: %x", EP->IDCODE);
+    mprintf("ID: %x\n", EP->IDCODE);
 
 /* Load default packet classifier rules - see ep_pfilter.c for details */
     pfilter_init_default();

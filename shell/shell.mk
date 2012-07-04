@@ -9,4 +9,5 @@ OBJS_SHELL = 	shell/shell.o \
 							shell/cmd_measure_t24p.o \
 							shell/cmd_time.o \
 							shell/cmd_gui.o \
-							shell/cmd_ip.o
+							shell/cmd_ip.o \
+							shell/cmd_mac.o
