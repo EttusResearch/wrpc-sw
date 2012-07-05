@@ -124,7 +124,10 @@ int send_bootp(uint8_t* buf, int retry) {
 
 int process_bootp(uint8_t* buf, int len) 
 {
+  volatile unsigned int *eb_ip = (unsigned int*)0x20718;
+  unsigned int ip;
   uint8_t mac[6];
+  
   get_mac_addr(mac);
   
   if (len != BOOTP_END) return 0;
@@ -139,5 +142,13 @@ int process_bootp(uint8_t* buf, int len)
   
   mprintf("Discovered IP address!\n");
   memcpy(myIP, buf+BOOTP_YIADDR, 4);
+  
+  ip = 
+    (buf[BOOTP_YIADDR+0] << 24) |
+    (buf[BOOTP_YIADDR+1] << 16) |
+    (buf[BOOTP_YIADDR+2] <<  8) |
+    (buf[BOOTP_YIADDR+3]);
+  while (*eb_ip != ip) *eb_ip = ip;
+  
   return 1;
 }
