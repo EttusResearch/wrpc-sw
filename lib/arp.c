@@ -72,6 +72,8 @@ void arp_poll(void) {
   wr_sockaddr_t addr;
   int len;
   
+  if (needIP) return; /* can't do ARP w/o an address... */
+  
   if ((len = ptpd_netif_recvfrom(arp_socket, &addr, buf, sizeof(buf), 0)) > 0)
     if ((len = process_arp(buf, len)) > 0)
       ptpd_netif_sendto(arp_socket, &addr, buf, len, 0);

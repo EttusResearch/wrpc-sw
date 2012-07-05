@@ -31,6 +31,7 @@ int cmd_mac(const char *args[])
   } else if (!strcasecmp(args[0], "set") && args[1]) {
     decode_mac(args[1], mac);
     set_mac_addr(mac);
+    pfilter_init_default();
   } else if (!strcasecmp(args[0], "setp") && args[1]) {
     decode_mac(args[1], mac);
     set_persistent_mac(mac);

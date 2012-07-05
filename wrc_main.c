@@ -14,6 +14,7 @@
 //#include "eeprom.h"
 #include "softpll_ng.h"
 #include "persistent_mac.h"
+#include "lib/ipv4.h"
 
 #include "wrc_ptp.h"
 
@@ -59,9 +60,8 @@ void wrc_initialize()
   pps_gen_init();
   wrc_ptp_init();
   
-  /* Derive the IP from the MAC address (10.x.y.z) */
-  /* This will be done with BOOTP in the near future */
-  ipv4_init("wru1", 0x0A000000 | mac_addr[3] << 16 | mac_addr[4] << 8 | mac_addr[5]);
+  ipv4_init("wru1");
+  arp_init("wru1");
 }
 
 #define LINK_WENT_UP 1
@@ -136,33 +136,34 @@ int main(void)
   wrc_gui_mode = 0;
 
   wrc_initialize();
-
-	shell_init();
-
-	wrc_ptp_set_mode(WRC_MODE_SLAVE);
-	wrc_ptp_start();
-
-	for(;;)
-	{
-	
+  shell_init();
+  
+  wrc_ptp_set_mode(WRC_MODE_SLAVE);
+  wrc_ptp_start();
+  
+  for (;;)
+  {
     int l_status = wrc_check_link();
 
     switch (l_status)
     {
+      case LINK_WENT_UP:
+        needIP = 1;
+        break;
+        
       case LINK_UP:
         update_rx_queues();
+        ipv4_poll();
+        arp_poll();
         break;
 
       case LINK_WENT_DOWN:
         spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-
         break;
-    }        
+    }
 
-		ui_update();
-		wrc_ptp_update();
+    ui_update();
+    wrc_ptp_update();
     spll_update_aux_clocks();
-    ipv4_poll();
   }
 }
-

@@ -27,10 +27,15 @@ int cmd_ip(const char *args[])
   } else if (!strcasecmp(args[0], "set") && args[1]) {
     decode_ip(args[1], ip);
     memcpy(myIP, ip, 4);
+    needIP = !ip[0] && !ip[1] && !ip[2] && !ip[3];
   } else {
     return -EINVAL;
   }
   
-  mprintf("IP-address: %d.%d.%d.%d\n", 
-    ip[0], ip[1], ip[2], ip[3]);
+  if (needIP) {
+    mprintf("IP-address: in training\n");
+  } else {
+    mprintf("IP-address: %d.%d.%d.%d\n", 
+      ip[0], ip[1], ip[2], ip[3]);
+  }
 }

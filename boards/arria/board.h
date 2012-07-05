@@ -6,7 +6,7 @@
 /* Board-specific parameters */
 
 /* WR Core system/CPU clock frequency in Hz */
-#define CPU_CLOCK 62500000ULL
+#define CPU_CLOCK 125000000ULL
 
 /* WR Reference clock period (picoseconds) and frequency (Hz) */
 #define REF_CLOCK_PERIOD_PS 8000
@@ -19,7 +19,7 @@
 #define NET_MAX_SOCKETS 3
 
 /* Socket buffer size, determines the max. RX packet size */
-#define NET_SKBUF_SIZE 256
+#define NET_SKBUF_SIZE 512
 
 /* Number of auxillary clock channels - usually equal to the number of FMCs */
 #define NUM_AUX_CLOCKS 1

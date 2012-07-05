@@ -3,8 +3,6 @@
 #include "ipv4.h"
 #include "ptpd_netif.h"
 
-static wr_socket_t* icmp_socket;
-
 #define IP_VERSION	0
 #define IP_TOS		(IP_VERSION+1)
 #define IP_LEN		(IP_TOS+1)
@@ -22,20 +20,7 @@ static wr_socket_t* icmp_socket;
 #define ICMP_CHECKSUM	(ICMP_CODE+1)
 #define ICMP_END	(ICMP_CHECKSUM+2)
 
-void icmp_init(const char* if_name) {
-  wr_sockaddr_t saddr;
-  
-  /* Configure socket filter */
-  memset(&saddr, 0, sizeof(saddr));
-  strcpy(saddr.if_name, if_name);
-  get_mac_addr(&saddr.mac); /* Unicast */
-  saddr.ethertype = htons(0x0800); /* IPv4 */
-  saddr.family = PTPD_SOCK_RAW_ETHERNET;
-  
-  icmp_socket = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &saddr);
-}
-
-static int process_icmp(uint8_t* buf, int len) {
+int process_icmp(uint8_t* buf, int len) {
   int iplen, hisBodyLen;
   uint8_t hisIP[4];
   uint16_t sum;
@@ -88,14 +73,4 @@ static int process_icmp(uint8_t* buf, int len) {
   buf[IP_CHECKSUM+1] = sum & 0xff;
   
   return 24+hisBodyLen;
-}
-
-void icmp_poll(void) {
-  uint8_t buf[ICMP_END+136];
-  wr_sockaddr_t addr;
-  int len;
-  
-  if ((len = ptpd_netif_recvfrom(icmp_socket, &addr, buf, sizeof(buf), 0)) > 0)
-    if ((len = process_icmp(buf, len)) > 0)
-      ptpd_netif_sendto(icmp_socket, &addr, buf, len, 0);
 }
