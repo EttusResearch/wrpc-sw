@@ -246,6 +246,11 @@ void pfilter_init_default()
  	pfilter_logic3(14,  1, AND,  6, OR,  5); /* r14 = ARP(broadcast) or PTPv2 */
  	pfilter_logic3(15, 10, AND,  7, OR, 14); /* r15 = ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
  	
+	/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
+	pfilter_cmp(18, 0x0044, 0xffff, MOV, 14); /* r14 = 1 when dport = BOOTPC */
+	pfilter_logic3(14, 14, AND, 8, AND, 11);  /* r14 = BOOTP/UDP/IP(unicast|broadcast) */
+	pfilter_logic2(15,          14, OR, 15);   /* r15 = BOOTP/UDP/IP(unicast|broadcast) or ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
+	
  	pfilter_logic3(20, 11, AND,  8, OR, 15); /* r16 = Something we accept */
  	pfilter_logic2(R_DROP, 20, NOT, 0);      /* None match? drop */
  	

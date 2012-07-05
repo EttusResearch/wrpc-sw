@@ -127,7 +127,6 @@ int process_bootp(uint8_t* buf, int len)
   uint8_t mac[6];
   get_mac_addr(mac);
   
-  mprintf("recvd: %d %x %d %d %d\n", len, buf[IP_VERSION], buf[IP_PROTOCOL], buf[UDP_DPORT+1], buf[UDP_SPORT+1]);
   if (len != BOOTP_END) return 0;
   
   if (buf[IP_VERSION] != 0x45) return 0;
