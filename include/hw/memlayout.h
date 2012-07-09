@@ -1,16 +1,20 @@
 #ifndef __REGS_H
 #define __REGS_H
 
-#define BASE_MINIC    0x20000
-#define BASE_EP   	  0x20100 
-#define BASE_SOFTPLL  0x20200 
-#define BASE_PPS_GEN  0x20300
-#define BASE_SYSCON   0x20400
-#define BASE_UART 	  0x20500
-#define BASE_ONEWIRE  0x20600
-#define BASE_ETHERBONE_CFG 0x20700
+#define SDB_ADDRESS 0x30000
+
+unsigned char* BASE_MINIC;
+unsigned char* BASE_EP;
+unsigned char* BASE_SOFTPLL;
+unsigned char* BASE_PPS_GEN;
+unsigned char* BASE_SYSCON;
+unsigned char* BASE_UART;
+unsigned char* BASE_ONEWIRE;
+unsigned char* BASE_ETHERBONE_CFG;
 
 #define FMC_EEPROM_ADR 0x50
 
+void sdb_find_devices(void);
+void sdb_print_devices(void);
  
 #endif

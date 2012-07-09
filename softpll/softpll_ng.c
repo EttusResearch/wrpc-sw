@@ -13,8 +13,8 @@
 
 volatile int irq_count = 0;
 
-static volatile struct SPLL_WB *SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
-static volatile struct PPSG_WB *PPSG = (volatile struct PPSG_WB *) BASE_PPS_GEN;
+static volatile struct SPLL_WB *SPLL;
+static volatile struct PPSG_WB *PPSG;
 
 #define TRACE(...) TRACE_DEV(__VA_ARGS__)
 
@@ -233,6 +233,9 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	char mode_str[20];
 	volatile int dummy;
 	int i;
+	
+	SPLL = (volatile struct SPLL_WB *) BASE_SOFTPLL;
+	PPSG = (volatile struct PPSG_WB *) BASE_PPS_GEN;
 
 	disable_irq();
 

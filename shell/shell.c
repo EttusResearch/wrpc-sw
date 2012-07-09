@@ -49,6 +49,7 @@ static const struct shell_cmd cmds_list[] = {
 		{ "ip",							cmd_ip },
 #endif
 		{ "mac",						cmd_mac },
+		{ "sdb",						cmd_sdb },
 	
 		{ NULL,			NULL }
 	};

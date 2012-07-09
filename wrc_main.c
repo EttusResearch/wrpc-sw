@@ -34,9 +34,12 @@ void wrc_initialize()
   int ret, i;
   uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
   char sfp_pn[17];
-	
+  
+  sdb_find_devices();
   uart_init();
+  
   mprintf("WR Core: starting up...\n");
+  
   timer_init(1);
   owInit();
   

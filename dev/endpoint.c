@@ -27,7 +27,7 @@ LGPL 2.1
 #define DMTD_AVG_SAMPLES 256
 
 static int autoneg_enabled;
-static volatile struct EP_WB *EP = (volatile struct EP_WB *) BASE_EP;
+volatile struct EP_WB *EP;
 
 /* functions for accessing PCS (MDIO) registers */
 uint16_t pcs_read(int location)
@@ -72,6 +72,7 @@ void get_mac_addr(uint8_t dev_addr[])
 /* Initializes the endpoint and sets its local MAC address */
 void ep_init(uint8_t mac_addr[])
 {
+    EP = (volatile struct EP_WB *) BASE_EP;
     set_mac_addr(mac_addr);
 
     *(unsigned int *)(0x62000) = 0x2; // reset network stuff (cleanup required!)

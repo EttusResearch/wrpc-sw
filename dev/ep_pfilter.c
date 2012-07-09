@@ -81,7 +81,7 @@
 
 #define pfilter_dbg 
 
-static volatile struct EP_WB *EP = (volatile struct EP_WB *) BASE_EP;
+extern volatile struct EP_WB *EP;
 
 static const uint64_t PF_MODE_LOGIC    = (1ULL<<34);
 static const uint64_t PF_MODE_CMP    = 0ULL;

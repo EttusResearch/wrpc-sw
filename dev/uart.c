@@ -9,10 +9,11 @@
     ( ((( (unsigned long long)baudrate * 8ULL) << (16 - 7)) + \
       (CPU_CLOCK >> 8)) / (CPU_CLOCK >> 7) )
 
-static volatile struct UART_WB *uart = (volatile struct UART_WB *) BASE_UART;
+volatile struct UART_WB *uart;
 
 void uart_init()
 {
+	uart = (volatile struct UART_WB *) BASE_UART;
 	uart->BCR = CALC_BAUD(UART_BAUDRATE);
 }
 

@@ -38,7 +38,7 @@ void timer_init(uint32_t enable);
 uint32_t timer_get_tics();
 void timer_delay(uint32_t how_long);
 
-static volatile struct SYSCON_WB *syscon = (volatile struct SYSCON_WB *) BASE_SYSCON;
+extern volatile struct SYSCON_WB *syscon;
 
 /****************************
  *        GPIO
