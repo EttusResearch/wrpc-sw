@@ -57,7 +57,9 @@ OBJS_WRC = 	wrc_main.o \
 PTP_NOPOSIX = ptp-noposix
 
 INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal -I$(PTP_NOPOSIX)/libptpnetif -Isoftpll -Iinclude
-					 
+
+CFLAGS_EB = -DWITH_ETHERBONE=$(WITH_ETHERBONE)
+
 CFLAGS_PTPD  = -ffreestanding -DPTPD_FREESTANDING -DWRPC_EXTRA_SLIM -DPTPD_MSBF -DPTPD_DBG \
 							 -DPTPD_NO_DAEMON -DNEW_SINGLE_WRFSM -DPTPD_TRACE_MASK=0 \
 							 -include $(PTP_NOPOSIX)/compat.h \
@@ -95,7 +97,7 @@ OBJDUMP=$(CROSS_COMPILE)objdump
 OBJCOPY=$(CROSS_COMPILE)objcopy
 SIZE=$(CROSS_COMPILE)size
 					 
-CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
+CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_EB) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
 OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOCKITOWM) $(OBJS_SOFTPLL) $(OBJS_DEV)
 OUTPUT=wrc

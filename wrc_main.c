@@ -60,8 +60,10 @@ void wrc_initialize()
   pps_gen_init();
   wrc_ptp_init();
   
+#if WITH_ETHERBONE
   ipv4_init("wru1");
   arp_init("wru1");
+#endif
 }
 
 #define LINK_WENT_UP 1
@@ -147,14 +149,18 @@ int main(void)
 
     switch (l_status)
     {
+#if WITH_ETHERBONE
       case LINK_WENT_UP:
         needIP = 1;
         break;
+#endif
         
       case LINK_UP:
         update_rx_queues();
+#if WITH_ETHERBONE
         ipv4_poll();
         arp_poll();
+#endif
         break;
 
       case LINK_WENT_DOWN:

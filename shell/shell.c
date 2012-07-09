@@ -45,7 +45,9 @@ static const struct shell_cmd cmds_list[] = {
 		{ "saveenv",				cmd_saveenv },
 		{ "time",						cmd_time },
 		{ "sfp",						cmd_sfp },
+#if WITH_ETHERBONE
 		{ "ip",							cmd_ip },
+#endif
 		{ "mac",						cmd_mac },
 	
 		{ NULL,			NULL }
