@@ -8,6 +8,7 @@
 #define BASE_SYSCON   0x20400
 #define BASE_UART 	  0x20500
 #define BASE_ONEWIRE  0x20600
+#define BASE_ETHERBONE_CFG 0x20700
 
 #define FMC_EEPROM_ADR 0x50
 

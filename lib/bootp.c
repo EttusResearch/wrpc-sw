@@ -1,6 +1,8 @@
 #include <string.h>
 
 #include "ipv4.h"
+#include "hw/memlayout.h"
+#include "hw/etherbone-config.h"
 
 #define IP_VERSION	0
 #define IP_TOS		(IP_VERSION+1)
@@ -124,7 +126,8 @@ int send_bootp(uint8_t* buf, int retry) {
 
 int process_bootp(uint8_t* buf, int len) 
 {
-  volatile unsigned int *eb_ip = (unsigned int*)0x20718;
+  volatile unsigned int *eb_ip = 
+    (unsigned int*)(BASE_ETHERBONE_CFG + EB_IPV4);
   unsigned int ip;
   uint8_t mac[6];
   
