@@ -1,5 +1,5 @@
 # choose your board here. 
-BOARD = arria
+BOARD = spec
 
 # 1 enables Etherbone support
 WITH_ETHERBONE=1
@@ -116,7 +116,7 @@ wrc: 		$(OBJS)
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
-				./tools/genramvhd -s 81920 $(OUTPUT).bin > $(OUTPUT).vhd
+				./tools/genramvhd -s 90112 $(OUTPUT).bin > $(OUTPUT).vhd
 
 clean:	
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
