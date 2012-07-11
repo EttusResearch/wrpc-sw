@@ -8,6 +8,7 @@
 #include "pps_gen.h"
 #include "util.h"
 #include "timer.h"
+#include "onewire.h"
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND /* 1 sec */
 
@@ -122,6 +123,8 @@ int wrc_log_stats(void)
   int aux_stat;
   uint64_t sec;
   uint32_t nsec;
+  int16_t brd_temp = 0;
+  int16_t brd_temp_frac = 0;
     
 	pps_gen_get_time(&sec, &nsec);
   halexp_get_port_state(&ps, NULL);
@@ -149,6 +152,9 @@ int wrc_log_stats(void)
           spll_get_dac(1)
           );
   mprintf("ucnt:%d ", (int32_t)cur_servo_state.update_count);
+
+  own_readtemp(ONEWIRE_PORT, &brd_temp, &brd_temp_frac);
+  mprintf("temp:%d.%02d C", brd_temp, brd_temp_frac);
 
   mprintf("\n");
   return 0;
