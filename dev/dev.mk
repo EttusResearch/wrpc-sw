@@ -7,5 +7,5 @@ OBJS_DEV = 	dev/eeprom.o \
 						dev/syscon.o \
 						dev/uart.o \
 						dev/sfp.o \
-						dev/persistent_mac.o \
+						dev/onewire.o \
 						dev/sdb.o
