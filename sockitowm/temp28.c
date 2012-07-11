@@ -45,85 +45,91 @@
 // FALSE(0) could not read the temperature, perhaps device is not
 // in contact
 //
-int ReadTemperature28(int portnum, uchar *SerialNum, float *Temp)
+uint8_t ReadTemperature28(uint8_t portnum, uint8_t *SerialNum, int16_t *Temp)
 {
-   uchar rt=FALSE;
-   uchar send_block[30],lastcrc8 = 0;
-   int send_cnt, tsht, i, loop=0;
-   int power = 0;
+  uint8_t rt=FALSE;
+  uint8_t send_block[30],lastcrc8 = 0;
+  int send_cnt, tsht, i;
+  static int power = -1;
+  static uint8_t toggle = 0;
 
-   // set the device serial number to the counter device
-   owSerialNum(portnum,SerialNum,FALSE);
+  // set the device serial number to the counter device
+  owSerialNum(portnum,SerialNum,FALSE);
 
-   for (loop = 0; loop < 2; loop ++)
-   {
-      // check if the chip is connected to VDD
-      if (owAccess(portnum))
-      {
-         owWriteByte(portnum,0xB4);
-         power = owReadByte(portnum);
+  //we need to call this only once at the beginning
+  if(power==-1)
+  {
+    // check if the chip is connected to VDD
+    if (owAccess(portnum))
+    {
+      owWriteByte(portnum,0xB4);
+      power = owReadByte(portnum);
+    }
+  }
+
+  if(toggle) 
+  {
+    if( owAccess(portnum))
+    {
+      // turn off the 1-Wire Net strong pull-up
+      if (power) {
+        if (owLevel(portnum,MODE_NORMAL) != MODE_NORMAL)
+          return FALSE;
       }
 
+      while(!owReadByte(portnum)){} //wait until conversion is done
       // access the device
       if (owAccess(portnum))
       {
-         // send the convert command and if nesessary start power delivery
-         if (power) {
-            if (!owWriteBytePower(portnum,0x44))
-               return FALSE;
-         } else {
-            if (!owWriteByte(portnum,0x44))
-               return FALSE;
-         }
+        // create a block to send that reads the temperature
+        // read scratchpad command
+        send_cnt = 0;
+        send_block[send_cnt++] = 0xBE;
+        // now add the read bytes for data bytes and crc8
+        for (i = 0; i < 9; i++)
+          send_block[send_cnt++] = 0xFF;
 
-         // sleep for 1 second
-         msDelay(1000);
+        // now send the block
+        if (owBlock(portnum,FALSE,send_block,send_cnt))
+        {
+          // initialize the CRC8
+          setcrc8(portnum,0);
+          // perform the CRC8 on the last 8 bytes of packet
+          for (i = send_cnt - 9; i < send_cnt; i++)
+            lastcrc8 = docrc8(portnum,send_block[i]);
 
-         // turn off the 1-Wire Net strong pull-up
-         if (power) {
-            if (owLevel(portnum,MODE_NORMAL) != MODE_NORMAL)
-               return FALSE;
-         }
-
-         // access the device
-         if (owAccess(portnum))
-         {
-            // create a block to send that reads the temperature
-            // read scratchpad command
-            send_cnt = 0;
-            send_block[send_cnt++] = 0xBE;
-            // now add the read bytes for data bytes and crc8
-            for (i = 0; i < 9; i++)
-               send_block[send_cnt++] = 0xFF;
-
-            // now send the block
-            if (owBlock(portnum,FALSE,send_block,send_cnt))
-            {
-               // initialize the CRC8
-               setcrc8(portnum,0);
-               // perform the CRC8 on the last 8 bytes of packet
-               for (i = send_cnt - 9; i < send_cnt; i++)
-                  lastcrc8 = docrc8(portnum,send_block[i]);
-
-               // verify CRC8 is correct
-               if (lastcrc8 == 0x00)
-               {
-                  // calculate the high-res temperature
-             tsht = send_block[2] << 8;
-             tsht = tsht | send_block[1];
-             if (tsht & 0x00001000)
-             tsht = tsht | 0xffff0000;
-                  *Temp = ((float) tsht)/16;
-                  // success
-                  rt = TRUE;
-                  break;
-               }
-            }
-         }
+          // verify CRC8 is correct
+          if (lastcrc8 == 0x00)
+          {
+            // calculate the high-res temperature
+            tsht = send_block[2] << 8;
+            tsht = tsht | send_block[1];
+            if (tsht & 0x00001000)
+              tsht = tsht | 0xffff0000;
+            *Temp = (int16_t) tsht;
+            // success
+            rt = TRUE;
+            //break;
+          }
+        }
       }
+    }
+  }
 
-   }
+  // access the device
+  if (owAccess(portnum))
+  {
+    // send the convert command and if nesessary start power delivery
+    if (power) {
+      if (!owWriteBytePower(portnum,0x44))
+        return FALSE;
+    } else {
+      if (!owWriteByte(portnum,0x44))
+        return FALSE;
+    }
+    toggle=1;
+  }
 
-   // return the result flag rt
-   return rt;
+  // return the result flag rt
+  return rt;
 }

@@ -28,4 +28,4 @@
 //
 // ---------------------------------------------------------------------------
 
-int ReadTemperature28(int,uchar *,float *);
+uint8_t ReadTemperature28(uint8_t , uint8_t *,int16_t *);
