@@ -14,9 +14,12 @@
 //#include "eeprom.h"
 #include "softpll_ng.h"
 #include "onewire.h"
+#include "shell.h"
 #include "lib/ipv4.h"
 
 #include "wrc_ptp.h"
+
+int wrc_ui_mode = 0;
 
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)
@@ -99,13 +102,12 @@ int wrc_check_link()
 }
 
 int wrc_extra_debug = 0;
-int wrc_gui_mode = 0;
 
 void wrc_debug_printf(int subsys, const char *fmt, ...)
 {
 	va_list ap;
 	
-	if(wrc_gui_mode) return;
+	if(wrc_ui_mode) return;
 	
 	va_start(ap, fmt);
 	
@@ -122,13 +124,13 @@ int wrc_man_phase = 0;
 static void ui_update()
 {
 
-		if(wrc_gui_mode)
+		if(wrc_ui_mode == UI_GUI_MODE)
 		{
 			wrc_mon_gui();
 			if(uart_read_byte() == 27)
 			{
 				shell_init();
-				wrc_gui_mode = 0;
+				wrc_ui_mode = UI_SHELL_MODE;
 			}	
 		}
 		else
@@ -139,7 +141,7 @@ static void ui_update()
 int main(void)
 {
   wrc_extra_debug = 1;
-  wrc_gui_mode = 0;
+  wrc_ui_mode = UI_SHELL_MODE;
 
   wrc_initialize();
   shell_init();
