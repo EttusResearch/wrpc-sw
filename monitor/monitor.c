@@ -114,7 +114,7 @@ int wrc_mon_gui(void)
   return 0;
 }
 
-int wrc_log_stats(void)
+int wrc_log_stats(uint8_t onetime)
 {
   static char* slave_states[] = {"Uninitialized", "SYNC_SEC", "SYNC_NSEC", "SYNC_PHASE", "TRACK_PHASE"};
   static uint32_t last = 0;
@@ -126,6 +126,11 @@ int wrc_log_stats(void)
   int16_t brd_temp = 0;
   int16_t brd_temp_frac = 0;
     
+  if(!onetime && timer_get_tics() - last < UI_REFRESH_PERIOD)
+      return 0;
+
+  last = timer_get_tics();
+
 	pps_gen_get_time(&sec, &nsec);
   halexp_get_port_state(&ps, NULL);
   minic_get_stats(&tx, &rx);

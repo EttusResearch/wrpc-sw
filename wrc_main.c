@@ -133,6 +133,15 @@ static void ui_update()
 				wrc_ui_mode = UI_SHELL_MODE;
 			}	
 		}
+    else if(wrc_ui_mode == UI_STAT_MODE)
+    {
+      wrc_log_stats(0);
+			if(uart_read_byte() == 27)
+			{
+				shell_init();
+				wrc_ui_mode = UI_SHELL_MODE;
+			}	
+    }
 		else
 			shell_interactive();
 
