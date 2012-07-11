@@ -4,6 +4,7 @@
 
 #include "softpll_ng.h"
 #include "shell.h"
+#include "onewire.h"
 #include "../lib/ipv4.h"
 
 static decode_mac(const char *str, unsigned char* mac) {
@@ -27,14 +28,14 @@ int cmd_mac(const char *args[])
   } else if (!strcasecmp(args[0], "getp")) {
     /* get persistent MAC */
     get_mac_addr(mac);
-    get_persistent_mac(mac);
+    get_persistent_mac(ONEWIRE_PORT, mac);
   } else if (!strcasecmp(args[0], "set") && args[1]) {
     decode_mac(args[1], mac);
     set_mac_addr(mac);
     pfilter_init_default();
   } else if (!strcasecmp(args[0], "setp") && args[1]) {
     decode_mac(args[1], mac);
-    set_persistent_mac(mac);
+    set_persistent_mac(ONEWIRE_PORT, mac);
   } else {
     return -EINVAL;
   }

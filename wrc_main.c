@@ -13,7 +13,7 @@
 #include "i2c.h"
 //#include "eeprom.h"
 #include "softpll_ng.h"
-#include "persistent_mac.h"
+#include "onewire.h"
 #include "lib/ipv4.h"
 
 #include "wrc_ptp.h"
@@ -50,7 +50,8 @@ void wrc_initialize()
   mac_addr[4] = 0xAD;
   mac_addr[5] = 0x42;
   
-  if (get_persistent_mac(mac_addr) == -1) {
+  own_scanbus(ONEWIRE_PORT);
+  if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
     mprintf("Unable to determine MAC address\n");
   }
 
