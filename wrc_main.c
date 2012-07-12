@@ -19,7 +19,7 @@
 
 #include "wrc_ptp.h"
 
-int wrc_ui_mode = 0;
+int wrc_ui_mode = UI_SHELL_MODE;
 
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)
