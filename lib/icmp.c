@@ -23,9 +23,11 @@
 int process_icmp(uint8_t* buf, int len) {
   int iplen, hisBodyLen;
   uint8_t hisIP[4];
+  uint8_t myIP[4];
   uint16_t sum;
   
   /* Is it IP targetting us? */
+  getIP(myIP);
   if (buf[IP_VERSION] != 0x45 ||
       memcmp(buf+IP_DEST, myIP, 4))
     return 0;
