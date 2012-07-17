@@ -1,8 +1,6 @@
 #include <string.h>
 
 #include "ipv4.h"
-#include "hw/memlayout.h"
-#include "hw/etherbone-config.h"
 
 #define IP_VERSION	0
 #define IP_TOS		(IP_VERSION+1)
@@ -126,9 +124,6 @@ int send_bootp(uint8_t* buf, int retry) {
 
 int process_bootp(uint8_t* buf, int len) 
 {
-  volatile unsigned int *eb_ip = 
-    (unsigned int*)(BASE_ETHERBONE_CFG + EB_IPV4);
-  unsigned int ip;
   uint8_t mac[6];
   
   get_mac_addr(mac);
@@ -144,14 +139,7 @@ int process_bootp(uint8_t* buf, int len)
   if (memcmp(buf+BOOTP_CHADDR, mac, 6)) return 0;
   
   mprintf("Discovered IP address!\n");
-  memcpy(myIP, buf+BOOTP_YIADDR, 4);
-  
-  ip = 
-    (buf[BOOTP_YIADDR+0] << 24) |
-    (buf[BOOTP_YIADDR+1] << 16) |
-    (buf[BOOTP_YIADDR+2] <<  8) |
-    (buf[BOOTP_YIADDR+3]);
-  while (*eb_ip != ip) *eb_ip = ip;
+  setIP(buf+BOOTP_YIADDR);
   
   return 1;
 }

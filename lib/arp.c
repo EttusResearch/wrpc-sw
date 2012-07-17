@@ -32,10 +32,12 @@ void arp_init(const char* if_name) {
 static int process_arp(uint8_t* buf, int len) {
   uint8_t hisMAC[6];
   uint8_t hisIP[4];
+  uint8_t myIP[4];
   
   if (len < ARP_END) return 0;
   
   /* Is it ARP request targetting our IP? */
+  getIP(myIP);
   if (buf[ARP_OPER+0] != 0 ||
       buf[ARP_OPER+1] != 1 ||
       memcmp(buf+ARP_TPA, myIP, 4))

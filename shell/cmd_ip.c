@@ -22,12 +22,10 @@ int cmd_ip(const char *args[])
   unsigned char ip[4];
   
   if (!args[0] || !strcasecmp(args[0], "get")) {
-    /* get current IP */
-    memcpy(ip, myIP, 4);
+    getIP(ip);
   } else if (!strcasecmp(args[0], "set") && args[1]) {
     decode_ip(args[1], ip);
-    memcpy(myIP, ip, 4);
-    needIP = !ip[0] && !ip[1] && !ip[2] && !ip[3];
+    setIP(ip);
   } else {
     return -EINVAL;
   }
