@@ -6,6 +6,7 @@
 		Subcommands:
 			add vendor_type delta_tx delta_rx alpha - adds an SFP to the database, with given alpha/delta_rx/delta_rx values
 			show - shows the SFP database
+      match - tries to get calibration parameters from DB for a detected SFP
       erase - cleans the SFP database
 			detect - detects the transceiver type		
 */
@@ -20,10 +21,10 @@ int cmd_sfp(const char *args[])
 {
   int8_t sfpcount=1, i, temp;
   struct s_sfpinfo sfp;
+  static char pn[SFP_PN_LEN+1] = "\0";
 
 	if(args[0] && !strcasecmp(args[0], "detect"))
 	{
-		char pn[17];
 		if(!sfp_present())
 			mprintf("No SFP.\n");
 		else
@@ -84,6 +85,25 @@ int cmd_sfp(const char *args[])
         mprintf("%c", sfp.pn[temp]);
       mprintf(" dTx: %d, dRx: %d, alpha: %d\n", sfp.dTx, sfp.dRx, sfp.alpha);
     }
+  }
+  else if (args[0] && !strcasecmp(args[0], "match"))
+  {
+    if(pn[0]=='\0')
+    {
+      mprintf("Run sfp detect first\n");
+      return 0;
+    }
+    strncpy(sfp.pn, pn, SFP_PN_LEN);
+    if(eeprom_match_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &sfp) > 0)
+    {
+      mprintf("SFP matched, dTx=%d, dRx=%d, alpha=%d\n", sfp.dTx, sfp.dRx, sfp.alpha);
+      sfp_deltaTx = sfp.dTx;
+      sfp_deltaRx = sfp.dRx;
+      sfp_alpha = sfp.alpha;
+    }
+    else
+      mprintf("Could not match to DB\n");
+    return 0;
   }
 	
 	return 0;

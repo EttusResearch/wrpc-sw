@@ -145,6 +145,35 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp, u
   return sfpcount;
 }
 
+int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp)
+{
+  uint8_t sfpcount = 1;
+  int8_t i, temp;
+  struct s_sfpinfo dbsfp;
+
+  for(i=0; i<sfpcount; ++i)
+  {   
+    temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &dbsfp, 0, i); 
+    if(!i) 
+    {   
+      sfpcount=temp; //only in first round valid sfpcount is returned from eeprom_get_sfp
+      if(sfpcount == 0 || sfpcount == 0xFF)
+        return 0;
+      else if(sfpcount<0) 
+        return sfpcount;
+    }   
+    if( !strncmp(dbsfp.pn, sfp->pn, 16) )
+    {
+      sfp->dTx = dbsfp.dTx;
+      sfp->dRx = dbsfp.dRx;
+      sfp->alpha = dbsfp.alpha;
+      return 1;
+    }
+  } 
+
+  return 0;
+}
+
 int8_t eeprom_get_sfpinfo(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, struct s_sfpinfo *sfpinfo, uint16_t section_sz)
 {
   uint8_t *buf;
