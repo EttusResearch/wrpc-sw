@@ -98,6 +98,16 @@ void mi2c_init(uint8_t i2cif)
   M_SDA_OUT(i2cif, 1);
 }
 
+uint8_t mi2c_devprobe(uint8_t i2cif, uint8_t i2c_addr)
+{
+  uint8_t ret;
+  mi2c_start(i2cif);
+  ret = !mi2c_put_byte(i2cif, i2c_addr<<1);
+  mi2c_stop(i2cif);
+
+  return ret;
+}
+
 //void mi2c_scan(uint8_t i2cif)
 //{
 //    int i;
