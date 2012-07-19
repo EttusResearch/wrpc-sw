@@ -9,7 +9,7 @@
 
 #define EE_RET_I2CERR -1
 #define EE_RET_DBFULL -2
-#define EE_RET_CHKSUM -3
+#define EE_RET_CORRPT -3
 #define EE_RET_POSERR -4
 
 extern int32_t sfp_alpha;
@@ -28,9 +28,13 @@ struct s_sfpinfo
 int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size);
 int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size);
 
-
 int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr);
 int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16_t *section_sz);
 int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp);
+
+int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr);
+int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[]);
+int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr);
+int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char* buf, uint8_t bufsize, uint8_t next);
 
 #endif

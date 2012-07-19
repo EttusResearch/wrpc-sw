@@ -4,6 +4,7 @@
 
 #include "util.h"
 #include "uart.h"
+#include "syscon.h"
 #include "shell.h"
 
 #define SH_MAX_LINE_LEN 80	
@@ -45,6 +46,7 @@ static const struct shell_cmd cmds_list[] = {
 		{ "saveenv",				cmd_saveenv },
 		{ "time",						cmd_time },
 		{ "sfp",						cmd_sfp },
+    { "init",           cmd_init },
 #if WITH_ETHERBONE
 		{ "ip",							cmd_ip },
 #endif
@@ -265,4 +267,31 @@ const char* fromdec(const char* dec, int* v) {
   
   *v = o;
   return dec;
+}
+
+int shell_boot_script(void)
+{
+  uint8_t next=0;
+
+  //first check if EEPROM is really there
+  if( !mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR) )
+    if( !mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR) )
+      return -1;
+
+  while(1)
+  {
+    cmd_len = eeprom_init_readcmd(WRPC_FMC_I2C, FMC_EEPROM_ADR, cmd_buf, SH_MAX_LINE_LEN, next);
+    if(cmd_len <= 0)
+    { 
+      if(next==0) mprintf("Empty init script...\n");
+      break;
+    }
+    cmd_buf[cmd_len] = 0;
+    
+    mprintf("executing: %s", cmd_buf);
+    _shell_exec();
+    next = 1;
+  }
+
+  return 0;
 }

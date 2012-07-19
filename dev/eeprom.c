@@ -11,7 +11,7 @@
  * is that it starts with 0xdeadbeef pattern. The structure of SFP section is:
  *
  * --------------
- * | count (4B) |
+ * | count (1B) |
  * --------------------------------------------------------------------------------------------
  * |   SFP(1) part number (16B)       | alpha (4B) | deltaTx (4B) | deltaRx (4B) | chksum(1B) |
  * --------------------------------------------------------------------------------------------
@@ -28,6 +28,19 @@
  *                      (16 ascii chars)
  * checksum           - low order 8 bits of the sum of all bytes for the SFP(PN,alpha,dTx,dRx)
  *
+ */
+
+/*
+ * The init script area consist of 2-byte size field and a set of shell commands
+ * separated with '\n' character.
+ *
+ * -------------------
+ * | bytes used (2B) |
+ * ------------------------------------------------
+ * | shell commands separated with '\n'.....      |
+ * |                                              |
+ * |                                              |
+ * ------------------------------------------------
  */
 
 
@@ -127,7 +140,7 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp, u
     for(i=0; i<sizeof(struct s_sfpinfo)-1; ++i) //'-1' because we do not include chksum in computation
       chksum = (uint8_t) ((uint16_t)chksum + *(ptr++)) & 0xff;
     if(chksum != sfp->chksum)
-      EE_RET_CHKSUM;
+      EE_RET_CORRPT;
   }
   else
   {
@@ -172,4 +185,118 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp)
   } 
 
   return 0;
+}
+
+int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
+{
+  uint16_t used = 0;
+
+  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used))
+    return EE_RET_I2CERR;
+  else
+    return used;
+}
+
+int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr)
+{
+  uint16_t used = 0xffff, i;
+  uint16_t pattern = 0xff;
+
+  eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used));
+  if(used==0xffff) used=0;
+  for(i=0; i<used; ++i)
+    eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+i, &pattern, 1);
+  used = 0xffff;
+  eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, &used, 2);
+
+  return used;
+}
+
+/* 
+ * Appends a new shell command at the end of boot script
+ */
+int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
+{
+  uint8_t i=1;
+  char separator = ' ';
+  uint16_t used, readback;
+
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+    return EE_RET_I2CERR;
+
+  if( used==0xffff ) used=0;  //this means the memory is blank
+
+  while(args[i]!='\0')
+  {
+    if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used, args[i], strlen(args[i])) != strlen(args[i]))
+      return EE_RET_I2CERR;
+    used += strlen(args[i]);
+    if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used, &separator, sizeof(separator)) != sizeof(separator) )
+      return EE_RET_I2CERR;
+    ++used;
+    ++i;
+  }
+  //the end of the command, replace last separator with '\n'
+  separator = '\n';
+  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used-1, &separator, sizeof(separator)) != sizeof(separator) )
+    return EE_RET_I2CERR;
+  //and finally update the size of the script
+  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+    return EE_RET_I2CERR;
+
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &readback, sizeof(readback)) != sizeof(readback) )
+    return EE_RET_I2CERR;
+
+  return 0;
+}
+
+int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
+{
+  uint16_t used, i;
+  char byte;
+
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+    return EE_RET_I2CERR;
+
+  if(used==0 || used==0xffff) 
+  {
+    used = 0;  //this means the memory is blank
+    mprintf("Empty init script...\n");
+  }
+
+  //just read and print to the screen char after char
+  for(i=0; i<used; ++i)
+  {
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+i, &byte, sizeof(byte)) != sizeof(byte) )
+      return EE_RET_I2CERR;
+    mprintf("%c", byte);
+  }
+
+  return 0;
+}
+
+int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char* buf, uint8_t bufsize, uint8_t next)
+{
+  static uint16_t ptr;
+  static uint16_t used = 0;
+  uint8_t i=0;
+
+  if(next == 0) 
+  {
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+      return EE_RET_I2CERR;
+    ptr = sizeof(used);
+  }
+
+  if(ptr-sizeof(used) >= used)
+    return 0;
+
+  do
+  {
+    if(ptr-sizeof(used) > bufsize) return EE_RET_CORRPT;
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT+(ptr++), &buf[i], sizeof(char)) != sizeof(char) )
+      return EE_RET_I2CERR;
+  }while(buf[i++]!='\n');
+
+  return i;
 }

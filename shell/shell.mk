@@ -10,7 +10,8 @@ OBJS_SHELL = 	shell/shell.o \
 							shell/cmd_time.o \
 							shell/cmd_gui.o \
 							shell/cmd_sdb.o \
-							shell/cmd_mac.o
+							shell/cmd_mac.o \
+							shell/cmd_init.o
 
 ifneq ($(WITH_ETHERBONE), 0)
 OBJS_SHELL += shell/cmd_ip.o

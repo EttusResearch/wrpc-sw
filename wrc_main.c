@@ -71,6 +71,9 @@ void wrc_initialize()
   ipv4_init("wru1");
   arp_init("wru1");
 #endif
+
+  //try to read and execute init script from EEPROM
+  shell_boot_script();
 }
 
 #define LINK_WENT_UP 1
