@@ -286,9 +286,9 @@ int shell_boot_script(void)
       if(next==0) mprintf("Empty init script...\n");
       break;
     }
-    cmd_buf[cmd_len] = 0;
+    cmd_buf[cmd_len-1] = 0;
     
-    mprintf("executing: %s", cmd_buf);
+    mprintf("executing: %s\n", cmd_buf);
     _shell_exec();
     next = 1;
   }
