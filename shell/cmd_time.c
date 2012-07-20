@@ -31,7 +31,7 @@ int cmd_time(const char *args[])
 			return -EBUSY;
 	} else if(args[0] && !strcasecmp(args[0], "raw"))
 	{
-			mprintf("%d %d\n", sec, nsec);
+			mprintf("%d %d\n", (uint32_t)sec, nsec);
 			return 0;
 	}
 
