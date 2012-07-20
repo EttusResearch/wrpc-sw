@@ -80,7 +80,7 @@ int wrc_ptp_set_mode(int mode)
 
 	ptp_mode = 0;
 	
-	ptp_enabled = 0;
+  wrc_ptp_stop();
 	
 	switch(mode)
 	{
@@ -147,6 +147,7 @@ int wrc_ptp_get_mode()
 int wrc_ptp_start()
 {
   ptpPortDS->linkUP = FALSE;
+  wr_servo_reset();
   initDataClock(&rtOpts, &ptpClockDS);
 
   ptp_enabled = 1;
@@ -156,6 +157,7 @@ int wrc_ptp_start()
 int wrc_ptp_stop()
 {
 	ptp_enabled = 0;
+  wr_servo_reset();
 	return 0;
 }
 
