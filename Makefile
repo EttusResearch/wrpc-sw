@@ -56,7 +56,7 @@ OBJS_WRC = 	wrc_main.o \
 
 PTP_NOPOSIX = ptp-noposix
 
-INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal -I$(PTP_NOPOSIX)/libptpnetif -Isoftpll -Iinclude
+INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal -I$(PTP_NOPOSIX)/libptpnetif -Isoftpll -I$(PTP_NOPOSIX)/softpll -Iinclude
 
 CFLAGS_EB = -DWITH_ETHERBONE=$(WITH_ETHERBONE)
 
@@ -78,7 +78,8 @@ OBJS_PTPD = $(PTP_NOPOSIX)/PTPWRd/arith.o \
 						$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
 						$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
 						$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o \
-						$(PTP_NOPOSIX)/libposix/net.o
+						$(PTP_NOPOSIX)/libposix/net.o \
+						$(PTP_NOPOSIX)/softpll/softpll_ng.o
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T arch/lm32/ram.ld 
@@ -89,7 +90,6 @@ include shell/shell.mk
 include tests/tests.mk
 include lib/lib.mk
 include sockitowm/sockitowm.mk
-include softpll/softpll.mk
 include dev/dev.mk
 
 CC=$(CROSS_COMPILE)gcc
