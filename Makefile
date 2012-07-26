@@ -56,7 +56,7 @@ OBJS_WRC = 	wrc_main.o \
 
 PTP_NOPOSIX = ptp-noposix
 
-INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal -I$(PTP_NOPOSIX)/libptpnetif -Isoftpll -I$(PTP_NOPOSIX)/softpll -Iinclude
+INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal -I$(PTP_NOPOSIX)/libptpnetif -I$(PTP_NOPOSIX)/softpll -Iinclude
 
 CFLAGS_EB = -DWITH_ETHERBONE=$(WITH_ETHERBONE)
 
