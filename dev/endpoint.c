@@ -13,6 +13,7 @@ LGPL 2.1
 #include "board.h"
 #include "syscon.h"
 #include <endpoint.h>
+#include "eeprom.h"
 
 #include <hw/endpoint_regs.h>
 #include <hw/endpoint_mdio.h>
@@ -154,8 +155,8 @@ int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 {
     /* fixme: these values should be stored in calibration block in the EEPROM on the FMC. Also, the TX/RX delays of a particular SFP 
        should be added here */
-	*delta_tx = 46407; 
-	*delta_rx = 273593 + PICOS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
+	*delta_tx = sfp_deltaTx; 
+	*delta_rx = sfp_deltaRx + PICOS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
 	return 0;
 }
 
