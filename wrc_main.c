@@ -30,7 +30,7 @@ int32_t sfp_alpha = 73622176;  //default value if could not read EEPROM
 #endif
 int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
-uint32_t cal_phase_transition = 595; //7000;
+uint32_t cal_phase_transition = 2394; //7000;
 
 void wrc_initialize()
 {
