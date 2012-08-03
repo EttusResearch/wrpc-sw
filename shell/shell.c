@@ -40,7 +40,7 @@ static const struct shell_cmd cmds_list[] = {
 		{ "stat",						cmd_stat },
 		{ "ptp",						cmd_ptp },
 		{ "mode",						cmd_mode },
-		{ "measure_t24p",		cmd_measure_t24p },
+		{ "calibration",		cmd_calib },
 		{ "set",						cmd_set },
 		{ "env",						cmd_env },
 		{ "saveenv",				cmd_saveenv },

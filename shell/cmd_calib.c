@@ -8,7 +8,7 @@
 
 extern int measure_t24p(int *value);
 
-int cmd_measure_t24p(const char *args[])
+int cmd_calib(const char *args[])
 {
 	return measure_t24p(NULL);
 }
