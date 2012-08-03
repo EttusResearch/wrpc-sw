@@ -22,7 +22,7 @@ int cmd_calib(const char *args[])
 	}
 	else if( !args[0] )
 	{
-		if( eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, &trans, 0) )
+		if( eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, &trans, 0) >0 )
 		{
 			mprintf("Found phase transition in EEPROM: %dps\n", trans);
 			cal_phase_transition = trans;

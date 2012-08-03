@@ -17,6 +17,7 @@ extern int32_t sfp_alpha;
 extern int32_t sfp_deltaTx;
 extern int32_t sfp_deltaRx;
 extern uint32_t cal_phase_transition;
+extern uint8_t has_eeprom;
 
 struct s_sfpinfo
 {
@@ -27,6 +28,7 @@ struct s_sfpinfo
   uint8_t chksum;
 } __attribute__((__packed__));
 
+uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr);
 int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size);
 int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size);
 

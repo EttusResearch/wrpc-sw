@@ -45,11 +45,25 @@
  * ------------------------------------------------
  */
 
+uint8_t has_eeprom = 0;
+
+uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
+{
+	has_eeprom = 1;	
+	if( !mi2c_devprobe(i2cif, i2c_addr) )
+		if( !mi2c_devprobe(i2cif, i2c_addr) )
+			has_eeprom = 0;
+
+	return 0;
+}
 
 int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size)
 {
 	int i;
 	unsigned char c;
+
+	if(!has_eeprom)
+		return -1;
 
   mi2c_start(i2cif);
   if(mi2c_put_byte(i2cif, i2c_addr << 1) < 0)
@@ -76,6 +90,9 @@ int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, 
 int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size)
 {
 	int i, busy;
+
+	if(!has_eeprom)
+		return -1;
 
 	for(i=0;i<size;i++)
 	{
@@ -227,7 +244,9 @@ int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr)
   uint16_t used = 0xffff, i;
   uint16_t pattern = 0xff;
 
-  eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used));
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+		return EE_RET_I2CERR;
+
   if(used==0xffff) used=0;
   for(i=0; i<used; ++i)
     eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+i, &pattern, 1);

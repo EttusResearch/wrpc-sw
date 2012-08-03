@@ -6,6 +6,7 @@
 #include "uart.h"
 #include "syscon.h"
 #include "shell.h"
+#include "eeprom.h"
 
 #define SH_MAX_LINE_LEN 80	
 #define SH_MAX_ARGS 8
@@ -274,9 +275,8 @@ int shell_boot_script(void)
   uint8_t next=0;
 
   //first check if EEPROM is really there
-  if( !mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR) )
-    if( !mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR) )
-      return -1;
+	eeprom_present(WRPC_FMC_I2C, FMC_EEPROM_ADR);
+	if(!has_eeprom) return -1;
 
   while(1)
   {
