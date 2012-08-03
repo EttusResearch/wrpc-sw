@@ -10,8 +10,8 @@
  * placed also outside the FMC standardized EEPROM structure. The only requirement
  * is that it starts with 0xdeadbeef pattern. The structure of SFP section is:
  *
- * --------------
- * | count (1B) |
+ * ----------------------------------------------
+ * | cal_ph_trans (4B) | SFP count (1B) |
  * --------------------------------------------------------------------------------------------
  * |   SFP(1) part number (16B)       | alpha (4B) | deltaTx (4B) | deltaRx (4B) | chksum(1B) |
  * --------------------------------------------------------------------------------------------
@@ -23,6 +23,8 @@
  * --------------------------------------------------------------------------------------------
  *
  * Fields description:
+ * cal_ph_trans       - t2/t4 phase transition value (got from measure_t24p() ), contains 
+ *                      _valid_ bit (MSB) and 31 bits of cal_phase_transition value
  * count              - how many SFPs are described in the list (binary)
  * SFP(n) part number - SFP PN as read from SFP's EEPROM (e.g. AXGE-1254-0531) 
  *                      (16 ascii chars)
@@ -185,6 +187,29 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp)
   } 
 
   return 0;
+}
+
+int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t *val, uint8_t write)
+{
+  if(write)
+  {
+    *val |= (1<<31);
+    if( eeprom_write(i2cif, i2c_addr, EE_BASE_CAL, val, sizeof(val) ) != sizeof(val) )
+      return EE_RET_I2CERR;
+    else
+      return 1;
+  }
+  else
+  {
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_CAL, val, sizeof(val) ) != sizeof(val) )
+      return EE_RET_I2CERR;
+
+    if( !(*val&(1<<31)) )
+      return 0;
+
+    *val &= 0x7fffffff;  //return ph_trans value without validity bit
+    return 1;
+  }
 }
 
 int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)

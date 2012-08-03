@@ -4,7 +4,8 @@
 #define SFP_SECTION_PATTERN 0xdeadbeef
 #define SFPS_MAX 4
 #define SFP_PN_LEN 16
-#define EE_BASE_SFP 4*1024
+#define EE_BASE_CAL 4*1024
+#define EE_BASE_SFP 4*1024+4
 #define EE_BASE_INIT 4*1024+SFPS_MAX*29
 
 #define EE_RET_I2CERR -1
@@ -15,6 +16,7 @@
 extern int32_t sfp_alpha;
 extern int32_t sfp_deltaTx;
 extern int32_t sfp_deltaRx;
+extern uint32_t cal_phase_transition;
 
 struct s_sfpinfo
 {
@@ -31,6 +33,8 @@ int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf,
 int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr);
 int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16_t *section_sz);
 int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp);
+
+int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t *val, uint8_t write);
 
 int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr);
 int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[]);
