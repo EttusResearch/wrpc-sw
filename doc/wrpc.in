@@ -1,0 +1,448 @@
+\input texinfo    @c -*-texinfo-*-
+%
+% wrpc.in - main file for the documentation
+%
+%%%%
+
+%------------------------------------------------------------------------------
+%
+%                         NOTE FOR THE UNAWARE USER
+%                         =========================
+%
+%    This file is a texinfo source. It isn't the binary file of some strange
+%    editor of mine. If you want ASCII, you should "make fine-delay.txt".
+%
+%------------------------------------------------------------------------------
+
+%
+% This is not a conventional info file...
+% I use three extra features:
+%   - The '%' as a comment marker, if at beginning of line ("\%" -> "%")
+%   - leading blanks are allowed (this is something I can't live without)
+%   - braces are automatically escaped when they appear in example blocks
+%
+
+@comment %**start of header
+@documentlanguage en
+@documentencoding ISO-8859-1
+@setfilename wrpc.info
+@settitle White Rabbit PTP Core
+@iftex
+@afourpaper
+@end iftex
+@paragraphindent none
+@comment %**end of header
+
+@setchapternewpage off
+
+@set update-month August 2012
+@set release 2.0
+@set tagname wrpc-v2.0
+@c WARNING: in @example I Can't use @value{tagname}, so please look for this
+@c string when updating the document.
+
+@finalout
+
+@titlepage
+@title White Rabbit PTP Core User's Manual
+@subtitle @value{update-month} -- Release @value{release}
+@subtitle Building and Running
+@author Grzegorz Daniluk (CERN BE-CO-HT)
+@end titlepage
+@headings single
+
+@c ##########################################################################
+@iftex
+@contents
+@end iftex
+
+@c ##########################################################################
+@node Top
+@top Introduction
+
+This is the user manual for the White Rabbit PTP Core developed on 
+@code{ohwr.org}. It describes the building and running process. If you don't
+want to get your hands dirty and prefer to use the binaries available at 
+@code{http://www.ohwr.org/projects/wr-cores/files} you can skip 
+@ref{Building the Core} and move forward directly to 
+@ref{Running and Configuring}.
+
+@menu
+* Repositories and Releases::   
+* Building the Core::
+* Running and Configuring
+* Known bugs and missing features::  
+* Troubleshooting::             
+@end menu
+
+@c ##########################################################################
+@node Repositories and Releases
+@chapter Repositories and Releases
+
+This version of the White Rabbit PTP Core is release @value{release}.
+The code and documentation is distributed in the following places:
+
+@table @code
+
+@item http://www.ohwr.org/projects/wr-cores/documents
+
+	This place hosts the pdf documentation for every official
+        release.
+
+@item http://www.ohwr.org/projects/wr-cores/files
+
+	Here we place the @i{.tar.gz} file for every release,
+        including the @i{git} tree and synthesized/compiled binaries
+
+@item git://ohwr.org/hdl-core-lib/wr-cores.git
+
+	Read-only repository with the complete HDL design of WRPC
+
+@item git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git
+
+  Read-only repository with the WRPC LM32 software (incl. WR PTP daemon)
+
+@end table
+
+Other tools useful in building and running WRPC can be fetched from the 
+following locations:
+
+@table @code
+
+@item git://ohwr.org/misc/hdl-make.git
+
+  @i{hdlmake} is used in the HDL synthesis process to build the Makefile based
+on the set of Manifest files.
+
+@item http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
+
+  LM32 toolchain used to compile the WRPC firmware (software).
+
+@end table
+
+The repositories containing the WRPC gateware and software (@i{wr-cores}, 
+@i{wrpc-sw}) are tagged with @code{@value{tagname}} tag. Other tools
+used to build the core and load it into SPEC board should be used in their
+newest available versions stored in master branch of an appropriate git 
+repository (unless specified otherwise in this document).
+
+Any official hot fixes, if any,  for this
+release will live in the branch called
+@code{@value{tagname}-fixes}, in each repository.
+
+
+@c ##########################################################################
+@node Building the Core
+@chapter Building the Core
+
+Building the White Rabbit PTP Core is a two step process. First you have to
+synthesize the FPGA firmware (gateware). This describes the hardware inside 
+FPGA that is later used by LM32 software to perform WR synchronization.
+
+To perform the steps below you would need a computer running Linux.
+
+@menu
+* HDL synthesis
+* LM32 software compilation
+@end menu
+
+@c ##########################################################################
+@node HDL synthesis
+@section HDL synthesis
+
+Before running the synthesis process you have to make sure that your 
+environment is set correctly. You need the Xilinx ISE Software with free 
+WebPack license installed on a PC. It contains the script @i{settings32.sh} 
+and @i{settings32.csh} (depending on the shell you use) that sets up all the
+system variables required by Xilinx software. For default installation path the 
+script is located in:
+
+@example
+  /opt/Xilinx/<version>/ISE_DS/settings32.sh
+@end example
+
+and has to be executed before other tools are used. The easiest way to ensure 
+that @i{ISE}-related variables are set in the shell is to check if @i{$XILINX}
+variable contains the path to your @i{ISE} installation directory.
+
+@b{Note:} current version of @i{hdlmake} tool developed at CERN requires 
+modification of @i{$XILINX} variable after @i{settings32} script execution. 
+This, provided that the installation path for @i{ISE} is /opt/Xilinx/<version>) 
+should look like this:
+
+@example
+  $ export XILINX=/opt/Xilinx/<version>/ISE_DS
+@end example
+
+
+HDL sources for WR PTP Core can be synthesized with nothing more but Xilinx 
+ISE software, but using @i{hdlmake} tool developed at CERN is much more 
+convenient. It creates a synthesis Makefile and ISE project file based on the 
+set of Manifest.py files deployed among directories inside @i{wr-cores} 
+repository.
+
+First, please clone the @i{hdlmake} repository from its location given in 
+@ref{Repositories and Releases}:
+
+@example
+  $ git clone git://ohwr.org/misc/hdl-make.git <your_hdlmake_location>
+@end example
+
+and add the @i{hdlmake} binary to your @i{$PATH} to be able to call it from 
+any directory:
+
+@example
+  $ export PATH=<your_hdlmake_location>:$PATH
+@end example
+
+@b{Note:} the @i{hdlmake} usage instructions here are based on version 493ce82.
+When there will be newer commits, they can be used but please be aware that its
+execution parameters may change. In that case please refer to @i{hdlmake} 
+documentation.
+
+@sp 1
+Having Xilinx ISE software and @i{hdlmake} you can clone the main WR PTP Core 
+git repository and start building the FPGA bitstream. First, please create a 
+local copy of the @i{wr-cores} in the preferred location on your system. This 
+release is marked with @value{tagname} tag.
+
+@example
+  $ git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_wrpc_location>
+  $ cd <your_wrpc_location>
+  $ git checkout wrpc-v2.0
+@end example
+
+@b{Note:} alternatively you can get the release sources from the tarball 
+available in @i{http://www.ohwr.org/projects/wr-cores/files}
+
+@sp 1
+The subdirectory which contains the main synthesis Manifest.py for SPEC board 
+and in which you should perform the whole process is:
+
+@example
+  $ cd <your_wrpc_location>/syn/spec_1_1/wr_core_demo/
+@end example
+
+Executing @i{hdlmake} without any parameters will fetch other git repositories 
+containing submodules essential for WRPC, and store their local copies to:
+
+@example
+  <your_wrpc_location>/ip_cores
+@end example
+
+After that, the actual synthesis is just the matter of executing the command:
+
+@example
+  $ make
+@end example
+
+just as in a regular software compilation process. This takes (depending on 
+your computer speed) about 15 minutes and if you are lucky (i.e. there were no 
+errors) it should create FPGA firmware in two files: @i{spec_top.bit} and 
+@i{spec_top.bin}. The former can be downloaded to FPGA using Xilinx software 
+(@i{Impact} or @i{Chipscope Pro}) and Xilinx Platform Cable. The latter can be 
+used to program the Spartan 6 chip on SPEC using the kernel driver from 
+@i{spec-sw} repository (usage example in @ref{Running and Configuring}).
+
+@sp 1
+If, on the other hand, you would like to clean-up the repository and rebuild 
+everything from scratch you can use the following commands:
+@itemize
+@item @i{$ make clean} - removes all synthesis reports and log files;
+@item @i{$ make mrproper} - removes spec_top.bin and spec_top.bit files;
+@item @i{$ hdlmake clean} - removes all fetched repositories (modules) from 
+                            @i{ip_cores} subdirectory.
+@end itemize
+
+@c ##########################################################################
+@node LM32 software compilation
+@section LM32 software compilation
+
+To compile the LM32 software for White Rabbit PTP Core you will need to 
+download and unpack the LM32 toolchain from the location mentioned already in 
+@ref{Repositories and Releases}:
+
+@example
+  $ wget http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
+  $ tar xJf lm32.tar.xz -C <your_lm32_location>
+@end example
+
+Similar as with @i{hdlmake} in @ref{Building the Core}, you will need to add 
+the LM32 toolchain binaries to you @i{$PATH} to be able to call them from any 
+directory:
+
+@example
+  $ export PATH=<your_lm32_location>/lm32/bin:$PATH
+@end example
+
+To get the release sources of WRPC software please clone the @i{wrpc-sw} git
+repository tagged with @value{tagname} tag:
+
+@example
+  $ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_wrpcsw_location>
+  $ cd <your_wrpcsw_location>
+  $ git checkout wrpc-v2.0
+@end example
+
+@b{Note:} alternatively you can get the release sources from the tarball 
+available in @i{http://www.ohwr.org/projects/wr-cores/files}
+
+@sp 1
+The WRPC software repository contains a ptp-nosposix (that contains the WR PTP 
+software daemon) in the form of a git submodule. Your fresh local copy cloned 
+from @i{ohwr.org} has therefore the @i{ptp-noposix} directory empty. To fetch 
+the ptp-noposix you have to execute the following git commands:
+
+@example
+  $ git submodule init
+  $ git submodule update
+@end example
+
+Now you have everything that is needed to build the software for WRPC. Before 
+compilation the decision can be made whether to turn on or not the software 
+support for Etherbone core that is integrated inside WRPC gateware for SPEC 
+board. But default it is disabled but can be turned on by setting the value of
+@i{WITH_ETHERBONE} variable inside the Makefile. The compilation is made by 
+a simple command without any additional parameters:
+
+@example
+  $ make
+@end example
+
+The resulting binary @i{wrc.bin} can be then used with the loader from 
+@i{spec-sw} software package to program the LM32 inside White Rabbit PTP Core 
+(@ref{Running and Configuring}).
+
+@c ##########################################################################
+@node Running and Configuring
+@chapter Running and Configuring
+
+@menu
+* Downloading firmware to SPEC
+* Writing EEPROM and calibration
+* Running the Core
+@end menu
+
+
+@c ##########################################################################
+@node Downloading firmware to SPEC
+@section Downloading firmware to SPEC
+
+There is a Software support for the SPEC board project in @i{ohwr.org}. It 
+contains a set of Linux kernel drivers and userspace tools written by 
+Alessandro Rubini and Tomasz Wlostowski that are used to communicate with the 
+SPEC board plugged into the PCI-Express port of the PC. 
+
+The instructions in this section are based on commit 27b4ad9 of @i{spec-sw} 
+repository and are limited to absolutely minimum required to load WRPC FPGA 
+and LM32 firmware. The full manual for @i{spec-sw} can be found on: 
+@i{http://www.ohwr.org/attachments/download/1506/spec-sw-2012-08-08.pdf}. 
+There will be a newer version of SPEC software support that you would like to 
+use, the up-to-date documentation can always be found in @i{doc/} subdirectory
+of @i{spec-sw} git repository.
+
+@sp 1
+First, please clone the git repository of SPEC software support package and 
+build the kernel driver and userspace tools:
+
+@example
+  $ git clone git://ohwr.org/fmc-projects/spec/spec-sw.git <your_specsw_location>
+  $ cd <your_specsw_location>
+  $ git checkout 27b4ad9
+  $ make
+@end example
+
+Then you have to copy the @i{spec_top.bin} to /lib/firmware/fmc/. changing its
+name:
+
+@example
+  $ cp <your_wrpc_location>/syn/spec_1_1/wr_core_demo/spec_top.bin \
+        /lib/firmware/fmc/spec-demo.bin
+@end example
+
+and after that you are ready to load the @i{spec.ko} driver that configures the
+Spartan 6 FPGA on SPEC with a given bitstream (make sure you are in 
+<your_spacsw_location>:
+
+@example
+  $ insmod kernel/spec.ko name=demo
+@end example
+
+To check if the FPGA firmware file was found by the driver and correctly loaded 
+to FPGA the @i{dmesg} Linux command can be called. Among plenty of messages 
+you should be able to find something very similar to:
+
+@example
+@noindent
+  [99883.768214] spec_probe (device 0003:0000)
+  [99883.768220] spec_probe: current 8639 (insmod)
+  [99883.768248] spec 0000:03:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
+  [99883.768302] spec 0000:03:00.0: irq 49 for MSI/MSI-X
+  [99883.768971] spec_load_files
+  [99883.774842] spec_load_fpga: got binary file "fmc/spec-demo.bin", 
+1485512 (0x16aac8) bytes
+  [99883.966491] spec_load_submodule: load "fmc/spec-demo": 256
+@end example
+
+If everything went right up to this moment you can write the LM32 binwry 
+(@i{wrc.bin}) to the SPEC board. For this purpose, there is a @i{spec-cl} tool
+in the @i{spec-sw}. The programming is done with the simple command below:
+
+@example
+  $ tools/spec-cl <your_wrpcsw_location>/wrc.bin
+@end example 
+
+@sp 1
+Now you should be able to start the Virtual-UART software (also a part of 
+@i{spec-sw} package) that you will use to interact with the White Rabbit PTP 
+Core Shell:
+
+@example
+  $ tools/spec-vuart
+@end example
+
+If you are able to see the WRPC Shell prompt @i{wrc#} that means the Core is up
+and running on your SPEC. Congratulations !
+
+
+@c ##########################################################################
+@node Writing EEPROM and calibration
+@section Writing EEPROM and calibration
+
+
+@c ##########################################################################
+@node Running the Core
+@section Running the Core
+
+@c ##########################################################################
+@node Known Bugs and missing features
+@chapter Known Bugs and missing features
+
+
+@c ##########################################################################
+@node Troubleshooting
+@chapter Troubleshooting
+
+
+@c ##########################################################################
+@node WRPC Shell commands
+@appendix WRPC Shell Commands
+
+@multitable @columnfractions .5 .5
+@item @code{pll init <mode> <ref_channel> <align_pps>} @tab manually run spll_init() 
+function to initialize SoftPll
+@item @code{pll cl <channel>} @tab check if SoftPLL is locked for the channel
+
+@item @code{calibration} @tab
+@end multitable
+
+
+
+
+@c ##########################################################################
+@bye
+
+@c  LocalWords:  gnudd titlepage iftex texinfo CERN documentlanguage settitle
+@c  LocalWords:  documentencoding setfilename afourpaper paragraphindent FPGA
+@c  LocalWords:  setchapternewpage finalout gateware ohwr modprobe insmod cset
+@c  LocalWords:  smallexample ctrl timestamp fdelay struct spusa

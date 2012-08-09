@@ -1,0 +1,16 @@
+*~
+*.aux
+*.cp
+*.cps
+*.fn
+*.html
+*.info
+*.ky
+*.log
+fine-delay.pdf
+*.pg
+*.texi
+*.toc
+*.tp
+/*.txt
+*.vr
