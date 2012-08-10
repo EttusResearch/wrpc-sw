@@ -63,7 +63,7 @@
 This is the user manual for the White Rabbit PTP Core developed on 
 @code{ohwr.org}. It describes the building and running process. If you don't
 want to get your hands dirty and prefer to use the binaries available at 
-@code{http://www.ohwr.org/projects/wr-cores/files} you can skip 
+@uref{http://www.ohwr.org/projects/wr-cores/files} you can skip 
 @ref{Building the Core} and move forward directly to 
 @ref{Running and Configuring}.
 
@@ -73,6 +73,7 @@ want to get your hands dirty and prefer to use the binaries available at
 * Running and Configuring
 * Known bugs and missing features::  
 * Troubleshooting::             
+* Questions, reporting bugs::
 @end menu
 
 @c ##########################################################################
@@ -126,9 +127,8 @@ used to build the core and load it into SPEC board should be used in their
 newest available versions stored in master branch of an appropriate git 
 repository (unless specified otherwise in this document).
 
-Any official hot fixes, if any,  for this
-release will live in the branch called
-@code{@value{tagname}-fixes}, in each repository.
+Any official hot fixes, if any, for this release will live in the branch called
+@code{@value{tagname}-fixes}, in each WRPC repository.
 
 
 @c ##########################################################################
@@ -139,7 +139,7 @@ Building the White Rabbit PTP Core is a two step process. First you have to
 synthesize the FPGA firmware (gateware). This describes the hardware inside 
 FPGA that is later used by LM32 software to perform WR synchronization.
 
-To perform the steps below you would need a computer running Linux.
+To perform the steps below you will need a computer running Linux.
 
 @menu
 * HDL synthesis
@@ -167,14 +167,14 @@ variable contains the path to your @i{ISE} installation directory.
 
 @b{Note:} current version of @i{hdlmake} tool developed at CERN requires 
 modification of @i{$XILINX} variable after @i{settings32} script execution. 
-This, provided that the installation path for @i{ISE} is /opt/Xilinx/<version>) 
+This (provided that the installation path for @i{ISE} is /opt/Xilinx/<version>) 
 should look like this:
 
 @example
   $ export XILINX=/opt/Xilinx/<version>/ISE_DS
 @end example
 
-
+@sp 1
 HDL sources for WR PTP Core can be synthesized with nothing more but Xilinx 
 ISE software, but using @i{hdlmake} tool developed at CERN is much more 
 convenient. It creates a synthesis Makefile and ISE project file based on the 
@@ -188,8 +188,8 @@ First, please clone the @i{hdlmake} repository from its location given in
   $ git clone git://ohwr.org/misc/hdl-make.git <your_hdlmake_location>
 @end example
 
-and add the @i{hdlmake} binary to your @i{$PATH} to be able to call it from 
-any directory:
+and add the @i{hdlmake} binary location to your @i{$PATH} to be able to call 
+it from any directory:
 
 @example
   $ export PATH=<your_hdlmake_location>:$PATH
@@ -213,7 +213,7 @@ release is marked with @value{tagname} tag.
 @end example
 
 @b{Note:} alternatively you can get the release sources from the tarball 
-available in @i{http://www.ohwr.org/projects/wr-cores/files}
+available in @uref{http://www.ohwr.org/projects/wr-cores/files}
 
 @sp 1
 The subdirectory which contains the main synthesis Manifest.py for SPEC board 
@@ -268,8 +268,8 @@ download and unpack the LM32 toolchain from the location mentioned already in
 @end example
 
 Similar as with @i{hdlmake} in @ref{Building the Core}, you will need to add 
-the LM32 toolchain binaries to you @i{$PATH} to be able to call them from any 
-directory:
+the LM32 toolchain binaries location to you @i{$PATH} to be able to call them 
+from any directory:
 
 @example
   $ export PATH=<your_lm32_location>/lm32/bin:$PATH
@@ -285,7 +285,7 @@ repository tagged with @value{tagname} tag:
 @end example
 
 @b{Note:} alternatively you can get the release sources from the tarball 
-available in @i{http://www.ohwr.org/projects/wr-cores/files}
+available in @uref{http://www.ohwr.org/projects/wr-cores/files}
 
 @sp 1
 The WRPC software repository contains a ptp-nosposix (that contains the WR PTP 
@@ -301,7 +301,7 @@ the ptp-noposix you have to execute the following git commands:
 Now you have everything that is needed to build the software for WRPC. Before 
 compilation the decision can be made whether to turn on or not the software 
 support for Etherbone core that is integrated inside WRPC gateware for SPEC 
-board. But default it is disabled but can be turned on by setting the value of
+board. By default it is disabled but can be turned on by setting the value of
 @i{WITH_ETHERBONE} variable inside the Makefile. The compilation is made by 
 a simple command without any additional parameters:
 
@@ -310,8 +310,8 @@ a simple command without any additional parameters:
 @end example
 
 The resulting binary @i{wrc.bin} can be then used with the loader from 
-@i{spec-sw} software package to program the LM32 inside White Rabbit PTP Core 
-(@ref{Running and Configuring}).
+@i{spec-sw} software package to program the LM32 inside the White Rabbit PTP 
+Core (@ref{Running and Configuring}).
 
 @c ##########################################################################
 @node Running and Configuring
@@ -336,8 +336,8 @@ SPEC board plugged into the PCI-Express port of the PC.
 The instructions in this section are based on commit 27b4ad9 of @i{spec-sw} 
 repository and are limited to absolutely minimum required to load WRPC FPGA 
 and LM32 firmware. The full manual for @i{spec-sw} can be found on: 
-@i{http://www.ohwr.org/attachments/download/1506/spec-sw-2012-08-08.pdf}. 
-There will be a newer version of SPEC software support that you would like to 
+@uref{http://www.ohwr.org/attachments/download/1506/spec-sw-2012-08-08.pdf}. 
+If there will be a newer version of SPEC software support you would like to
 use, the up-to-date documentation can always be found in @i{doc/} subdirectory
 of @i{spec-sw} git repository.
 
@@ -384,9 +384,10 @@ you should be able to find something very similar to:
   [99883.966491] spec_load_submodule: load "fmc/spec-demo": 256
 @end example
 
-If everything went right up to this moment you can write the LM32 binwry 
+If everything went right up to this moment you can write the LM32 binary 
 (@i{wrc.bin}) to the SPEC board. For this purpose, there is a @i{spec-cl} tool
-in the @i{spec-sw}. The programming is done with the simple command below:
+in the @i{spec-sw} repository. Programming is done with the simple command 
+below:
 
 @example
   $ tools/spec-cl <your_wrpcsw_location>/wrc.bin
@@ -394,7 +395,7 @@ in the @i{spec-sw}. The programming is done with the simple command below:
 
 @sp 1
 Now you should be able to start the Virtual-UART software (also a part of 
-@i{spec-sw} package) that you will use to interact with the White Rabbit PTP 
+@i{spec-sw} package) that will be used to interact with the White Rabbit PTP 
 Core Shell:
 
 @example
@@ -409,22 +410,231 @@ and running on your SPEC. Congratulations !
 @node Writing EEPROM and calibration
 @section Writing EEPROM and calibration
 
+By default WRPC starts in WR Slave mode, uses the calibration values for 
+Axcen AXGE-3454-0531 SFP and for release FPGA bitstream available in 
+@i{http://www.ohwr.org/projects/wr-cores/files}. This might be fine for running
+White Rabbit PTP Core for the first time and synchronizing it to WR Switch. 
+There are however, two mechanisms that are useful when playing more with WRPC 
+shell and different settings. 
+
+@b{Note:} the examples below describe only a subset of WRPC Shell commands 
+required to make a basic configuration and calibration. A full description of
+all supported commands can be found in @ref{WRPC Shell commands}.
+
+@sp 1
+First, before making the configuration changes, it is recommended (but not 
+obligatory) to stop the PTP daemon. Then, the debug messages from daemon would
+not show up to the console while you will interact with the shell.
+
+@example
+  wrc# ptp stop
+@end example
+ 
+If your SPEC has any Mezzanine board plugged into the FMC connector (e.g. DIO,
+Fine Delay, TDC...) then you can create a calibration database inside the FMC 
+EEPROM. The example below presents the WRPC Shell commands which create an 
+empty SFP database and add two Axcen transceivers with deltaTx, deltaRx and 
+alpha parameters associated with them. Those SFPs are most widely used in WR
+development and demonstrations:
+
+@example
+  wrc# sfp erase
+  wrc# sfp add AXGE-1254-0531 46407 167843 73622176
+  wrc# sfp add AXGE-3454-0531 46407 167843 -73622176
+@end example
+
+To check the content of the SFP database you can execute the @i{sfp show} shell
+command. 
+
+The calibration procedure of WRPC is limited to absolutely minimum and is fully
+automatized. It measures the t2/t4 phase transition point and stores the value
+into the FMC EEPROM so that the calibration would not have to be repeated every
+time the Core starts. However, it is @b{*important*} to remember that this
+calibration function should be executed only once but for @b{*every*} new FPGA
+firmware synthesized form @i{wr-cores} repository:
+
+@example
+  wrc# ptp stop
+  wrc# sfp detect
+  wrc# sfp match
+  wrc# calibration force
+@end example
+
+The example above detects the SFP transceiver plugged into the SPEC board, tries
+to read its parameters from our newly created SFP database and forces the
+calibration to be executed. The @i{force} argument is required since
+@i{calibration} without any arguments tries first to read the t2/t4 phase
+transition stored in EEPROM, and does not run the procedure if the value was
+previously stored there. That is used to get the measured value and pass it to
+PTP daemon before it starts (see init script examples).
+
+@sp 1
+The WR PTP Core's mode of operation (WR Master/WR Slave) can be set using the
+@i{mode} shell command:
+
+@example
+  wrc# mode slave
+or
+  wrc# mode master
+@end example
+
+This stops the PTP daemon, changes the mode of operation, but does not start it
+back automatically. Therefore after changing it you need to start the daemon
+manually:
+
+@example
+  wrc# ptp start
+@end example
+
+@sp 2
+One option is to type all those commands to initialize the WRPC software to the
+required state every time the Core starts. However, you can also write your own
+init script to FMC EEPROM and WRPC software will execute it each time it comes
+back from the reset state (this also includes coming back from reset after
+programming the FPGA and LM32). Building the simple script that reads the
+detected SFP parameters and t2/t4 phase transition value from EEPROM, configures
+the mode of operation to WR Slave and starts the PTP daemon is presented here:
+
+@example
+  wrc# init erase
+  wrc# init add ptp stop
+  wrc# init add sfp detect
+  wrc# init add sfp match
+  wrc# init add calibration
+  wrc# init add mode slave
+  wrc# init add ptp start
+@end example
+
+Almost exactly the same one can be used for running SPEC in WR Master mode. The
+only difference would be of course @i{init add mode slave} vs. @i{init add mode
+master}.
 
 @c ##########################################################################
 @node Running the Core
 @section Running the Core
 
-@c ##########################################################################
-@node Known Bugs and missing features
-@chapter Known Bugs and missing features
+Having the SFP database, t2/t4 phase transition point and the init script 
+created in @ref{Writing EEPROM and calibration} you can restart the WR PTP Core 
+by reprogramming the LM32 software (with @i{spec-cl} tool) or by typing the 
+shell command:
 
+@example
+  wrc# init boot
+@end example
+
+After that you should see the log messages that confirm the init script
+execution:
+
+@example
+(...)
+executing: ptp stop
+executing: sfp detect
+AXGE-3454-0531  
+executing: sfp match
+SFP matched, dTx=46407, dRx=167843, alpha=-73622176
+executing: calibration
+Found phase transition in EEPROM: 2384ps
+executing: mode slave
+SPLL_Init: running as Slave, 1 ref channels, 2 out channels
+Locking PLL
+executing: ptp start
+wrc# SPLL_Init: running as Slave, 1 ref channels, 2 out channels
+Enabling ptracker channel: 0
+(...)
+@end example
+
+Now you should have the White Rabbit PTP Core running in WR Slave mode. The
+Shell also contains the monitoring function which you can use to check the WR
+synchronization status:
+
+@example
+  wrc# gui
+@end example
+
+The information is presented in a clear, auto-refreshing screen:
+
+@sp 1
+@center @image{wrpc_mon, 12cm,,wrpc sync monitor}
+@sp 1
+
+@b{Note:} the @i{Synchronization status} and @i{Timing parameters} in @i{gui} 
+are available only in WR Slave mode. When running as WR Master, you would be 
+able to see only the current date and time, link status, Tx and Rx packet 
+counters, lock and calibration status.
+
+@sp 1
+If you have a DIO Mezzanine board placed on your SPEC, you can check the
+synchronization quality by observing the difference between 1-PPS signals from
+the WR Master and WR Slave. White Rabbit PTP Core generates 1-PPS signal to the
+LEMO connector No. 1 on DIO Mezzanine. However, please remember to use
+oscilloscope cables having the same length and type (with the same delay), or
+take their delay difference into account in your measurements.
 
 @c ##########################################################################
 @node Troubleshooting
 @chapter Troubleshooting
 
+@b{My computer hangs on loading spec.ko driver.}
+
+This will occur when you try to load the @i{spec.ko} kernel driver while your 
+@i{spec-vuart} is running and trying to get messages from Virtual-UART's
+registers inside WRPC. Please remember to quit @i{spec-vuart} before reloading
+the driver.
+
+@sp 1
+@b{I want to synthesize WRPC but hdlmake does nothing, just quits without any
+message.}
+
+Please check if you have the Xilinx ISE-related system variables set correctly
+(@i{settings32.sh} script provided by Xilinx sets them) and make sure you have
+overwritten the @i{$XILINX} variable to:
+
+@example
+  $ export XILINX=/opt/Xilinx/<version>/ISE_DS
+@end example
+
+or similar, if your installation folder differs from default.
+
+@sp 1
+@b{WR PTP Core seems to work but I observe on my oscilloscope that the offset
+between 1-PPS signals from WR Master and WR Slave is more than 1 ns.}
+
+Run the t2/t4 phase transition value measurement procedure from the WRPC Shell:
+
+@example
+  wrc# ptp stop
+  wrc# calibration force
+@end example
+
+and check if the oscilloscope cables you use have the same delays (or take the
+delay difference into account in your measurements).
+
+@sp 1
+@b{I can see in the WRPC GUI that the servo cannot reach TRACK_PHASE state.}
+
+Please stop the PTP daemon on your SPEC, read your SFP's parameters from SFP
+database you have created in EEPROM and run the t2/t4 phase transition value
+measurement procedure form WRPC Shell:
+
+@example
+  wrc# ptp stop
+  wrc# sfp detect
+  wrc# sfp match
+  wrc# calibration force
+@end example
+
 
 @c ##########################################################################
+@node Questions, reporting bugs 
+@chapter Questions, reporting bugs
+
+If you have found a bug, you have problems with White Rabbit PTP Core or one 
+of the tools used to build and run it, you can write to our mailing list
+@code{white-rabit-dev@@ohwr.org}
+
+
+@c ##########################################################################
+@page
 @node WRPC Shell commands
 @appendix WRPC Shell Commands
 
@@ -432,10 +642,62 @@ and running on your SPEC. Congratulations !
 @item @code{pll init <mode> <ref_channel> <align_pps>} @tab manually run spll_init() 
 function to initialize SoftPll
 @item @code{pll cl <channel>} @tab check if SoftPLL is locked for the channel
+@item @code{pll sps <channel> <picoseconds>} @tab set phase shift for the channel
+@item @code{pll gps <channel>} @tab get current and target phase shift for the channel
+@item @code{pll start <channel>} @tab start SoftPLL for the channel
+@item @code{pll stop <channel>} @tab stop SoftPLL for the channel
+@item @code{pll sdac <index> <val>} @tab set the dac
+@item @code{pll gdac <index>} @tab get dac's value
 
-@item @code{calibration} @tab
+@item @code{gui} @tab starts GUI WRPC monitor
+
+@item @code{stat} @tab prints one line log message
+@item @code{stat cont} @tab prints log message for each second (Esc to exit back to shell)
+
+@item @code{ptp start} @tab start WR PTP daemon
+@item @code{ptp stop} @tab stops WR PTP daemon
+
+@item @code{mode} @tab prints available WR PTP modes
+@item @code{mode grandmaster} @tab sets WRPC to operate as Grandmaster clock (requires external 10MHz and 1-PPS reference)(*)
+@item @code{mode master} @tab sets WRPC to operate as Free-running Master(*)
+@item @code{mode slave} @tab sets WRPC to operate as Slave node(*)
+
+@item @code{calibration} @tab tries to read t2/4 phase transition from EEPROM, if not found runs calibration procedure
+@item @code{calibration force} @tab starts calibration procedure that measures t2/4 phase transition, and stores the result to EEPROM
+
+@item @code{time} @tab prints current time from WRPC
+@item @code{time raw} @tab  prints current time in a raw format (seconds, nanoseconds)
+@item @code{time set <sec> <nsec>} @tab sets WRPC time
+
+@item @code{sfp detect} @tab prints the ID of currently used SFP transceiver
+@item @code{sfp erase} @tab cleans the SFP database stored in FMC EEPROM
+@item @code{sfp add <ID> <deltaTx> <deltaRx> <alpha>} @tab stores calibration parameters for SFP to the database in FMC EEPROM
+@item @code{sfp show} @tab prints all SFP transceivers stored in database
+@item @code{sfp match} @tab tries to get calibration parameters from database for currently used SFP transceiver(**)
+
+@item @code{init erase} @tab cleans initialization script in FMC EEPROM
+@item @code{init add <cmd>} @tab adds shell command at the end of initialization script
+@item @code{init show} @tab prints all commands from the script stored in EEPROM
+@item @code{init boot} @tab executes the script stored in FMC EEPROM (the same action is done automatically when WRPC starts after resetting LM32)
+
+@item @code{mac get} @tab prints WRPC's MAC address
+@item @code{mac getp} @tab re-generates MAC address from 1-wire digital thermometer or EEPROM
+@item @code{mac set <mac>} @tab sets the MAC address of WRPC
+@item @code{mac setp <mac>} @tab sets MAC address to the 1-wire EEPROM (if available)
+
+@item @code{sdb} @tab prints devices connected to the Wishbone bus inside WRPC
+
+@item @code{ip get} @tab prints the IPv4 address of the WRPC(***)
+@item @code{ip set <ip>} @tab sets the IPv4 address of the WRPC(***)
+
 @end multitable
 
+  * after executing _mode_ command, _ptp start_ is required to start WR PTP 
+daemon in new mode
+
+ ** requires running _sfp detect_ first
+
+*** available only with Etherbone support compiled in
 
 
 
