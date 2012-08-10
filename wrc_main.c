@@ -23,10 +23,10 @@ int wrc_ui_mode = UI_SHELL_MODE;
 
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)
-int32_t sfp_alpha = -73622176;  //default value if could not read EEPROM
-int32_t sfp_deltaTx = 46407;  //default value if could not read EEPROM
-int32_t sfp_deltaRx = 177093; //default value if could not read EEPROM
-uint32_t cal_phase_transition = 2394; //7000;
+int32_t sfp_alpha = -73622176;  //default values if could not read EEPROM
+int32_t sfp_deltaTx = 46407;
+int32_t sfp_deltaRx = 167843;
+uint32_t cal_phase_transition = 2389;
 
 void wrc_initialize()
 {
