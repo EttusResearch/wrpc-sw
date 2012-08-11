@@ -174,6 +174,10 @@ should look like this:
   $ export XILINX=/opt/Xilinx/<version>/ISE_DS
 @end example
 
+@b{Note:} the Xilinx project file included in the WRPC sources was created with
+Xilinx ISE 14.1. It is recommended to use the newest available version of ISE
+software.
+
 @sp 1
 HDL sources for WR PTP Core can be synthesized with nothing more but Xilinx 
 ISE software, but using @i{hdlmake} tool developed at CERN is much more 
@@ -296,6 +300,15 @@ the ptp-noposix you have to execute the following git commands:
 @example
   $ git submodule init
   $ git submodule update
+@end example
+
+First you have to compile the tools provided with WRPC software which are used
+later during the software compilation:
+
+@example
+  $ cd tools
+  $ make
+  $ cd ..
 @end example
 
 Now you have everything that is needed to build the software for WRPC. Before 
