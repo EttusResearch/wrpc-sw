@@ -121,7 +121,7 @@ static int _shell_exec()
 	for(i=0; cmds_list[i].name; i++)
 		if(!strcasecmp(cmds_list[i].name, tokptr[0]))
 		{
-			int rv = cmds_list[i].exec(tokptr+1);
+			int rv = cmds_list[i].exec((const char **)tokptr+1);
 			if(rv<0) 
 				mprintf("Err %d\n", rv);
 			return rv;

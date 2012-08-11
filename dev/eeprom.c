@@ -151,7 +151,7 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp, u
 
   if(!add)
   {
-    if( eeprom_read(i2cif, i2c_addr, EE_BASE_SFP + sizeof(sfpcount) + pos*sizeof(struct s_sfpinfo), sfp, 
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_SFP + sizeof(sfpcount) + pos*sizeof(struct s_sfpinfo), (uint8_t*)sfp, 
           sizeof(struct s_sfpinfo)) != sizeof(struct s_sfpinfo) )
       return EE_RET_I2CERR;
 
@@ -169,7 +169,7 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp, u
       chksum = (uint8_t) ((uint16_t)chksum + *(ptr++)) & 0xff;
     sfp->chksum = chksum;
     /*add SFP at the end of DB*/
-    eeprom_write(i2cif, i2c_addr, EE_BASE_SFP+sizeof(sfpcount) + sfpcount*sizeof(struct s_sfpinfo), sfp, sizeof(struct s_sfpinfo));
+    eeprom_write(i2cif, i2c_addr, EE_BASE_SFP+sizeof(sfpcount) + sfpcount*sizeof(struct s_sfpinfo), (uint8_t*)sfp, sizeof(struct s_sfpinfo));
     sfpcount++;
     eeprom_write(i2cif, i2c_addr, EE_BASE_SFP, &sfpcount, sizeof(sfpcount));
   }
@@ -211,14 +211,14 @@ int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t *val, uint8_t wr
   if(write)
   {
     *val |= (1<<31);
-    if( eeprom_write(i2cif, i2c_addr, EE_BASE_CAL, val, sizeof(val) ) != sizeof(val) )
+    if( eeprom_write(i2cif, i2c_addr, EE_BASE_CAL, (uint8_t*)val, sizeof(val) ) != sizeof(val) )
       return EE_RET_I2CERR;
     else
       return 1;
   }
   else
   {
-    if( eeprom_read(i2cif, i2c_addr, EE_BASE_CAL, val, sizeof(val) ) != sizeof(val) )
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_CAL, (uint8_t*)val, sizeof(val) ) != sizeof(val) )
       return EE_RET_I2CERR;
 
     if( !(*val&(1<<31)) )
@@ -233,7 +233,7 @@ int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
 {
   uint16_t used = 0;
 
-  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used))
+  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used))
     return EE_RET_I2CERR;
   else
     return used;
@@ -244,14 +244,14 @@ int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr)
   uint16_t used = 0xffff, i;
   uint16_t pattern = 0xff;
 
-  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
 		return EE_RET_I2CERR;
 
   if(used==0xffff) used=0;
   for(i=0; i<used; ++i)
-    eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+i, &pattern, 1);
+    eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+i, (uint8_t*)&pattern, 1);
   used = 0xffff;
-  eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, &used, 2);
+  eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, 2);
 
   return used;
 }
@@ -265,14 +265,14 @@ int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
   char separator = ' ';
   uint16_t used, readback;
 
-  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
     return EE_RET_I2CERR;
 
   if( used==0xffff ) used=0;  //this means the memory is blank
 
   while(args[i]!='\0')
   {
-    if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used, args[i], strlen(args[i])) != strlen(args[i]))
+    if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used, (uint8_t*)args[i], strlen(args[i])) != strlen(args[i]))
       return EE_RET_I2CERR;
     used += strlen(args[i]);
     if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used, &separator, sizeof(separator)) != sizeof(separator) )
@@ -285,10 +285,10 @@ int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
   if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT+sizeof(used)+used-1, &separator, sizeof(separator)) != sizeof(separator) )
     return EE_RET_I2CERR;
   //and finally update the size of the script
-  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+  if( eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
     return EE_RET_I2CERR;
 
-  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &readback, sizeof(readback)) != sizeof(readback) )
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&readback, sizeof(readback)) != sizeof(readback) )
     return EE_RET_I2CERR;
 
   return 0;
@@ -299,7 +299,7 @@ int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
   uint16_t used, i;
   char byte;
 
-  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+  if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
     return EE_RET_I2CERR;
 
   if(used==0 || used==0xffff) 
@@ -327,7 +327,7 @@ int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char* buf, uint8_t b
 
   if(next == 0) 
   {
-    if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, &used, sizeof(used)) != sizeof(used) )
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
       return EE_RET_I2CERR;
     ptr = sizeof(used);
   }
