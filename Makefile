@@ -115,6 +115,7 @@ wrc: 		$(OBJS)
 				${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS) 
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
+				cd tools; $(MAKE)
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
 				./tools/genramvhd -s 90112 $(OUTPUT).bin > $(OUTPUT).vhd
 
