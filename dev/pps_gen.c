@@ -71,15 +71,29 @@ int pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
 	return 0;
 }
 
+uint64_t pps_get_utc(void)
+{
+	uint64_t out;
+	uint32_t low, high;
+	
+	low  = ppsg_read(CNTR_UTCLO);
+	high = ppsg_read(CNTR_UTCHI);
+	
+	high &= 0xFF; /* CNTR_UTCHI has only 8 bits defined -- rest are HDL don't care */
+	
+	out = (uint64_t)low | (uint64_t)high << 32;
+	return out;
+}
+
 void pps_gen_get_time(uint64_t *seconds, uint32_t *nanoseconds)
 {
 	uint32_t ns_cnt;
 	uint64_t sec1, sec2;
 	
 	do {
-		sec1 = (uint64_t)ppsg_read(CNTR_UTCLO) | (uint64_t)ppsg_read(CNTR_UTCHI) << 32;
+		sec1 = pps_get_utc();
 		ns_cnt = ppsg_read(CNTR_NSEC);
-		sec2 = (uint64_t)ppsg_read(CNTR_UTCLO) | (uint64_t)ppsg_read(CNTR_UTCHI) << 32;
+		sec2 = pps_get_utc();
 	}	while(sec2 != sec1);
 
 	if(seconds) *seconds = sec2;
