@@ -92,7 +92,7 @@ void pps_gen_get_time(uint64_t *seconds, uint32_t *nanoseconds)
 	
 	do {
 		sec1 = pps_get_utc();
-		ns_cnt = ppsg_read(CNTR_NSEC);
+		ns_cnt = ppsg_read(CNTR_NSEC) & 0xFFFFFFFUL; /* 28-bit wide register */
 		sec2 = pps_get_utc();
 	}	while(sec2 != sec1);
 

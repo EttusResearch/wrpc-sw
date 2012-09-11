@@ -250,7 +250,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 	minic_rxbuf_free(num_words);
   minic.rx_head = (uint32_t *)((uint32_t)minic.rx_base + ((uint32_t)minic.rx_head+(num_words<<2) - (uint32_t)minic.rx_base) % (minic.rx_size<<2));
 
-  cur_avail = minic_readl(MINIC_REG_RX_AVAIL);
+  cur_avail = minic_readl(MINIC_REG_RX_AVAIL) & 0xFFFFFF; /* 24-bit field */
 
   /*empty buffer->no more received packets, or packet reception in progress but not done*/
 	if( !RX_DESC_VALID(*minic.rx_head))
