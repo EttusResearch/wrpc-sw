@@ -124,6 +124,5 @@ void sdb_find_devices(void) {
   BASE_SYSCON        = find_device(0xff07fc47);
   BASE_UART          = find_device(0xe2d13d04);
   BASE_ONEWIRE       = find_device(0x779c5443);
-  
-  BASE_ETHERBONE_CFG = (unsigned char*)0x20700; /* !!! fixme -- needs HW change */
+  BASE_ETHERBONE_CFG = find_device(0x68202b22);
 }
