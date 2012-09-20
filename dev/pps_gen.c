@@ -112,9 +112,9 @@ int pps_gen_enable_output(int enable)
 {
     uint32_t escr = ppsg_read(ESCR);
     if(enable)
-        ppsg_write(ESCR, escr | PPSG_ESCR_PPS_VALID);
+        ppsg_write(ESCR, escr | PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID);
     else
-        ppsg_write(ESCR, escr & ~PPSG_ESCR_PPS_VALID);
+        ppsg_write(ESCR, escr & ~(PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID));
 
     return 0;
 }
