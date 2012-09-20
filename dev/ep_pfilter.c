@@ -223,6 +223,8 @@ void pfilter_init_default()
 {
  	pfilter_new();
  	pfilter_nop();
+
+#if WITH_ETHERBONE != 0
  	pfilter_cmp(0, 0xffff, 0xffff, MOV, 1);
  	pfilter_cmp(1, 0xffff, 0xffff, AND, 1);
  	pfilter_cmp(2, 0xffff, 0xffff, AND, 1); /* r1 = 1 when dst mac is broadcast */
@@ -257,6 +259,24 @@ void pfilter_init_default()
 	pfilter_logic2(R_CLASS(7), 11, AND, 8); /* class 7: UDP/IP(unicast|broadcast) => external fabric */
 	pfilter_logic2(R_CLASS(0), 15, MOV, 0); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
 
-  	pfilter_load();
+  pfilter_load();
+#else
+  pfilter_new();
+  pfilter_nop();
+  pfilter_cmp(0, 0xffff, 0xffff, MOV, 1);
+  pfilter_cmp(1, 0xffff, 0xffff, AND, 1);
+  pfilter_cmp(2, 0xffff, 0xffff, AND, 1); /* r1 = 1 when dst mac is broadcast */
+  pfilter_cmp(0, 0x011b, 0xffff, MOV, 2);
+  pfilter_cmp(1, 0x1900, 0xffff, AND, 2);
+  pfilter_cmp(2, 0x0000, 0xffff, AND, 2); /* r2 = 1 when dst mac is PTP multicast (01:1b:19:00:00:00) */
+  pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, 3);
+  pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, 3);
+  pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, 3); /* r3 = 1 when the packet is unicast to our own MAC */
+  pfilter_cmp(6, 0x88f7, 0xffff, MOV, 5); /* r5 = 1 when ethertype = PTPv2 */
+  pfilter_logic3(6, 3, OR,  2, AND, 5); /* r6 = PTPv2(multicast or unicast) */
+  pfilter_logic2(R_CLASS(7), 6, NOT, 0); /* class 7: not PTP => external fabric */
+  pfilter_logic2(R_CLASS(0), 6, MOV, 0); /* class 0: PTPv2 => PTP LM32 core */
+  pfilter_load();
+#endif
  	
 }
