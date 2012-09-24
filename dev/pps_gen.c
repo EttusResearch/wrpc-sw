@@ -67,7 +67,7 @@ int pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
  	ppsg_write(ADJ_UTCHI, (uint32_t ) (seconds >> 32) & 0xff);
 	ppsg_write(ADJ_NSEC, (int32_t) ((int64_t) nanoseconds * 1000LL / (int64_t)REF_CLOCK_PERIOD_PS));
 
-  ppsg_write(CR, ppsg_read(CR) | PPSG_CR_CNT_SET);
+  ppsg_write(CR, (ppsg_read(CR) & 0xfffffffb) | PPSG_CR_CNT_SET);
 	return 0;
 }
 
