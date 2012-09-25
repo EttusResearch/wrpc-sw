@@ -25,7 +25,7 @@ int cmd_time(const char *args[])
 	if(args[2] && !strcasecmp(args[0], "set")) {
 		if(wrc_ptp_get_mode() != WRC_MODE_SLAVE)
 		{
-			pps_gen_set_time((uint64_t)atoi(args[1]), atoi(args[2]) / 8);
+			pps_gen_set_time((uint64_t)atoi(args[1]), atoi(args[2]));
 			return 0;
 		} else
 			return -EBUSY;
