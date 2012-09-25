@@ -4,6 +4,7 @@
 #include "types.h"
 
 #define ETH_HEADER_SIZE 14
+#define WRPC_FID				0
 
 void minic_init();
 void minic_disable();

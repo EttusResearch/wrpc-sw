@@ -265,7 +265,6 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 }
 
 
-static uint16_t tx_oob_val = 0;
 
 int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_timestamp *hwts)
 {
@@ -286,7 +285,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
 	d_hdr = 0;
 
   if(hwts)
-    d_hdr = TX_DESC_WITH_OOB | (tx_oob_val << 12);
+    d_hdr = TX_DESC_WITH_OOB | (WRPC_FID<<12);
 
   d_hdr |= TX_DESC_VALID | nwords;
   
@@ -311,9 +310,9 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
       raw_ts = minic_readl(MINIC_REG_TSR1);
       fid = MINIC_TSR0_FID_R(minic_readl(MINIC_REG_TSR0));
 
-			if(fid != tx_oob_val)
+			if(fid != WRPC_FID)
 			{
-			 	TRACE_DEV("minic_tx_frame: unmatched fid %d vs %d\n", fid, tx_oob_val);
+			 	TRACE_DEV("minic_tx_frame: unmatched fid %d vs %d\n", fid, WRPC_FID);
 			}
 
       EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
@@ -330,8 +329,6 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
 //	  TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
 		  minic.tx_count++;
     }
-
-  tx_oob_val++;
 
   return size;
 }
