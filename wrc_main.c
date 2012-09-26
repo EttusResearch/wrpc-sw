@@ -45,13 +45,16 @@ void wrc_initialize()
   mac_addr[0] = 0x08;   //
   mac_addr[1] = 0x00;   // CERN OUI
   mac_addr[2] = 0x30;   //  
-  mac_addr[3] = 0xDE;   // fallback MAC if get_persistent_mac fails
-  mac_addr[4] = 0xAD;
-  mac_addr[5] = 0x42;
   
   own_scanbus(ONEWIRE_PORT);
   if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
     mprintf("Unable to determine MAC address\n");
+  	mac_addr[0] = 0x11; //
+  	mac_addr[1] = 0x22; // 
+  	mac_addr[2] = 0x33; // fallback MAC if get_persistent_mac fails  
+  	mac_addr[3] = 0x44; //
+  	mac_addr[4] = 0x55; //
+  	mac_addr[5] = 0x66; //
   }
 
   TRACE_DEV("Local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],mac_addr[1],mac_addr[2],mac_addr[3],mac_addr[4],mac_addr[5]);
