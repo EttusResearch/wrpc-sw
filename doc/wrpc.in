@@ -68,7 +68,7 @@ want to get your hands dirty and prefer to use the binaries available at
 @ref{Running and Configuring}.
 
 @menu
-* Repositories and Releases::   
+* Software and hardware requirements::   
 * Building the Core::
 * Running and Configuring
 * Known bugs and missing features::  
@@ -77,8 +77,17 @@ want to get your hands dirty and prefer to use the binaries available at
 @end menu
 
 @c ##########################################################################
+@node Software and hardware requirements
+@chapter Software and hardware requirements
+
+@menu
+* Repositories and Releases
+* Hardware needed
+@end menu
+
+@c ##########################################################################
 @node Repositories and Releases
-@chapter Repositories and Releases
+@section Repositories and Releases
 
 This version of the White Rabbit PTP Core is release @value{release}.
 The code and documentation is distributed in the following places:
@@ -130,6 +139,23 @@ repository (unless specified otherwise in this document).
 Any official hot fixes, if any, for this release will live in the branch called
 @code{@value{tagname}-fixes}, in each WRPC repository.
 
+@c ##########################################################################
+@node Hardware needed
+@section Hardware needed
+
+The absolutely minimum hardware you need to build and run the White
+Rabbit PTP Core is a PC computer with Linux and one Simple PCIe FMC Carrier
+(SPEC) - @uref{http://www.ohwr.org/projects/spec}. However, it is recommended to 
+use also the DIO FMC card (@uref{http://www.ohwr.org/projects/fmc-dio-5chttla})
+for storing calibration values and configuration in EEPROM(described later). 
+To test the White Rabbit synchronization, you will also need:
+@itemize
+@item second SPEC board with DIO FMC or White Rabbit Switch;
+@item pair of SFP transceivers (AXCEN AXGE-1254-0531 and AXCEN AXGE-3454-0531
+are recommended);
+@item a roll of G652, single mode fiber to connect your SPECs or SPEC with WR
+Switch.
+@end itemize
 
 @c ##########################################################################
 @node Building the Core
@@ -368,8 +394,10 @@ build the kernel driver and userspace tools:
 Then you have to copy the @i{spec_top.bin} to /lib/firmware/fmc/. changing its
 name:
 
+@b{Note:} the commands below have to be executed with superuser rights
+
 @example
-  $ cp <your_wrpc_location>/syn/spec_1_1/wr_core_demo/spec_top.bin \
+  $ sudo cp <your_wrpc_location>/syn/spec_1_1/wr_core_demo/spec_top.bin \
         /lib/firmware/fmc/spec-demo.bin
 @end example
 
@@ -378,7 +406,7 @@ Spartan 6 FPGA on SPEC with a given bitstream (make sure you are in
 <your_spacsw_location>:
 
 @example
-  $ insmod kernel/spec.ko name=demo
+  $ sudo insmod kernel/spec.ko name=demo
 @end example
 
 To check if the FPGA firmware file was found by the driver and correctly loaded 
@@ -403,7 +431,7 @@ in the @i{spec-sw} repository. Programming is done with the simple command
 below:
 
 @example
-  $ tools/spec-cl <your_wrpcsw_location>/wrc.bin
+  $ sudo tools/spec-cl <your_wrpcsw_location>/wrc.bin
 @end example 
 
 @sp 1
@@ -412,7 +440,7 @@ Now you should be able to start the Virtual-UART software (also a part of
 Core Shell:
 
 @example
-  $ tools/spec-vuart
+  $ sudo tools/spec-vuart
 @end example
 
 If you are able to see the WRPC Shell prompt @i{wrc#} that means the Core is up
