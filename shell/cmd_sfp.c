@@ -1,14 +1,14 @@
 /*  Command: sfp
     Arguments: subcommand [subcommand-specific args]
-    
+
     Description: SFP detection/database manipulation.
-		
+
 		Subcommands:
 			add vendor_type delta_tx delta_rx alpha - adds an SFP to the database, with given alpha/delta_rx/delta_rx values
 			show - shows the SFP database
       match - tries to get calibration parameters from DB for a detected SFP
       erase - cleans the SFP database
-			detect - detects the transceiver type		
+			detect - detects the transceiver type
 */
 
 #include "shell.h"
@@ -32,7 +32,7 @@ int cmd_sfp(const char *args[])
 		pn[16]=0;
 		mprintf("%s\n",pn);
 		return 0;
-	} 
+	}
 //  else if (!strcasecmp(args[0], "i2cscan"))
 //  {
 //    mi2c_scan(WRPC_FMC_I2C);
@@ -53,7 +53,7 @@ int cmd_sfp(const char *args[])
     sfp.dTx = atoi(args[2]);
     sfp.dRx = atoi(args[3]);
     sfp.alpha = atoi(args[4]);
-    temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &sfp, 1, 0);	
+    temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &sfp, 1, 0);
     if(temp == EE_RET_DBFULL)
       mprintf("SFP DB is full\n");
     else if(temp == EE_RET_I2CERR)
@@ -66,7 +66,7 @@ int cmd_sfp(const char *args[])
     for(i=0; i<sfpcount; ++i)
     {
       temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &sfp, 0, i);
-      if(!i) 
+      if(!i)
       {
         sfpcount=temp; //only in first round valid sfpcount is returned from eeprom_get_sfp
         if(sfpcount == 0 || sfpcount == 0xFF)
@@ -105,6 +105,6 @@ int cmd_sfp(const char *args[])
       mprintf("Could not match to DB\n");
     return 0;
   }
-	
+
 	return 0;
 }

@@ -40,7 +40,7 @@ int pps_gen_adjust(int counter, int64_t how_much)
 {
   uint32_t cr;
 
-  TRACE_DEV("Adjust: counter = %s [%c%d]\n", 
+  TRACE_DEV("Adjust: counter = %s [%c%d]\n",
   	counter == PPSG_ADJUST_SEC ? "seconds" : "nanoseconds", how_much<0?'-':'+', (int32_t)abs(how_much));
 
 	if(counter == PPSG_ADJUST_NSEC)
@@ -75,12 +75,12 @@ uint64_t pps_get_utc(void)
 {
 	uint64_t out;
 	uint32_t low, high;
-	
+
 	low  = ppsg_read(CNTR_UTCLO);
 	high = ppsg_read(CNTR_UTCHI);
-	
+
 	high &= 0xFF; /* CNTR_UTCHI has only 8 bits defined -- rest are HDL don't care */
-	
+
 	out = (uint64_t)low | (uint64_t)high << 32;
 	return out;
 }
@@ -89,7 +89,7 @@ void pps_gen_get_time(uint64_t *seconds, uint32_t *nanoseconds)
 {
 	uint32_t ns_cnt;
 	uint64_t sec1, sec2;
-	
+
 	do {
 		sec1 = pps_get_utc();
 		ns_cnt = ppsg_read(CNTR_NSEC) & 0xFFFFFFFUL; /* 28-bit wide register */

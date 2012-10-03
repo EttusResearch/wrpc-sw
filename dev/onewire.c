@@ -43,14 +43,14 @@ int8_t get_persistent_mac(uint8_t portnum, uint8_t* mac)
   uint8_t read_buffer[32];
   uint8_t i;
   int8_t out;
-  
+
   out = -1;
 
   if(devsnum == 0) return out;
-  
+
   for (i = 0; i < devsnum; ++i) {
 //#if DEBUG_PMAC
-    mprintf("Found device: %x:%x:%x:%x:%x:%x:%x:%x\n", 
+    mprintf("Found device: %x:%x:%x:%x:%x:%x:%x:%x\n",
       FamilySN[i][7], FamilySN[i][6], FamilySN[i][5], FamilySN[i][4],
       FamilySN[i][3], FamilySN[i][2], FamilySN[i][1], FamilySN[i][0]);
 //#endif
@@ -65,7 +65,7 @@ int8_t get_persistent_mac(uint8_t portnum, uint8_t* mac)
       mprintf("Using temperature ID for MAC\n");
 #endif
     }
-    
+
     /* If there is an EEPROM, read page 0 for the MAC */
     if (FamilySN[i][0] == 0x43) {
       owLevel(portnum, MODE_NORMAL);
@@ -79,14 +79,14 @@ int8_t get_persistent_mac(uint8_t portnum, uint8_t* mac)
           memcpy(mac, read_buffer, 6);
           out = 0;
 #if DEBUG_PMAC
-          mprintf("Using EEPROM page: %x:%x:%x:%x:%x:%x\n", 
+          mprintf("Using EEPROM page: %x:%x:%x:%x:%x:%x\n",
             mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 #endif
         }
       }
     }
   }
-  
+
   return out;
 }
 
@@ -98,18 +98,18 @@ int8_t set_persistent_mac(uint8_t portnum, uint8_t* mac)
 
   // Find the device (only the first one, we won't write MAC to all EEPROMs out there, right?)
   if( FindDevices(portnum, &FamilySN[0], 0x43, 1) == 0) return -1;
-  
+
   memset(write_buffer, 0, sizeof(write_buffer));
   memcpy(write_buffer, mac, 6);
-  
+
 #if DEBUG_PMAC
   mprintf("Writing to EEPROM\n");
 #endif
-  
+
   /* Write the last EEPROM with the MAC */
   owLevel(portnum, MODE_NORMAL);
   if (Write43(portnum, FamilySN[0], EEPROM_MAC_PAGE, &write_buffer) == TRUE)
     return 0;
-  
+
   return -1;
 }

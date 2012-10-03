@@ -5,8 +5,8 @@
 #include "syscon.h"
 
 /*
- * The SFP section is placed somewhere inside FMC EEPROM and it really does not 
- * matter where (can be a binary data inside the Board Info section but can be 
+ * The SFP section is placed somewhere inside FMC EEPROM and it really does not
+ * matter where (can be a binary data inside the Board Info section but can be
  * placed also outside the FMC standardized EEPROM structure. The only requirement
  * is that it starts with 0xdeadbeef pattern. The structure of SFP section is:
  *
@@ -23,10 +23,10 @@
  * --------------------------------------------------------------------------------------------
  *
  * Fields description:
- * cal_ph_trans       - t2/t4 phase transition value (got from measure_t24p() ), contains 
+ * cal_ph_trans       - t2/t4 phase transition value (got from measure_t24p() ), contains
  *                      _valid_ bit (MSB) and 31 bits of cal_phase_transition value
  * count              - how many SFPs are described in the list (binary)
- * SFP(n) part number - SFP PN as read from SFP's EEPROM (e.g. AXGE-1254-0531) 
+ * SFP(n) part number - SFP PN as read from SFP's EEPROM (e.g. AXGE-1254-0531)
  *                      (16 ascii chars)
  * checksum           - low order 8 bits of the sum of all bytes for the SFP(PN,alpha,dTx,dRx)
  *
@@ -49,7 +49,7 @@ uint8_t has_eeprom = 0;
 
 uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 {
-	has_eeprom = 1;	
+	has_eeprom = 1;
 	if( !mi2c_devprobe(i2cif, i2c_addr) )
 		if( !mi2c_devprobe(i2cif, i2c_addr) )
 			has_eeprom = 0;
@@ -151,7 +151,7 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp, u
 
   if(!add)
   {
-    if( eeprom_read(i2cif, i2c_addr, EE_BASE_SFP + sizeof(sfpcount) + pos*sizeof(struct s_sfpinfo), (uint8_t*)sfp, 
+    if( eeprom_read(i2cif, i2c_addr, EE_BASE_SFP + sizeof(sfpcount) + pos*sizeof(struct s_sfpinfo), (uint8_t*)sfp,
           sizeof(struct s_sfpinfo)) != sizeof(struct s_sfpinfo) )
       return EE_RET_I2CERR;
 
@@ -184,16 +184,16 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp)
   struct s_sfpinfo dbsfp;
 
   for(i=0; i<sfpcount; ++i)
-  {   
-    temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &dbsfp, 0, i); 
-    if(!i) 
-    {   
+  {
+    temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &dbsfp, 0, i);
+    if(!i)
+    {
       sfpcount=temp; //only in first round valid sfpcount is returned from eeprom_get_sfp
       if(sfpcount == 0 || sfpcount == 0xFF)
         return 0;
-      else if(sfpcount<0) 
+      else if(sfpcount<0)
         return sfpcount;
-    }   
+    }
     if( !strncmp(dbsfp.pn, sfp->pn, 16) )
     {
       sfp->dTx = dbsfp.dTx;
@@ -201,7 +201,7 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp)
       sfp->alpha = dbsfp.alpha;
       return 1;
     }
-  } 
+  }
 
   return 0;
 }
@@ -256,7 +256,7 @@ int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr)
   return used;
 }
 
-/* 
+/*
  * Appends a new shell command at the end of boot script
  */
 int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
@@ -302,7 +302,7 @@ int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
   if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
     return EE_RET_I2CERR;
 
-  if(used==0 || used==0xffff) 
+  if(used==0 || used==0xffff)
   {
     used = 0;  //this means the memory is blank
     mprintf("Empty init script...\n");
@@ -325,7 +325,7 @@ int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char* buf, uint8_t b
   static uint16_t used = 0;
   uint8_t i=0;
 
-  if(next == 0) 
+  if(next == 0)
   {
     if( eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t*)&used, sizeof(used)) != sizeof(used) )
       return EE_RET_I2CERR;

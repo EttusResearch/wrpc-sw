@@ -21,7 +21,7 @@ int sfp_read_part_id(char *part_id)
   mi2c_start(WRPC_SFP_I2C);
   mi2c_put_byte(WRPC_SFP_I2C, 0xA0);
   mi2c_put_byte(WRPC_SFP_I2C, 0x00);
-  mi2c_repeat_start(WRPC_SFP_I2C); 
+  mi2c_repeat_start(WRPC_SFP_I2C);
   mi2c_put_byte(WRPC_SFP_I2C, 0xA1);
   mi2c_get_byte(WRPC_SFP_I2C, &data, 1);
   mi2c_stop(WRPC_SFP_I2C);
@@ -40,8 +40,8 @@ int sfp_read_part_id(char *part_id)
   mi2c_get_byte(WRPC_SFP_I2C, &data, 1);  //final word, checksum
   mi2c_stop(WRPC_SFP_I2C);
 
-  if(sum == data) 
+  if(sum == data)
       return 0;
-  
+
   return -1;
 }

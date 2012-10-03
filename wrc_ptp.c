@@ -38,7 +38,7 @@ static RunTimeOpts rtOpts = {
    .wrStateTimeout= WR_DEFAULT_STATE_TIMEOUT_MS,
    .phyCalibrationRequired = FALSE,
 	.disableFallbackIfWRFails = TRUE,
-         
+
    .primarySource = FALSE,
    .wrConfig      = WR_S_ONLY,
    .masterOnly    = FALSE,
@@ -53,7 +53,7 @@ static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN;
 int wrc_ptp_init()
 {
 	Integer16 ret;
-	
+
   netStartup();
 
   ptpPortDS = ptpdStartup(0, NULL, &ret, &rtOpts, &ptpClockDS);
@@ -65,7 +65,7 @@ int wrc_ptp_init()
     PTPD_TRACE(TRACE_WRPC, NULL,"failed to initialize network\n");
     return -1;
   }
-  
+
   ptpPortDS->linkUP = FALSE;
   ptp_enabled = 0;
   return 0;
@@ -79,12 +79,12 @@ int wrc_ptp_set_mode(int mode)
 	uint32_t start_tics, lock_timeout = 0;
 
 	ptp_mode = 0;
-	
+
   wrc_ptp_stop();
-	
+
 	switch(mode)
 	{
-		case WRC_MODE_GM:	
+		case WRC_MODE_GM:
 			rtOpts.primarySource = TRUE;
 			rtOpts.wrConfig = WR_M_ONLY;
 			rtOpts.masterOnly = TRUE;
@@ -103,15 +103,15 @@ int wrc_ptp_set_mode(int mode)
 	case WRC_MODE_SLAVE:
 			rtOpts.primarySource = FALSE;
 			rtOpts.wrConfig = WR_S_ONLY;
-			rtOpts.masterOnly = FALSE;			
+			rtOpts.masterOnly = FALSE;
       spll_init(SPLL_MODE_SLAVE, 0, 1);
 			break;
 	}
 
   initDataClock(&rtOpts, &ptpClockDS);
-		
+
 	start_tics = timer_get_tics();
-	
+
 	mprintf("Locking PLL");
 
 	pps_gen_enable_output(0);
@@ -130,10 +130,10 @@ int wrc_ptp_set_mode(int mode)
 			return -EINTR;
 		}
 	}
-	
+
 	if(mode == WRC_MODE_MASTER || mode == WRC_MODE_GM)
 		pps_gen_enable_output(1);
-	
+
 	mprintf("\n");
 	ptp_mode = mode;
 	return 0;

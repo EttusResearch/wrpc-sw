@@ -9,15 +9,15 @@ OBJS_TEST = testtool.o
 INCLUDE_DIR = -I../include -I../ptp-noposix/PTPWRd
 
 CROSS_COMPILE ?= lm32-elf-
-CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
-LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T ../target/lm32/ram.ld 
+CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
+LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T ../target/lm32/ram.ld
 OBJS_PLATFORM=../target/lm32/crt0.o ../target/lm32/irq.o
 
 CC=$(CROSS_COMPILE)gcc
 OBJCOPY=$(CROSS_COMPILE)objcopy
 OBJDUMP=$(CROSS_COMPILE)objdump
 CFLAGS= $(CFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os -include ../include/trace.h  -I../include/ -I../ptp-noposix/libptpnetif -I../ptp-noposix/PTPWRd
-LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os 
+LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Os
 SIZE = $(CROSS_COMPILE)size
 
 OBJS=$(OBJS_PLATFORM) $(OBJS_COMMON) $(OBJS_TEST)
@@ -26,11 +26,11 @@ OUTPUT = testtool
 
 all:    $(OBJS)
 		$(SIZE) -t $(OBJS)
-		${CC} -o $(OUTPUT).elf $(OBJS) $(LDFLAGS) 
+		${CC} -o $(OUTPUT).elf $(OBJS) $(LDFLAGS)
 		${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 
 clean:
-		rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin 
+		rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin
 
 %.o:    %.c
 		${CC} $(CFLAGS) -c $^ -o $@

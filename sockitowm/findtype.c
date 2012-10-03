@@ -64,7 +64,7 @@ SMALLINT FindDevices(int portnum, uchar FamilySN[][8], SMALLINT family_code, int
 	// perform the search
       if (!owNext(portnum,TRUE, FALSE))
          break;
-         
+
       owSerialNum(portnum,FamilySN[NumDevices], TRUE);
       if ((FamilySN[NumDevices][0] & 0x7F) == (family_code & 0x7F))
       {

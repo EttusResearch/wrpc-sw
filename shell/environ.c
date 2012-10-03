@@ -25,16 +25,16 @@ static char *_env_get(const char *var)
 
 		i++;
 	}
-	
+
 	return NULL;
 }
 
 char *env_get(const char *var)
 {
 	char *p = _env_get(var);
-	
+
 	if(!p) return NULL;
-	
+
 	return p+2+strlen(p+1);
 }
 
@@ -55,22 +55,22 @@ int env_set(const char *var, const char *value)
 	{
 		p=vstart+1;
 		while(*p != 0xaa && *p != 0xff) p++;
-	
+
 		memmove(vstart, p, SH_ENVIRON_SIZE - (p - env_buf));
 	}
 
 	end = _env_end();
-	
+
 	if ((end + strlen(var) + strlen(value) + 3) >= SH_ENVIRON_SIZE)
 		return -ENOMEM;
-		
+
 	p = &env_buf[end];
-		
+
 	*p++ = 0xaa;
 	memcpy(p, var, strlen(var) + 1); p += strlen(var) + 1;
 	memcpy(p, value, strlen(value) + 1); p += strlen(value) + 1;
 	*p++ = 0xff;
-	
+
 	p = env_buf;
 
 	return 0;
@@ -79,14 +79,14 @@ int env_set(const char *var, const char *value)
 int cmd_env(const char *args[])
 {
 	unsigned char *p = env_buf;
-	
+
 	while(*p != 0xff)
 	{
 		if(*p==0xaa)
 			mprintf("%s=%s\n", p+1, p+strlen(p+1)+2);
 		p++;
 	}
-	
+
 	return 0;
 }
 
@@ -100,7 +100,7 @@ int cmd_set(const char *args[])
 {
 	if(!args[1])
 		return -EINVAL;
-	
+
 	return env_set(args[0], args[1]);
 }
 

@@ -3,9 +3,9 @@
 
 main(int argc, char *argv[])
 {
-  if(argc < 3) return -1; 
+  if(argc < 3) return -1;
   FILE *f = fopen(argv[1],"rb");
-  if(!f) return -1; 
+  if(!f) return -1;
   unsigned char x[4];
   int i=0;
   int n = atoi(argv[2]);
@@ -18,7 +18,7 @@ main(int argc, char *argv[])
 
   for(;i<n;)
   {
-    printf("write %x %02X%02X%02X%02X\n", i++, 0,0,0,0);  
+    printf("write %x %02X%02X%02X%02X\n", i++, 0,0,0,0);
   }
   fclose(f);
   return 0;

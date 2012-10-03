@@ -40,10 +40,10 @@ char *format_time(uint64_t sec)
   static char buf[64];
   unsigned long dayclock, dayno;
   int year = EPOCH_YR;
- 
+
   dayclock = (unsigned long)sec % SECS_DAY;
   dayno = (unsigned long)sec / SECS_DAY;
- 
+
   t.tm_sec = dayclock % 60;
   t.tm_min = (dayclock % 3600) / 60;
   t.tm_hour = dayclock / 3600;
@@ -68,27 +68,27 @@ char *format_time(uint64_t sec)
   return buf;
 }
 
-                                                                                                  
-void cprintf(int color, const char *fmt, ...)                                                                    
+
+void cprintf(int color, const char *fmt, ...)
 {
-  va_list ap;                                                                                                       
-  mprintf("\033[0%d;3%dm",color & C_DIM ? 2:1, color&0x7f);                                                          
+  va_list ap;
+  mprintf("\033[0%d;3%dm",color & C_DIM ? 2:1, color&0x7f);
   va_start(ap, fmt);
-  vprintf(fmt, ap);                                                                                                 
+  vprintf(fmt, ap);
   va_end(ap);
 }
 
-void pcprintf(int row, int col, int color, const char *fmt, ...)                                                 
+void pcprintf(int row, int col, int color, const char *fmt, ...)
 {
-  va_list ap;                                                                                                       
+  va_list ap;
   mprintf("\033[%d;%df", row, col);
-  mprintf("\033[0%d;3%dm",color & C_DIM ? 2:1, color&0x7f); 
-  va_start(ap, fmt);                                                                                                
-  vprintf(fmt, ap);                                                                                                 
+  mprintf("\033[0%d;3%dm",color & C_DIM ? 2:1, color&0x7f);
+  va_start(ap, fmt);
+  vprintf(fmt, ap);
   va_end(ap);
 }
 
-void term_clear()                                                                                                     
+void term_clear()
 {
-  mprintf("\033[2J\033[1;1H");                                                                                       
+  mprintf("\033[2J\033[1;1H");
 }

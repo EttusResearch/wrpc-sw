@@ -9,7 +9,7 @@
 
 static decode_mac(const char *str, unsigned char* mac) {
   int i, x;
-  
+
   /* Don't try to detect bad input; need small code */
   for (i = 0; i < 6; ++i) {
     str = fromhex(str, &x);
@@ -21,7 +21,7 @@ static decode_mac(const char *str, unsigned char* mac) {
 int cmd_mac(const char *args[])
 {
   unsigned char mac[6];
-  
+
   if (!args[0] || !strcasecmp(args[0], "get")) {
     /* get current MAC */
     get_mac_addr(mac);
@@ -39,7 +39,7 @@ int cmd_mac(const char *args[])
   } else {
     return -EINVAL;
   }
-  
-  mprintf("MAC-address: %x:%x:%x:%x:%x:%x\n", 
+
+  mprintf("MAC-address: %x:%x:%x:%x:%x:%x\n",
     mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }

@@ -33,25 +33,25 @@ void wrc_initialize()
   int ret, i;
   uint8_t mac_addr[6], ds18_id[8] = {0,0,0,0,0,0,0,0};
   char sfp_pn[17];
-  
+
   sdb_find_devices();
   uart_init();
-  
+
   mprintf("WR Core: starting up...\n");
-  
+
   timer_init(1);
   owInit();
-  
+
   mac_addr[0] = 0x08;   //
   mac_addr[1] = 0x00;   // CERN OUI
-  mac_addr[2] = 0x30;   //  
-  
+  mac_addr[2] = 0x30;   //
+
   own_scanbus(ONEWIRE_PORT);
   if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
     mprintf("Unable to determine MAC address\n");
   	mac_addr[0] = 0x11; //
-  	mac_addr[1] = 0x22; // 
-  	mac_addr[2] = 0x33; // fallback MAC if get_persistent_mac fails  
+  	mac_addr[1] = 0x22; //
+  	mac_addr[2] = 0x33; // fallback MAC if get_persistent_mac fails
   	mac_addr[3] = 0x44; //
   	mac_addr[4] = 0x55; //
   	mac_addr[5] = 0x66; //
@@ -65,7 +65,7 @@ void wrc_initialize()
   minic_init();
   pps_gen_init();
   wrc_ptp_init();
-  
+
 #if WITH_ETHERBONE
   ipv4_init("wru1");
   arp_init("wru1");
@@ -88,7 +88,7 @@ int wrc_check_link()
     TRACE_DEV("Link up.\n");
     gpio_out(GPIO_LED_LINK, 1);
     rv = LINK_WENT_UP;
-  } 
+  }
   else if(prev_link_state && !link_state)
   {
     TRACE_DEV("Link down.\n");
@@ -105,14 +105,14 @@ int wrc_extra_debug = 0;
 void wrc_debug_printf(int subsys, const char *fmt, ...)
 {
 	va_list ap;
-	
+
 	if(wrc_ui_mode) return;
-	
+
 	va_start(ap, fmt);
-	
+
 	if(wrc_extra_debug || (!wrc_extra_debug && (subsys & TRACE_SERVO)))
 	 	vprintf(fmt, ap);
-	
+
 	va_end(ap);
 }
 
@@ -130,7 +130,7 @@ static void ui_update()
 			{
 				shell_init();
 				wrc_ui_mode = UI_SHELL_MODE;
-			}	
+			}
 		}
     else if(wrc_ui_mode == UI_STAT_MODE)
     {
@@ -139,7 +139,7 @@ static void ui_update()
 			{
 				shell_init();
 				wrc_ui_mode = UI_SHELL_MODE;
-			}	
+			}
     }
 		else
 			shell_interactive();
@@ -159,7 +159,7 @@ int main(void)
 
   //try to read and execute init script from EEPROM
   shell_boot_script();
-  
+
   for (;;)
   {
     int l_status = wrc_check_link();
@@ -171,7 +171,7 @@ int main(void)
         needIP = 1;
         break;
 #endif
-        
+
       case LINK_UP:
         update_rx_queues();
 #if WITH_ETHERBONE

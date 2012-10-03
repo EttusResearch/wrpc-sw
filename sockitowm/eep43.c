@@ -21,11 +21,11 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 #if DEBUG_EEP43
 		mprintf(" Writing Scratchpad...\n");
 #endif
-		if (!owWriteBytePower(portnum, WRITE_SCRATCH_CMD)) 
+		if (!owWriteBytePower(portnum, WRITE_SCRATCH_CMD))
 			return FALSE;
 		setcrc16(portnum, 0);
 		docrc16(portnum,(ushort)WRITE_SCRATCH_CMD);
-		
+
 		owLevel(portnum, MODE_NORMAL);
 		owWriteBytePower(portnum, 0x00);	//write LSB of target addr
 		docrc16(portnum,(ushort)0x00);
@@ -34,8 +34,8 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 		docrc16(portnum,(ushort)0x00);
 
 
-		for(i = 0; i < 32; i++)			//write 32 data bytes to scratchpad 
-		{	
+		for(i = 0; i < 32; i++)			//write 32 data bytes to scratchpad
+		{
 			owLevel(portnum,MODE_NORMAL);
 			owWriteBytePower(portnum, page_buffer[i]);
 			lastcrc16 = docrc16(portnum, page_buffer[i]);
@@ -56,7 +56,7 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 			owLevel(portnum, MODE_NORMAL);
 			if(Copy2Mem43(portnum, SerialNum))
 				rt=TRUE;
-	
+
 		}
 	}
 
@@ -67,15 +67,15 @@ int Write43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 int Copy2Mem43(int portnum, uchar *SerialNum)
 {
 	uchar rt=FALSE;
-	ushort lastcrc16; 
+	ushort lastcrc16;
 	int i;
 	uchar read_data;
-	
+
 	owSerialNum(portnum, SerialNum, FALSE);
 
 	if(owAccess(portnum))
-	{	
-		if (!owWriteBytePower(portnum, COPY_SCRATCH_CMD)) 
+	{
+		if (!owWriteBytePower(portnum, COPY_SCRATCH_CMD))
 			return FALSE;
 		owLevel(portnum, MODE_NORMAL);
 		owWriteBytePower(portnum, 0x00);	//write LSB of target addr
@@ -85,12 +85,12 @@ int Copy2Mem43(int portnum, uchar *SerialNum)
 		owWriteBytePower(portnum, 0x1f);	//write E/S
 
 		usleep(500000);
-				
-		
-		owLevel(portnum,MODE_NORMAL);		
+
+
+		owLevel(portnum,MODE_NORMAL);
 		read_data = owReadBytePower(portnum);
-		
-		if (read_data == 0xaa)			
+
+		if (read_data == 0xaa)
 			rt=TRUE;
 	}
 
@@ -98,7 +98,7 @@ int Copy2Mem43(int portnum, uchar *SerialNum)
 	return rt;
 }
 
-	
+
 // routine for reading the scratchpad of a DS28EC20P EEPROM
 // 80 pages of 32byte
 // 32byte scratchpad
@@ -106,45 +106,45 @@ int Copy2Mem43(int portnum, uchar *SerialNum)
 int ReadScratch43(int portnum, uchar *SerialNum, uchar *page_buffer)
 {
 	uchar rt=FALSE;
-	ushort lastcrc16; 
+	ushort lastcrc16;
 	int i;
 	ushort target_addr = 0;
 	uchar read_data;
-	
+
 	owSerialNum(portnum, SerialNum, FALSE);
 
 	if(owAccess(portnum))
-	{	
+	{
 #if DEBUG_EEP43
 		mprintf(" Reading Scratchpad...\n");
 #endif
-		if (!owWriteBytePower(portnum, READ_SCRATCH_CMD)) 
+		if (!owWriteBytePower(portnum, READ_SCRATCH_CMD))
 			return FALSE;
 
 		setcrc16(portnum, 0);				//init crc
 		docrc16(portnum,(ushort)READ_SCRATCH_CMD);
-		
-					
-		
+
+
+
 		owLevel(portnum,MODE_NORMAL);		//read 2 byte address and 1 byte status
 		read_data = owReadBytePower(portnum);
 		lastcrc16 = docrc16(portnum, read_data);
 		target_addr = read_data;
- 
-		owLevel(portnum,MODE_NORMAL);		
+
+		owLevel(portnum,MODE_NORMAL);
 		read_data = owReadBytePower(portnum);
 		lastcrc16 = docrc16(portnum, read_data);
 		target_addr |= read_data << 8;
 
-		owLevel(portnum,MODE_NORMAL);		
+		owLevel(portnum,MODE_NORMAL);
 		read_data = owReadBytePower(portnum);
 		lastcrc16 = docrc16(portnum, read_data);
 
 #if DEBUG_EEP43
 		mprintf("E/S: 0x%x\n", read_data);
 #endif
-		for(i = 0; i < 32; i++) 
-		{	
+		for(i = 0; i < 32; i++)
+		{
 			owLevel(portnum,MODE_NORMAL);
 			page_buffer[i] = owReadBytePower(portnum);
 			lastcrc16 = docrc16(portnum, page_buffer[i]);
@@ -152,14 +152,14 @@ int ReadScratch43(int portnum, uchar *SerialNum, uchar *page_buffer)
 		//	mprintf(" CRC16: %x", lastcrc16);
 		//	mprintf(" CRC16i: %x\n", ~lastcrc16);
 		}
-		
+
 		for(i = 0; i < 2; i++)
 		{
-			owLevel(portnum,MODE_NORMAL);		
+			owLevel(portnum,MODE_NORMAL);
 			read_data = owReadBytePower(portnum);
 			lastcrc16 = docrc16(portnum, read_data);
-		}	
-		if (lastcrc16 == 0xb001)			
+		}
+		if (lastcrc16 == 0xb001)
 			rt=TRUE;
 	}
 
@@ -173,30 +173,30 @@ int ReadScratch43(int portnum, uchar *SerialNum, uchar *page_buffer)
 int ReadMem43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 {
 	uchar rt=FALSE;
-	ushort lastcrc16; 
+	ushort lastcrc16;
 	int i;
 	ushort target_addr = 0;
 	uchar read_data;
-	
+
 	owSerialNum(portnum, SerialNum, FALSE);
 
 	if(owAccess(portnum))
-	{	
-		if (!owWriteBytePower(portnum, E_READ_MEM_CMD)) 
+	{
+		if (!owWriteBytePower(portnum, E_READ_MEM_CMD))
 			return FALSE;
 
 		setcrc16(portnum, 0);				//init crc
 		docrc16(portnum,(ushort)E_READ_MEM_CMD);
-		
+
 		owLevel(portnum, MODE_NORMAL);
 		owWriteBytePower(portnum, 0x00);	//write LSB of target addr
 		docrc16(portnum,(ushort)0x00);
 		owLevel(portnum, MODE_NORMAL);
 		owWriteBytePower(portnum, 0x00);	//write MSB of target addr
 		docrc16(portnum,(ushort)0x00);
-		
-		for(i = 0; i < 32; i++) 
-		{	
+
+		for(i = 0; i < 32; i++)
+		{
 			owLevel(portnum,MODE_NORMAL);
 			page_buffer[i] = owReadBytePower(portnum);
 			lastcrc16 = docrc16(portnum, page_buffer[i]);
@@ -204,14 +204,14 @@ int ReadMem43(int portnum, uchar *SerialNum, int page, uchar *page_buffer)
 		//	mprintf(" CRC16: %x", lastcrc16);
 		//	mprintf(" CRC16i: %x\n", ~lastcrc16);
 		}
-		
+
 		for(i = 0; i < 2; i++)
 		{
-			owLevel(portnum,MODE_NORMAL);		
+			owLevel(portnum,MODE_NORMAL);
 			read_data = owReadBytePower(portnum);
 			lastcrc16 = docrc16(portnum, read_data);
-		}	
-		if (lastcrc16 == 0xb001)			
+		}
+		if (lastcrc16 == 0xb001)
 			rt=TRUE;
 	}
 

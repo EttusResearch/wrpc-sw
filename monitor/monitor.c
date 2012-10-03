@@ -24,7 +24,7 @@ int wrc_mon_gui(void)
   int aux_stat;
   uint64_t sec;
   uint32_t nsec;
-    
+
   if(timer_get_tics() - last < UI_REFRESH_PERIOD)
     return 0;
 
@@ -53,18 +53,18 @@ int wrc_mon_gui(void)
       cprintf(C_GREY, "(RX: %d, TX: %d), mode: ", rx, tx);
 
       switch(ps.mode)
-        {   
+        {
         case HEXP_PORT_MODE_WR_MASTER:cprintf(C_WHITE, "WR Master  ");break;
         case HEXP_PORT_MODE_WR_SLAVE:cprintf(C_WHITE, "WR Slave   ");break;
-        }   
+        }
 
       if(ps.is_locked) cprintf(C_GREEN, "Locked  "); else   cprintf(C_RED, "NoLock  ");
       if(ps.rx_calibrated  && ps.tx_calibrated) cprintf(C_GREEN, "Calibrated  "); else   cprintf(C_RED, "Uncalibrated  ");
 
-      
 
 
-      
+
+
       /* show_servo */
       cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
 
@@ -72,13 +72,13 @@ int wrc_mon_gui(void)
         {
           cprintf(C_RED, "Master mode or sync info not valid\n\n");
           return;
-        }   
+        }
 
       cprintf(C_GREY, "Servo state:               "); cprintf(C_WHITE, "%s\n", cur_servo_state.slave_servo_state);
       cprintf(C_GREY, "Phase tracking:            "); if(cur_servo_state.tracking_enabled) cprintf(C_GREEN, "ON\n"); else cprintf(C_RED,"OFF\n");
       cprintf(C_GREY, "Synchronization source:    "); cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);
 
-      cprintf(C_GREY, "Aux clock status:          "); 
+      cprintf(C_GREY, "Aux clock status:          ");
 
       aux_stat = spll_get_aux_status(0);
 
@@ -96,8 +96,8 @@ int wrc_mon_gui(void)
       cprintf(C_GREY, "Master PHY delays:         "); cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n", (int32_t)cur_servo_state.delta_tx_m, (int32_t)cur_servo_state.delta_rx_m);
       cprintf(C_GREY, "Slave PHY delays:          "); cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n", (int32_t)cur_servo_state.delta_tx_s, (int32_t)cur_servo_state.delta_rx_s);
       cprintf(C_GREY, "Total link asymmetry:      "); cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.total_asymmetry));
-      cprintf(C_GREY, "Cable rtt delay:           "); cprintf(C_WHITE, "%d ps\n", 
-                                                                  (int32_t)(cur_servo_state.mu) - (int32_t)cur_servo_state.delta_tx_m - (int32_t)cur_servo_state.delta_rx_m - 
+      cprintf(C_GREY, "Cable rtt delay:           "); cprintf(C_WHITE, "%d ps\n",
+                                                                  (int32_t)(cur_servo_state.mu) - (int32_t)cur_servo_state.delta_tx_m - (int32_t)cur_servo_state.delta_rx_m -
                                                                   (int32_t)cur_servo_state.delta_tx_s - (int32_t)cur_servo_state.delta_rx_s);
       cprintf(C_GREY, "Clock offset:              "); cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_offset));
       cprintf(C_GREY, "Phase setpoint:            "); cprintf(C_WHITE, "%d ps\n", (int32_t)(cur_servo_state.cur_setpoint));
@@ -125,7 +125,7 @@ int wrc_log_stats(uint8_t onetime)
   uint32_t nsec;
   int16_t brd_temp = 0;
   int16_t brd_temp_frac = 0;
-    
+
   if(!onetime && timer_get_tics() - last < UI_REFRESH_PERIOD)
       return 0;
 
@@ -146,8 +146,8 @@ int wrc_log_stats(uint8_t onetime)
   mprintf("dtxm:%d drxm:%d ", (int32_t)cur_servo_state.delta_tx_m, (int32_t)cur_servo_state.delta_rx_m);
   mprintf("dtxs:%d drxs:%d ", (int32_t)cur_servo_state.delta_tx_s, (int32_t)cur_servo_state.delta_rx_s);
   mprintf("asym:%d ", (int32_t)(cur_servo_state.total_asymmetry));
-  mprintf("crtt:%d ", 
-          (int32_t)(cur_servo_state.mu) - (int32_t)cur_servo_state.delta_tx_m - (int32_t)cur_servo_state.delta_rx_m - 
+  mprintf("crtt:%d ",
+          (int32_t)(cur_servo_state.mu) - (int32_t)cur_servo_state.delta_tx_m - (int32_t)cur_servo_state.delta_rx_m -
           (int32_t)cur_servo_state.delta_tx_s - (int32_t)cur_servo_state.delta_rx_s);
   mprintf("cko:%d ", (int32_t)(cur_servo_state.cur_offset));
   mprintf("setp:%d ", (int32_t)(cur_servo_state.cur_setpoint));

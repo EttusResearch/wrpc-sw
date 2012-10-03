@@ -1,4 +1,4 @@
-# choose your board here. 
+# choose your board here.
 BOARD = spec
 
 # 1 enables Etherbone support
@@ -81,8 +81,8 @@ OBJS_PTPD = $(PTP_NOPOSIX)/PTPWRd/arith.o \
 						$(PTP_NOPOSIX)/libposix/net.o \
 						$(PTP_NOPOSIX)/softpll/softpll_ng.o
 
-CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled 
-LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T arch/lm32/ram.ld 
+CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
+LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled   -nostdlib -T arch/lm32/ram.ld
 
 OBJS_PLATFORM=arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
 
@@ -96,14 +96,14 @@ CC=$(CROSS_COMPILE)gcc
 OBJDUMP=$(CROSS_COMPILE)objdump
 OBJCOPY=$(CROSS_COMPILE)objcopy
 SIZE=$(CROSS_COMPILE)size
-					 
+
 CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_EB) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunction-sections -fdata-sections -Os -Iinclude -include include/trace.h $(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
 OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOCKITOWM) $(OBJS_SOFTPLL) $(OBJS_DEV)
 OUTPUT=wrc
 REVISION=$(shell git rev-parse HEAD)
 
-$(shell ln -sf ../boards/$(BOARD)/board.h include/board.h) 
+$(shell ln -sf ../boards/$(BOARD)/board.h include/board.h)
 
 all:		tools wrc
 
@@ -112,14 +112,14 @@ wrc: 		$(OBJS)
 				echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
 				$(CC) $(CFLAGS) -c revision.c
 				$(SIZE) -t $(OBJS)
-				${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS) 
+				${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS)
 				${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
 				${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 				cd tools; $(MAKE)
 				./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
 				./tools/genramvhd -s 90112 $(OUTPUT).bin > $(OUTPUT).vhd
 
-clean:	
+clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
 
 %.o:		%.c

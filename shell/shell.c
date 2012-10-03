@@ -8,7 +8,7 @@
 #include "shell.h"
 #include "eeprom.h"
 
-#define SH_MAX_LINE_LEN 80	
+#define SH_MAX_LINE_LEN 80
 #define SH_MAX_ARGS 8
 #define SH_ENVIRON_SIZE 256
 
@@ -53,7 +53,7 @@ static const struct shell_cmd cmds_list[] = {
 #endif
 		{ "mac",						cmd_mac },
 		{ "sdb",						cmd_sdb },
-	
+
 		{ NULL,			NULL }
 	};
 
@@ -94,7 +94,7 @@ static int _shell_exec()
 	int n = 0, i = 0;
 
 	memset(tokptr, 0, sizeof(tokptr));
-	
+
 	while(1)
 	{
 		if(n >= SH_MAX_ARGS)
@@ -102,13 +102,13 @@ static int _shell_exec()
 
 		while(cmd_buf[i] == ' ' && cmd_buf[i]) cmd_buf[i++] = 0;
 
-		if(!cmd_buf[i]) 
+		if(!cmd_buf[i])
 			break;
 
 		tokptr [n++] = &cmd_buf[i];
 		while(cmd_buf[i] != ' ' && cmd_buf[i]) i++;
 
-		if(!cmd_buf[i]) 
+		if(!cmd_buf[i])
 			break;
 	}
 
@@ -122,7 +122,7 @@ static int _shell_exec()
 		if(!strcasecmp(cmds_list[i].name, tokptr[0]))
 		{
 			int rv = cmds_list[i].exec((const char **)tokptr+1);
-			if(rv<0) 
+			if(rv<0)
 				mprintf("Err %d\n", rv);
 			return rv;
 		}
@@ -160,18 +160,18 @@ void shell_interactive()
 
 		case SH_INPUT:
 			c = uart_read_byte();
-				
+
 			if(c < 0)
 				return;
 
 			if(c == 27 || ((current_key & ESCAPE_FLAG) && c == 91))
 				current_key = ESCAPE_FLAG;
-			else 
+			else
 				current_key |= c;
 
 			if(current_key & 0xff)
-			{ 
-			
+			{
+
 				switch(current_key)
 				{
 					case KEY_LEFT:
@@ -188,12 +188,12 @@ void shell_interactive()
 							esc('C');
 						}
 						break;
-			
+
 					case KEY_ENTER:
 						mprintf("\n");
 						state = SH_EXEC;
 						break;
-					
+
 					case KEY_DELETE:
 						if(cmd_pos != cmd_len)
 						{
@@ -201,7 +201,7 @@ void shell_interactive()
 							esc('P');
 						}
 						break;
-						
+
 					case KEY_BACKSPACE:
 						if(cmd_pos > 0)
 						{
@@ -211,10 +211,10 @@ void shell_interactive()
 							cmd_pos--;
 						}
 						break;
-					
+
 					case '\t':
 						break;
-						
+
 					default:
 						if(!(current_key & ESCAPE_FLAG) && insert(current_key))
 						{
@@ -222,12 +222,12 @@ void shell_interactive()
 							mprintf("%c", current_key);
 						}
 						break;
-					
+
 				}
 				current_key = 0;
 			}
 			break;
-			
+
 		case SH_EXEC:
 			cmd_buf[cmd_len] = 0;
 			_shell_exec();
@@ -238,7 +238,7 @@ void shell_interactive()
 
 const char* fromhex(const char* hex, int* v) {
   int o = 0;
-  
+
   for (; *hex; ++hex) {
     if (*hex >= '0' && *hex <= '9') {
       o = (o << 4) + (*hex - '0');
@@ -250,14 +250,14 @@ const char* fromhex(const char* hex, int* v) {
       break;
     }
   }
-  
+
   *v = o;
   return hex;
 }
 
 const char* fromdec(const char* dec, int* v) {
   int o = 0;
-  
+
   for (; *dec; ++dec) {
     if (*dec >= '0' && *dec <= '9') {
       o = (o * 10) + (*dec - '0');
@@ -265,7 +265,7 @@ const char* fromdec(const char* dec, int* v) {
       break;
     }
   }
-  
+
   *v = o;
   return dec;
 }
@@ -282,12 +282,12 @@ int shell_boot_script(void)
   {
     cmd_len = eeprom_init_readcmd(WRPC_FMC_I2C, FMC_EEPROM_ADR, cmd_buf, SH_MAX_LINE_LEN, next);
     if(cmd_len <= 0)
-    { 
+    {
       if(next==0) mprintf("Empty init script...\n");
       break;
     }
     cmd_buf[cmd_len-1] = 0;
-    
+
     mprintf("executing: %s\n", cmd_buf);
     _shell_exec();
     next = 1;

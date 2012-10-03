@@ -62,22 +62,22 @@ static unsigned char* find_device_deep(unsigned int base, unsigned int sdb, unsi
   sdb_record_t* record = (sdb_record_t*)sdb;
   int records = record->interconnect.sdb_records;
   int i;
-  
+
   for (i = 0; i < records; ++i, ++record) {
     if (record->empty.record_type == SDB_BRIDGE) {
-      unsigned char* out = 
+      unsigned char* out =
         find_device_deep(
           base + record->bridge.sdb_component.addr_first.low,
           record->bridge.sdb_child.low,
           devid);
       if (out) return out;
     }
-    if (record->empty.record_type == SDB_DEVICE && 
+    if (record->empty.record_type == SDB_DEVICE &&
         record->device.sdb_component.product.device_id == devid) {
       break;
     }
   }
-  
+
   if (i == records) return 0;
   return (unsigned char*)(base + record->device.sdb_component.addr_first.low);
 }
@@ -87,20 +87,20 @@ static void print_devices_deep(unsigned int base, unsigned int sdb) {
   int records = record->interconnect.sdb_records;
   int i;
   char buf[20];
-  
+
   for (i = 0; i < records; ++i, ++record) {
     if (record->empty.record_type == SDB_BRIDGE)
       print_devices_deep(
         base + record->bridge.sdb_component.addr_first.low,
         record->bridge.sdb_child.low);
-    
+
     if (record->empty.record_type != SDB_DEVICE) continue;
-    
+
     memcpy(buf, record->device.sdb_component.product.name, 19);
     buf[19] = 0;
-    mprintf("%8x:%8x 0x%8x %s\n", 
+    mprintf("%8x:%8x 0x%8x %s\n",
             record->device.sdb_component.product.vendor_id.low,
-            record->device.sdb_component.product.device_id, 
+            record->device.sdb_component.product.device_id,
             base + record->device.sdb_component.addr_first.low,
             buf);
   }

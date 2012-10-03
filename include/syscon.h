@@ -8,7 +8,7 @@
 
 struct SYSCON_WB
 {
-  uint32_t RSTR;  /*Syscon Reset Register*/  
+  uint32_t RSTR;  /*Syscon Reset Register*/
   uint32_t GPSR;  /*GPIO Set/Readback Register*/
   uint32_t GPCR;  /*GPIO Clear Register*/
   uint32_t HWFR;  /*Hardware Feature Register*/
@@ -29,7 +29,7 @@ struct SYSCON_WB
 struct s_i2c_if
 {
   uint32_t scl;
-  uint32_t sda; 
+  uint32_t sda;
 };
 
 extern struct s_i2c_if i2c_if[2];
@@ -60,6 +60,6 @@ static inline int sysc_get_memsize()
 {
 	return (SYSC_HWFR_MEMSIZE_R(syscon->HWFR) + 1) * 16;
 }
-        
+
 #endif
-        
+

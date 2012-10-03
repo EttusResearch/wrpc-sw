@@ -25,22 +25,22 @@ int process_icmp(uint8_t* buf, int len) {
   uint8_t hisIP[4];
   uint8_t myIP[4];
   uint16_t sum;
-  
+
   /* Is it IP targetting us? */
   getIP(myIP);
   if (buf[IP_VERSION] != 0x45 ||
       memcmp(buf+IP_DEST, myIP, 4))
     return 0;
-  
+
   iplen = (buf[IP_LEN+0] << 8 | buf[IP_LEN+1]);
-  
+
   /* An ICMP ECHO request? */
   if (buf[IP_PROTOCOL] != 0x01 || buf[ICMP_TYPE] != 0x08)
     return 0;
 
   hisBodyLen = iplen - 24;
   if (hisBodyLen > 64) hisBodyLen = 64;
-  
+
   memcpy(hisIP, buf+IP_SOURCE,  4);
 
   // ------------ IP --------------
@@ -58,21 +58,21 @@ int process_icmp(uint8_t* buf, int len) {
   buf[IP_CHECKSUM+1] = 0;
   memcpy(buf+IP_SOURCE, myIP, 4);
   memcpy(buf+IP_DEST, hisIP, 4);
-  
+
   // ------------ ICMP ---------
   buf[ICMP_TYPE] = 0x0; // echo reply
   buf[ICMP_CODE] = 0;
   buf[ICMP_CHECKSUM+0] = 0;
   buf[ICMP_CHECKSUM+1] = 0;
   // No need to copy payload; we modified things in-place
-  
+
   sum = ipv4_checksum((unsigned short*)(buf+ICMP_TYPE), (hisBodyLen+4+1)/2);
   buf[ICMP_CHECKSUM+0] = sum >> 8;
   buf[ICMP_CHECKSUM+1] = sum & 0xff;
-  
+
   sum = ipv4_checksum((unsigned short*)(buf+IP_VERSION), 10);
   buf[IP_CHECKSUM+0] = sum >> 8;
   buf[IP_CHECKSUM+1] = sum & 0xff;
-  
+
   return 24+hisBodyLen;
 }

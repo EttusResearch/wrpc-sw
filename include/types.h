@@ -1,7 +1,7 @@
 #ifndef __TYPES_H
 #define __TYPES_H
 
-#include <inttypes.h> 
+#include <inttypes.h>
 
 struct hw_timestamp {
   uint8_t valid;

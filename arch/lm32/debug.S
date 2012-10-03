@@ -3,7 +3,7 @@
  * Load this code anywhere in memory and point DEBA at it.
  * When DC=1 it chain loads the exception handlers at EBA.
  * User exception handlers must save to the stack.
- * 
+ *
  * Copyright (C) 2011 by Wesley W. Terpstra <w.terpstra@gsi.de>
  */
 
@@ -289,7 +289,7 @@ handle_debug_trap:
 	calli	jtag_put_byte
 
 _get_command:
-	/* Input: [Wxxxxxxx] 
+	/* Input: [Wxxxxxxx]
          *   W=0, x=0:  quit debug trap
          *   W=1, x=0:  report register dump location
          *   W=0, x>0:  read 'x' bytes
@@ -306,7 +306,7 @@ _get_command:
 	/* Load memory access address */
 	calli	jtag_get_word
 	mv	r11, r1
-	
+
 	/* Either read or write */
 	bne	r10, r0, _read_mem
 

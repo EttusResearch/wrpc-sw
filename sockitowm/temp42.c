@@ -31,7 +31,7 @@
 //
 #include "ownet.h"
 #include "temp42.h"
- 
+
 //----------------------------------------------------------------------
 // Read the temperature of a DS28EA00 (family code 0x42)
 //
@@ -54,10 +54,10 @@ int ReadTemperature42(int portnum, uchar *SerialNum, int *Temp, int *frac )
 
    int val_int=0;
    int is_neg=FALSE;
- 
+
    // set the device serial number to the counter device
    owSerialNum(portnum,SerialNum,FALSE);
- 
+
    for (loop = 0; loop < 2; loop ++)
    {
       // check if the chip is connected to VDD
@@ -65,13 +65,13 @@ int ReadTemperature42(int portnum, uchar *SerialNum, int *Temp, int *frac )
       {
          owWriteByte(portnum,0xB4);
          power = owReadByte(portnum);
-      } 
- 
+      }
+
       // access the device
       if (owOverdriveAccess(portnum))
       {
          // send the convert command and if nesessary start power delivery
-        // if (power) { 
+        // if (power) {
         //    if (!owWriteBytePower(portnum,0x44))
         //       return FALSE;
         // } else {
@@ -81,11 +81,11 @@ int ReadTemperature42(int portnum, uchar *SerialNum, int *Temp, int *frac )
          // sleep for 1 second
          msDelay(1000);
          // turn off the 1-Wire Net strong pull-up
-         if (power) { 
+         if (power) {
             if (owLevel(portnum,MODE_NORMAL) != MODE_NORMAL)
                return FALSE;
          }
- 
+
          // access the device
          if (owOverdriveAccess(portnum))
          {
@@ -96,7 +96,7 @@ int ReadTemperature42(int portnum, uchar *SerialNum, int *Temp, int *frac )
             // now add the read bytes for data bytes and crc8
             for (i = 0; i < 9; i++)
                send_block[send_cnt++] = 0xFF;
- 
+
             // now send the block
             if (owBlock(portnum,FALSE,send_block,send_cnt))
             {
@@ -105,20 +105,20 @@ int ReadTemperature42(int portnum, uchar *SerialNum, int *Temp, int *frac )
                // perform the CRC8 on the last 8 bytes of packet
                for (i = send_cnt - 9; i < send_cnt; i++)
                   lastcrc8 = docrc8(portnum,send_block[i]);
- 
+
                // verify CRC8 is correct
                if (lastcrc8 == 0x00)
                {
-                
+
 		// calculate the high-res temperature
 		// from twos complement representation
             	val_int = send_block[1];   	// low byte
 		val_int |= send_block[2] << 8;  // high byte
 		if (val_int & 0x00001000) {	// check sign for negative
 			val_int = ~val_int + 1;
-			is_neg = TRUE;	
-		}	
-	
+			is_neg = TRUE;
+		}
+
             	*Temp = val_int >> 4;		// only integer part
 		*frac = val_int & 0x08;		// only 1/2 bit
                   // success

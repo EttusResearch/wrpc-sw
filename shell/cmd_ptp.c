@@ -1,6 +1,6 @@
 /*  Command: ptp
     Arguments: one [start/stop]
-    
+
     Description: (re)starts/stops the PTP session. */
 
 #include <errno.h>

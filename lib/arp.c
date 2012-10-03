@@ -18,14 +18,14 @@ static wr_socket_t* arp_socket;
 
 void arp_init(const char* if_name) {
   wr_sockaddr_t saddr;
-  
+
   /* Configure socket filter */
   memset(&saddr, 0, sizeof(saddr));
   strcpy(saddr.if_name, if_name);
   memset(&saddr.mac, 0xFF, 6); /* Broadcast */
   saddr.ethertype = htons(0x0806); /* ARP */
   saddr.family = PTPD_SOCK_RAW_ETHERNET;
-  
+
   arp_socket = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &saddr);
 }
 
@@ -33,9 +33,9 @@ static int process_arp(uint8_t* buf, int len) {
   uint8_t hisMAC[6];
   uint8_t hisIP[4];
   uint8_t myIP[4];
-  
+
   if (len < ARP_END) return 0;
-  
+
   /* Is it ARP request targetting our IP? */
   getIP(myIP);
   if (buf[ARP_OPER+0] != 0 ||
@@ -46,7 +46,7 @@ static int process_arp(uint8_t* buf, int len) {
   memcpy(hisMAC, buf+ARP_SHA, 6);
   memcpy(hisIP,  buf+ARP_SPA, 4);
 
-  // ------------- ARP ------------  
+  // ------------- ARP ------------
   // HW ethernet
   buf[ARP_HTYPE+0] = 0;
   buf[ARP_HTYPE+1] = 1;
@@ -65,7 +65,7 @@ static int process_arp(uint8_t* buf, int len) {
   // his MAC+IP
   memcpy(buf+ARP_THA, hisMAC, 6);
   memcpy(buf+ARP_TPA, hisIP,  4);
-  
+
   return ARP_END;
 }
 
@@ -73,9 +73,9 @@ void arp_poll(void) {
   uint8_t buf[ARP_END+100];
   wr_sockaddr_t addr;
   int len;
-  
+
   if (needIP) return; /* can't do ARP w/o an address... */
-  
+
   if ((len = ptpd_netif_recvfrom(arp_socket, &addr, buf, sizeof(buf), 0)) > 0)
     if ((len = process_arp(buf, len)) > 0)
       ptpd_netif_sendto(arp_socket, &addr, buf, len, 0);

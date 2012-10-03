@@ -41,8 +41,8 @@
 
 #include "board.h"
 
-//#define S_OVD 1 
-//#define S_PWR 0 
+//#define S_OVD 1
+//#define S_PWR 0
 #define S_IEN 0
 #define S_OVD_E 1
 #define CLK_DIV_NOR (CPU_CLOCK/200000-1)  //clock divider for normal mode
@@ -74,7 +74,7 @@ int S_PWR = 0;
 // init clock divider for SCU board
 SMALLINT owInit(void)
 {
-	IOWR_SOCKIT_OWM_CDR(BASE_ONEWIRE, ((CLK_DIV_NOR & SOCKIT_OWM_CDR_N_MSK) | ((CLK_DIV_OVD << SOCKIT_OWM_CDR_O_OFST) & SOCKIT_OWM_CDR_O_MSK))); 
+	IOWR_SOCKIT_OWM_CDR(BASE_ONEWIRE, ((CLK_DIV_NOR & SOCKIT_OWM_CDR_N_MSK) | ((CLK_DIV_OVD << SOCKIT_OWM_CDR_O_OFST) & SOCKIT_OWM_CDR_O_MSK)));
 	return 0;
 }
 

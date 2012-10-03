@@ -8,7 +8,7 @@
 
 static decode_ip(const char *str, unsigned char* ip) {
   int i, x;
-  
+
   /* Don't try to detect bad input; need small code */
   for (i = 0; i < 4; ++i) {
     str = fromdec(str, &x);
@@ -20,7 +20,7 @@ static decode_ip(const char *str, unsigned char* ip) {
 int cmd_ip(const char *args[])
 {
   unsigned char ip[4];
-  
+
   if (!args[0] || !strcasecmp(args[0], "get")) {
     getIP(ip);
   } else if (!strcasecmp(args[0], "set") && args[1]) {
@@ -29,11 +29,11 @@ int cmd_ip(const char *args[])
   } else {
     return -EINVAL;
   }
-  
+
   if (needIP) {
     mprintf("IP-address: in training\n");
   } else {
-    mprintf("IP-address: %d.%d.%d.%d\n", 
+    mprintf("IP-address: %d.%d.%d.%d\n",
       ip[0], ip[1], ip[2], ip[3]);
   }
 }

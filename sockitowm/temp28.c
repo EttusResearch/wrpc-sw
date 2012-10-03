@@ -67,7 +67,7 @@ uint8_t ReadTemperature28(uint8_t portnum, uint8_t *SerialNum, int16_t *Temp)
     }
   }
 
-  if(toggle) 
+  if(toggle)
   {
     if( owAccess(portnum))
     {

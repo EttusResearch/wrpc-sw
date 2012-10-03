@@ -47,7 +47,7 @@ static int meas_phase_range(wr_socket_t *sock, int phase_min, int phase_max, int
 	spll_set_phase_shift(SPLL_ALL_CHANNELS, phase_min);
 
 	while(spll_shifter_busy(0));
-	
+
 	purge_socket(sock);
 
 	i=0;
@@ -58,9 +58,9 @@ static int meas_phase_range(wr_socket_t *sock, int phase_min, int phase_max, int
 		update_rx_queues();
 		int n = ptpd_netif_recvfrom(sock, &from, buf, 128, &ts_rx);
 
-		
+
 		if(n>0)
-		{			
+		{
 			msgUnpackHeader(buf, &mhdr);
 			if(mhdr.messageType == 0)
 				ts_sync = ts_rx;
@@ -68,14 +68,14 @@ static int meas_phase_range(wr_socket_t *sock, int phase_min, int phase_max, int
 		    {
 				MsgFollowUp fup;
 				msgUnpackFollowUp(buf, &fup);
-				
+
             mprintf("Shift: %d/%dps [step %dps]        \r", setpoint,phase_max,phase_step);
             results[i].phase = phase;
             results[i].phase_sync = ts_sync.phase;
             results[i].ahead = ts_sync.raw_ahead;
             results[i].delta_ns = fup.preciseOriginTimestamp.nanosecondsField - ts_sync.nsec;
             results[i].delta_ns += (fup.preciseOriginTimestamp.secondsField.lsb - ts_sync.sec) * 1000000000;
-            
+
 			setpoint += phase_step;
 			spll_set_phase_shift(0, setpoint);
 			while(spll_shifter_busy(0));
@@ -107,7 +107,7 @@ int measure_t24p(int *value)
 	wr_sockaddr_t sock_addr;
 	int i, nr;
 	struct meas_entry results[128];
-	
+
 	spll_enable_ptracker(0, 1);
 
 	sock_addr.family = PTPD_SOCK_RAW_ETHERNET; // socket type
@@ -134,7 +134,7 @@ int measure_t24p(int *value)
 
 	if(ptpd_netif_init() != 0)
 	 	return -1;
-    
+
 	sock = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET, 0, &sock_addr);
 	nr=meas_phase_range(sock, 0, 8000, 1000, results);
 	int tplus = find_transition(results, nr, 1);
@@ -142,31 +142,31 @@ int measure_t24p(int *value)
 
 	int approx_plus = results[tplus].phase;
 	int approx_minus = results[tminus].phase;
-	
+
 
 	nr=meas_phase_range(sock, approx_plus-1000, approx_plus+1000, 100, results);
 	tplus = find_transition(results, nr, 1);
     int phase_plus = results[tplus].phase;
-    
+
 	nr=meas_phase_range(sock, approx_minus-1000, approx_minus+1000, 100, results);
 	tminus = find_transition(results, nr, 0);
     int phase_minus = results[tminus].phase;
-    
+
 	mprintf("Transitions found: positive @ %d ps, negative @ %d ps.\n", phase_plus, phase_minus);
 	int ttrans = phase_minus-1000;
 	if(ttrans < 0) ttrans+=8000;
-	
+
 	mprintf("(t2/t4)_phase_transition = %dps\n", ttrans);
 	ptpd_netif_set_phase_transition(sock, ttrans);
 
 	mprintf("Verification... \n");
 	nr =meas_phase_range(sock, 0, 16000, 500, results);
-	
+
 	for(i=0;i<nr;i++) mprintf("phase_dmtd: %d delta_ns: %d, phase_sync: %d\n", results[i].phase, results[i].delta_ns, results[i].phase_sync);
-	
+
 
 	if(value) *value = ttrans;
 
-	return 0;	
+	return 0;
 }
 

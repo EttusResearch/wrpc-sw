@@ -41,6 +41,6 @@ int uart_read_byte()
 {
 	if(!uart_poll())
 		return -1;
-		
+
  	return uart->RDR & 0xff;
 }

@@ -42,11 +42,11 @@ static volatile uint32_t dma_tx_buf[MINIC_DMA_TX_BUF_SIZE / 4];
 static volatile uint32_t dma_rx_buf[MINIC_DMA_RX_BUF_SIZE / 4];
 
 struct wr_minic {
-  volatile uint32_t *rx_head, *rx_base; 
+  volatile uint32_t *rx_head, *rx_base;
   uint32_t rx_avail, rx_size;
   volatile uint32_t *tx_head, *tx_base;
   uint32_t tx_avail, tx_size;
-  
+
   int tx_count, rx_count;
 };
 
@@ -127,14 +127,14 @@ static void minic_new_tx_buffer()
 
   minic.tx_head = minic.tx_base;
   minic.tx_avail = minic.tx_size;
-	
+
   minic_writel(MINIC_REG_TX_ADDR, (uint32_t) minic.tx_base);
 }
 
 void minic_init()
 {
 	uint32_t lo , hi;
-	
+
     minic_writel(MINIC_REG_EIC_IDR, MINIC_EIC_IDR_RX);
     minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
 	minic.rx_base = dma_rx_buf;
@@ -143,7 +143,7 @@ void minic_init()
 /* FIXME: now we have a temporary HW protection against accidentally overwriting the memory - there's some
    very well hidden bug in Minic's RX logic which sometimes causes an overwrite of the memory outside
    the buffer. */
-   
+
 	lo = (uint32_t)minic.rx_base >> 2;
 	hi = ((uint32_t)minic.rx_base >> 2) + (sizeof(dma_rx_buf)>>2) - 1;
 
@@ -196,16 +196,16 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 			//otherwise, weird !!
     	mprintf("invalid descriptor @%x = %x\n", (uint32_t)minic.rx_head, desc_hdr);
 			minic_new_rx_buffer();
-		}	
+		}
     return 0;
   }
   payload_size = RX_DESC_SIZE(desc_hdr);
   num_words = ((payload_size + 3) >> 2) + 1;
 
 
-  /* valid packet */	
+  /* valid packet */
   if(!RX_DESC_ERROR(desc_hdr))
-  {   
+  {
 
     if(RX_DESC_HAS_OOB(desc_hdr) && hwts != NULL)
     {
@@ -223,7 +223,7 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
       pps_gen_get_time(&sec, &counter_ppsg);
 
       if(counter_r > 3*REF_CLOCK_FREQ_HZ/4 && counter_ppsg < 250000000)
-        sec--; 
+        sec--;
 
       hwts->sec = sec & 0x7fffffff ;
 
@@ -243,8 +243,8 @@ int minic_rx_frame(uint8_t *hdr, uint8_t *payload, uint32_t buf_size, struct hw_
 
     minic_rx_memcpy(hdr, (void*)minic.rx_head + 4, ETH_HEADER_SIZE);
     minic_rx_memcpy(payload, (void*)minic.rx_head + 4 + ETH_HEADER_SIZE, n_recvd - ETH_HEADER_SIZE);
-  } 
-	else { 
+  }
+	else {
     n_recvd = -1;
   }
 	minic_rxbuf_free(num_words);
@@ -288,7 +288,7 @@ int minic_tx_frame(uint8_t *hdr, uint8_t *payload, uint32_t size, struct hw_time
     d_hdr = TX_DESC_WITH_OOB | (WRPC_FID<<12);
 
   d_hdr |= TX_DESC_VALID | nwords;
-  
+
   *(volatile uint32_t *)(minic.tx_head) = d_hdr;
   *(volatile uint32_t *)(minic.tx_head + nwords) = 0;
 

@@ -16,5 +16,5 @@ unsigned char* BASE_ETHERBONE_CFG;
 
 void sdb_find_devices(void);
 void sdb_print_devices(void);
- 
+
 #endif

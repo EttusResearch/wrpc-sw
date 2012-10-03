@@ -1,9 +1,9 @@
 /*  Command: time
-    Arguments: 
+    Arguments:
     	set UTC NSEC - sets time
     	raw - dumps raw time
     	<none> - dumps pretty time
-    
+
     Description: (re)starts/stops the PTP session. */
 
 #include <errno.h>
@@ -21,7 +21,7 @@ int cmd_time(const char *args[])
 	uint32_t nsec;
 
 	pps_gen_get_time(&sec, &nsec);
-	
+
 	if(args[2] && !strcasecmp(args[0], "set")) {
 		if(wrc_ptp_get_mode() != WRC_MODE_SLAVE)
 		{
@@ -36,6 +36,6 @@ int cmd_time(const char *args[])
 	}
 
 	mprintf("%s +%d nanoseconds.\n", format_time(sec), nsec); /* fixme: clock freq is not always 125 MHz */
-	
-	return 0;	
+
+	return 0;
 }

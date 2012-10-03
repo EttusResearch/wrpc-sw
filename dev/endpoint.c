@@ -1,6 +1,6 @@
 /*
 
-WR Endpoint (WR-compatible Ethernet MAC driver 
+WR Endpoint (WR-compatible Ethernet MAC driver
 
 Tomasz Wlostowski/CERN 2011
 
@@ -63,8 +63,8 @@ void get_mac_addr(uint8_t dev_addr[])
 {
     dev_addr[5] = (EP->MACL & 0x000000ff);
     dev_addr[4] = (EP->MACL & 0x0000ff00) >> 8;
-    dev_addr[3] = (EP->MACL & 0x00ff0000) >> 16; 
-    dev_addr[2] = (EP->MACL & 0xff000000) >> 24; 
+    dev_addr[3] = (EP->MACL & 0x00ff0000) >> 16;
+    dev_addr[2] = (EP->MACL & 0xff000000) >> 24;
     dev_addr[1] = (EP->MACH & 0x000000ff);
     dev_addr[0] = (EP->MACH & 0x0000ff00) >> 8;
 }
@@ -85,7 +85,7 @@ void ep_init(uint8_t mac_addr[])
     EP->TSCR = EP_TSCR_EN_TXTS | EP_TSCR_EN_RXTS;     /* Enable timestamping */
 
 /* Configure DMTD phase tracking */
-    EP->DMCR =  EP_DMCR_EN | EP_DMCR_N_AVG_W(DMTD_AVG_SAMPLES);        
+    EP->DMCR =  EP_DMCR_EN | EP_DMCR_N_AVG_W(DMTD_AVG_SAMPLES);
 }
 
 /* Enables/disables transmission and reception. When autoneg is set to 1,
@@ -153,9 +153,9 @@ int ep_link_up(uint16_t *lpa)
 /* Returns the TX/RX latencies. They are valid only when the link is up. */
 int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 {
-    /* fixme: these values should be stored in calibration block in the EEPROM on the FMC. Also, the TX/RX delays of a particular SFP 
+    /* fixme: these values should be stored in calibration block in the EEPROM on the FMC. Also, the TX/RX delays of a particular SFP
        should be added here */
-	*delta_tx = sfp_deltaTx; 
+	*delta_tx = sfp_deltaTx;
 	*delta_rx = sfp_deltaRx + PICOS_PER_SERIAL_BIT * MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
 	return 0;
 }
@@ -164,7 +164,7 @@ int ep_get_deltas(uint32_t *delta_tx, uint32_t *delta_rx)
 int ep_cal_pattern_enable()
 {
   uint32_t val;
-  val = pcs_read(MDIO_REG_WR_SPEC);   
+  val = pcs_read(MDIO_REG_WR_SPEC);
   val |= MDIO_WR_SPEC_TX_CAL;
   pcs_write(MDIO_REG_WR_SPEC, val);
 
