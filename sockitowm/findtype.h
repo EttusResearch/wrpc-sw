@@ -30,4 +30,4 @@
 //
 //----------------------------------------------------------------------
 
-SMALLINT FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
+SMALLINT FindDevices(int, uchar FamilySN[][8], SMALLINT, int);

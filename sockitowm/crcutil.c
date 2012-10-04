@@ -34,6 +34,7 @@
 ushort utilcrc16[MAX_PORTNUM];
 uchar utilcrc8[MAX_PORTNUM];
 static short oddparity[16] = { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
+
 static uchar dscrc_table[] = {
         0, 94,188,226, 97, 63,221,131,194,156,126, 32,163,253, 31, 65,
       157,195, 33,127,252,162, 64, 30, 95, 1,227,189, 62, 96,130,220,
@@ -59,8 +60,8 @@ static uchar dscrc_table[] = {
 //
 void setcrc16(int portnum, ushort reset)
 {
-   utilcrc16[portnum&0x0FF] = reset;
-   return;
+	utilcrc16[portnum & 0x0FF] = reset;
+	return;
 }
 
 //--------------------------------------------------------------------------
@@ -72,8 +73,8 @@ void setcrc16(int portnum, ushort reset)
 //
 void setcrc8(int portnum, uchar reset)
 {
-   utilcrc8[portnum&0x0FF] = reset;
-   return;
+	utilcrc8[portnum & 0x0FF] = reset;
+	return;
 }
 
 //--------------------------------------------------------------------------
@@ -88,18 +89,18 @@ void setcrc8(int portnum, uchar reset)
 //
 ushort docrc16(int portnum, ushort cdata)
 {
-   cdata = (cdata ^ (utilcrc16[portnum&0x0FF] & 0xff)) & 0xff;
-   utilcrc16[portnum&0x0FF] >>= 8;
+	cdata = (cdata ^ (utilcrc16[portnum & 0x0FF] & 0xff)) & 0xff;
+	utilcrc16[portnum & 0x0FF] >>= 8;
 
-   if (oddparity[cdata & 0xf] ^ oddparity[cdata >> 4])
-     utilcrc16[portnum&0x0FF] ^= 0xc001;
+	if (oddparity[cdata & 0xf] ^ oddparity[cdata >> 4])
+		utilcrc16[portnum & 0x0FF] ^= 0xc001;
 
-   cdata <<= 6;
-   utilcrc16[portnum&0x0FF] ^= cdata;
-   cdata <<= 1;
-   utilcrc16[portnum&0x0FF] ^= cdata;
+	cdata <<= 6;
+	utilcrc16[portnum & 0x0FF] ^= cdata;
+	cdata <<= 1;
+	utilcrc16[portnum & 0x0FF] ^= cdata;
 
-   return utilcrc16[portnum&0x0FF];
+	return utilcrc16[portnum & 0x0FF];
 }
 
 //--------------------------------------------------------------------------
@@ -114,6 +115,6 @@ ushort docrc16(int portnum, ushort cdata)
 //
 uchar docrc8(int portnum, uchar x)
 {
-   utilcrc8[portnum&0x0FF] = dscrc_table[utilcrc8[portnum&0x0FF] ^ x];
-   return utilcrc8[portnum&0x0FF];
+	utilcrc8[portnum & 0x0FF] = dscrc_table[utilcrc8[portnum & 0x0FF] ^ x];
+	return utilcrc8[portnum & 0x0FF];
 }

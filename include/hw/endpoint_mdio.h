@@ -30,7 +30,6 @@
 #define WBGEN2_SIGN_EXTEND(value, bits) (((value) & (1<<bits) ? ~((1<<(bits))-1): 0 ) | (value))
 #endif
 
-
 /* definitions for register: MDIO Control Register */
 
 /* definitions for field: Reserved in reg: MDIO Control Register */

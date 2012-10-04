@@ -45,28 +45,27 @@
 //#define S_PWR 0
 #define S_IEN 0
 #define S_OVD_E 1
-#define CLK_DIV_NOR (CPU_CLOCK/200000-1)  //clock divider for normal mode
-#define CLK_DIV_OVD (CPU_CLOCK/1000000-1) //clock divider for overdrive mode
+#define CLK_DIV_NOR (CPU_CLOCK/200000-1)	//clock divider for normal mode
+#define CLK_DIV_OVD (CPU_CLOCK/1000000-1)	//clock divider for overdrive mode
 
 // exportable link-level functions
 SMALLINT owTouchReset(int);
-SMALLINT owTouchBit(int,SMALLINT);
-SMALLINT owTouchByte(int,SMALLINT);
-SMALLINT owWriteByte(int,SMALLINT);
+SMALLINT owTouchBit(int, SMALLINT);
+SMALLINT owTouchByte(int, SMALLINT);
+SMALLINT owWriteByte(int, SMALLINT);
 SMALLINT owReadByte(int);
-SMALLINT owSpeed(int,SMALLINT);
-SMALLINT owLevel(int,SMALLINT);
+SMALLINT owSpeed(int, SMALLINT);
+SMALLINT owLevel(int, SMALLINT);
 SMALLINT owProgramPulse(int);
 //void msDelay(int);
 long msGettick(void);
-SMALLINT owWriteBytePower(int,SMALLINT);
+SMALLINT owWriteBytePower(int, SMALLINT);
 SMALLINT owReadBytePower(int);
-SMALLINT owReadBitPower(int,SMALLINT);
+SMALLINT owReadBitPower(int, SMALLINT);
 SMALLINT owHasPowerDelivery(int);
 SMALLINT owHasOverDrive(int);
 SMALLINT owHasProgramPulse(int);
 SMALLINT owInit(void);
-
 
 int S_OVD = 0;
 int S_PWR = 0;
@@ -74,10 +73,12 @@ int S_PWR = 0;
 // init clock divider for SCU board
 SMALLINT owInit(void)
 {
-	IOWR_SOCKIT_OWM_CDR(BASE_ONEWIRE, ((CLK_DIV_NOR & SOCKIT_OWM_CDR_N_MSK) | ((CLK_DIV_OVD << SOCKIT_OWM_CDR_O_OFST) & SOCKIT_OWM_CDR_O_MSK)));
+	IOWR_SOCKIT_OWM_CDR(BASE_ONEWIRE,
+			    ((CLK_DIV_NOR & SOCKIT_OWM_CDR_N_MSK) |
+			     ((CLK_DIV_OVD << SOCKIT_OWM_CDR_O_OFST) &
+			      SOCKIT_OWM_CDR_O_MSK)));
 	return 0;
 }
-
 
 //--------------------------------------------------------------------------
 // Reset all of the devices on the 1-Wire Net and return the result.
@@ -90,21 +91,23 @@ SMALLINT owInit(void)
 //
 SMALLINT owTouchReset(int portnum)
 {
-   int reg;
-   int ovd = (S_OVD >> portnum) & 0x1;
+	int reg;
+	int ovd = (S_OVD >> portnum) & 0x1;
 
-   IOWR_SOCKIT_OWM_CTL (BASE_ONEWIRE, (S_PWR << SOCKIT_OWM_CTL_POWER_OFST )
-                                       | (portnum << SOCKIT_OWM_CTL_SEL_OFST )
-                                       | (S_IEN ? SOCKIT_OWM_CTL_IEN_MSK : 0x00)
-                                       | ( SOCKIT_OWM_CTL_CYC_MSK )
-                                       | (ovd ? SOCKIT_OWM_CTL_OVD_MSK : 0x00)
-                                       | ( SOCKIT_OWM_CTL_RST_MSK ));
+	IOWR_SOCKIT_OWM_CTL(BASE_ONEWIRE, (S_PWR << SOCKIT_OWM_CTL_POWER_OFST)
+			    | (portnum << SOCKIT_OWM_CTL_SEL_OFST)
+			    | (S_IEN ? SOCKIT_OWM_CTL_IEN_MSK : 0x00)
+			    | (SOCKIT_OWM_CTL_CYC_MSK)
+			    | (ovd ? SOCKIT_OWM_CTL_OVD_MSK : 0x00)
+			    | (SOCKIT_OWM_CTL_RST_MSK));
 
-   // wait for STX (end of transfer cycle) and read the presence status
-   while ((reg = IORD_SOCKIT_OWM_CTL (BASE_ONEWIRE)) & SOCKIT_OWM_CTL_CYC_MSK);
+	// wait for STX (end of transfer cycle) and read the presence status
+	while ((reg = IORD_SOCKIT_OWM_CTL(BASE_ONEWIRE))
+	       & SOCKIT_OWM_CTL_CYC_MSK)
+		;
 
-   // return negated DAT (presence detect)
-   return (~reg & SOCKIT_OWM_CTL_DAT_MSK); // NOTE the shortcut
+	// return negated DAT (presence detect)
+	return (~reg & SOCKIT_OWM_CTL_DAT_MSK);	// NOTE the shortcut
 }
 
 //--------------------------------------------------------------------------
@@ -122,24 +125,24 @@ SMALLINT owTouchReset(int portnum)
 //
 SMALLINT owTouchBit(int portnum, SMALLINT sendbit)
 {
-   int reg;
-   int ovd = (S_OVD >> portnum) & 0x1;
+	int reg;
+	int ovd = (S_OVD >> portnum) & 0x1;
 
+	// read/write data
+	IOWR_SOCKIT_OWM_CTL(BASE_ONEWIRE, (S_PWR << SOCKIT_OWM_CTL_POWER_OFST)
+			    | (portnum << SOCKIT_OWM_CTL_SEL_OFST)
+			    | (S_IEN ? SOCKIT_OWM_CTL_IEN_MSK : 0x00)
+			    | (SOCKIT_OWM_CTL_CYC_MSK)
+			    | (ovd ? SOCKIT_OWM_CTL_OVD_MSK : 0x00)
+			    | (sendbit & SOCKIT_OWM_CTL_DAT_MSK));	// NOTE the shortcut
 
-   // read/write data
-   IOWR_SOCKIT_OWM_CTL (BASE_ONEWIRE, (S_PWR << SOCKIT_OWM_CTL_POWER_OFST )
-       				       | (portnum << SOCKIT_OWM_CTL_SEL_OFST )
-                                       | (S_IEN ? SOCKIT_OWM_CTL_IEN_MSK : 0x00)
-                                       | ( SOCKIT_OWM_CTL_CYC_MSK )
-                                       | (ovd ? SOCKIT_OWM_CTL_OVD_MSK : 0x00)
-                                       | (sendbit & SOCKIT_OWM_CTL_DAT_MSK )); // NOTE the shortcut
+	// wait for STX (end of transfer cycle) and read the read data bit
+	while ((reg = IORD_SOCKIT_OWM_CTL(BASE_ONEWIRE))
+	       & SOCKIT_OWM_CTL_CYC_MSK)
+		;
 
-   // wait for STX (end of transfer cycle) and read the read data bit
-   while ((reg = IORD_SOCKIT_OWM_CTL (BASE_ONEWIRE)) & SOCKIT_OWM_CTL_CYC_MSK);
-
-
-   // return DAT (read bit)
-   return (reg & SOCKIT_OWM_CTL_DAT_MSK); // NOTE the shortcut
+	// return DAT (read bit)
+	return (reg & SOCKIT_OWM_CTL_DAT_MSK);	// NOTE the shortcut
 }
 
 //--------------------------------------------------------------------------
@@ -156,14 +159,13 @@ SMALLINT owTouchBit(int portnum, SMALLINT sendbit)
 //
 SMALLINT owTouchByte(int portnum, SMALLINT sendbyte)
 {
-   int i;
-   SMALLINT dat = 0;
-   for (i=0; i<8; i++)
-   {
-      dat |= owTouchBit(portnum,sendbyte & 0x1) << i;
-      sendbyte >>= 1;
-   }
-   return dat;
+	int i;
+	SMALLINT dat = 0;
+	for (i = 0; i < 8; i++) {
+		dat |= owTouchBit(portnum, sendbyte & 0x1) << i;
+		sendbyte >>= 1;
+	}
+	return dat;
 }
 
 //--------------------------------------------------------------------------
@@ -180,7 +182,7 @@ SMALLINT owTouchByte(int portnum, SMALLINT sendbyte)
 //
 SMALLINT owWriteByte(int portnum, SMALLINT sendbyte)
 {
-   return (owTouchByte(portnum,sendbyte) == sendbyte) ? TRUE : FALSE;
+	return (owTouchByte(portnum, sendbyte) == sendbyte) ? TRUE : FALSE;
 }
 
 //--------------------------------------------------------------------------
@@ -194,7 +196,7 @@ SMALLINT owWriteByte(int portnum, SMALLINT sendbyte)
 //
 SMALLINT owReadByte(int portnum)
 {
-   return owTouchByte(portnum,0xFF);
+	return owTouchByte(portnum, 0xFF);
 }
 
 //--------------------------------------------------------------------------
@@ -210,15 +212,17 @@ SMALLINT owReadByte(int portnum)
 //
 SMALLINT owSpeed(int portnum, SMALLINT new_speed)
 {
-   int select;
-   select = 0x1 << portnum;
-   //if overdrive is implemented use it
-   if (S_OVD_E) {
-      if (new_speed == MODE_OVERDRIVE) S_OVD |= select;
-      if (new_speed == MODE_NORMAL ) S_OVD &= ~select;
-   }
-   // return the current port state
-   return (S_OVD & select) ? MODE_OVERDRIVE : MODE_NORMAL;
+	int select;
+	select = 0x1 << portnum;
+	//if overdrive is implemented use it
+	if (S_OVD_E) {
+		if (new_speed == MODE_OVERDRIVE)
+			S_OVD |= select;
+		if (new_speed == MODE_NORMAL)
+			S_OVD &= ~select;
+	}
+	// return the current port state
+	return (S_OVD & select) ? MODE_OVERDRIVE : MODE_NORMAL;
 }
 
 //--------------------------------------------------------------------------
@@ -237,18 +241,21 @@ SMALLINT owSpeed(int portnum, SMALLINT new_speed)
 //
 SMALLINT owLevel(int portnum, SMALLINT new_level)
 {
-   if (new_level == MODE_STRONG5) {
-      // set the power bit
-      S_PWR |= (1 << portnum);
-      IOWR_SOCKIT_OWM_CTL (BASE_ONEWIRE, (S_PWR << SOCKIT_OWM_CTL_POWER_OFST) | SOCKIT_OWM_CTL_PWR_MSK);
-   }
-   if (new_level == MODE_NORMAL) {
-      // clear the power bit
-      S_PWR &= ~(1 << portnum);
-      IOWR_SOCKIT_OWM_CTL (BASE_ONEWIRE, (S_PWR << SOCKIT_OWM_CTL_POWER_OFST));
-   }
-   // return the current port state
-   return ((S_PWR >> portnum) & 0x1) ? MODE_STRONG5 : MODE_NORMAL;
+	if (new_level == MODE_STRONG5) {
+		// set the power bit
+		S_PWR |= (1 << portnum);
+		IOWR_SOCKIT_OWM_CTL(BASE_ONEWIRE,
+				    (S_PWR << SOCKIT_OWM_CTL_POWER_OFST) |
+				    SOCKIT_OWM_CTL_PWR_MSK);
+	}
+	if (new_level == MODE_NORMAL) {
+		// clear the power bit
+		S_PWR &= ~(1 << portnum);
+		IOWR_SOCKIT_OWM_CTL(BASE_ONEWIRE,
+				    (S_PWR << SOCKIT_OWM_CTL_POWER_OFST));
+	}
+	// return the current port state
+	return ((S_PWR >> portnum) & 0x1) ? MODE_STRONG5 : MODE_NORMAL;
 }
 
 //--------------------------------------------------------------------------
@@ -263,7 +270,7 @@ SMALLINT owLevel(int portnum, SMALLINT new_level)
 //
 SMALLINT owProgramPulse(int portnum)
 {
-   return owHasProgramPulse(portnum);
+	return owHasProgramPulse(portnum);
 }
 
 //--------------------------------------------------------------------------
@@ -278,7 +285,6 @@ SMALLINT owProgramPulse(int portnum)
    // compute the number delay cycles depending on delay time
    len = (len * S_F_DLY) >> 16;
 
-
    for (i=0; i<len; i++) {
       // create a 960us pause
       IOWR_SOCKIT_OWM_CTL (BASE_ONEWIRE, ( S_PWR << SOCKIT_OWM_CTL_POWER_OFST )
@@ -288,7 +294,8 @@ SMALLINT owProgramPulse(int portnum)
                                           | ( SOCKIT_OWM_CTL_DLY_MSK ));
 
      // wait for STX (end of transfer cycle)
-     while (IORD_SOCKIT_OWM_CTL (BASE_ONEWIRE) & SOCKIT_OWM_CTL_CYC_MSK);
+     while (IORD_SOCKIT_OWM_CTL (BASE_ONEWIRE) & SOCKIT_OWM_CTL_CYC_MSK)
+     	;
 
    }
 #else
@@ -309,11 +316,11 @@ SMALLINT owProgramPulse(int portnum)
 long msGettick(void)
 {
 #ifdef UCOS_II
-   // uCOS-II tick counter
-OSTimeGet();
+	// uCOS-II tick counter
+	OSTimeGet();
 #else
-   // TODO add platform specific code here
-   return 0;
+	// TODO add platform specific code here
+	return 0;
 #endif
 }
 
@@ -332,16 +339,16 @@ OSTimeGet();
 //
 SMALLINT owWriteBytePower(int portnum, SMALLINT sendbyte)
 {
-   if (!owHasPowerDelivery(portnum))
-      return FALSE;
+	if (!owHasPowerDelivery(portnum))
+		return FALSE;
 
-   if(owTouchByte(portnum,sendbyte) != sendbyte)
-      return FALSE;
+	if (owTouchByte(portnum, sendbyte) != sendbyte)
+		return FALSE;
 
-   if(owLevel(portnum,MODE_STRONG5) != MODE_STRONG5)
-      return FALSE;
+	if (owLevel(portnum, MODE_STRONG5) != MODE_STRONG5)
+		return FALSE;
 
-   return TRUE;
+	return TRUE;
 }
 
 //--------------------------------------------------------------------------
@@ -360,16 +367,16 @@ SMALLINT owWriteBytePower(int portnum, SMALLINT sendbyte)
 //
 SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse)
 {
-   if (!owHasPowerDelivery(portnum))
-      return FALSE;
+	if (!owHasPowerDelivery(portnum))
+		return FALSE;
 
-   if(owTouchBit(portnum,0x01) != applyPowerResponse)
-      return FALSE;
+	if (owTouchBit(portnum, 0x01) != applyPowerResponse)
+		return FALSE;
 
-   if(owLevel(portnum,MODE_STRONG5) != MODE_STRONG5)
-      return FALSE;
+	if (owLevel(portnum, MODE_STRONG5) != MODE_STRONG5)
+		return FALSE;
 
-   return TRUE;
+	return TRUE;
 }
 
 //--------------------------------------------------------------------------
@@ -384,17 +391,17 @@ SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse)
 //
 SMALLINT owReadBytePower(int portnum)
 {
-   SMALLINT getbyte;
+	SMALLINT getbyte;
 
-   if (!owHasPowerDelivery(portnum))
-      return FALSE;
+	if (!owHasPowerDelivery(portnum))
+		return FALSE;
 
-   getbyte = owTouchByte(portnum,0xFF);
+	getbyte = owTouchByte(portnum, 0xFF);
 
-   if (owLevel(portnum,MODE_STRONG5) != MODE_STRONG5)
-      return FALSE;
+	if (owLevel(portnum, MODE_STRONG5) != MODE_STRONG5)
+		return FALSE;
 
-   return getbyte;
+	return getbyte;
 }
 
 //--------------------------------------------------------------------------
@@ -407,7 +414,7 @@ SMALLINT owReadBytePower(int portnum)
 //
 SMALLINT owHasPowerDelivery(int portnum)
 {
-   return TRUE;
+	return TRUE;
 }
 
 //--------------------------------------------------------------------------
@@ -420,7 +427,7 @@ SMALLINT owHasPowerDelivery(int portnum)
 //
 SMALLINT owHasOverDrive(int portnum)
 {
-   return S_OVD_E;
+	return S_OVD_E;
 }
 
 //--------------------------------------------------------------------------
@@ -434,5 +441,5 @@ SMALLINT owHasOverDrive(int portnum)
 // FALSE program voltage not available
 SMALLINT owHasProgramPulse(int portnum)
 {
-   return FALSE;
+	return FALSE;
 }

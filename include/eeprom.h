@@ -19,28 +19,32 @@ extern int32_t sfp_deltaRx;
 extern uint32_t cal_phase_transition;
 extern uint8_t has_eeprom;
 
-struct s_sfpinfo
-{
-  char pn[SFP_PN_LEN];
-  int32_t alpha;
-  int32_t dTx;
-  int32_t dRx;
-  uint8_t chksum;
-} __attribute__((__packed__));
+struct s_sfpinfo {
+	char pn[SFP_PN_LEN];
+	int32_t alpha;
+	int32_t dTx;
+	int32_t dRx;
+	uint8_t chksum;
+} __attribute__ ((__packed__));
 
 uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr);
-int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size);
-int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t *buf, size_t size);
+int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t * buf,
+		size_t size);
+int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
+		 uint8_t * buf, size_t size);
 
 int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr);
-int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size, uint16_t *section_sz);
-int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo* sfp);
+int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size,
+			   uint16_t * section_sz);
+int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo *sfp);
 
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t *val, uint8_t write);
+int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
+		      uint8_t write);
 
 int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr);
 int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[]);
 int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr);
-int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char* buf, uint8_t bufsize, uint8_t next);
+int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char *buf,
+			   uint8_t bufsize, uint8_t next);
 
 #endif

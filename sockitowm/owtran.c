@@ -56,32 +56,28 @@
 //
 // The maximum tran_len is 160
 //
-SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len)
+SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar * tran_buf,
+		 SMALLINT tran_len)
 {
-   uchar i;
+	uchar i;
 
-   // check for a block too big
-   if (tran_len > 160)
-   {
-      OWERROR(OWERROR_BLOCK_TOO_BIG);
-      return FALSE;
-   }
+	// check for a block too big
+	if (tran_len > 160) {
+		OWERROR(OWERROR_BLOCK_TOO_BIG);
+		return FALSE;
+	}
+	// check if need to do a owTouchReset first
+	if (do_reset) {
+		if (!owTouchReset(portnum)) {
+			OWERROR(OWERROR_NO_DEVICES_ON_NET);
+			return FALSE;
+		}
+	}
+	// send and receive the buffer
+	for (i = 0; i < tran_len; i++)
+		tran_buf[i] = (uchar) owTouchByte(portnum, tran_buf[i]);
 
-   // check if need to do a owTouchReset first
-   if (do_reset)
-   {
-      if (!owTouchReset(portnum))
-      {
-         OWERROR(OWERROR_NO_DEVICES_ON_NET);
-         return FALSE;
-      }
-   }
-
-   // send and receive the buffer
-   for (i = 0; i < tran_len; i++)
-      tran_buf[i] = (uchar)owTouchByte(portnum,tran_buf[i]);
-
-   return TRUE;
+	return TRUE;
 }
 
 //--------------------------------------------------------------------------
@@ -108,95 +104,78 @@ SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_
 // -1 error, device not connected or program pulse voltage
 // not available
 //
-SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr, SMALLINT write_cmd,
-                       SMALLINT crc_type, SMALLINT do_access)
+SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr,
+		       SMALLINT write_cmd, SMALLINT crc_type,
+		       SMALLINT do_access)
 {
-   ushort lastcrc16;
-   uchar lastcrc8;
+	ushort lastcrc16;
+	uchar lastcrc8;
 
-   // optionally access the device
-   if (do_access)
-   {
-      if (!owAccess(portnum))
-      {
-         OWERROR(OWERROR_ACCESS_FAILED);
-         return -1;
-      }
+	// optionally access the device
+	if (do_access) {
+		if (!owAccess(portnum)) {
+			OWERROR(OWERROR_ACCESS_FAILED);
+			return -1;
+		}
+		// send the write command
+		if (!owWriteByte(portnum, write_cmd)) {
+			OWERROR(OWERROR_WRITE_BYTE_FAILED);
+			return -1;
+		}
+		// send the address
+		if (!owWriteByte(portnum, addr & 0xFF)
+		    || !owWriteByte(portnum, addr >> 8)) {
+			OWERROR(OWERROR_WRITE_BYTE_FAILED);
+			return -1;
+		}
+	}
+	// send the data to write
+	if (!owWriteByte(portnum, write_byte)) {
+		OWERROR(OWERROR_WRITE_BYTE_FAILED);
+		return -1;
+	}
+	// read the CRC
+	if (crc_type == 0) {
+		// calculate CRC8
+		if (do_access) {
+			setcrc8(portnum, 0);
+			docrc8(portnum, (uchar) write_cmd);
+			docrc8(portnum, (uchar) (addr & 0xFF));
+			docrc8(portnum, (uchar) (addr >> 8));
+		} else
+			setcrc8(portnum, (uchar) (addr & 0xFF));
 
-      // send the write command
-      if (!owWriteByte(portnum,write_cmd))
-      {
-         OWERROR(OWERROR_WRITE_BYTE_FAILED);
-         return -1;
-      }
+		docrc8(portnum, (uchar) write_byte);
+		// read and calculate the read crc
+		lastcrc8 = docrc8(portnum, (uchar) owReadByte(portnum));
+		// crc should now be 0x00
+		if (lastcrc8 != 0) {
+			OWERROR(OWERROR_CRC_FAILED);
+			return -1;
+		}
+	} else {
+		// CRC16
+		if (do_access) {
+			setcrc16(portnum, 0);
+			docrc16(portnum, (ushort) write_cmd);
+			docrc16(portnum, (ushort) (addr & 0xFF));
+			docrc16(portnum, (ushort) (addr >> 8));
+		} else
+			setcrc16(portnum, (ushort) addr);
+		docrc16(portnum, (ushort) write_byte);
+		// read and calculate the read crc
+		docrc16(portnum, (ushort) owReadByte(portnum));
+		lastcrc16 = docrc16(portnum, (ushort) owReadByte(portnum));
+		// crc should now be 0xB001
+		if (lastcrc16 != 0xB001)
+			return -1;
+	}
 
-      // send the address
-      if (!owWriteByte(portnum,addr & 0xFF) || !owWriteByte(portnum,addr >> 8))
-      {
-         OWERROR(OWERROR_WRITE_BYTE_FAILED);
-         return -1;
-      }
-   }
-
-   // send the data to write
-   if (!owWriteByte(portnum,write_byte))
-   {
-      OWERROR(OWERROR_WRITE_BYTE_FAILED);
-      return -1;
-   }
-
-   // read the CRC
-   if (crc_type == 0)
-   {
-      // calculate CRC8
-      if (do_access)
-      {
-         setcrc8(portnum,0);
-         docrc8(portnum,(uchar)write_cmd);
-         docrc8(portnum,(uchar)(addr & 0xFF));
-         docrc8(portnum,(uchar)(addr >> 8));
-      }
-      else
-         setcrc8(portnum,(uchar)(addr & 0xFF));
-
-      docrc8(portnum,(uchar)write_byte);
-      // read and calculate the read crc
-      lastcrc8 = docrc8(portnum,(uchar)owReadByte(portnum));
-      // crc should now be 0x00
-      if (lastcrc8 != 0)
-      {
-         OWERROR(OWERROR_CRC_FAILED);
-         return -1;
-      }
-   }
-   else
-   {
-      // CRC16
-      if (do_access)
-      {
-         setcrc16(portnum,0);
-         docrc16(portnum,(ushort)write_cmd);
-         docrc16(portnum,(ushort)(addr & 0xFF));
-         docrc16(portnum,(ushort)(addr >> 8));
-      }
-      else
-         setcrc16(portnum,(ushort)addr);
-      docrc16(portnum,(ushort)write_byte);
-      // read and calculate the read crc
-      docrc16(portnum,(ushort)owReadByte(portnum));
-      lastcrc16 = docrc16(portnum,(ushort)owReadByte(portnum));
-      // crc should now be 0xB001
-      if (lastcrc16 != 0xB001)
-         return -1;
-   }
-
-   // send the program pulse
-   if (!owProgramPulse(portnum))
-   {
-      OWERROR(OWERROR_PROGRAM_PULSE_FAILED);
-      return -1;
-   }
-
-   // read back and return the resulting byte
-   return owReadByte(portnum);
+	// send the program pulse
+	if (!owProgramPulse(portnum)) {
+		OWERROR(OWERROR_PROGRAM_PULSE_FAILED);
+		return -1;
+	}
+	// read back and return the resulting byte
+	return owReadByte(portnum);
 }
