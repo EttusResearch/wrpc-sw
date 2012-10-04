@@ -48,7 +48,7 @@ WITH_ETHERBONE=0
 
 # and don't touch the rest unless you know what you're doing.
 
-CROSS_COMPILE = lm32-elf-
+CROSS_COMPILE ?= lm32-elf-
 
 OBJS_WRC = 	wrc_main.o \
 						wrc_ptp.o \
@@ -101,15 +101,15 @@ CFLAGS= $(CFLAGS_PLATFORM) $(CFLAGS_EB) $(CFLAGS_PTPD) $(INCLUDE_DIRS) -ffunctio
 LDFLAGS= $(LDFLAGS_PLATFORM) -ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
 OBJS=$(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) $(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) $(OBJS_SOCKITOWM) $(OBJS_SOFTPLL) $(OBJS_DEV)
 OUTPUT=wrc
-REVISION=$(shell git rev-parse HEAD)
+REVISION=$(shell git describe --dirty --always)
 
-$(shell ln -sf ../boards/$(BOARD)/board.h include/board.h)
 
 all:		tools wrc
 
 wrc: 		$(OBJS)
 				echo "const char *build_revision = \"$(REVISION)\";" > revision.c
 				echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
+				ln -sf ../boards/$(BOARD)/board.h include/board.h
 				$(CC) $(CFLAGS) -c revision.c
 				$(SIZE) -t $(OBJS)
 				${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS)
