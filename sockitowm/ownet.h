@@ -78,31 +78,31 @@
    // several kilobytes of data should not be SMALLINT. The most
    // common place you'll see smallint is for boolean return types.
    //
-   #define SMALLINT int
+#define SMALLINT int
 #endif
 
 #ifndef OW_UCHAR
-   #define OW_UCHAR
-   typedef unsigned char uchar;
-   #if !defined(__MINGW32__) && (defined(__CYGWIN__) || defined(__GNUC__))
-      typedef unsigned long ulong;
+#define OW_UCHAR
+typedef unsigned char uchar;
+#if !defined(__MINGW32__) && (defined(__CYGWIN__) || defined(__GNUC__))
+typedef unsigned long ulong;
       //ushort already defined in sys/types.h
-      #include <sys/types.h>
-   #else
-      #if defined(_WIN32) || defined(WIN32) || defined(__MC68K__) || defined(_WIN32_WCE) || defined(_DOS) || defined(_WINDOWS) || defined(__MINGW32__)
-         typedef unsigned short ushort;
-         typedef unsigned long ulong;
-      #endif
-   #endif
-   #ifdef __sun__
-      #include <sys/types.h>
-   #endif
-   #ifdef SDCC
+#include <sys/types.h>
+#else
+#if defined(_WIN32) || defined(WIN32) || defined(__MC68K__) || defined(_WIN32_WCE) || defined(_DOS) || defined(_WINDOWS) || defined(__MINGW32__)
+typedef unsigned short ushort;
+typedef unsigned long ulong;
+#endif
+#endif
+#ifdef __sun__
+#include <sys/types.h>
+#endif
+#ifdef SDCC
       //intent of ushort is 2 bytes unsigned.
       //for ds390 in sdcc, an int, not a short,
       //is 2 bytes.
-      typedef unsigned int ushort;
-   #endif
+typedef unsigned int ushort;
+#endif
 #endif
 
 // general defines
@@ -123,7 +123,7 @@
 #define TRUE 1
 
 #ifndef MAX_PORTNUM
-   #define MAX_PORTNUM 1
+#define MAX_PORTNUM 1
 #endif
 
 // mode bit flags
@@ -152,24 +152,24 @@ extern int owHasErrors(void);
 
 #ifdef DEBUG
    //Raises an exception with extra debug info
-   #define OWERROR(err) owRaiseError(err,__LINE__,__FILE__)
-   extern void owRaiseError(int,int,char*);
-   #define OWASSERT(s,err,ret) if(!(s)){owRaiseError((err),__LINE__,__FILE__);return (ret);}
+#define OWERROR(err) owRaiseError(err,__LINE__,__FILE__)
+extern void owRaiseError(int, int, char *);
+#define OWASSERT(s,err,ret) if(!(s)){owRaiseError((err),__LINE__,__FILE__);return (ret);}
 #else
    //Raises an exception with just the error code
-   #define OWERROR(err) owRaiseError(err)
-   extern void owRaiseError(int);
-   #define OWASSERT(s,err,ret) if(!(s)){owRaiseError((err));return (ret);}
+#define OWERROR(err) owRaiseError(err)
+extern void owRaiseError(int);
+#define OWASSERT(s,err,ret) if(!(s)){owRaiseError((err));return (ret);}
 #endif
 
 #ifdef SOCKIT_OWM_ERR_SMALL
-   #define OWERROR_DUMP(fileno) /*no-op*/;
+#define OWERROR_DUMP(fileno) /*no-op*/;
 #else
    //Prints the stack out to the given file.
-   #define OWERROR_DUMP(fileno) while(owHasErrors()) owPrintErrorMsg(fileno);
-   extern void owPrintErrorMsg(FILE *);
-   extern void owPrintErrorMsgStd();
-   extern char *owGetErrorMsg(int);
+#define OWERROR_DUMP(fileno) while(owHasErrors()) owPrintErrorMsg(fileno);
+extern void owPrintErrorMsg(FILE *);
+extern void owPrintErrorMsgStd();
+extern char *owGetErrorMsg(int);
 #endif
 
 #else
@@ -309,18 +309,17 @@ extern int owHasErrors(void);
 // One Wire functions defined in ownetu.c
 SMALLINT owFirst(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
 SMALLINT owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
-void owSerialNum(int portnum, uchar *serialnum_buf, SMALLINT do_read);
+void owSerialNum(int portnum, uchar * serialnum_buf, SMALLINT do_read);
 void owFamilySearchSetup(int portnum, SMALLINT search_family);
 void owSkipFamily(int portnum);
 SMALLINT owAccess(int portnum);
 SMALLINT owVerify(int portnum, SMALLINT alarm_only);
 SMALLINT owOverdriveAccess(int portnum);
 
-
 // external One Wire functions defined in owsesu.c
- SMALLINT owAcquire(int portnum, char *port_zstr);
- int owAcquireEx(char *port_zstr);
- void owRelease(int portnum);
+SMALLINT owAcquire(int portnum, char *port_zstr);
+int owAcquireEx(char *port_zstr);
+void owRelease(int portnum);
 
 // external One Wire functions defined in findtype.c
 // SMALLINT FindDevices(int,uchar FamilySN[][8],SMALLINT,int);
@@ -344,12 +343,16 @@ SMALLINT owReadBitPower(int portnum, SMALLINT applyPowerResponse);
 extern SMALLINT FAMILY_CODE_04_ALARM_TOUCHRESET_COMPLIANCE;
 
 // external One Wire functions from transaction layer in owtrnu.c
-SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar *tran_buf, SMALLINT tran_len);
-SMALLINT owReadPacketStd(int portnum, SMALLINT do_access, int start_page, uchar *read_buf);
-SMALLINT owWritePacketStd(int portnum, int start_page, uchar *write_buf,
-                          SMALLINT write_len, SMALLINT is_eprom, SMALLINT crc_type);
-SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr, SMALLINT write_cmd,
-                       SMALLINT crc_type, SMALLINT do_access);
+SMALLINT owBlock(int portnum, SMALLINT do_reset, uchar * tran_buf,
+		 SMALLINT tran_len);
+SMALLINT owReadPacketStd(int portnum, SMALLINT do_access, int start_page,
+			 uchar * read_buf);
+SMALLINT owWritePacketStd(int portnum, int start_page, uchar * write_buf,
+			  SMALLINT write_len, SMALLINT is_eprom,
+			  SMALLINT crc_type);
+SMALLINT owProgramByte(int portnum, SMALLINT write_byte, int addr,
+		       SMALLINT write_cmd, SMALLINT crc_type,
+		       SMALLINT do_access);
 
 // link functions
 void msDelay(int len);
@@ -358,15 +361,15 @@ long msGettick(void);
 // ioutil.c functions prototypes
 int EnterString(char *msg, char *buf, int min, int max);
 int EnterNum(char *msg, int numchars, long *value, long min, long max);
-int EnterHex(char *msg, int numchars, ulong *value);
+int EnterHex(char *msg, int numchars, ulong * value);
 int ToHex(char ch);
 int getkeystroke(void);
 int key_abort(void);
 void ExitProg(char *msg, int exit_code);
-int getData(uchar *write_buff, int max_len, SMALLINT gethex);
-void PrintHex(uchar* buffer, int cnt);
-void PrintChars(uchar* buffer, int cnt);
-void PrintSerialNum(uchar* buffer);
+int getData(uchar * write_buff, int max_len, SMALLINT gethex);
+void PrintHex(uchar * buffer, int cnt);
+void PrintChars(uchar * buffer, int cnt);
+void PrintSerialNum(uchar * buffer);
 
 // external functions defined in crcutil.c
 void setcrc16(int portnum, ushort reset);

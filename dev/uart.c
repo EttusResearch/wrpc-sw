@@ -13,16 +13,15 @@ volatile struct UART_WB *uart;
 
 void uart_init()
 {
-	uart = (volatile struct UART_WB *) BASE_UART;
+	uart = (volatile struct UART_WB *)BASE_UART;
 	uart->BCR = CALC_BAUD(UART_BAUDRATE);
 }
 
 void uart_write_byte(int b)
 {
-	if(b == '\n')
+	if (b == '\n')
 		uart_write_byte('\r');
-	while(uart->SR & UART_SR_TX_BUSY)
-		;
+	while (uart->SR & UART_SR_TX_BUSY) ;
 	uart->TDR = b;
 }
 
@@ -34,13 +33,13 @@ void uart_write_string(char *s)
 
 int uart_poll()
 {
- 	return uart->SR & UART_SR_RX_RDY;
+	return uart->SR & UART_SR_RX_RDY;
 }
 
 int uart_read_byte()
 {
-	if(!uart_poll())
+	if (!uart_poll())
 		return -1;
-		
- 	return uart->RDR & 0xff;
+
+	return uart->RDR & 0xff;
 }

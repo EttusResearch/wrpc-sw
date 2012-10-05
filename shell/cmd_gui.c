@@ -1,8 +1,8 @@
-/* 	Command: gui 
+/* 	Command: gui
 		Arguments: none
-		
+
 		Description: launches the WR Core monitor GUI */
-		
+
 #include "shell.h"
 
 int cmd_gui(const char *args[])

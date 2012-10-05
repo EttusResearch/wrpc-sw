@@ -38,7 +38,7 @@ SECTIONS
 {
 
   .boot : { *(.boot) } > ram
-   
+
   /* Code */
   .text           :
   {
@@ -60,26 +60,26 @@ SECTIONS
     KEEP (*(.dtors))
     KEEP (*(.jcr))
     _etext = .;
-  } > ram =0 
+  } > ram =0
 
   /* Exception handlers */
   .eh_frame_hdr : { *(.eh_frame_hdr) } > ram
   .eh_frame : { KEEP (*(.eh_frame)) } > ram
   .gcc_except_table : { *(.gcc_except_table) *(.gcc_except_table.*) } > ram
-    
+
   /* Read-only data */
-  .rodata         : 
-  { 
+  .rodata         :
+  {
     . = ALIGN(4);
     _frodata = .;
     _frodata_rom = LOADADDR(.rodata);
-    *(.rodata .rodata.* .gnu.linkonce.r.*) 
+    *(.rodata .rodata.* .gnu.linkonce.r.*)
     *(.rodata1)
     _erodata = .;
   } > ram
-        
+
   /* Data */
-  .data           : 
+  .data           :
   {
     . = ALIGN(4);
     _fdata = .;
@@ -90,8 +90,8 @@ SECTIONS
     _gp = ALIGN(16) + 0x7ff0;
     *(.sdata .sdata.* .gnu.linkonce.s.*)
     _edata = .;
-  } > ram 
-  
+  } > ram
+
   /* BSS */
   .bss           :
   {
@@ -108,10 +108,10 @@ SECTIONS
     _end = .;
     PROVIDE (end = .);
   } > ram
-  
+
   /* First location in stack is highest address in RAM */
   PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
-  
+
   /* Stabs debugging sections.  */
   .stab          0 : { *(.stab) }
   .stabstr       0 : { *(.stabstr) }
@@ -120,7 +120,7 @@ SECTIONS
   .stab.index    0 : { *(.stab.index) }
   .stab.indexstr 0 : { *(.stab.indexstr) }
   .comment       0 : { *(.comment) }
-  
+
   /* DWARF debug sections.
      Symbols in the DWARF debugging sections are relative to the beginning
      of the section so we begin them at 0.  */

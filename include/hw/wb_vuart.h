@@ -30,7 +30,6 @@
 #define WBGEN2_SIGN_EXTEND(value, bits) (((value) & (1<<bits) ? ~((1<<(bits))-1): 0 ) | (value))
 #endif
 
-
 /* definitions for register: Status Register */
 
 /* definitions for field: TX busy in reg: Status Register */
@@ -80,18 +79,18 @@
 #define UART_DEBUG_CSR_USEDW_R(reg)           WBGEN2_GEN_READ(reg, 0, 8)
 
 PACKED struct UART_WB {
-  /* [0x0]: REG Status Register */
-  uint32_t SR;
-  /* [0x4]: REG Baudrate control register */
-  uint32_t BCR;
-  /* [0x8]: REG Transmit data regsiter */
-  uint32_t TDR;
-  /* [0xc]: REG Receive data regsiter */
-  uint32_t RDR;
-  /* [0x10]: REG FIFO 'UART TX FIFO' data output register 0 */
-  uint32_t DEBUG_R0;
-  /* [0x14]: REG FIFO 'UART TX FIFO' control/status register */
-  uint32_t DEBUG_CSR;
+	/* [0x0]: REG Status Register */
+	uint32_t SR;
+	/* [0x4]: REG Baudrate control register */
+	uint32_t BCR;
+	/* [0x8]: REG Transmit data regsiter */
+	uint32_t TDR;
+	/* [0xc]: REG Receive data regsiter */
+	uint32_t RDR;
+	/* [0x10]: REG FIFO 'UART TX FIFO' data output register 0 */
+	uint32_t DEBUG_R0;
+	/* [0x14]: REG FIFO 'UART TX FIFO' control/status register */
+	uint32_t DEBUG_CSR;
 };
 
 #endif

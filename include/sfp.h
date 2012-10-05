@@ -12,4 +12,3 @@ int sfp_present();
 int sfp_read_part_id(char *part_id);
 
 #endif
-

@@ -49,30 +49,29 @@
 // Returns: TRUE(1) success, device type found
 // FALSE(0) device not found
 //
-SMALLINT FindDevices(int portnum, uchar FamilySN[][8], SMALLINT family_code, int MAXDEVICES)
+SMALLINT FindDevices(int portnum, uchar FamilySN[][8], SMALLINT family_code,
+		     int MAXDEVICES)
 {
-   int NumDevices=0;
+	int NumDevices = 0;
 
-   // find the devices
-   // set the search to first find that family code
-   owFamilySearchSetup(portnum,family_code);
+	// find the devices
+	// set the search to first find that family code
+	owFamilySearchSetup(portnum, family_code);
 
-   // loop to find all of the devices up to MAXDEVICES
-   NumDevices = 0;
-   do
-   {
-	// perform the search
-      if (!owNext(portnum,TRUE, FALSE))
-         break;
-         
-      owSerialNum(portnum,FamilySN[NumDevices], TRUE);
-      if ((FamilySN[NumDevices][0] & 0x7F) == (family_code & 0x7F))
-      {
-         NumDevices++;
-      }
-   }
-   while (NumDevices < (MAXDEVICES - 1));
+	// loop to find all of the devices up to MAXDEVICES
+	NumDevices = 0;
+	do {
+		// perform the search
+		if (!owNext(portnum, TRUE, FALSE))
+			break;
 
-   // check if not at least 1 device
-   return NumDevices;
+		owSerialNum(portnum, FamilySN[NumDevices], TRUE);
+		if ((FamilySN[NumDevices][0] & 0x7F) == (family_code & 0x7F)) {
+			NumDevices++;
+		}
+	}
+	while (NumDevices < (MAXDEVICES - 1));
+
+	// check if not at least 1 device
+	return NumDevices;
 }

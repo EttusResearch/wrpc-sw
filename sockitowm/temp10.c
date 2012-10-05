@@ -45,93 +45,94 @@
 // FALSE(0) could not read the temperature, perhaps device is not
 // in contact
 //
-int ReadTemperature10(int portnum, uchar *SerialNum, float *Temp)
+int ReadTemperature10(int portnum, uchar * SerialNum, float *Temp)
 {
-   uchar rt=FALSE;
-   uchar send_block[30],lastcrc8 = 0;
-   int send_cnt, tsht, i, loop=0;
-   float tmp,cr,cpc;
-   int power = 0;
+	uchar rt = FALSE;
+	uchar send_block[30], lastcrc8 = 0;
+	int send_cnt, tsht, i, loop = 0;
+	float tmp, cr, cpc;
+	int power = 0;
 
-   // set the device serial number to the counter device
-   owSerialNum(portnum,SerialNum,FALSE);
+	// set the device serial number to the counter device
+	owSerialNum(portnum, SerialNum, FALSE);
 
-   for (loop = 0; loop < 2; loop ++)
-   {
-      // check if the chip is connected to VDD
-      if (owAccess(portnum))
-      {
-         owWriteByte(portnum,0xB4);
-         power = owReadByte(portnum);
-      }
-	// access the device
-      if (owAccess(portnum))
-      {
-         // send the convert command and if nesessary start power delivery
-         if (power) {
-            if (!owWriteBytePower(portnum,0x44))
-               return FALSE;
-         } else {
-            if (!owWriteByte(portnum,0x44))
-               return FALSE;
-         }
+	for (loop = 0; loop < 2; loop++) {
+		// check if the chip is connected to VDD
+		if (owAccess(portnum)) {
+			owWriteByte(portnum, 0xB4);
+			power = owReadByte(portnum);
+		}
+		// access the device
+		if (owAccess(portnum)) {
+			// send the convert command and if nesessary start power delivery
+			if (power) {
+				if (!owWriteBytePower(portnum, 0x44))
+					return FALSE;
+			} else {
+				if (!owWriteByte(portnum, 0x44))
+					return FALSE;
+			}
 
-         // sleep for 1 second
-         msDelay(1000);
-         // turn off the 1-Wire Net strong pull-up
-         if (power) {
-            if (owLevel(portnum,MODE_NORMAL) != MODE_NORMAL)
-               return FALSE;
-         }
+			// sleep for 1 second
+			msDelay(1000);
+			// turn off the 1-Wire Net strong pull-up
+			if (power) {
+				if (owLevel(portnum, MODE_NORMAL) !=
+				    MODE_NORMAL)
+					return FALSE;
+			}
+			// access the device
+			if (owAccess(portnum)) {
+				// create a block to send that reads the temperature
+				// read scratchpad command
+				send_cnt = 0;
+				send_block[send_cnt++] = 0xBE;
+				// now add the read bytes for data bytes and crc8
+				for (i = 0; i < 9; i++)
+					send_block[send_cnt++] = 0xFF;
 
-         // access the device
-         if (owAccess(portnum))
-         {
-            // create a block to send that reads the temperature
-            // read scratchpad command
-            send_cnt = 0;
-            send_block[send_cnt++] = 0xBE;
-            // now add the read bytes for data bytes and crc8
-            for (i = 0; i < 9; i++)
-               send_block[send_cnt++] = 0xFF;
+				// now send the block
+				if (owBlock
+				    (portnum, FALSE, send_block, send_cnt)) {
+					// initialize the CRC8
+					setcrc8(portnum, 0);
+					// perform the CRC8 on the last 8 bytes of packet
+					for (i = send_cnt - 9; i < send_cnt;
+					     i++)
+						lastcrc8 =
+						    docrc8(portnum,
+							   send_block[i]);
 
-            // now send the block
-            if (owBlock(portnum,FALSE,send_block,send_cnt))
-            {
-               // initialize the CRC8
-               setcrc8(portnum,0);
-               // perform the CRC8 on the last 8 bytes of packet
-               for (i = send_cnt - 9; i < send_cnt; i++)
-                  lastcrc8 = docrc8(portnum,send_block[i]);
+					// verify CRC8 is correct
+					if (lastcrc8 == 0x00) {
+						// calculate the high-res temperature
+						tsht = send_block[1] / 2;
+						if (send_block[2] & 0x01)
+							tsht |= -128;
+						tmp = (float)(tsht);
+						cr = send_block[7];
+						cpc = send_block[8];
+						if (((cpc - cr) == 1)
+						    && (loop == 0))
+							continue;
+						if (cpc == 0)
+							return FALSE;
+						else
+							tmp =
+							    tmp - (float)0.25 +
+							    (cpc - cr) / cpc;
 
-               // verify CRC8 is correct
-               if (lastcrc8 == 0x00)
-               {
-                  // calculate the high-res temperature
-                  tsht = send_block[1]/2;
-                  if (send_block[2] & 0x01)
-                     tsht |= -128;
-                  tmp = (float)(tsht);
-                  cr = send_block[7];
-                  cpc = send_block[8];
-                  if (((cpc - cr) == 1) && (loop == 0))
-                     continue;
-                  if (cpc == 0)
-                     return FALSE;
-                  else
-                     tmp = tmp - (float)0.25 + (cpc - cr)/cpc;
+						*Temp = tmp;
+						// success
+						rt = TRUE;
+						break;
+					}
+				}
+			}
+		}
 
-                  *Temp = tmp;
-                  // success
-                  rt = TRUE;
-                  break;
-               }
-            }
-         }
-      }
+	}
 
-   }
-
-   // return the result flag rt
-   return rt;
+	// return the result flag rt
+	return rt;
 }

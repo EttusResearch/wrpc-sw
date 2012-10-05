@@ -30,7 +30,6 @@
 #define WBGEN2_SIGN_EXTEND(value, bits) (((value) & (1<<bits) ? ~((1<<(bits))-1): 0 ) | (value))
 #endif
 
-
 /* definitions for register: Status Register */
 
 /* definitions for field: TX busy in reg: Status Register */
@@ -66,14 +65,14 @@
 #define UART_REG_RDR 0x0000000c
 
 PACKED struct UART_WB {
-  /* [0x0]: REG Status Register */
-  uint32_t SR;
-  /* [0x4]: REG Baudrate control register */
-  uint32_t BCR;
-  /* [0x8]: REG Transmit data regsiter */
-  uint32_t TDR;
-  /* [0xc]: REG Receive data regsiter */
-  uint32_t RDR;
+	/* [0x0]: REG Status Register */
+	uint32_t SR;
+	/* [0x4]: REG Baudrate control register */
+	uint32_t BCR;
+	/* [0x8]: REG Transmit data regsiter */
+	uint32_t TDR;
+	/* [0xc]: REG Receive data regsiter */
+	uint32_t RDR;
 };
 
 #endif

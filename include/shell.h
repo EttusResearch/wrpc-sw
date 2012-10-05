@@ -7,8 +7,8 @@
 
 extern int wrc_ui_mode;
 
-const char* fromhex(const char* hex, int* v);
-const char* fromdec(const char* dec, int* v);
+const char *fromhex(const char *hex, int *v);
+const char *fromdec(const char *dec, int *v);
 
 int cmd_gui(const char *args[]);
 int cmd_pll(const char *args[]);
@@ -25,7 +25,6 @@ int cmd_sdb(const char *args[]);
 int cmd_mac(const char *args[]);
 int cmd_init(const char *args[]);
 
-
 int cmd_env(const char *args[]);
 int cmd_saveenv(const char *args[]);
 int cmd_set(const char *args[]);
@@ -40,4 +39,3 @@ void shell_interactive();
 int shell_boot_script(void);
 
 #endif
-
