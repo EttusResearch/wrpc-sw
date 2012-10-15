@@ -340,8 +340,8 @@ later during the software compilation:
 Now you have everything that is needed to build the software for WRPC. Before
 compilation the decision can be made whether to turn on or not the software
 support for Etherbone core that is integrated inside WRPC gateware for SPEC
-board. By default it is disabled but can be turned on by setting the value of
-@i{WITH_ETHERBONE} variable inside the Makefile. The compilation is made by
+board. By default it is disabled but can be turned on by setting the
+@i{CONFIG_ETHERBONE} variable to @i{y} inside the Makefile. The compilation is made by
 a simple command without any additional parameters:
 
 @example

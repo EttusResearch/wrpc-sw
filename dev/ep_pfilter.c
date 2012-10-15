@@ -228,7 +228,7 @@ void pfilter_init_default()
 	pfilter_new();
 	pfilter_nop();
 
-#if WITH_ETHERBONE != 0
+#ifdef CONFIG_ETHERBONE
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, 1);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, 1);
 	pfilter_cmp(2, 0xffff, 0xffff, AND, 1);	/* r1 = 1 when dst mac is broadcast */
@@ -264,7 +264,7 @@ void pfilter_init_default()
 	pfilter_logic2(R_CLASS(0), 15, MOV, 0);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
 
 	pfilter_load();
-#else
+#else /* not etherbone */
 	pfilter_new();
 	pfilter_nop();
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, 1);
@@ -281,6 +281,6 @@ void pfilter_init_default()
 	pfilter_logic2(R_CLASS(7), 6, NOT, 0);	/* class 7: not PTP => external fabric */
 	pfilter_logic2(R_CLASS(0), 6, MOV, 0);	/* class 0: PTPv2 => PTP LM32 core */
 	pfilter_load();
-#endif
+#endif /* CONFIG_ETHERBONE */
 
 }

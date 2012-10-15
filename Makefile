@@ -1,8 +1,8 @@
 # choose your board here.
 BOARD = spec
 
-# 1 enables Etherbone support
-WITH_ETHERBONE=0
+# Uncomment to enable Etherbone support (will soon be a Kconfig variable)
+# CONFIG_ETHERBONE=y
 
 
 # and don't touch the rest unless you know what you're doing.
@@ -24,7 +24,10 @@ INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal \
 		-I$(PTP_NOPOSIX)/softpll \
 		-Iinclude
 
-CFLAGS_EB = -DWITH_ETHERBONE=$(WITH_ETHERBONE)
+# Will soon be managed by Kconfig
+ifdef CONFIG_ETHERBONE
+CFLAGS_EB = -DCONFIG_ETHERBONE=1
+endif
 
 CFLAGS_PTPD  = -ffreestanding \
 	-DPTPD_FREESTANDING \
