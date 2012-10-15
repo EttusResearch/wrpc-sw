@@ -23,7 +23,7 @@
 #include "lxdialog/dialog.h"
 
 static const char mconf_readme[] = N_(
-"Overview\n"
+"Overview (from Linux Kernel, not WRPC-specific)\n"
 "--------\n"
 "Some kernel features may be built directly into the kernel.\n"
 "Some may be made into loadable runtime modules.  Some features\n"
@@ -832,7 +832,7 @@ int main(int ac, char **av)
 		if (conf_get_changed())
 			res = dialog_yesno(NULL,
 					   _("Do you wish to save your "
-					     "new kernel configuration?\n"
+					     "new WRPC configuration?\n"
 					     "<ESC><ESC> to continue."),
 					   6, 60);
 		else
@@ -844,8 +844,8 @@ int main(int ac, char **av)
 	case 0:
 		if (conf_write(filename)) {
 			fprintf(stderr, _("\n\n"
-				"Error during writing of the kernel configuration.\n"
-				"Your kernel configuration changes were NOT saved."
+				"Error during writing of the WRPC configuration.\n"
+				"Your WRPC configuration changes were NOT saved."
 				"\n\n"));
 			return 1;
 		}

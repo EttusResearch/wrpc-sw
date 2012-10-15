@@ -10,7 +10,7 @@
 #include "lkc.h"
 
 static const char nohelp_text[] = N_(
-	"There is no help available for this kernel option.\n");
+	"There is no help available for this configuration option.\n");
 
 struct menu rootmenu;
 static struct menu **last_entry_ptr;
