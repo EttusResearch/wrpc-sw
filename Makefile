@@ -87,7 +87,7 @@ REVISION=$(shell git describe --dirty --always)
 
 all: tools wrc
 
-wrc: $(OBJS)
+wrc: silentoldconfig $(OBJS)
 	echo "const char *build_revision = \"$(REVISION)\";" > revision.c
 	echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
 	$(CC) $(CFLAGS) -c revision.c
@@ -113,3 +113,11 @@ clean:
 
 tools:
 	make -C tools
+
+# following targets from Makefile.kconfig
+silentoldconfig:
+	@mkdir -p include/config
+	$(MAKE) -f Makefile.kconfig $@
+
+scripts_basic config %config:
+	$(MAKE) -f Makefile.kconfig $@
