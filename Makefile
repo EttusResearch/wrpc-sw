@@ -83,9 +83,7 @@ REVISION=$(shell git describe --dirty --always)
 all: tools wrc
 
 wrc: silentoldconfig $(OBJS)
-	echo "const char *build_revision = \"$(REVISION)\";" > revision.c
-	echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
-	$(CC) $(CFLAGS) -c revision.c
+	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
 	$(SIZE) -t $(OBJS)
 	${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS)
 	${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin

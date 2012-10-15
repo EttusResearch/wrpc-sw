@@ -4,7 +4,6 @@
 *.bin
 *.*~
 include/board.h
-revision.c
 tools/zpu-loader
 tools/vuart_console
 tools/genraminit
