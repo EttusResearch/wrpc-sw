@@ -31,7 +31,7 @@ extern "C" {
 
 #define SRCTREE "srctree"
 
-#define PACKAGE "linux"
+#define PACKAGE "wrpc-sw"
 #define LOCALEDIR "/usr/share/locale"
 
 #define _(text) gettext(text)

@@ -305,7 +305,7 @@ static void set_config_filename(const char *config_filename)
 	sym = sym_lookup("KERNELVERSION", 0);
 	sym_calc_value(sym);
 	size = snprintf(menu_backtitle, sizeof(menu_backtitle),
-	                _("%s - Linux Kernel v%s Configuration"),
+	                _("%s - WRPC v%s Configuration"),
 		        config_filename, sym_get_string_value(sym));
 	if (size >= sizeof(menu_backtitle))
 		menu_backtitle[sizeof(menu_backtitle)-1] = '\0';
@@ -851,13 +851,13 @@ int main(int ac, char **av)
 		}
 	case -1:
 		printf(_("\n\n"
-			"*** End of Linux kernel configuration.\n"
-			"*** Execute 'make' to build the kernel or try 'make help'."
+			"*** End of WRPC configuration.\n"
+			"*** Execute 'make' to build the binary."
 			"\n\n"));
 		break;
 	default:
 		fprintf(stderr, _("\n\n"
-			"Your kernel configuration changes were NOT saved."
+			"Your WRPC configuration changes were NOT saved."
 			"\n\n"));
 	}
 
