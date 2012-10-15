@@ -7,3 +7,15 @@ config ETHERBONE
 	  This allows to run LM32 code that is aware of Etherbone.
 	  You need to run a gateware file that includes Etherbone support.
 	  If in doubt, say No.
+
+config DETERMINISTIC_BINARY
+       boolean "Build a binary that is the same every time"
+       help
+         This option is used to #ifdef __DATE__ and __TIME__ strings
+	 out of the compiled WRC binary. If you set it you'll get the
+	 same binary bit-by-bit at each rebuild.  I am using this
+	 option to hack the build procedure and use a simple "diff"
+	 between the old and new output to verify I didn't introduce
+	 changes.
+
+	 If in doubt, say No.
