@@ -1,0 +1,9 @@
+
+mainmenu "WR PTP Core software configuration"
+
+config ETHERBONE
+	boolean "Compile Etherbone support in wrpc-sw"
+	help
+	  This allows to run LM32 code that is aware of Etherbone.
+	  You need to run a gateware file that includes Etherbone support.
+	  If in doubt, say No.
