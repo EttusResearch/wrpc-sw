@@ -87,7 +87,6 @@ all: tools wrc
 wrc: $(OBJS)
 	echo "const char *build_revision = \"$(REVISION)\";" > revision.c
 	echo "const char *build_date = __DATE__ \" \" __TIME__;" >> revision.c
-	ln -sf ../boards/$(BOARD)/board.h include/board.h
 	$(CC) $(CFLAGS) -c revision.c
 	$(SIZE) -t $(OBJS)
 	${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS)
@@ -97,11 +96,17 @@ wrc: $(OBJS)
 	./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
 	./tools/genramvhd -s 90112 $(OUTPUT).bin > $(OUTPUT).vhd
 
+$(OBJS): include/board.h
+
+include/board.h:
+	ln -sf ../boards/$(BOARD)/board.h include/board.h
+
+
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
+	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram include/board.h
 
 %.o:		%.c
-	$(CC) $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $^ -o $@
+	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
 tools:
 	make -C tools
