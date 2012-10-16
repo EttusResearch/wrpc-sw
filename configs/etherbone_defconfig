@@ -1,0 +1,4 @@
+#
+# Automatically generated make config: don't edit
+#
+CONFIG_ETHERBONE=y

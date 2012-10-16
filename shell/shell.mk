@@ -13,6 +13,6 @@ OBJS_SHELL = 	shell/shell.o \
 							shell/cmd_mac.o \
 							shell/cmd_init.o
 
-ifneq ($(WITH_ETHERBONE), 0)
+ifdef CONFIG_ETHERBONE
 OBJS_SHELL += shell/cmd_ip.o
 endif

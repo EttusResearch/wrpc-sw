@@ -13,3 +13,11 @@ tools/lm32-loader
 wrc_disasm.S
 wrc.ram
 wrc.vhd
+
+*.cmd
+*.o
+.tmp_*
+.config
+.config.old
+include/config
+include/generated
