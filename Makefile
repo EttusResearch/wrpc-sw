@@ -129,3 +129,4 @@ scripts_basic config %config:
 	$(MAKE) -f Makefile.kconfig $@
 
 .config: silentoldconfig
+
