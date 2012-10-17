@@ -80,17 +80,25 @@ OUTPUT = wrc
 
 REVISION=$(shell git describe --dirty --always)
 
-all: tools wrc
+all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).elf
 
-wrc: silentoldconfig $(OBJS)
+.PRECIOUS: %.elf %.bin
+.PHONY: all tools clean
+
+$(OUTPUT).elf: silentoldconfig $(OBJS)
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
-	$(SIZE) -t $(OBJS)
-	${CC} -o $(OUTPUT).elf revision.o $(OBJS) $(LDFLAGS)
-	${OBJCOPY} -O binary $(OUTPUT).elf $(OUTPUT).bin
+	${CC} -o $@ revision.o $(OBJS) $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
-	cd tools; $(MAKE)
-	./tools/genraminit $(OUTPUT).bin 0 > $(OUTPUT).ram
-	./tools/genramvhd -s 90112 $(OUTPUT).bin > $(OUTPUT).vhd
+	$(SIZE) $@
+
+%.bin: %.elf
+	${OBJCOPY} -O binary $^ $@
+
+%.ram: tools %.bin
+	./tools/genraminit $*.bin 0 > $@
+
+%.vhd: tools %.bin
+	./tools/genramvhd -s 90112 $*.bin > $@
 
 $(OBJS): include/board.h
 
@@ -105,7 +113,7 @@ clean:
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
 tools:
-	make -C tools
+	$(MAKE) -C tools
 
 # following targets from Makefile.kconfig
 silentoldconfig:
