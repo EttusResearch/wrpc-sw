@@ -14,8 +14,8 @@ SIZE =		$(CROSS_COMPILE)size
 
 PTP_NOPOSIX = ptp-noposix
 
-objs-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
-objs-y += wrc_main.o wrc_ptp.o monitor/monitor.o
+obj-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
+obj-y += wrc_main.o wrc_ptp.o monitor/monitor.o
 
 cflags-y = -include $(CURDIR)/include/generated/autoconf.h \
 	-Iinclude -I.
@@ -37,7 +37,7 @@ cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-I$(PTP_NOPOSIX)/softpll \
 	-I$(PTP_NOPOSIX)/PTPWRd
 
-objs-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
+obj-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/bmc.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/msg.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/net.o \
@@ -70,9 +70,7 @@ CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) \
 LDFLAGS = $(LDFLAGS_PLATFORM) \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
 
-OBJS = $(objs-y) \
-	$(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) \
-	$(OBJS_SOCKITOWM) $(OBJS_SOFTPLL) $(OBJS_DEV)
+OBJS = $(obj-y)
 
 OUTPUT = wrc
 
