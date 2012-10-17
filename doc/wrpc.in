@@ -343,17 +343,37 @@ First you have to compile the tools provided with WRPC software which are used
 later during the software compilation:
 
 @example
-  $ cd tools
-  $ make
-  $ cd ..
+  $ make -C tools
 @end example
 
-Now you have everything that is needed to build the software for WRPC. Before
-compilation the decision can be made whether to turn on or not the software
-support for Etherbone core that is integrated inside WRPC gateware for SPEC
-board. By default it is disabled but can be turned on by setting the
-@i{CONFIG_ETHERBONE} variable to @i{y} inside the Makefile. The compilation is made by
-a simple command without any additional parameters:
+Now you have everything that is needed to build the software for WRPC,
+but you need to make a few configuration choices. The package is using
+@i{Kconfig} as a configuration engine, so you may run one of the
+following commnads (the first is text-mode, the second uses a KDE GUI
+and the third uses a Gnome GUI):
+
+@example
+   $ make menuconfig
+   $ make xconfig
+   $ make gconfig
+@end example
+
+Other @i{Kconfig} target applies, like @code{config}, @code{oldconfig}
+and so on.  A few default known-good configurations are found in
+@file{./configs} and you choose them by @i{make}ing them by name
+like this:
+
+@example
+  $ make spec_defconfig
+@end example
+
+The most important configuration choice at this point in time is
+whether to enable Etherbone or not. It is disabled by default in
+@code{spec_defconfig} and enabled by default in
+@code{etherbone_defconfig}.
+
+After the package is configured, just run @code{make} without
+parameters to build your binary file:
 
 @example
   $ make
