@@ -10,7 +10,7 @@
 %                         =========================
 %
 %    This file is a texinfo source. It isn't the binary file of some strange
-%    editor of mine. If you want ASCII, you should "make fine-delay.txt".
+%    editor of mine. If you want ASCII, you should "make wrpc.txt".
 %
 %------------------------------------------------------------------------------
 
@@ -35,7 +35,7 @@
 
 @setchapternewpage off
 
-@set update-month August 2012
+@set update-month October 2012
 @set release 2.0
 @set tagname wrpc-v2.0
 @c WARNING: in @example I Can't use @value{tagname}, so please look for this
@@ -45,7 +45,7 @@
 
 @titlepage
 @title White Rabbit PTP Core User's Manual
-@subtitle @value{update-month} -- Release @value{release}
+@subtitle @value{update-month}
 @subtitle Building and Running
 @author Grzegorz Daniluk (CERN BE-CO-HT)
 @end titlepage
@@ -89,8 +89,12 @@ want to get your hands dirty and prefer to use the binaries available at
 @node Repositories and Releases
 @section Repositories and Releases
 
-This version of the White Rabbit PTP Core is release @value{release}.
-The code and documentation is distributed in the following places:
+This manual you are reading is not about an official release,
+but a snapshot of the current master branch. The last release
+we blessed is called @value{release}.
+
+The code and documentation for the project is distributed in the
+following places:
 
 @table @code
 
@@ -127,6 +131,8 @@ on the set of Manifest files.
 @item http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
 
   LM32 toolchain used to compile the WRPC firmware (software).
+  This specific file is linked from the @i{files} tab of the
+  @code{wrpc-sw} project.
 
 @end table
 
@@ -243,7 +249,11 @@ release is marked with @value{tagname} tag.
 @end example
 
 @b{Note:} alternatively you can get the release sources from the tarball
-available in @uref{http://www.ohwr.org/projects/wr-cores/files}
+available in the @i{files} tab of @code{wr-cores}:
+
+@example
+ http://www.ohwr.org/projects/wr-cores/files
+@end example
 
 @sp 1
 The subdirectory which contains the main synthesis Manifest.py for SPEC board
@@ -306,19 +316,20 @@ from any directory:
 @end example
 
 To get the release sources of WRPC software please clone the @i{wrpc-sw} git
-repository tagged with @value{tagname} tag:
+repository tagged with @value{tagname} tag. Otherwise, you can use the current master
+branch, with the latest improvements and fixes.
 
-@example
+@smallexample
   $ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_wrpcsw_location>
   $ cd <your_wrpcsw_location>
-  $ git checkout wrpc-v2.0
-@end example
+  $ git checkout wrpc-v2.0   # or "git checkout master"
+@end smallexample
 
 @b{Note:} alternatively you can get the release sources from the tarball
-available in @uref{http://www.ohwr.org/projects/wr-cores/files}
+available in the @i{files} tab of the @code{wr-cores} OHWR project.
 
 @sp 1
-The WRPC software repository contains a ptp-nosposix (that contains the WR PTP
+The WRPC software repository contains a ptp-noposix (that contains the WR PTP
 software daemon) in the form of a git submodule. Your fresh local copy cloned
 from @i{ohwr.org} has therefore the @i{ptp-noposix} directory empty. To fetch
 the ptp-noposix you have to execute the following git commands:
@@ -368,28 +379,32 @@ Core (@ref{Running and Configuring}).
 @section Downloading firmware to SPEC
 
 There is a Software support for the SPEC board project in @i{ohwr.org}. It
-contains a set of Linux kernel drivers and userspace tools written by
+contains a set of Linux kernel drivers and user space tools written by
 Alessandro Rubini and Tomasz Wlostowski that are used to communicate with the
 SPEC board plugged into the PCI-Express port of the PC.
 
 The instructions in this section are based on commit 27b4ad9 of @i{spec-sw}
 repository and are limited to absolutely minimum required to load WRPC FPGA
-and LM32 firmware. The full manual for @i{spec-sw} can be found on:
-@uref{http://www.ohwr.org/attachments/download/1506/spec-sw-2012-08-08.pdf}.
-If there will be a newer version of SPEC software support you would like to
+and LM32 firmware. The full manual for @i{spec-sw} can be found at:
+
+@example
+ http://www.ohwr.org/attachments/download/1506/spec-sw-2012-08-08.pdf
+@end example
+
+If there is a newer version of SPEC software support you would like to
 use, the up-to-date documentation can always be found in @i{doc/} subdirectory
 of @i{spec-sw} git repository.
 
 @sp 1
 First, please clone the git repository of SPEC software support package and
-build the kernel driver and userspace tools:
+build the kernel driver and user space tools:
 
-@example
+@smallexample
   $ git clone git://ohwr.org/fmc-projects/spec/spec-sw.git <your_specsw_location>
   $ cd <your_specsw_location>
   $ git checkout 27b4ad9
   $ make
-@end example
+@end smallexample
 
 Then you have to copy the @i{spec_top.bin} to /lib/firmware/fmc/. changing its
 name:
@@ -403,7 +418,7 @@ name:
 
 and after that you are ready to load the @i{spec.ko} driver that configures the
 Spartan 6 FPGA on SPEC with a given bitstream (make sure you are in
-<your_spacsw_location>:
+<your_specsw_location>:
 
 @example
   $ sudo insmod kernel/spec.ko name=demo
@@ -413,7 +428,7 @@ To check if the FPGA firmware file was found by the driver and correctly loaded
 to FPGA the @i{dmesg} Linux command can be called. Among plenty of messages
 you should be able to find something very similar to:
 
-@example
+@smallexample
 @noindent
   [99883.768214] spec_probe (device 0003:0000)
   [99883.768220] spec_probe: current 8639 (insmod)
@@ -423,7 +438,7 @@ you should be able to find something very similar to:
   [99883.774842] spec_load_fpga: got binary file "fmc/spec-demo.bin",
 1485512 (0x16aac8) bytes
   [99883.966491] spec_load_submodule: load "fmc/spec-demo": 256
-@end example
+@end smallexample
 
 If everything went right up to this moment you can write the LM32 binary
 (@i{wrc.bin}) to the SPEC board. For this purpose, there is a @i{spec-cl} tool
@@ -488,7 +503,7 @@ To check the content of the SFP database you can execute the @i{sfp show} shell
 command.
 
 The calibration procedure of WRPC is limited to absolutely minimum and is fully
-automatized. It measures the t2/t4 phase transition point and stores the value
+automatic. It measures the t2/t4 phase transition point and stores the value
 into the FMC EEPROM so that the calibration would not have to be repeated every
 time the Core starts. However, it is @b{*important*} to remember that this
 calibration function should be executed only once but for @b{*every*} new FPGA
@@ -511,11 +526,10 @@ PTP daemon before it starts (see init script examples).
 
 @sp 1
 The WR PTP Core's mode of operation (WR Master/WR Slave) can be set using the
-@i{mode} shell command:
+@i{mode} shell command in one of the following two ways:
 
 @example
   wrc# mode slave
-or
   wrc# mode master
 @end example
 
@@ -671,7 +685,7 @@ measurement procedure form WRPC Shell:
 
 If you have found a bug, you have problems with White Rabbit PTP Core or one
 of the tools used to build and run it, you can write to our mailing list
-@code{white-rabit-dev@@ohwr.org}
+@code{white-rabbit-dev@@ohwr.org}
 
 
 @c ##########################################################################
@@ -748,4 +762,6 @@ daemon in new mode
 @c  LocalWords:  gnudd titlepage iftex texinfo CERN documentlanguage settitle
 @c  LocalWords:  documentencoding setfilename afourpaper paragraphindent FPGA
 @c  LocalWords:  setchapternewpage finalout gateware ohwr modprobe insmod cset
-@c  LocalWords:  smallexample ctrl timestamp fdelay struct spusa
+@c  LocalWords:  smallexample ctrl timestamp fdelay struct spusa hdlmake Xilinx
+@c  LocalWords:  bitstream wrpc init EEPROM grandmaster wrpcsw noposix http
+@c  LocalWords:  tarball toolchain specsw sudo Etherbone
