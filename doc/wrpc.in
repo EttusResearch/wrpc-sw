@@ -67,25 +67,11 @@ want to get your hands dirty and prefer to use the binaries available at
 @ref{Building the Core} and move forward directly to
 @ref{Running and Configuring}.
 
-@menu
-* Software and hardware requirements::
-* Building the Core::
-* Running and Configuring
-* Known bugs and missing features::
-* Troubleshooting::
-* Questions, reporting bugs::
-@end menu
-
 @c ##########################################################################
 @node Software and hardware requirements
 @chapter Software and hardware requirements
 
-@menu
-* Repositories and Releases
-* Hardware needed
-@end menu
-
-@c ##########################################################################
+@c ==========================================================================
 @node Repositories and Releases
 @section Repositories and Releases
 
@@ -145,7 +131,7 @@ repository (unless specified otherwise in this document).
 Any official hot fixes, if any, for this release will live in the branch called
 @code{@value{tagname}-fixes}, in each WRPC repository.
 
-@c ##########################################################################
+@c ==========================================================================
 @node Hardware needed
 @section Hardware needed
 
@@ -173,12 +159,7 @@ FPGA that is later used by LM32 software to perform WR synchronization.
 
 To perform the steps below you will need a computer running Linux.
 
-@menu
-* HDL synthesis
-* LM32 software compilation
-@end menu
-
-@c ##########################################################################
+@c ==========================================================================
 @node HDL synthesis
 @section HDL synthesis
 
@@ -294,7 +275,7 @@ everything from scratch you can use the following commands:
                             @i{ip_cores} subdirectory.
 @end itemize
 
-@c ##########################################################################
+@c ==========================================================================
 @node LM32 software compilation
 @section LM32 software compilation
 
@@ -387,14 +368,7 @@ Core (@ref{Running and Configuring}).
 @node Running and Configuring
 @chapter Running and Configuring
 
-@menu
-* Downloading firmware to SPEC
-* Writing EEPROM and calibration
-* Running the Core
-@end menu
-
-
-@c ##########################################################################
+@c ==========================================================================
 @node Downloading firmware to SPEC
 @section Downloading firmware to SPEC
 
@@ -482,7 +456,7 @@ If you are able to see the WRPC Shell prompt @i{wrc#} that means the Core is up
 and running on your SPEC. Congratulations !
 
 
-@c ##########################################################################
+@c ==========================================================================
 @node Writing EEPROM and calibration
 @section Writing EEPROM and calibration
 
@@ -584,7 +558,7 @@ Almost exactly the same one can be used for running SPEC in WR Master mode. The
 only difference would be of course @i{init add mode slave} vs. @i{init add mode
 master}.
 
-@c ##########################################################################
+@c ==========================================================================
 @node Running the Core
 @section Running the Core
 
