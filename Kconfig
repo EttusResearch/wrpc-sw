@@ -19,3 +19,8 @@ config DETERMINISTIC_BINARY
 	 changes.
 
 	 If in doubt, say No.
+
+# The following will soon become a choice with ppsi
+config PTP_NOPOSIX
+       boolean
+       default y

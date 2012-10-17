@@ -11,20 +11,17 @@ SIZE =		$(CROSS_COMPILE)size
 
 -include $(CURDIR)/.config
 
-OBJS_WRC = 	wrc_main.o \
-		wrc_ptp.o \
-		monitor/monitor.o
 
 PTP_NOPOSIX = ptp-noposix
 
-INCLUDE_DIRS = -I$(PTP_NOPOSIX)/wrsw_hal \
-		-I$(PTP_NOPOSIX)/libptpnetif \
-		-I$(PTP_NOPOSIX)/softpll \
-		-Iinclude
+objs-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
+objs-y += wrc_main.o wrc_ptp.o monitor/monitor.o
 
-CFLAGS = -include $(CURDIR)/include/generated/autoconf.h
+cflags-y = -include $(CURDIR)/include/generated/autoconf.h \
+	-Iinclude -I.
 
-CFLAGS_PTPD  = -ffreestanding \
+cflags-$(CONFIG_PTP_NOPOSIX) += \
+	-ffreestanding \
 	-DPTPD_FREESTANDING \
 	-DWRPC_EXTRA_SLIM \
 	-DPTPD_MSBF \
@@ -34,9 +31,13 @@ CFLAGS_PTPD  = -ffreestanding \
 	-DPTPD_TRACE_MASK=0 \
 	-include $(PTP_NOPOSIX)/compat.h \
 	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
-	-include $(PTP_NOPOSIX)/libposix/ptpd-wrappers.h
+	-include $(PTP_NOPOSIX)/libposix/ptpd-wrappers.h \
+	-I$(PTP_NOPOSIX)/wrsw_hal \
+	-I$(PTP_NOPOSIX)/libptpnetif \
+	-I$(PTP_NOPOSIX)/softpll \
+	-I$(PTP_NOPOSIX)/PTPWRd
 
-OBJS_PTPD = $(PTP_NOPOSIX)/PTPWRd/arith.o \
+objs-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/bmc.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/msg.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/net.o \
@@ -55,8 +56,6 @@ CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T arch/lm32/ram.ld
 
-OBJS_PLATFORM = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
-
 include shell/shell.mk
 include tests/tests.mk
 include lib/lib.mk
@@ -64,15 +63,14 @@ include sockitowm/sockitowm.mk
 include dev/dev.mk
 
 
-CFLAGS += $(CFLAGS_PLATFORM) $(CFLAGS_EB) $(CFLAGS_PTPD) $(INCLUDE_DIRS) \
-	-ffunction-sections -fdata-sections -Os -Iinclude \
-	-include include/trace.h \
-	$(PTPD_CFLAGS) -I$(PTP_NOPOSIX)/PTPWRd -I. -Isoftpll
+CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) \
+	-ffunction-sections -fdata-sections -Os \
+	-include include/trace.h
 
 LDFLAGS = $(LDFLAGS_PLATFORM) \
 	-ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
 
-OBJS = $(OBJS_PLATFORM) $(OBJS_WRC) $(OBJS_PTPD) \
+OBJS = $(objs-y) \
 	$(OBJS_SHELL) $(OBJS_TESTS) $(OBJS_LIB) \
 	$(OBJS_SOCKITOWM) $(OBJS_SOFTPLL) $(OBJS_DEV)
 
