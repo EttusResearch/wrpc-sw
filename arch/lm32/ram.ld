@@ -1,6 +1,8 @@
 /*
- * Simulator Link script for Lattice Mico32.
- * Contributed by Jon Beniston <jon@beniston.com>
+ * Link script for Lattice Mico32. Very loosely based on
+ * code contributed by Jon Beniston <jon@beniston.com>
+ *
+ * Jon's license (BSD-style):
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,8 +28,6 @@
 
 OUTPUT_FORMAT("elf32-lm32")
 ENTRY(_start)
-/*INPUT() */
-GROUP(-lgcc -lc)
 
 MEMORY
 {

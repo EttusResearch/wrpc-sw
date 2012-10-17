@@ -68,7 +68,7 @@ CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) \
 	-include include/trace.h
 
 LDFLAGS = $(LDFLAGS_PLATFORM) \
-	-ffunction-sections -fdata-sections -Wl,--gc-sections -Os -Iinclude
+	-Wl,--gc-sections -Os -lgcc -lc
 
 OBJS = $(obj-y)
 
