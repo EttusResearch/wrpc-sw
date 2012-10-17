@@ -80,12 +80,12 @@ OUTPUT = wrc
 
 REVISION=$(shell git describe --dirty --always)
 
-all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).elf
+all: tools $(OUTPUT).ram $(OUTPUT).vhd
 
 .PRECIOUS: %.elf %.bin
-.PHONY: all tools clean
+.PHONY: all tools clean gitmodules
 
-$(OUTPUT).elf: silentoldconfig $(OBJS)
+$(OUTPUT).elf: silentoldconfig gitmodules $(OBJS)
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
 	${CC} -o $@ revision.o $(OBJS) $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
@@ -114,6 +114,15 @@ clean:
 
 tools:
 	$(MAKE) -C tools
+
+# if needed, check out the submodules (first time only), so users
+# who didn't read carefully the manual won't get confused
+gitmodules:
+	@test -d ptp-noposix/libposix || echo "Checking out submodules"
+	@test -d ptp-noposix/libposix || \
+		git submodule init && git submodule update
+
+
 
 # following targets from Makefile.kconfig
 silentoldconfig:
