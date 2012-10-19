@@ -13,7 +13,7 @@
 
 #include "ptpd.h"
 #include "ptpd_netif.h"
-#include "timer.h"
+#include "syscon.h"
 #include "softpll_ng.h"
 #include "wrc_ptp.h"
 #include "pps_gen.h"

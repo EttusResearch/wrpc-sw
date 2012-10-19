@@ -32,6 +32,7 @@ struct s_i2c_if {
 
 extern struct s_i2c_if i2c_if[2];
 
+#define TICS_PER_SECOND 1000
 void timer_init(uint32_t enable);
 uint32_t timer_get_tics();
 void timer_delay(uint32_t how_long);

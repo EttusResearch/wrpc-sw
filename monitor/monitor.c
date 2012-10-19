@@ -17,7 +17,7 @@
 #include "minic.h"
 #include "pps_gen.h"
 #include "util.h"
-#include "timer.h"
+#include "syscon.h"
 #include "onewire.h"
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
