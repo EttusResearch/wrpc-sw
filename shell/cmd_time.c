@@ -8,6 +8,8 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <wrc.h>
 
 #include "shell.h"
 #include "util.h"

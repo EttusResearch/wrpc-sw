@@ -3,11 +3,13 @@
 
 		Description: launches the WR Core monitor GUI */
 
+#include <string.h>
+#include <wrc.h>
 #include "shell.h"
 #include "eeprom.h"
 #include "syscon.h"
 
-extern int measure_t24p(int *value);
+extern int measure_t24p(uint32_t *value);
 
 int cmd_calib(const char *args[])
 {

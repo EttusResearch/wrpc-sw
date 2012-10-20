@@ -1,5 +1,7 @@
+#include <wrc.h>
 #include "shell.h"
 #include "syscon.h"
+
 
 extern const char *build_revision, *build_date;
 

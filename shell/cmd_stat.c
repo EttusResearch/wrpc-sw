@@ -1,4 +1,6 @@
 #include "shell.h"
+#include <string.h>
+#include <wrc.h>
 
 int cmd_stat(const char *args[])
 {

@@ -1,13 +1,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <wrc.h>
 
 #include "softpll_ng.h"
 #include "shell.h"
 #include "onewire.h"
+#include "endpoint.h"
 #include "../lib/ipv4.h"
 
-static decode_mac(const char *str, unsigned char *mac)
+static void decode_mac(const char *str, unsigned char *mac)
 {
 	int i, x;
 
@@ -44,4 +46,5 @@ int cmd_mac(const char *args[])
 
 	mprintf("MAC-address: %x:%x:%x:%x:%x:%x\n",
 		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	return 0;
 }
