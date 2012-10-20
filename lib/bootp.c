@@ -1,4 +1,6 @@
 #include <string.h>
+#include <wrc.h>
+#include "endpoint.h"
 
 #include "ipv4.h"
 

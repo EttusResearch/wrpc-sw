@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <time.h>
+#include <wrc.h>
 
 #include "util.h"
 
