@@ -5,6 +5,15 @@ config MPRINTF
 	boolean
 	default y
 
+config PP_PRINTF
+       boolean
+       default !MPRINTF
+
+config PRINT_BUFSIZE
+       depends on PP_PRINTF
+       int "Size for the temporary output string of pp_printf"
+       default 128
+
 config ETHERBONE
 	boolean "Compile Etherbone support in wrpc-sw"
 	help

@@ -20,7 +20,7 @@ obj-y += wrc_main.o wrc_ptp.o monitor/monitor.o
 cflags-y = -include $(CURDIR)/include/generated/autoconf.h \
 	-Iinclude -I.
 
-cflags-$(CONFIG_PP_PRINTF) += -I $(CURDIR)/pp_printf
+cflags-$(CONFIG_PP_PRINTF) += -I$(CURDIR)/pp_printf
 
 cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-ffreestanding \
@@ -61,6 +61,7 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 include shell/shell.mk
 include tests/tests.mk
 include lib/lib.mk
+include pp_printf/printf.mk
 include sockitowm/sockitowm.mk
 include dev/dev.mk
 
