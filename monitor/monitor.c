@@ -6,6 +6,7 @@
 #include "ptpd_exports.h"
 #include "hal_exports.h"
 #include "softpll_ng.h"
+#include "minic.h"
 #include "pps_gen.h"
 #include "util.h"
 #include "timer.h"
@@ -16,12 +17,8 @@
 extern ptpdexp_sync_state_t cur_servo_state;
 extern int wrc_man_phase;
 
-int wrc_mon_gui(void)
+void wrc_mon_gui(void)
 {
-	static char *slave_states[] = {
-		"Uninitialized", "SYNC_SEC", "SYNC_NSEC", "SYNC_PHASE",
-		"TRACK_PHASE"
-	};
 	static uint32_t last = 0;
 	hexp_port_state_t ps;
 	int tx, rx;
@@ -30,7 +27,7 @@ int wrc_mon_gui(void)
 	uint32_t nsec;
 
 	if (timer_get_tics() - last < UI_REFRESH_PERIOD)
-		return 0;
+		return;
 
 	last = timer_get_tics();
 
@@ -151,15 +148,11 @@ int wrc_mon_gui(void)
 
 	cprintf(C_GREY, "--");
 
-	return 0;
+	return;
 }
 
 int wrc_log_stats(uint8_t onetime)
 {
-	static char *slave_states[] = {
-		"Uninitialized", "SYNC_SEC", "SYNC_NSEC", "SYNC_PHASE",
-		"TRACK_PHASE"
-	};
 	static uint32_t last = 0;
 	hexp_port_state_t ps;
 	int tx, rx;

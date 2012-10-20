@@ -10,7 +10,7 @@
 int mprintf(char const *format, ...)
 	__attribute__((format(printf,1,2)));
 
-int wrc_mon_gui(void);
+void wrc_mon_gui(void);
 void shell_init(void);
 int wrc_log_stats(uint8_t onetime);
 
