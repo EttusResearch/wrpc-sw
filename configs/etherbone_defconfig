@@ -1,4 +1,8 @@
 #
 # Automatically generated make config: don't edit
 #
+CONFIG_MPRINTF=y
+# CONFIG_PP_PRINTF is not set
 CONFIG_ETHERBONE=y
+# CONFIG_DETERMINISTIC_BINARY is not set
+CONFIG_PTP_NOPOSIX=y
