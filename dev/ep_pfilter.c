@@ -76,7 +76,7 @@
 
 #define PFILTER_MAX_CODE_SIZE      32
 
-#define pfilter_dbg
+#define pfilter_dbg(x, ...) /* nothing */
 
 extern volatile struct EP_WB *EP;
 
@@ -129,27 +129,6 @@ static void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op,
 	    | op | (rd << 3);
 
 	ir = ir | ((uint64_t) value & 0xffffULL) << 13;
-
-	code_buf[code_pos++] = ir;
-}
-
-   // rd                    = (packet[offset] & (1<<bit_index)) op rd
-static void pfilter_btst(int offset, int bit_index, pfilter_op_t op, int rd)
-{
-	uint64_t ir;
-
-	check_size();
-
-	if (offset > code_pos)
-		pfilter_dbg
-		    ("microcode: comparison offset is bigger than current PC. Insert some nops before comparing");
-
-	check_reg_range(rd, 1, 15, "ra/rd");
-	check_reg_range(bit_index, 0, 15, "bit index");
-
-	ir = ((1ULL << 33) | PF_MODE_CMP | ((uint64_t) offset << 7) |
-	      ((uint64_t) bit_index << 29) | (uint64_t) op | ((uint64_t) rd <<
-							      3));
 
 	code_buf[code_pos++] = ir;
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <wrc.h>
 
 #include "types.h"
 #include "board.h"
@@ -186,7 +187,7 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 	uint32_t payload_size, num_words;
 	uint32_t desc_hdr;
 	uint32_t raw_ts;
-	uint32_t rx_addr_cur, cur_avail;
+	uint32_t cur_avail;
 	int n_recvd;
 
 	if (!(minic_readl(MINIC_REG_EIC_ISR) & MINIC_EIC_ISR_RX))

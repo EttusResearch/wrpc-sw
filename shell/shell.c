@@ -276,7 +276,8 @@ int shell_boot_script(void)
 
 	while (1) {
 		cmd_len = eeprom_init_readcmd(WRPC_FMC_I2C, FMC_EEPROM_ADR,
-					      cmd_buf, SH_MAX_LINE_LEN, next);
+					      (uint8_t *)cmd_buf,
+					      SH_MAX_LINE_LEN, next);
 		if (cmd_len <= 0) {
 			if (next == 0)
 				mprintf("Empty init script...\n");
