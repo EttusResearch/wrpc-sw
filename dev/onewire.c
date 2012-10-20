@@ -1,6 +1,10 @@
+#include <string.h>
+#include <wrc.h>
 #include "onewire.h"
 #include "../sockitowm/ownet.h"
 #include "../sockitowm/findtype.h"
+#include "../sockitowm/eep43.h"
+#include "../sockitowm/temp28.h"
 
 #define DEBUG_PMAC 0
 
@@ -72,7 +76,7 @@ int8_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
 		if (FamilySN[i][0] == 0x43) {
 			owLevel(portnum, MODE_NORMAL);
 			if (ReadMem43(portnum, FamilySN[i], EEPROM_MAC_PAGE,
-				      &read_buffer) == TRUE) {
+				      read_buffer) == TRUE) {
 				if (read_buffer[0] == 0 && read_buffer[1] == 0
 				    && read_buffer[2] == 0) {
 					/* Skip the EEPROM since it has not been programmed! */
@@ -116,7 +120,7 @@ int8_t set_persistent_mac(uint8_t portnum, uint8_t * mac)
 
 	/* Write the last EEPROM with the MAC */
 	owLevel(portnum, MODE_NORMAL);
-	if (Write43(portnum, FamilySN[0], EEPROM_MAC_PAGE, &write_buffer) ==
+	if (Write43(portnum, FamilySN[0], EEPROM_MAC_PAGE, write_buffer) ==
 	    TRUE)
 		return 0;
 
