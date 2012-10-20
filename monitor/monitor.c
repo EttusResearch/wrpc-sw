@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <wrc.h>
 
 #include "board.h"
 #include "ptpd_exports.h"

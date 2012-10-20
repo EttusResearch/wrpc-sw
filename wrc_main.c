@@ -118,8 +118,6 @@ void wrc_debug_printf(int subsys, const char *fmt, ...)
 	va_end(ap);
 }
 
-static int wrc_enable_tracking = 1;
-static int ptp_enabled = 1;
 int wrc_man_phase = 0;
 
 static void ui_update()

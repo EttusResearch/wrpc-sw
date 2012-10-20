@@ -11,6 +11,8 @@ int mprintf(char const *format, ...)
 	__attribute__((format(printf,1,2)));
 
 int wrc_mon_gui(void);
+void shell_init(void);
+int wrc_log_stats(uint8_t onetime);
 
 
 /* This is in the library, somewhere */
@@ -18,5 +20,6 @@ extern int abs(int val);
 
 /* The following from ptp-noposix */
 extern void wr_servo_reset(void);
+void update_rx_queues(void);
 
 #endif /* __WRC_H__ */
