@@ -2,12 +2,59 @@
 mainmenu "WR PTP Core software configuration"
 
 config MPRINTF
-	boolean
+	boolean "Use the old mprintf implementation for printf
 	default y
+	help
+	  wrpc-sw has traditionally used mprintf as its printf engine.
+	  Unfortunately, the code base has unclear copyright status,
+	  and we are now able to run pp_printf instead. Such implementation
+	  however has had little testing in wrpc-sw by now. Mprintf
+	  is scheduled to be removed in the future, as soon as pp_printf
+	  is more tested on the field.
+
+	  If unsure, say y for the time being.
 
 config PP_PRINTF
        boolean
        default !MPRINTF
+
+choice
+	prompt "Implementation of pp_printf"
+	depends on PP_PRINTF
+	default PRINTF_XINT
+
+config PRINTF_FULL
+ 	bool "full"
+	help
+	  This selects an implementation that supports all standard
+	  formats with modifiers, like "%08X" and "%.5s". It costs
+	  around 2k of compiled code more than XINT.
+	  See pp_printf/README for details.
+
+config PRINTF_XINT
+ 	bool "hex-and-int"
+	help
+	  This selects a printf that can only print decimal and hex
+	  numbers, without obeying the format modifiers. %c and %s are
+	  supported too, and %p is equivalente to %x.
+	  See pp_printf/README for details.
+
+config PRINTF_MINI
+ 	bool "minimal"
+	help
+	  This selects a printf that prints all integers as hex,
+	  without obeying the format modifiers. %c and %s are
+	  supported too. See pp_printf/README for details.
+	  This is not probably what you want for wrpc-sw.
+
+config PRINTF_NONE
+ 	bool "empty"
+	help
+	  This selects a printf that prints the format string
+	  alone and ignores all further arguments. Minimal size,
+	  but not suited for wrpc-sw. See pp_printf/README for details.
+endchoice
+
 
 config PRINT_BUFSIZE
        depends on PP_PRINTF
