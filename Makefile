@@ -20,6 +20,8 @@ obj-y += wrc_main.o wrc_ptp.o monitor/monitor.o
 cflags-y = -include $(CURDIR)/include/generated/autoconf.h \
 	-Iinclude -I.
 
+cflags-$(CONFIG_PP_PRINTF) += -I $(CURDIR)/pp_printf
+
 cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-ffreestanding \
 	-DPTPD_FREESTANDING \

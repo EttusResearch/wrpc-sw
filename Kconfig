@@ -1,6 +1,10 @@
 
 mainmenu "WR PTP Core software configuration"
 
+config MPRINTF
+	boolean
+	default y
+
 config ETHERBONE
 	boolean "Compile Etherbone support in wrpc-sw"
 	help
