@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 
+#include <wrc.h>
 #include "syscon.h"
 #include "uart.h"
 #include "endpoint.h"
@@ -14,6 +15,8 @@
 //#include "eeprom.h"
 #include "softpll_ng.h"
 #include "onewire.h"
+#include "pps_gen.h"
+#include "sockitowm.h"
 #include "shell.h"
 #include "lib/ipv4.h"
 
@@ -30,9 +33,7 @@ uint32_t cal_phase_transition = 2389;
 
 void wrc_initialize()
 {
-	int ret, i;
-	uint8_t mac_addr[6], ds18_id[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-	char sfp_pn[17];
+	uint8_t mac_addr[6];
 
 	sdb_find_devices();
 	uart_init();
