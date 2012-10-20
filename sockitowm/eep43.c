@@ -1,3 +1,4 @@
+#include <wrc.h>
 #include "ownet.h"
 
 #define READ_SCRATCH_CMD 0xaa
@@ -7,6 +8,8 @@
 #define E_READ_MEM_CMD 0xa5
 
 //#define DEBUG_EEP43 1
+
+static int Copy2Mem43(int portnum, uchar * SerialNum);
 
 int Write43(int portnum, uchar * SerialNum, int page, uchar * page_buffer)
 {
@@ -62,11 +65,9 @@ int Write43(int portnum, uchar * SerialNum, int page, uchar * page_buffer)
 	return rt;
 }
 
-int Copy2Mem43(int portnum, uchar * SerialNum)
+static int Copy2Mem43(int portnum, uchar * SerialNum)
 {
 	uchar rt = FALSE;
-	ushort lastcrc16;
-	int i;
 	uchar read_data;
 
 	owSerialNum(portnum, SerialNum, FALSE);
@@ -164,7 +165,6 @@ int ReadMem43(int portnum, uchar * SerialNum, int page, uchar * page_buffer)
 	uchar rt = FALSE;
 	ushort lastcrc16;
 	int i;
-	ushort target_addr = 0;
 	uchar read_data;
 
 	owSerialNum(portnum, SerialNum, FALSE);

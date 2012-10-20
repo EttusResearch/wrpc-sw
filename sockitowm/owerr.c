@@ -30,6 +30,7 @@
 //
 
 #include <string.h>
+#include <wrc.h>
 //#include <stdio.h>
 #include "ownet.h"
 #include "uart.h"
@@ -314,9 +315,6 @@ void owPrintErrorMsg(FILE * filenum)
 	char *f = owErrorStack[owErrorPointer].filename;
 	int err = owGetErrorNum();
 	//fprintf(filenum,"Error %d: %s line %d: %s\r\n",err,f,l,owErrorMsg[err]);
-#else
-	int err = owGetErrorNum();
-	//fprintf(filenum,"Error %d: %s\r\n",err,owErrorMsg[err]);
 #endif
 }
 
