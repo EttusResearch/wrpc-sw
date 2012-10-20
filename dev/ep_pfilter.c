@@ -87,7 +87,7 @@ static int code_pos;
 static uint64_t code_buf[32];
 
 /* begins assembling a new packet filter program */
-void pfilter_new()
+static void pfilter_new()
 {
 	code_pos = 0;
 }
@@ -108,7 +108,8 @@ static void check_reg_range(int val, int minval, int maxval, char *name)
 	}
 }
 
-void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op, int rd)
+static void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op,
+			int rd)
 {
 	uint64_t ir;
 
@@ -133,7 +134,7 @@ void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op, int rd)
 }
 
    // rd                    = (packet[offset] & (1<<bit_index)) op rd
-void pfilter_btst(int offset, int bit_index, pfilter_op_t op, int rd)
+static void pfilter_btst(int offset, int bit_index, pfilter_op_t op, int rd)
 {
 	uint64_t ir;
 
@@ -153,7 +154,7 @@ void pfilter_btst(int offset, int bit_index, pfilter_op_t op, int rd)
 	code_buf[code_pos++] = ir;
 }
 
-void pfilter_nop()
+static void pfilter_nop()
 {
 	uint64_t ir;
 	check_size();
@@ -162,7 +163,7 @@ void pfilter_nop()
 }
 
   // rd  = ra op rb
-void pfilter_logic2(int rd, int ra, pfilter_op_t op, int rb)
+static void pfilter_logic2(int rd, int ra, pfilter_op_t op, int rb)
 {
 	uint64_t ir;
 	check_size();
@@ -194,7 +195,7 @@ static void pfilter_logic3(int rd, int ra, pfilter_op_t op, int rb,
 }
 
 /* Terminates the microcode, loads it to the endpoint and enables the pfilter */
-void pfilter_load()
+static void pfilter_load()
 {
 	int i;
 	code_buf[code_pos++] = (1ULL << 35);	// insert FIN instruction
