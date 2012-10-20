@@ -57,3 +57,6 @@ SECTIONS
 	/* First location in stack is highest address in RAM */
 	PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
 }
+
+/* We need to provide mprintf to ptp-noposix object files, if missing */
+PROVIDE(mprintf = pp_printf);
