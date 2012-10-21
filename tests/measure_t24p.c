@@ -56,6 +56,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 	purge_socket(sock);
 
 	i = 0;
+	ts_sync.correct = 0;
 	while (setpoint <= phase_max) {
 		ptpd_netif_get_dmtd_phase(sock, &phase);
 
@@ -66,7 +67,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 			msgUnpackHeader(buf, &mhdr);
 			if (mhdr.messageType == 0)
 				ts_sync = ts_rx;
-			else if (mhdr.messageType == 8) {
+			else if (mhdr.messageType == 8 && ts_sync.correct == 1) {
 				MsgFollowUp fup;
 				msgUnpackFollowUp(buf, &fup);
 
@@ -87,6 +88,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 				while (spll_shifter_busy(0)) ;
 				purge_socket(sock);
 
+				ts_sync.correct = 0;
 				i++;
 			}
 		}
