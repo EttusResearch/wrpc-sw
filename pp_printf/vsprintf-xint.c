@@ -8,7 +8,7 @@
 
 static const char hex[] = "0123456789abcdef";
 
-static int number(char *out, int value, int base)
+static int number(char *out, int value, int base, int lead, int wid)
 {
 	char tmp[16];
 	int i = 16, ret;
@@ -18,8 +18,8 @@ static int number(char *out, int value, int base)
 		tmp[--i] = hex[value % base];
 		value /= base;
 	}
-	if (i == 16)
-		tmp[--i] = '0';
+	while (i > 16 - wid)
+		tmp[--i] = lead;
 	ret = 16 - i;
 	while (i < 16)
 		*(out++) = tmp[i++];
@@ -29,7 +29,7 @@ static int number(char *out, int value, int base)
 int pp_vsprintf(char *buf, const char *fmt, va_list args)
 {
 	char *s, *str = buf;
-	int base;
+	int base, lead, wid;
 
 	for (; *fmt ; ++fmt) {
 		if (*fmt != '%') {
@@ -37,18 +37,25 @@ int pp_vsprintf(char *buf, const char *fmt, va_list args)
 			continue;
 		}
 
+		base = 10;
+		lead = ' ';
+		wid = 1;
 	repeat:
 		fmt++;		/* Skip '%' initially, other stuff later */
-		base = 10;
-		/* Skip the complete format string */
 		switch(*fmt) {
 		case '\0':
 			goto ret;
+		case '0':
+			lead = '0';
+			goto repeat;
+
 		case '*':
 			/* should be precision, just eat it */
 			base = va_arg(args, int);
 			/* fall through: discard unknown stuff */
 		default:
+			if (*fmt >= '1' && *fmt <= '9')
+				wid = *fmt - '0';
 			goto repeat;
 
 			/* Special cases for conversions */
@@ -78,7 +85,7 @@ int pp_vsprintf(char *buf, const char *fmt, va_list args)
 		case 'd':
 		case 'i':
 		case 'u':
-			str += number(str, va_arg(args, int), base);
+			str += number(str, va_arg(args, int), base, lead, wid);
 			break;
 		}
 	}

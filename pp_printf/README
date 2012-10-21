@@ -72,8 +72,9 @@ Footprint: 1500-3300 bytes, plus 100-400 bytes for the frontend.
 	================================
 
 This prints correctly "%c", "%s", "%i", "%x". Formats "%u" and "%d"
-are synonims of "%i", and "%p"is a synonim for "%x".  No attributes
-are supported, to keep size small. I personally dislike it, because it
+are synonims of "%i", and "%p"is a synonim for "%x".  The only
+supported attributes are '0' and a one-digit width (e.g.: "%08x"
+works).  I personally dislike it, because it
 not powerful enough nor low-level as real hacker's too should be.
 However, it matches the requirement of some projects with a little
 user interface, where the "full" code reveals too large and the "mini"
@@ -83,13 +84,14 @@ please set "CONFIG_PRINTF_XINT=y" in your environment or Makefile.
 This is the result of the example. As expected, no size nor precision
 directives are obeyed:
 
-    integer 1024 666 53
-    octal   2000 1232 65
-    hex     400 29a 35
-    HEX etc 400 666 53
+    integer  1024   666 00053
+    octal    2000  1232 00065
+    hex       400   29a 00035
+    HEX etc   400   666    53
     char: A  string foo foo verylongstring
 
 Footprint: 250-700 bytes, plus 100-250 bytes for the frontend
+(FIXME: The figure hasn't been updated after I added the attributes)
 
 
 	The miminal implementaion in detail
@@ -160,6 +162,8 @@ preprocessor-related reasons.
 This table excludes the static buffer (256 in .bss by default) and
 only lists the code size (command "size", column "text"), compiled
 with -Os as for this Makefile.
+
+(FIXME: The figure fox xint must be redone, as I added the attributes)
 
 printf.o is the frontend and is linked in all four configurations,
 the other ones are exclusive one another:
