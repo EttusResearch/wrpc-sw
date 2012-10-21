@@ -45,7 +45,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 			    int phase_step, struct meas_entry *results)
 {
 	char buf[128];
-	wr_timestamp_t ts_rx, ts_sync;
+	wr_timestamp_t ts_rx, ts_sync = {0,};
 	wr_sockaddr_t from;
 	MsgHeader mhdr;
 	int setpoint = phase_min, i = 0, phase;
@@ -56,7 +56,6 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 	purge_socket(sock);
 
 	i = 0;
-	ts_sync.correct = 0;
 	while (setpoint <= phase_max) {
 		ptpd_netif_get_dmtd_phase(sock, &phase);
 
@@ -67,7 +66,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 			msgUnpackHeader(buf, &mhdr);
 			if (mhdr.messageType == 0)
 				ts_sync = ts_rx;
-			else if (mhdr.messageType == 8 && ts_sync.correct == 1) {
+			else if (mhdr.messageType == 8 && ts_sync.correct) {
 				MsgFollowUp fup;
 				msgUnpackFollowUp(buf, &fup);
 
