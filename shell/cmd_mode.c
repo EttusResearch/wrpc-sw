@@ -1,3 +1,11 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2012 CERN (www.cern.ch)
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 /*  Command: mode
     Arguments: PTP mode: gm = grandmaster, master = free-running master, slave = slave
 

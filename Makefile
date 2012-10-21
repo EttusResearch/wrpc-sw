@@ -1,3 +1,5 @@
+# Tomasz Wlostowski for CERN, 2011,2012
+
 # choose your board here.
 BOARD = spec
 

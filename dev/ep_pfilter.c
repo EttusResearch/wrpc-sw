@@ -1,3 +1,14 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2011 CERN (www.cern.ch)
+ * Copyright (C) 2012 GSI (www.gsi.de)
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * Author: Wesley W. Terpstra <w.terpstra@gsi.de>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
+
 /* Endpoint Packet Filter/Classifier driver
 
    A little explanation: The WR core needs to classify the incoming packets into

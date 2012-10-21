@@ -1,3 +1,11 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2012 GSI (www.gsi.de)
+ * Author: Wesley W. Terpstra <w.terpstra@gsi.de>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
