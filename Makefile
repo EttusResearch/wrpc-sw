@@ -134,6 +134,7 @@ tools:
 gitmodules:
 	@test -d ptp-noposix/libposix || echo "Checking out submodules"
 	@test -d ptp-noposix/libposix || git submodule update --init
+	@test -d ppsi/arch-spec || git submodule update --init
 
 
 # following targets from Makefile.kconfig
