@@ -29,11 +29,11 @@ int cmd_time(const char *args[])
 	uint64_t sec;
 	uint32_t nsec;
 
-	pps_gen_get_time(&sec, &nsec);
+	shw_pps_gen_get_time(&sec, &nsec);
 
 	if (args[2] && !strcasecmp(args[0], "set")) {
 		if (wrc_ptp_get_mode() != WRC_MODE_SLAVE) {
-			pps_gen_set_time((uint64_t) atoi(args[1]),
+			shw_pps_gen_set_time((uint64_t) atoi(args[1]),
 					 atoi(args[2]));
 			return 0;
 		} else

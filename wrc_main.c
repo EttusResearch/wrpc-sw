@@ -75,7 +75,7 @@ static void wrc_initialize()
 	ep_enable(1, 1);
 
 	minic_init();
-	pps_gen_init();
+	shw_pps_gen_init();
 	wrc_ptp_init();
 
 #ifdef CONFIG_ETHERBONE

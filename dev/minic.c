@@ -240,7 +240,7 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 					payload_size + 4, 2);
 			EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
 
-			pps_gen_get_time(&sec, &counter_ppsg);
+			shw_pps_gen_get_time(&sec, &counter_ppsg);
 
 			if (counter_r > 3 * REF_CLOCK_FREQ_HZ / 4
 			    && counter_ppsg < 250000000)
@@ -351,7 +351,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		}
 
 		EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
-		pps_gen_get_time(&sec, &nsec);
+		shw_pps_gen_get_time(&sec, &nsec);
 
 		if (counter_r > 3 * REF_CLOCK_FREQ_HZ / 4 && nsec < 250000000)
 			sec--;

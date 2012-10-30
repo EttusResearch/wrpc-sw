@@ -44,7 +44,7 @@ void wrc_mon_gui(void)
 	pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 1.0");
 	pcprintf(2, 1, C_GREY, "Esc = exit");
 
-	pps_gen_get_time(&sec, &nsec);
+	shw_pps_gen_get_time(&sec, &nsec);
 
 	cprintf(C_BLUE, "\n\nTAI Time:                  ");
 	cprintf(C_WHITE, "%s", format_time(sec));
@@ -175,7 +175,7 @@ int wrc_log_stats(uint8_t onetime)
 
 	last = timer_get_tics();
 
-	pps_gen_get_time(&sec, &nsec);
+	shw_pps_gen_get_time(&sec, &nsec);
 	halexp_get_port_state(&ps, NULL);
 	minic_get_stats(&tx, &rx);
 	mprintf("lnk:%d rx:%d tx:%d ", ps.up, rx, tx);

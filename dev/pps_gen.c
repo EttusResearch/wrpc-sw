@@ -29,7 +29,7 @@
 #define ppsg_read(reg) \
 	*(volatile uint32_t *) (BASE_PPS_GEN + (offsetof(struct PPSG_WB, reg)))
 
-void pps_gen_init()
+void shw_pps_gen_init()
 {
 	uint32_t cr;
 
@@ -47,7 +47,7 @@ void pps_gen_init()
 }
 
 /* Adjusts the nanosecond (refclk cycle) counter by atomically adding (how_much) cycles. */
-int pps_gen_adjust(int counter, int64_t how_much)
+int shw_pps_gen_adjust(int counter, int64_t how_much)
 {
 	TRACE_DEV("Adjust: counter = %s [%c%d]\n",
 		  counter == PPSG_ADJUST_SEC ? "seconds" : "nanoseconds",
@@ -70,7 +70,7 @@ int pps_gen_adjust(int counter, int64_t how_much)
 }
 
 /* Sets the current time */
-void pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
+void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
 {
 	ppsg_write(ADJ_UTCLO, (uint32_t) (seconds & 0xffffffffLL));
 	ppsg_write(ADJ_UTCHI, (uint32_t) (seconds >> 32) & 0xff);
@@ -95,7 +95,7 @@ uint64_t pps_get_utc(void)
 	return out;
 }
 
-void pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds)
+void shw_pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds)
 {
 	uint32_t ns_cnt;
 	uint64_t sec1, sec2;
@@ -115,14 +115,14 @@ void pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds)
 }
 
 /* Returns 1 when the adjustment operation is not yet finished */
-int pps_gen_busy()
+int shw_pps_gen_busy()
 {
 	uint32_t cr = ppsg_read(CR);
 	return cr & PPSG_CR_CNT_ADJ ? 0 : 1;
 }
 
 /* Enables/disables PPS output */
-int pps_gen_enable_output(int enable)
+int shw_pps_gen_enable_output(int enable)
 {
 	uint32_t escr = ppsg_read(ESCR);
 	if (enable)

@@ -122,7 +122,7 @@ int wrc_ptp_set_mode(int mode)
 
 	mprintf("Locking PLL");
 
-	pps_gen_enable_output(0);
+	shw_pps_gen_enable_output(0);
 
 	while (!spll_check_lock(0) && lock_timeout) {
 		timer_delay(TICS_PER_SECOND);
@@ -137,7 +137,7 @@ int wrc_ptp_set_mode(int mode)
 	}
 
 	if (mode == WRC_MODE_MASTER || mode == WRC_MODE_GM)
-		pps_gen_enable_output(1);
+		shw_pps_gen_enable_output(1);
 
 	mprintf("\n");
 	ptp_mode = mode;
