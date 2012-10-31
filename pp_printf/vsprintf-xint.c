@@ -18,6 +18,8 @@ static int number(char *out, int value, int base, int lead, int wid)
 		tmp[--i] = hex[value % base];
 		value /= base;
 	}
+	if (i == 16)
+		tmp[--i] = '0';
 	while (i > 16 - wid)
 		tmp[--i] = lead;
 	ret = 16 - i;
