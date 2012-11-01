@@ -1,1 +1,1 @@
-OBJS_TESTS = tests/measure_t24p.o
+obj-y += tests/measure_t24p.o

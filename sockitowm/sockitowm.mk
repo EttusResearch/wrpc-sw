@@ -1,4 +1,4 @@
-OBJS_SOCKITOWM = \
+obj-y += \
 	sockitowm/crcutil.o	\
 	sockitowm/eep43.o	\
 	sockitowm/findtype.o	\
