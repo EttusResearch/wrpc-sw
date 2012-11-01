@@ -21,15 +21,20 @@ void uart_write_byte(int b)
 {
 	if (b == '\n')
 		uart_write_byte('\r');
-	while (uart->SR & UART_SR_TX_BUSY) ;
+	while (uart->SR & UART_SR_TX_BUSY)
+		;
 	uart->TDR = b;
 }
 
-void uart_write_string(char *s)
+int uart_write_string(const char *s)
 {
+	const char *t = s;
 	while (*s)
 		uart_write_byte(*(s++));
+	return s - t;
 }
+
+int puts(const char *s) __attribute__((alias("uart_write_string")));
 
 int uart_poll()
 {

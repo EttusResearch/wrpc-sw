@@ -7,8 +7,15 @@
  * one function and doesn't deserve an header of its own.
  * Also, this brings in very common and needed headers
  */
+#ifdef CONFIG_MPRINTF
 int mprintf(char const *format, ...)
 	__attribute__((format(printf,1,2)));
+#else
+#include <pp-printf.h>
+#define mprintf pp_printf
+#define vprintf pp_vprintf
+#define sprintf pp_sprintf
+#endif
 
 void wrc_mon_gui(void);
 void shell_init(void);

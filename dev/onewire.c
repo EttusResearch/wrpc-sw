@@ -56,7 +56,8 @@ int8_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
 
 	for (i = 0; i < devsnum; ++i) {
 //#if DEBUG_PMAC
-		mprintf("Found device: %x:%x:%x:%x:%x:%x:%x:%x\n",
+		mprintf("Found device: "
+			"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
 		FamilySN[i][7], FamilySN[i][6], FamilySN[i][5], FamilySN[i][4],
 		FamilySN[i][3], FamilySN[i][2], FamilySN[i][1], FamilySN[i][0]);
 //#endif
@@ -89,7 +90,7 @@ int8_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
 					out = 0;
 #if DEBUG_PMAC
 					mprintf("Using EEPROM page: "
-						"%x:%x:%x:%x:%x:%x\n",
+						"%02x:%02x:%02x:%02x:%02x:%02x\n",
 					     mac[0], mac[1], mac[2], mac[3],
 					     mac[4], mac[5]);
 #endif
