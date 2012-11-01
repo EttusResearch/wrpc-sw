@@ -1,7 +1,10 @@
 
+#include <string.h>
+#include <wrc.h>
 #include "shell.h"
 #include "eeprom.h"
 #include "syscon.h"
+#include "i2c.h"
 
 int cmd_init(const char *args[])
 {

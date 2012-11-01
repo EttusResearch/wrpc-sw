@@ -1,3 +1,5 @@
+#include <string.h>
+#include <wrc.h>
 #include "hw/memlayout.h"
 
 #define SDB_INTERCONNET 0x00
@@ -117,7 +119,7 @@ static void print_devices_deep(unsigned int base, unsigned int sdb)
 
 static unsigned char *find_device(unsigned int devid)
 {
-	find_device_deep(0, SDB_ADDRESS, devid);
+	return find_device_deep(0, SDB_ADDRESS, devid);
 }
 
 void sdb_print_devices(void)

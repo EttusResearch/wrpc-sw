@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <inttypes.h>
-
 #include <stdarg.h>
+#include <wrc.h>
+
 #define INET_ADDRSTRLEN 16
 
 #include "syscon.h"
@@ -17,10 +18,12 @@
 
 #include "ptpd.h"
 
+#if 0 /* not used, currently */
 static int get_bitslide(int ep)
 {
 	return (pcs_read(16) >> 4) & 0x1f;
 }
+#endif
 
 struct meas_entry {
 	int delta_ns;
@@ -42,7 +45,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 			    int phase_step, struct meas_entry *results)
 {
 	char buf[128];
-	wr_timestamp_t ts_tx, ts_rx, ts_sync;
+	wr_timestamp_t ts_rx, ts_sync = {0,};
 	wr_sockaddr_t from;
 	MsgHeader mhdr;
 	int setpoint = phase_min, i = 0, phase;
@@ -63,7 +66,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 			msgUnpackHeader(buf, &mhdr);
 			if (mhdr.messageType == 0)
 				ts_sync = ts_rx;
-			else if (mhdr.messageType == 8) {
+			else if (mhdr.messageType == 8 && ts_sync.correct) {
 				MsgFollowUp fup;
 				msgUnpackFollowUp(buf, &fup);
 
@@ -84,6 +87,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 				while (spll_shifter_busy(0)) ;
 				purge_socket(sock);
 
+				ts_sync.correct = 0;
 				i++;
 			}
 		}
@@ -100,6 +104,7 @@ static int find_transition(struct meas_entry *results, int n, int positive)
 		    && (results[(i + 1) % n].ahead == positive))
 			return i;
 	}
+	return -1;
 }
 
 extern void ptpd_netif_set_phase_transition(wr_socket_t * sock, int phase);

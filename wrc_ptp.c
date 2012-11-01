@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <errno.h>
+#include <wrc.h>
 
 #include "ptpd.h"
 #include "ptpd_netif.h"
@@ -8,6 +9,7 @@
 #include "softpll_ng.h"
 #include "wrc_ptp.h"
 #include "pps_gen.h"
+#include "uart.h"
 
 static RunTimeOpts rtOpts = {
 	.ifaceName = {"wr1"},

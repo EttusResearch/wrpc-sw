@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <wrc.h>
 
 #include "shell.h"
 #include "wrc_ptp.h"

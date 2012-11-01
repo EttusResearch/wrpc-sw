@@ -9,6 +9,7 @@ LGPL 2.1
 */
 
 #include <stdio.h>
+#include <wrc.h>
 
 #include "board.h"
 #include "syscon.h"

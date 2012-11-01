@@ -76,7 +76,7 @@
 
 #define PFILTER_MAX_CODE_SIZE      32
 
-#define pfilter_dbg
+#define pfilter_dbg(x, ...) /* nothing */
 
 extern volatile struct EP_WB *EP;
 
@@ -87,7 +87,7 @@ static int code_pos;
 static uint64_t code_buf[32];
 
 /* begins assembling a new packet filter program */
-void pfilter_new()
+static void pfilter_new()
 {
 	code_pos = 0;
 }
@@ -108,7 +108,8 @@ static void check_reg_range(int val, int minval, int maxval, char *name)
 	}
 }
 
-void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op, int rd)
+static void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op,
+			int rd)
 {
 	uint64_t ir;
 
@@ -132,28 +133,7 @@ void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op, int rd)
 	code_buf[code_pos++] = ir;
 }
 
-   // rd                    = (packet[offset] & (1<<bit_index)) op rd
-void pfilter_btst(int offset, int bit_index, pfilter_op_t op, int rd)
-{
-	uint64_t ir;
-
-	check_size();
-
-	if (offset > code_pos)
-		pfilter_dbg
-		    ("microcode: comparison offset is bigger than current PC. Insert some nops before comparing");
-
-	check_reg_range(rd, 1, 15, "ra/rd");
-	check_reg_range(bit_index, 0, 15, "bit index");
-
-	ir = ((1ULL << 33) | PF_MODE_CMP | ((uint64_t) offset << 7) |
-	      ((uint64_t) bit_index << 29) | (uint64_t) op | ((uint64_t) rd <<
-							      3));
-
-	code_buf[code_pos++] = ir;
-}
-
-void pfilter_nop()
+static void pfilter_nop()
 {
 	uint64_t ir;
 	check_size();
@@ -162,7 +142,7 @@ void pfilter_nop()
 }
 
   // rd  = ra op rb
-void pfilter_logic2(int rd, int ra, pfilter_op_t op, int rb)
+static void pfilter_logic2(int rd, int ra, pfilter_op_t op, int rb)
 {
 	uint64_t ir;
 	check_size();
@@ -194,7 +174,7 @@ static void pfilter_logic3(int rd, int ra, pfilter_op_t op, int rb,
 }
 
 /* Terminates the microcode, loads it to the endpoint and enables the pfilter */
-void pfilter_load()
+static void pfilter_load()
 {
 	int i;
 	code_buf[code_pos++] = (1ULL << 35);	// insert FIN instruction

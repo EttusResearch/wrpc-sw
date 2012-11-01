@@ -1,3 +1,6 @@
+#include <string.h>
+#include <wrc.h>
+
 #include "types.h"
 #include "i2c.h"
 #include "eeprom.h"
@@ -163,7 +166,7 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
 			chksum =
 			    (uint8_t) ((uint16_t) chksum + *(ptr++)) & 0xff;
 		if (chksum != sfp->chksum)
-			EE_RET_CORRPT;
+			return EE_RET_CORRPT;
 	} else {
 		/*count checksum */
 		ptr = (uint8_t *) sfp;
@@ -271,7 +274,7 @@ int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr)
 int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
 {
 	uint8_t i = 1;
-	char separator = ' ';
+	uint8_t separator = ' ';
 	uint16_t used, readback;
 
 	if (eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t *) & used,
@@ -314,7 +317,7 @@ int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
 int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
 {
 	uint16_t used, i;
-	char byte;
+	uint8_t byte;
 
 	if (eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t *) & used,
 	     sizeof(used)) != sizeof(used))
@@ -335,7 +338,7 @@ int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
 	return 0;
 }
 
-int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, char *buf,
+int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
 			   uint8_t bufsize, uint8_t next)
 {
 	static uint16_t ptr;

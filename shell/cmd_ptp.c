@@ -5,7 +5,7 @@
 
 #include <errno.h>
 #include <string.h>
-
+#include "wrc_ptp.h"
 #include "shell.h"
 
 int cmd_ptp(const char *args[])

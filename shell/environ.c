@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <wrc.h>
 
 #include "shell.h"
 
@@ -8,7 +9,7 @@
 
 /* Environment-related functions */
 
-static unsigned char env_buf[SH_ENVIRON_SIZE];
+static char env_buf[SH_ENVIRON_SIZE];
 
 void env_init()
 {
@@ -45,11 +46,12 @@ static int _env_end()
 	for (i = 0; i < SH_ENVIRON_SIZE; i++)
 		if (env_buf[i] == 0xff)
 			return i;
+	return 0;
 }
 
 int env_set(const char *var, const char *value)
 {
-	unsigned char *vstart = _env_get(var), *p;
+	char *vstart = _env_get(var), *p;
 	int end;
 
 	if (vstart) {		/* entry already present? remove current and append at the end of environment */
@@ -81,7 +83,7 @@ int env_set(const char *var, const char *value)
 
 int cmd_env(const char *args[])
 {
-	unsigned char *p = env_buf;
+	char *p = env_buf;
 
 	while (*p != 0xff) {
 		if (*p == 0xaa)

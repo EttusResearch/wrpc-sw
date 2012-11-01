@@ -306,6 +306,8 @@ extern char *owGetErrorMsg(int);
 #define OWERROR_LIBUSB_SET_ALTINTERFACE_ERROR 123
 #define OWERROR_LIBUSB_NO_ADAPTER_FOUND 124
 
+SMALLINT owInit(void);
+
 // One Wire functions defined in ownetu.c
 SMALLINT owFirst(int portnum, SMALLINT do_reset, SMALLINT alarm_only);
 SMALLINT owNext(int portnum, SMALLINT do_reset, SMALLINT alarm_only);

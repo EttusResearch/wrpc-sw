@@ -63,7 +63,7 @@ include sockitowm/sockitowm.mk
 include dev/dev.mk
 
 
-CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) \
+CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall \
 	-ffunction-sections -fdata-sections -Os \
 	-include include/trace.h
 

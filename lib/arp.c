@@ -1,4 +1,5 @@
 #include <string.h>
+#include "endpoint.h"
 
 #include "ipv4.h"
 #include "ptpd_netif.h"

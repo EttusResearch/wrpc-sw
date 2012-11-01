@@ -1,3 +1,4 @@
+#include <wrc.h>
 #include "board.h"
 #include "pps_gen.h"
 
@@ -18,7 +19,7 @@
 #define ppsg_read(reg) \
 	*(volatile uint32_t *) (BASE_PPS_GEN + (offsetof(struct PPSG_WB, reg)))
 
-int pps_gen_init()
+void pps_gen_init()
 {
 	uint32_t cr;
 
@@ -38,8 +39,6 @@ int pps_gen_init()
 /* Adjusts the nanosecond (refclk cycle) counter by atomically adding (how_much) cycles. */
 int pps_gen_adjust(int counter, int64_t how_much)
 {
-	uint32_t cr;
-
 	TRACE_DEV("Adjust: counter = %s [%c%d]\n",
 		  counter == PPSG_ADJUST_SEC ? "seconds" : "nanoseconds",
 		  how_much < 0 ? '-' : '+', (int32_t) abs(how_much));
@@ -61,10 +60,8 @@ int pps_gen_adjust(int counter, int64_t how_much)
 }
 
 /* Sets the current time */
-int pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
+void pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
 {
-	uint32_t cr;
-
 	ppsg_write(ADJ_UTCLO, (uint32_t) (seconds & 0xffffffffLL));
 	ppsg_write(ADJ_UTCHI, (uint32_t) (seconds >> 32) & 0xff);
 	ppsg_write(ADJ_NSEC,
@@ -72,7 +69,6 @@ int pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
 			      (int64_t) REF_CLOCK_PERIOD_PS));
 
 	ppsg_write(CR, (ppsg_read(CR) & 0xfffffffb) | PPSG_CR_CNT_SET);
-	return 0;
 }
 
 uint64_t pps_get_utc(void)

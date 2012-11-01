@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <wrc.h>
 
 #include "softpll_ng.h"
 #include "shell.h"
