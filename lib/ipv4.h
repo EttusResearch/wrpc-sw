@@ -1,6 +1,8 @@
 #ifndef IPV4_H
 #define IPV4_H
 
+#include <inttypes.h>
+
 void ipv4_init(const char *if_name);
 void ipv4_poll(void);
 

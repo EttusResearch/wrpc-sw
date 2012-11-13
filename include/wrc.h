@@ -7,6 +7,7 @@
  * one function and doesn't deserve an header of its own.
  * Also, this brings in very common and needed headers
  */
+#include <inttypes.h>
 #ifdef CONFIG_MPRINTF
 int mprintf(char const *format, ...)
 	__attribute__((format(printf,1,2)));
