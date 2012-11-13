@@ -63,8 +63,7 @@ obj-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/protocol.o \
 	$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
 	$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
-	$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o \
-	$(PTP_NOPOSIX)/libposix/net.o
+	$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
