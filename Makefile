@@ -13,14 +13,21 @@ SIZE =		$(CROSS_COMPILE)size
 
 -include $(CURDIR)/.config
 
+AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 
 PTP_NOPOSIX = ptp-noposix
 
+# we miss CONFIG_ARCH_LM32 as we have no other archs by now
 obj-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
 obj-y += wrc_main.o wrc_ptp.o monitor/monitor.o
+LDS = arch/lm32/ram.ld
 
-cflags-y = -include $(CURDIR)/include/generated/autoconf.h \
-	-Iinclude -I.
+# our linker script is preprocessed, so have a rule here
+%.ld: %.ld.S $(AUTOCONF)
+	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
+
+
+cflags-y = -include $(AUTOCONF)	-Iinclude -I.
 
 cflags-$(CONFIG_PP_PRINTF) += -I$(CURDIR)/pp_printf
 
@@ -58,7 +65,7 @@ obj-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
-	-nostdlib -T arch/lm32/ram.ld
+	-nostdlib -T $(LDS)
 
 include shell/shell.mk
 include tests/tests.mk
@@ -86,7 +93,7 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules
 
-$(OUTPUT).elf: silentoldconfig gitmodules $(OBJS)
+$(OUTPUT).elf: $(LDS) silentoldconfig gitmodules $(OBJS)
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
 	${CC} -o $@ revision.o $(OBJS) $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
