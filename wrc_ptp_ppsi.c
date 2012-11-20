@@ -10,6 +10,8 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <wrc.h>
+#include <minic.h>
+#include <spec.h>
 
 #include <ppsi/ppsi.h>
 #include <wr-constants.h>
@@ -36,13 +38,15 @@ static struct pp_net_path net_path;
 static struct pp_servo servo;
 static struct pp_frgn_master frgn_master;
 
+static int delay_ms = PP_DEFAULT_NEXT_DELAY_MS;
+
 int wrc_ptp_init()
 {
 	struct pp_instance *ppi = &ppi_static; /* no malloc, one instance */
 	sdb_find_devices();
 	uart_init();
 
-	/* FIXME printf? pp_puts("Spec: starting. Compiled on " __DATE__ "\n"); */
+	pp_printf("Spec: starting. Compiled on " __DATE__ "\n");
 
 	ppi->sent_seq_id = sent_seq_id;
 	ppi->defaultDS   = &defaultDS;
@@ -68,7 +72,6 @@ int wrc_ptp_init()
 	OPTS(ppi)->slave_only = 1;
 #endif
 
-	/* FIXME main spec_main_loop(ppi); */
 	return 0;
 }
 
@@ -111,18 +114,18 @@ int wrc_ptp_set_mode(int mode)
 
 	start_tics = timer_get_tics();
 
-	mprintf("Locking PLL");
+	pp_printf("Locking PLL");
 
 	shw_pps_gen_enable_output(0);
 
 	while (!spll_check_lock(0) && lock_timeout) {
 		timer_delay(TICS_PER_SECOND);
-		mprintf(".");
+		pp_printf(".");
 		if (timer_get_tics() - start_tics > lock_timeout) {
-			mprintf("\nLock timeout.\n");
+			pp_printf("\nLock timeout.\n");
 			return -ETIMEDOUT;
 		} else if (uart_read_byte() == 27) {
-			mprintf("\n");
+			pp_printf("\n");
 			return -EINTR;
 		}
 	}
@@ -130,7 +133,7 @@ int wrc_ptp_set_mode(int mode)
 	if (mode == WRC_MODE_MASTER || mode == WRC_MODE_GM)
 		shw_pps_gen_enable_output(1);
 
-	mprintf("\n");
+	pp_printf("\n");
 	ptp_mode = mode;
 	return 0;
 }
@@ -159,9 +162,45 @@ int wrc_ptp_stop()
 
 int wrc_ptp_update()
 {
+	int i;
+	const int eth_ofst = sizeof(struct spec_ethhdr);
+	struct pp_instance *ppi = &ppi_static;
+
 	if (ptp_enabled) {
-		/* FIXME singlePortLoop(&rtOpts,  ptpPortDS, 0); */
-		/* sharedPortsLoop(ptpPortDS); Questo mi sa che a me ora non serve */
+		unsigned char _packet[1500];
+		/* FIXME Alignment */
+		unsigned char *packet = _packet + 2;
+
+		/* Wait for a packet or for the timeout */
+		while (delay_ms && !minic_poll_rx()) {
+			timer_delay(1000);
+			delay_ms--;
+		}
+		if (!minic_poll_rx()) {
+			delay_ms = pp_state_machine(ppi, NULL, 0);
+			return 0;
+		}
+		/*
+		 * We got a packet. If it's not ours, continue consuming
+		 * the pending timeout
+		 */
+		/* FIXME i = spec_recv_packet(ppi, packet, sizeof(_packet), &ppi->last_rcv_time);*/
+		if (0) {
+			int j;
+			pp_printf("recvd: %i\n", i);
+			for (j = 0; j < i - eth_ofst; j++) {
+				pp_printf("%02x ", packet[j + eth_ofst]);
+				if( (j+1)%16==0 )
+					pp_printf("\n");
+			}
+			pp_printf("\n");
+		}
+		/* Warning: PP_ETHERTYPE is endian-agnostic by design */
+
+		if (((struct spec_ethhdr *)packet)->h_proto !=
+		     htons(PP_ETHERTYPE))
+			return 0;
+		delay_ms = pp_state_machine(ppi, packet + eth_ofst, i - eth_ofst);
 	}
 	return 0;
 }
