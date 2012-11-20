@@ -59,6 +59,9 @@ SECTIONS
 		_ebss = .;
 	} > ram
 
+	/* End of RAM for checking stack overflows */
+	PROVIDE(_endram = ORIGIN(stack));
+
 	/* First location in stack is highest address in STACK */
 	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
 }

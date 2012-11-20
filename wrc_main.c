@@ -149,10 +149,22 @@ static void ui_update()
 
 }
 
+extern uint32_t _endram;
+#define ENDRAM_MAGIC 0xbadc0ffe
+
+void check_stack(void)
+{
+	while (_endram != ENDRAM_MAGIC) {
+		mprintf("Stack overflow!\n");
+		timer_delay(1000);
+	}
+}
+
 int main(void)
 {
 	wrc_extra_debug = 1;
 	wrc_ui_mode = UI_SHELL_MODE;
+	_endram = ENDRAM_MAGIC;
 
 	wrc_initialize();
 	shell_init();
@@ -190,5 +202,6 @@ int main(void)
 		ui_update();
 		wrc_ptp_update();
 		spll_update_aux_clocks();
+		check_stack();
 	}
 }
