@@ -7,6 +7,7 @@ BOARD = spec
 CROSS_COMPILE ?= lm32-elf-
 
 CC =		$(CROSS_COMPILE)gcc
+LD =		$(CROSS_COMPILE)ld
 OBJDUMP =	$(CROSS_COMPILE)objdump
 OBJCOPY =	$(CROSS_COMPILE)objcopy
 SIZE =		$(CROSS_COMPILE)size
@@ -93,11 +94,14 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules
 
-$(OUTPUT).elf: $(LDS) silentoldconfig gitmodules $(OBJS)
+$(OUTPUT).elf: $(LDS) silentoldconfig gitmodules $(OUTPUT).o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
-	${CC} -o $@ revision.o $(OBJS) $(LDFLAGS)
+	${CC} -o $@ revision.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 	$(SIZE) $@
+
+$(OUTPUT).o: $(OBJS)
+	$(LD) --gc-sections -e _start -r $(OBJS) -o $@
 
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@
