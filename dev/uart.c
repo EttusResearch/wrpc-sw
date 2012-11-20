@@ -44,7 +44,7 @@ int uart_write_string(const char *s)
 
 int puts(const char *s) __attribute__((alias("uart_write_string")));
 
-int uart_poll()
+static int uart_poll()
 {
 	return uart->SR & UART_SR_RX_RDY;
 }

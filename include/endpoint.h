@@ -29,7 +29,4 @@ int ep_cal_pattern_disable();
 
 void pfilter_init_default();
 
-uint16_t pcs_read(int location);
-void pcs_write(int location, int value);
-
 #endif

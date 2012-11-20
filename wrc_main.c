@@ -40,7 +40,7 @@ int32_t sfp_deltaTx = 46407;
 int32_t sfp_deltaRx = 167843;
 uint32_t cal_phase_transition = 2389;
 
-void wrc_initialize()
+static void wrc_initialize()
 {
 	uint8_t mac_addr[6];
 
@@ -89,7 +89,7 @@ void wrc_initialize()
 #define LINK_UP 3
 #define LINK_DOWN 4
 
-int wrc_check_link()
+static int wrc_check_link()
 {
 	static int prev_link_state = -1;
 	int link_state = ep_link_up(NULL);
@@ -152,7 +152,7 @@ static void ui_update()
 extern uint32_t _endram;
 #define ENDRAM_MAGIC 0xbadc0ffe
 
-void check_stack(void)
+static void check_stack(void)
 {
 	while (_endram != ENDRAM_MAGIC) {
 		mprintf("Stack overflow!\n");

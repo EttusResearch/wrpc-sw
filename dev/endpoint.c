@@ -31,14 +31,14 @@ static int autoneg_enabled;
 volatile struct EP_WB *EP;
 
 /* functions for accessing PCS (MDIO) registers */
-uint16_t pcs_read(int location)
+static uint16_t pcs_read(int location)
 {
 	EP->MDIO_CR = EP_MDIO_CR_ADDR_W(location >> 2);
 	while ((EP->MDIO_ASR & EP_MDIO_ASR_READY) == 0) ;
 	return EP_MDIO_ASR_RDATA_R(EP->MDIO_ASR) & 0xffff;
 }
 
-void pcs_write(int location, int value)
+static void pcs_write(int location, int value)
 {
 	EP->MDIO_CR = EP_MDIO_CR_ADDR_W(location >> 2)
 		    | EP_MDIO_CR_DATA_W(value)
