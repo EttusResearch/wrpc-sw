@@ -31,7 +31,12 @@ ENTRY(_start)
 
 MEMORY
 {
-    ram : ORIGIN = 0x00000000, LENGTH = CONFIG_RAMSIZE
+    ram :
+	ORIGIN = 0x00000000,
+	LENGTH = CONFIG_RAMSIZE - CONFIG_STACKSIZE
+    stack :
+	ORIGIN = CONFIG_RAMSIZE - CONFIG_STACKSIZE,
+	LENGTH = CONFIG_STACKSIZE
 }
 
 SECTIONS
@@ -54,8 +59,8 @@ SECTIONS
 		_ebss = .;
 	} > ram
 
-	/* First location in stack is highest address in RAM */
-	PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
+	/* First location in stack is highest address in STACK */
+	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
 }
 
 /* We need to provide mprintf to ptp-noposix object files, if missing */
