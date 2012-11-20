@@ -70,6 +70,7 @@ cflags-$(CONFIG_PPSI) += \
 	-include include/ppsi-wrappers.h \
 	-Iinclude \
 	-I$(PPSI)/include \
+	-I$(PPSI)/arch-spec \
 	-I$(PPSI)/arch-spec/include \
 	-I$(PPSI)/proto-ext-whiterabbit \
 	-Iboards/spec
