@@ -1,8 +1,17 @@
 
 mainmenu "WR PTP Core software configuration"
 
+config RAMSIZE
+       int "Size of the RAM in the FPGA for this program"
+       default 90112
+       help
+         The usual configuration for wrpc-sw is 0x16000 bytes
+	 (i.e. 88kB = 90112 bytes) but if your project has less or
+	 more features you may want to adjust the FPGA size and
+	 choose your preferred value here.
+
 config MPRINTF
-	boolean "Use the old mprintf implementation for printf
+	boolean "Use the old mprintf implementation for printf"
 	default y
 	help
 	  wrpc-sw has traditionally used mprintf as its printf engine.
