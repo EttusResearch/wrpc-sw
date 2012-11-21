@@ -11,17 +11,27 @@ static const char hex[] = "0123456789abcdef";
 static int number(char *out, int value, int base, int lead, int wid)
 {
 	char tmp[16];
-	int i = 16, ret;
+	int i = 16, ret, negative = 0;
 
 	/* No error checking at all: it is as ugly as possible */
+	if (value < 0) {
+		negative = 1;
+		value = -value;
+	}
 	while (value && i) {
 		tmp[--i] = hex[value % base];
 		value /= base;
 	}
 	if (i == 16)
 		tmp[--i] = '0';
-	while (i > 16 - wid)
+	if (negative && lead == ' ') {
+		tmp[--i] = '-';
+		negative = 0;
+	}
+	while (i > 16 - wid - negative)
 		tmp[--i] = lead;
+	if (negative)
+		tmp[--i] = '-';
 	ret = 16 - i;
 	while (i < 16)
 		*(out++) = tmp[i++];
