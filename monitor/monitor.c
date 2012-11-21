@@ -113,43 +113,43 @@ void wrc_mon_gui(void)
 
 		cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
-		cprintf(C_GREY, "Round-trip time (mu):      ");
-		cprintf(C_WHITE, "%d ps\n", (int32_t) (cur_servo_state.mu));
-		cprintf(C_GREY, "Master-slave delay:        ");
-		cprintf(C_WHITE, "%d ps\n",
+		cprintf(C_GREY, "Round-trip time (mu):    ");
+		cprintf(C_WHITE, "%9d ps\n", (int32_t) (cur_servo_state.mu));
+		cprintf(C_GREY, "Master-slave delay:      ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.delay_ms));
-		cprintf(C_GREY, "Master PHY delays:         ");
+		cprintf(C_GREY, "Master PHY delays:       ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_m,
 			(int32_t) cur_servo_state.delta_rx_m);
-		cprintf(C_GREY, "Slave PHY delays:          ");
+		cprintf(C_GREY, "Slave PHY delays:        ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_s,
 			(int32_t) cur_servo_state.delta_rx_s);
-		cprintf(C_GREY, "Total link asymmetry:      ");
-		cprintf(C_WHITE, "%d ps\n",
+		cprintf(C_GREY, "Total link asymmetry:    ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.total_asymmetry));
-		cprintf(C_GREY, "Cable rtt delay:           ");
-		cprintf(C_WHITE, "%d ps\n",
+		cprintf(C_GREY, "Cable rtt delay:         ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.mu) -
 			(int32_t) cur_servo_state.delta_tx_m -
 			(int32_t) cur_servo_state.delta_rx_m -
 			(int32_t) cur_servo_state.delta_tx_s -
 			(int32_t) cur_servo_state.delta_rx_s);
-		cprintf(C_GREY, "Clock offset:              ");
-		cprintf(C_WHITE, "%d ps\n",
+		cprintf(C_GREY, "Clock offset:            ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_offset));
-		cprintf(C_GREY, "Phase setpoint:            ");
-		cprintf(C_WHITE, "%d ps\n",
+		cprintf(C_GREY, "Phase setpoint:          ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_setpoint));
-		cprintf(C_GREY, "Skew:                      ");
-		cprintf(C_WHITE, "%d ps\n",
+		cprintf(C_GREY, "Skew:                    ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_skew));
-		cprintf(C_GREY, "Manual phase adjustment:   ");
-		cprintf(C_WHITE, "%d ps\n", (int32_t) (wrc_man_phase));
+		cprintf(C_GREY, "Manual phase adjustment: ");
+		cprintf(C_WHITE, "%9d ps\n", (int32_t) (wrc_man_phase));
 
-		cprintf(C_GREY, "Update counter:            ");
-		cprintf(C_WHITE, "%d \n",
+		cprintf(C_GREY, "Update counter:          ");
+		cprintf(C_WHITE, "%9d \n",
 			(int32_t) (cur_servo_state.update_count));
 
 	}

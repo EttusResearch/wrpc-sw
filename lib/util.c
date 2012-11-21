@@ -71,7 +71,7 @@ char *format_time(uint64_t sec)
 	t.tm_mday = dayno + 1;
 	t.tm_isdst = 0;
 
-	sprintf(buf, "%s, %s %d, %d, %2d:%2d:%2d", _days[t.tm_wday],
+	sprintf(buf, "%s, %s %d, %d, %02d:%02d:%02d", _days[t.tm_wday],
 		_months[t.tm_mon], t.tm_mday, t.tm_year + YEAR0, t.tm_hour,
 		t.tm_min, t.tm_sec);
 
@@ -81,7 +81,7 @@ char *format_time(uint64_t sec)
 void cprintf(int color, const char *fmt, ...)
 {
 	va_list ap;
-	mprintf("\033[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
+	mprintf("\e[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
@@ -90,8 +90,8 @@ void cprintf(int color, const char *fmt, ...)
 void pcprintf(int row, int col, int color, const char *fmt, ...)
 {
 	va_list ap;
-	mprintf("\033[%d;%df", row, col);
-	mprintf("\033[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
+	mprintf("\e[%d;%df", row, col);
+	mprintf("\e[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
@@ -99,5 +99,5 @@ void pcprintf(int row, int col, int color, const char *fmt, ...)
 
 void term_clear()
 {
-	mprintf("\033[2J\033[1;1H");
+	mprintf("\e[2J\e[1;1H");
 }
