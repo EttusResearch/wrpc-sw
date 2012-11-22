@@ -131,9 +131,7 @@ tools:
 # who didn't read carefully the manual won't get confused
 gitmodules:
 	@test -d ptp-noposix/libposix || echo "Checking out submodules"
-	@test -d ptp-noposix/libposix || \
-		git submodule init && git submodule update
-
+	@test -d ptp-noposix/libposix || git submodule update --init
 
 
 # following targets from Makefile.kconfig
