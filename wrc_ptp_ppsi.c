@@ -21,8 +21,6 @@
 #include "pps_gen.h"
 #include "uart.h"
 
-extern struct pp_runtime_opts default_rt_opts;
-
 static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN;
 static struct pp_instance ppi_static;
 CONST_VERBOSITY int pp_diag_verbosity = 0;
