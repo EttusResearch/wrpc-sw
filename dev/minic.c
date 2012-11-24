@@ -15,6 +15,7 @@
 #include "board.h"
 #include "pps_gen.h"		/* for pps_gen_get_time() */
 #include "minic.h"
+#include <syscon.h>
 
 #include <hw/minic_regs.h>
 
@@ -292,6 +293,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 {
 	uint32_t d_hdr, mcr, nwords;
 	uint8_t ts_valid;
+	int i;
 	minic_new_tx_buffer();
 
 	memset((void *)minic.tx_head, 0x0, size + 16);
@@ -318,7 +320,17 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 	mcr = minic_readl(MINIC_REG_MCR);
 	minic_writel(MINIC_REG_MCR, mcr | MINIC_MCR_TX_START);
 
-	while ((minic_readl(MINIC_REG_MCR) & MINIC_MCR_TX_IDLE) == 0) ;
+	i = 0;
+
+	do {
+		mcr = minic_readl(MINIC_REG_MCR);
+		if (i > 0)
+		timer_delay(1);
+		i++;
+	} while (((mcr & MINIC_MCR_TX_IDLE) == 0) && (i < 1000));
+
+	if (i == 1000)
+		mprintf("Warning: tx not terminated infinite mcr=0x%x\n",mcr);
 
 	if (hwts) {		/* wait for the timestamp */
 		uint32_t raw_ts;
