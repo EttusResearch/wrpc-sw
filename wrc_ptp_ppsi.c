@@ -39,6 +39,7 @@ static struct pp_servo servo;
 static struct pp_frgn_master frgn_master;
 
 static int delay_ms = PP_DEFAULT_NEXT_DELAY_MS;
+static int start_tics = 0;
 
 int wrc_ptp_init()
 {
@@ -58,14 +59,6 @@ int wrc_ptp_init()
 	ppi->servo       = &servo;
 	ppi->frgn_master = &frgn_master;
 	ppi->arch_data   = NULL;
-
-#ifdef FIXME_NET_INIT	
-	if (spec_open_ch(ppi)) {
-		/* FIXME spec_errno pp_diag_error(ppi, spec_errno); */
-		/* FIXME pp_diag_fatal(ppi, "open_ch", ""); */
-	}
-#endif
-	pp_open_instance(ppi, 0 /* no opts */);
 
 #ifdef PPSI_SLAVE
 	/* FIXME slave_only */
@@ -171,21 +164,21 @@ int wrc_ptp_update()
 		/* FIXME Alignment */
 		unsigned char *packet = _packet + 2;
 
-		/* Wait for a packet or for the timeout */
-		while (delay_ms && !minic_poll_rx()) {
-			timer_delay(1000);
-			delay_ms--;
-		}
-		if (!minic_poll_rx()) {
-			delay_ms = pp_state_machine(ppi, NULL, 0);
-			return 0;
-		}
 		/*
 		 * We got a packet. If it's not ours, continue consuming
 		 * the pending timeout
 		 */
-		/* FIXME i = spec_recv_packet(ppi, packet, sizeof(_packet), &ppi->last_rcv_time);*/
-		if (0) {
+		i = spec_recv_packet(ppi, packet, sizeof(_packet),
+				     &ppi->last_rcv_time);
+		if ((!i) && (timer_get_tics() - start_tics < delay_ms))
+			return 0;
+		if (!i) {
+			/* Nothing received, but timeout elapsed */
+			start_tics = timer_get_tics();
+			delay_ms = pp_state_machine(ppi, NULL, 0);
+			return 0;
+		}
+		if (pp_diag_verbosity > 1) {
 			int j;
 			pp_printf("recvd: %i\n", i);
 			for (j = 0; j < i - eth_ofst; j++) {
@@ -197,10 +190,7 @@ int wrc_ptp_update()
 		}
 		/* Warning: PP_ETHERTYPE is endian-agnostic by design */
 
-		if (((struct spec_ethhdr *)packet)->h_proto !=
-		     htons(PP_ETHERTYPE))
-			return 0;
-		delay_ms = pp_state_machine(ppi, packet + eth_ofst, i - eth_ofst);
+		delay_ms = pp_state_machine(ppi, packet, i);
 	}
 	return 0;
 }
