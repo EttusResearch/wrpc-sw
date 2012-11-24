@@ -135,6 +135,15 @@ int wrc_ptp_get_mode()
 int wrc_ptp_start()
 {
 	struct pp_instance *ppi = &ppi_static;
+
+	pp_open_instance(ppi, 0 /* no opts */);
+	OPTS(ppi)->e2e_mode = 1;
+
+	/* Call the state machine. Being it in "Initializing" state, make
+	 * ppsi initialize what is necessary */
+	delay_ms = pp_state_machine(ppi, NULL, 0);
+	start_tics = timer_get_tics();
+
 	DSPOR(ppi)->linkUP = FALSE;
 	wr_servo_reset();
 
@@ -146,6 +155,7 @@ int wrc_ptp_stop()
 {
 	ptp_enabled = 0;
 	wr_servo_reset();
+	pp_close_instance(&ppi_static);
 	return 0;
 }
 
