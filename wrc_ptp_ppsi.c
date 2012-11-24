@@ -60,11 +60,6 @@ int wrc_ptp_init()
 	ppi->frgn_master = &frgn_master;
 	ppi->arch_data   = NULL;
 
-#ifdef PPSI_SLAVE
-	/* FIXME slave_only */
-	OPTS(ppi)->slave_only = 1;
-#endif
-
 	return 0;
 }
 
@@ -84,7 +79,8 @@ int wrc_ptp_set_mode(int mode)
 	case WRC_MODE_GM:
 		/* FIXME multiport rtOpts.primarySource = TRUE; */
 		DSPOR(ppi)->wrConfig = WR_M_ONLY;
-		/* FIXME multiport? rtOpts.masterOnly = TRUE; */
+		OPTS(ppi)->master_only = TRUE;
+		OPTS(ppi)->slave_only = FALSE;
 		spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
 		lock_timeout = LOCK_TIMEOUT_GM;
 		break;
@@ -92,7 +88,8 @@ int wrc_ptp_set_mode(int mode)
 	case WRC_MODE_MASTER:
 		/* FIXME multiport rtOpts.primarySource = FALSE; */
 		DSPOR(ppi)->wrConfig = WR_M_ONLY;
-		/* FIXME multiport? rtOpts.masterOnly = TRUE; */
+		OPTS(ppi)->master_only = TRUE;
+		OPTS(ppi)->slave_only = FALSE;
 		spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 		lock_timeout = LOCK_TIMEOUT_FM;
 		break;
@@ -100,7 +97,8 @@ int wrc_ptp_set_mode(int mode)
 	case WRC_MODE_SLAVE:
 		/* FIXME multiport rtOpts.primarySource = FALSE; */
 		DSPOR(ppi)->wrConfig = WR_S_ONLY;
-		/* FIXME multiport? rtOpts.masterOnly = FALSE; */
+		OPTS(ppi)->master_only = FALSE;
+		OPTS(ppi)->slave_only = TRUE;
 		spll_init(SPLL_MODE_SLAVE, 0, 1);
 		break;
 	}
