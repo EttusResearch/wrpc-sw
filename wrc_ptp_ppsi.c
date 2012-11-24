@@ -166,7 +166,7 @@ int wrc_ptp_update()
 	struct pp_instance *ppi = &ppi_static;
 
 	if (ptp_enabled) {
-		unsigned char _packet[1500];
+		static unsigned char _packet[500];
 		/* FIXME Alignment */
 		unsigned char *packet = _packet + 2;
 
