@@ -252,7 +252,7 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
                                                                                                                    from->mac[4],from->mac[5],from->mac[6],from->mac[7],
                                                                                                                    from->mac_dest[0],from->mac_dest[1],from->mac_dest[2],from->mac_dest[3],
                                                                                                                    from->mac_dest[4],from->mac_dest[5],from->mac_dest[6],from->mac_dest[7]);*/
-	return min(size, data_length);
+	return min(size - sizeof(struct ethhdr), data_length);
 	return 0;
 }
 
