@@ -24,7 +24,15 @@
 #undef PACKED
 #include "ptpd_netif.h"
 
+#ifdef CONFIG_PPSI
+#include <ppsi/ppsi.h>
+#define UNPACK_HEADER msg_unpack_header
+#define UNPACK_FOLLOWUP msg_unpack_follow_up
+#else
 #include "ptpd.h"
+#define UNPACK_HEADER msgUnpackHeader
+#define UNPACK_FOLLOWUP msgUnpackFollowUp
+#endif
 
 #if 0 /* not used, currently */
 static int get_bitslide(int ep)
@@ -74,12 +82,12 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 		int n = ptpd_netif_recvfrom(sock, &from, buf, 128, &ts_rx);
 
 		if (n > 0) {
-			msgUnpackHeader(buf, &mhdr);
+			UNPACK_HEADER(buf, &mhdr);
 			if (mhdr.messageType == 0)
 				ts_sync = ts_rx;
 			else if (mhdr.messageType == 8 && ts_sync.correct) {
 				MsgFollowUp fup;
-				msgUnpackFollowUp(buf, &fup);
+				UNPACK_FOLLOWUP(buf, &fup);
 
 				mprintf("Shift: %d/%dps [step %dps]        \r",
 					setpoint, phase_max, phase_step);
