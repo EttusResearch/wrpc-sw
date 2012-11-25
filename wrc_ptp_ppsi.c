@@ -162,7 +162,6 @@ int wrc_ptp_stop()
 int wrc_ptp_update()
 {
 	int i;
-	const int eth_ofst = sizeof(struct spec_ethhdr);
 	struct pp_instance *ppi = &ppi_static;
 
 	if (ptp_enabled) {
@@ -187,8 +186,8 @@ int wrc_ptp_update()
 		if (pp_diag_verbosity > 1) {
 			int j;
 			pp_printf("recvd: %i\n", i);
-			for (j = 0; j < i - eth_ofst; j++) {
-				pp_printf("%02x ", packet[j + eth_ofst]);
+			for (j = 0; j < i; j++) {
+				pp_printf("%02x ", packet[j]);
 				if( (j+1)%16==0 )
 					pp_printf("\n");
 			}
