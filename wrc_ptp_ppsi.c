@@ -165,15 +165,13 @@ int wrc_ptp_update()
 	struct pp_instance *ppi = &ppi_static;
 
 	if (ptp_enabled) {
-		static unsigned char _packet[500];
-		/* FIXME Alignment */
-		unsigned char *packet = _packet + 2;
+		static unsigned char packet[500];
 
 		/*
 		 * We got a packet. If it's not ours, continue consuming
 		 * the pending timeout
 		 */
-		i = spec_recv_packet(ppi, packet, sizeof(_packet),
+		i = spec_recv_packet(ppi, packet, sizeof(packet),
 				     &ppi->last_rcv_time);
 		if ((!i) && (timer_get_tics() - start_tics < delay_ms))
 			return 0;
