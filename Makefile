@@ -94,7 +94,7 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules
 
-$(OUTPUT).elf: $(LDS) silentoldconfig gitmodules $(OUTPUT).o
+$(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
 	${CC} -o $@ revision.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
@@ -111,6 +111,8 @@ $(OUTPUT).o: $(OBJS)
 
 %.vhd: tools %.bin
 	./tools/genramvhd -s 90112 $*.bin > $@
+
+$(AUTOCONF): silentoldconfig
 
 $(OBJS): include/board.h
 
