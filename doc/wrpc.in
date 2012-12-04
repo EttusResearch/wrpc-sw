@@ -702,6 +702,7 @@ function to initialize SoftPll
 
 @item @code{stat} @tab prints one line log message
 @item @code{stat cont} @tab prints log message for each second (Esc to exit back to shell)
+@item @code{stat bts} @tab prints bitslide value for established WR Link, needed by calibration procedure
 
 @item @code{ptp start} @tab start WR PTP daemon
 @item @code{ptp stop} @tab stops WR PTP daemon

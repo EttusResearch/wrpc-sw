@@ -148,6 +148,12 @@ int ep_link_up(uint16_t * lpa)
 	return (msr & flags) == flags ? 1 : 0;
 }
 
+int ep_get_bitslide()
+{
+	return PICOS_PER_SERIAL_BIT *
+		MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
+}
+
 /* Returns the TX/RX latencies. They are valid only when the link is up. */
 int ep_get_deltas(uint32_t * delta_tx, uint32_t * delta_rx)
 {
