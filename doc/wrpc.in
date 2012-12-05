@@ -600,7 +600,9 @@ synchronization status:
   wrc# gui
 @end example
 
-The information is presented in a clear, auto-refreshing screen:
+The information is presented in a clear, auto-refreshing screen (full
+description about information reported by gui is provided in @ref{WRPC GUI 
+elements}):
 
 @sp 1
 @center @image{wrpc_mon, 12cm,,wrpc sync monitor}
@@ -750,6 +752,55 @@ daemon in new mode
 *** available only with Etherbone support compiled in
 
 
+@c ##########################################################################
+@page
+@node WRPC GUI elements
+@appendix WRPC GUI elements
+
+@multitable @columnfractions .3 .7
+@item @code{TAI Time:} @tab current state of device's local clock
+@item @code{RX:} / @code{TX:} @tab Rx/Tx packets counters
+@item @code{mode:} @tab operation mode of White Rabbit PTP Core - @code{<WR
+Master, WR Slave>}
+@item @code{< Locked, NoLock >} @tab SoftPLL lock state
+
+@item @code{Servo state:} @tab current state of WR servo state machine -
+@code{<Uninitialized, SYNC_SEC, SYNC_NSEC, SYNC_PHASE, TRACK_PHASE>}
+
+@item @code{Phase tracking:} @tab is phase tracking enabled when WR Slave is
+synchronized to WR Master - @code{<ON, OFF>}
+@item @code{Synchronization source:} @tab network interface name from which WR 
+daemon gets synchronization - @code{<wru1>}
+
+@item @code{Round-trip time (mu):} @tab round-trip delay in picoseconds
+(@math{delay_{MM}})
+
+@item @code{Master-slave delay:} @tab estimated one-way (master to slave) link
+delay (@math{delay_{MS}})
+
+@item @code{Master PHY delays:} @tab transmission/reception delays of WR
+Master's hardware (@math{\Delta_{TXM}, \Delta_{RXM}})
+
+@item @code{Slave PHY delays:} @tab transmission/reception delays of WR Slave's
+hardware (@math{\Delta_{TXS}, \Delta_{RXS}})
+
+@item @code{Total link asymmetry:} @tab WR link asymmetry calculated as
+@math{delay_{MM} - 2 \cdot delay_{MS}}
+
+@item @code{Cable rtt delay:} @tab round-trip fiber latency
+
+@item @code{Clock offset:} @tab Slave to Master offset calculated by PTP daemon
+(@math{offset_{MS}})
+
+@item @code{Phase setpoint:} @tab current Slave's clock phase shift value
+
+@item @code{Skew:} @tab the difference between current and previous estimated
+one-way link delay
+
+@item @code{Update counter:} @tab the state of counter incremented every time
+the WR servo is updated
+
+@end multitable
 
 @c ##########################################################################
 @bye
