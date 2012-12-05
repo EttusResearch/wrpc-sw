@@ -28,7 +28,7 @@ static int number(char *out, int value, int base, int lead, int wid)
 		tmp[--i] = '-';
 		negative = 0;
 	}
-	while (i > 16 - wid - negative)
+	while (i > 16 - wid + negative)
 		tmp[--i] = lead;
 	if (negative)
 		tmp[--i] = '-';

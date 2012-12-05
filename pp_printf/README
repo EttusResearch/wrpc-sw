@@ -8,7 +8,8 @@ It is a complete printf (it only misses the %[charset] feature, and
 obviously floating point support). It relies on an external "puts"
 function for the actual output; the full version also needs strnlen.
 Unfortunately, the stdio puts adds a trailing newline (while most
-embedded implementations do not). The sprintf function is included.
+embedded implementations do not). The sprintf function is included
+as pp_sprintf.
 
 The printf engine, vsprintf(), comes in four flavours:
 
@@ -54,8 +55,10 @@ Example calls (example-printf.c):
     pp_printf("octal   %5o %5o %05o\n", 1024, 666, 53);
     pp_printf("hex     %5x %5x %05x\n", 1024, 666, 53);
     pp_printf("HEX etc %5X %+5d %-5i\n", 1024, 666, 53);
+    pp_printf("neg     %5i %5i %05i\n", -5, -10, -15);
     pp_printf("char: %c  string %s %5s %.5s\n", 65, "foo", "foo",
               "verylongstring");
+    pp_printf("hour    %02d:%02d:%02d\n", 12, 9, 0);
 
 Result (as you see, format modifiers are respected):
 
@@ -63,38 +66,41 @@ Result (as you see, format modifiers are respected):
     octal    2000  1232 00065
     hex       400   29a 00035
     HEX etc   400  +666 53
+    neg        -5   -10 -0015
     char: A  string foo   foo veryl
+    hour    12:09:00
 
-Footprint: 1500-3300 bytes, plus 100-400 bytes for the frontend.
+Footprint: 1400-3200 bytes, plus 100-400 bytes for the frontend.
 
 
-	The xint implementaion in detail
+	The xint implementation in detail
 	================================
 
 This prints correctly "%c", "%s", "%i", "%x". Formats "%u" and "%d"
-are synonims of "%i", and "%p"is a synonim for "%x".  The only
+are synonyms of "%i", and "%p" is a synonym for "%x".  The only
 supported attributes are '0' and a one-digit width (e.g.: "%08x"
-works).  I personally dislike it, because it
-not powerful enough nor low-level as real hacker's too should be.
+works).  I personally use it a lot but I don't like it much, because it
+is not powerful enough nor low-level as real hacker's too should be.
 However, it matches the requirement of some projects with a little
 user interface, where the "full" code reveals too large and the "mini"
 code is too unfair to the reader.  To compile it and link the example,
 please set "CONFIG_PRINTF_XINT=y" in your environment or Makefile.
 
-This is the result of the example. As expected, no size nor precision
-directives are obeyed:
+This is the result of the example. As expected, data is aligned and
+has leading zeroes when requested, but bot other formats are obeyed:
 
     integer  1024   666 00053
     octal    2000  1232 00065
     hex       400   29a 00035
     HEX etc   400   666    53
+    neg        -5   -10 -0015
     char: A  string foo foo verylongstring
+    hour    12:09:00
 
-Footprint: 250-700 bytes, plus 100-250 bytes for the frontend
-(FIXME: The figure hasn't been updated after I added the attributes)
+Footprint: 350-800 bytes, plus 100-400 bytes for the frontend
 
 
-	The miminal implementaion in detail
+	The miminal implementation in detail
 	===================================
 
 It is derived from the full one. I left all format parsing intact, but
@@ -118,13 +124,14 @@ Result of example-printf (you can "make CONFIG_PRINTF_MINI=y):
     octal   <00000400> <0000029a> <00000035>
     hex     <00000400> <0000029a> <00000035>
     HEX etc <00000400> <0000029a> <00000035>
+    neg     <fffffffb> <fffffff6> <fffffff1>
     char: A  string foo foo verylongstring
+    hour    <0000000c>:<00000009>:<00000000>
 
 As promised, %c and %s is printed correctly, but without obeying the
 format modifiers, but all integer value are printed in hex.
 
-Footprint: 200-600 bytes (usually less than 1k), plus 100-400 for the
-frontend.
+Footprint: 200-600 bytes, plus 100-400 for the frontend.
 
 
 	The empty implementation in detail
@@ -144,9 +151,11 @@ Result of example-printf (you can "make CONFIG_PRINTF_MINI=y):
     octal   %5o %5o %05o
     hex     %5x %5x %05x
     HEX etc %5X %+5d %-5i
+    neg     %5i %5i %05i
     char: %c  string %s %5s %.5s
+    hour    %02d:%02d:%02d
 
-Footprint: 20-90 bytes, plus 100-400 for the frontend.
+Footprint: 25-110 bytes, plus 100-400 for the frontend.
 
 If you want to remove all printf overhead in production, you should
 use a preprocessor macro to completely kill the printf calls. This
@@ -163,21 +172,19 @@ This table excludes the static buffer (256 in .bss by default) and
 only lists the code size (command "size", column "text"), compiled
 with -Os as for this Makefile.
 
-(FIXME: The figure fox xint must be redone, as I added the attributes)
-
 printf.o is the frontend and is linked in all four configurations,
 the other ones are exclusive one another:
 
                         printf.o       full  xint  mini  none
 
-   x86, gcc-4.4.5           87         1715   300   258    29
-   x86-64, gcc-4.4.5       418         2325   482   433    70
-   x86, gcc-4.6.2          255         2210   380   330    89
-   arm, gcc-4.2.2          156         2408   464   356    48
-   arm, gcc-4.5.2          128         2235   445   353    32
-   arm, gcc-4.5.2 thumb2    80         1443   253   209    20
-   lm32, gcc-4.5.3         196         3228   680   576    36
-   mips, gcc-4.4.1         184         2616   616   504    72
-   powerpc, gcc-4.4.1      328         2895   637   521    40
-   coldfire, gcc-4.4.1      96         2025   331   257    32
-   sh4, gcc-4.4.1          316         2152   464   408    28
+   x86, gcc-4.4.5           87         1715   471   258    48
+   x86-64, gcc-4.4.5       418         2325   701   433    77
+   x86, gcc-4.6.2          255         2210   565   330   110
+   arm, gcc-4.2.2          156         2408   672   356    52
+   arm, gcc-4.5.2          128         2235   637   353    44
+   arm, gcc-4.5.2 thumb2    80         1443   369   209    26
+   lm32, gcc-4.5.3         196         3228   820   576    44
+   mips, gcc-4.4.1         184         2616   808   504    72
+   powerpc, gcc-4.4.1      328         2895   869   521    48
+   coldfire, gcc-4.4.1      96         2025   479   257    42
+   sh4, gcc-4.4.1          316         2152   600   408    34

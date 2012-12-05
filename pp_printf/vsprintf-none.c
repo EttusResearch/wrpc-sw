@@ -9,5 +9,6 @@ int pp_vsprintf(char *buf, const char *fmt, va_list args)
 
 	for (; *fmt ; ++fmt)
 		*str++ = *fmt;
+	*str++ = '\0';
 	return str - buf;
 }
