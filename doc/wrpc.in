@@ -229,8 +229,14 @@ release is marked with @value{tagname} tag.
   $ git checkout wrpc-v2.0
 @end example
 
-@b{Note:} alternatively you can get the release sources from the tarball
-available in the @i{files} tab of @code{wr-cores}:
+If you are using @i{wr-cores} within another project (like @i{wr-nic}),
+you may need to check out a different tag instead. Refer to the
+documetation if your other project to find which version of this
+package you need to exactly rebuild the released binaries.
+
+@b{Note:} alternatively, for the specific v2.0 release, you can get
+the release sources from the tarball available in the @i{files} tab of
+@code{wr-cores}:
 
 @example
  http://www.ohwr.org/projects/wr-cores/files
@@ -288,17 +294,21 @@ download and unpack the LM32 toolchain from the location mentioned already in
   $ tar xJf lm32.tar.xz -C <your_lm32_location>
 @end example
 
-Similar as with @i{hdlmake} in @ref{Building the Core}, you will need to add
-the LM32 toolchain binaries location to you @i{$PATH} to be able to call them
-from any directory:
+Then you need to setup the @t{CROSS_COMPILE} variable in order
+to compile the software for a LM32 processor:
 
 @example
-  $ export PATH=<your_lm32_location>/lm32/bin:$PATH
+  $ export CROSS_COMPILE="<your_lm32_location>/lm32/bin/lm32-elf-"
 @end example
 
 To get the release sources of WRPC software please clone the @i{wrpc-sw} git
 repository tagged with @value{tagname} tag. Otherwise, you can use the current master
-branch, with the latest improvements and fixes.
+branch, with the latest improvements and fixes. Finally, if you are using
+@i{wrpc-sw} within another project, you may need to checkout a
+different tag or specific commit; if this applies,
+lease refer to the documentation of the other package to find the exact
+version you need to reproduce the released binaries before you make
+your changes.
 
 @smallexample
   $ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_wrpcsw_location>
@@ -309,26 +319,8 @@ branch, with the latest improvements and fixes.
 @b{Note:} alternatively you can get the release sources from the tarball
 available in the @i{files} tab of the @code{wr-cores} OHWR project.
 
-@sp 1
-The WRPC software repository contains a ptp-noposix (that contains the WR PTP
-software daemon) in the form of a git submodule. Your fresh local copy cloned
-from @i{ohwr.org} has therefore the @i{ptp-noposix} directory empty. To fetch
-the ptp-noposix you have to execute the following git commands:
-
-@example
-  $ git submodule init
-  $ git submodule update
-@end example
-
-First you have to compile the tools provided with WRPC software which are used
-later during the software compilation:
-
-@example
-  $ make -C tools
-@end example
-
-Now you have everything that is needed to build the software for WRPC,
-but you need to make a few configuration choices. The package is using
+Before you can compile @i{wrpc-sw}
+you need to make a few configuration choices. The package is using
 @i{Kconfig} as a configuration engine, so you may run one of the
 following commnads (the first is text-mode, the second uses a KDE GUI
 and the third uses a Gnome GUI):
@@ -359,6 +351,11 @@ parameters to build your binary file:
 @example
   $ make
 @end example
+
+The first time you build, the @i{Makefile} automatically downloads
+the @i{git submodules} of this package, unless you already did that
+by hand. The second and later build won't download anything
+from the network.
 
 The resulting binary @i{wrc.bin} can be then used with the loader from
 @i{spec-sw} software package to program the LM32 inside the White Rabbit PTP
@@ -690,6 +687,8 @@ of the tools used to build and run it, you can write to our mailing list
 @appendix WRPC Shell Commands
 
 @multitable @columnfractions .5 .5
+@item @code{ver} @tab prints which version of wrpc is running
+
 @item @code{pll init <mode> <ref_channel> <align_pps>} @tab manually run spll_init()
 function to initialize SoftPll
 @item @code{pll cl <channel>} @tab check if SoftPLL is locked for the channel
@@ -744,10 +743,10 @@ function to initialize SoftPll
 
 @end multitable
 
-  * after executing _mode_ command, _ptp start_ is required to start WR PTP
+  * after executing @t{mode} command, @t{ptp start} is required to start WR PTP
 daemon in new mode
 
- ** requires running _sfp detect_ first
+ ** requires running @t{sfp detect} first
 
 *** available only with Etherbone support compiled in
 
