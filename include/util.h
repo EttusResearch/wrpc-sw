@@ -1,5 +1,6 @@
 #ifndef __UTIL_H
 #define __UTIL_H
+#include <inttypes.h>
 
 /* Color codes for cprintf()/pcprintf() */
 #define C_DIM 0x80
