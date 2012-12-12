@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# no tty if invoked by cron. In that case I send email (commented here below)
+if tty 2> /dev/null; then tty=/dev/stdout; else tty=/dev/null; fi
+
+# this compiles all versions since the one noted
+if [ $# -ne 1 ]; then echo "pass base version (e.g.: next)\n" >&2; exit 1; fi
+
+# remember the current status, to go back there at the end
+currentb=$(git branch | grep '^\*' | sed 's/^..//')
+if echo $currentb | grep -q no.branch; then
+    currentb=$(git describe --always HEAD)
+fi
+echo "Currently on $currentb" > $tty
+sleep 1
+
+T=$(mktemp /tmp/gitlog.XXXXXX)
+O=$(mktemp /tmp/makeall.out.XXXXXX)
+MD=$(mktemp /tmp/mdlog.XXXXXX)
+git log --abbrev-commit --pretty=oneline ${1}~1.. > $T
+
+send=0
+failures=0
+while read a rest; do
+    echo "####################### $a $rest" | tee -a $O > $tty
+    git checkout $a 2>&1 | tee -a $O > $tty || send=1
+    git submodule update
+    make clean
+    if make -s 2>&1 | tee -a $O > $tty;
+	then true
+    else
+	send=1;
+	failures=$(($failures + 1))
+    fi
+    echo -n "commit $a: " >> $MD
+    md5sum wrc.o >> $MD
+done < $T
+
+git checkout $currentb
+git submodule update
+
+if true; then
+    echo ""
+    echo "Number of failed builds: $failures"
+    echo "The log of all compiles is at $O"
+    echo "The md5sums of wrc.o are at $MD"
+fi | tee -a $O > $tty
+
+#if [ $send -eq 1 ]; then
+#    cat $O | mutt -s "error: $0" rubini
+#fi
