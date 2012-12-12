@@ -1,5 +1,5 @@
 /*
- *  vsprintf-ugly: a possible free-software replacement for mprintf
+ *  vsprintf-xint: a possible free-software replacement for mprintf
  *
  *  public domain
  */
@@ -8,13 +8,13 @@
 
 static const char hex[] = "0123456789abcdef";
 
-static int number(char *out, int value, int base, int lead, int wid)
+static int number(char *out, unsigned value, int base, int lead, int wid)
 {
 	char tmp[16];
 	int i = 16, ret, negative = 0;
 
 	/* No error checking at all: it is as ugly as possible */
-	if (value < 0) {
+	if ((signed)value < 0 && base == 10) {
 		negative = 1;
 		value = -value;
 	}

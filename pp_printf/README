@@ -55,7 +55,7 @@ Example calls (example-printf.c):
     pp_printf("octal   %5o %5o %05o\n", 1024, 666, 53);
     pp_printf("hex     %5x %5x %05x\n", 1024, 666, 53);
     pp_printf("HEX etc %5X %+5d %-5i\n", 1024, 666, 53);
-    pp_printf("neg     %5i %5i %05i\n", -5, -10, -15);
+    pp_printf("neg     %5i %05i %05x\n", -5, -10, -15);
     pp_printf("char: %c  string %s %5s %.5s\n", 65, "foo", "foo",
               "verylongstring");
     pp_printf("hour    %02d:%02d:%02d\n", 12, 9, 0);
@@ -66,7 +66,7 @@ Result (as you see, format modifiers are respected):
     octal    2000  1232 00065
     hex       400   29a 00035
     HEX etc   400  +666 53
-    neg        -5   -10 -0015
+    neg        -5 -0010 fffffff1
     char: A  string foo   foo veryl
     hour    12:09:00
 
@@ -93,7 +93,7 @@ has leading zeroes when requested, but bot other formats are obeyed:
     octal    2000  1232 00065
     hex       400   29a 00035
     HEX etc   400   666    53
-    neg        -5   -10 -0015
+    neg        -5 -0010 fffffff1
     char: A  string foo foo verylongstring
     hour    12:09:00
 
@@ -151,7 +151,7 @@ Result of example-printf (you can "make CONFIG_PRINTF_MINI=y):
     octal   %5o %5o %05o
     hex     %5x %5x %05x
     HEX etc %5X %+5d %-5i
-    neg     %5i %5i %05i
+    neg     %5i %05i %05x
     char: %c  string %s %5s %.5s
     hour    %02d:%02d:%02d
 
@@ -177,14 +177,14 @@ the other ones are exclusive one another:
 
                         printf.o       full  xint  mini  none
 
-   x86, gcc-4.4.5           87         1715   471   258    48
-   x86-64, gcc-4.4.5       418         2325   701   433    77
-   x86, gcc-4.6.2          255         2210   565   330   110
-   arm, gcc-4.2.2          156         2408   672   356    52
-   arm, gcc-4.5.2          128         2235   637   353    44
-   arm, gcc-4.5.2 thumb2    80         1443   369   209    26
-   lm32, gcc-4.5.3         196         3228   820   576    44
-   mips, gcc-4.4.1         184         2616   808   504    72
-   powerpc, gcc-4.4.1      328         2895   869   521    48
-   coldfire, gcc-4.4.1      96         2025   479   257    42
-   sh4, gcc-4.4.1          316         2152   600   408    34
+   x86, gcc-4.4.5           87         1715   476   258    48
+   x86-64, gcc-4.4.5       418         2325   712   433    77
+   x86, gcc-4.6.2          255         2210   577   330   110
+   arm, gcc-4.2.2          156         2408   684   356    52
+   arm, gcc-4.5.2          128         2235   645   353    44
+   arm, gcc-4.5.2 thumb2    80         1443   373   209    26
+   lm32, gcc-4.5.3         196         3228   792   576    44
+   mips, gcc-4.4.1         184         2616   824   504    72
+   powerpc, gcc-4.4.1      328         2895   881   521    48
+   coldfire, gcc-4.4.1      96         2025   485   257    42
+   sh4, gcc-4.4.1          316         2152   608   408    34
