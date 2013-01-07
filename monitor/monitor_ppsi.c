@@ -40,116 +40,118 @@ void wrc_mon_gui(void)
 	last = timer_get_tics();
 
 	term_clear();
-	pp_printf("WR PTP Core Sync Monitor v 1.0");
-	pp_printf("Esc = exit");
+
+	pcprintf(1, 1, C_BLUE, "WR PTP Core Sync Monitor v 1.0");
+	pcprintf(2, 1, C_GREY, "Esc = exit");
 
 	shw_pps_gen_get_time(&sec, &nsec);
 
-	pp_printf("\n\nTAI Time:                  ");
-	pp_printf("%s", format_time(sec));
+	cprintf(C_BLUE, "\n\nTAI Time:                  ");
+	cprintf(C_WHITE, "%s", format_time(sec));
 
 	/*show_ports */
 	halexp_get_port_state(&ps, NULL);
-	pp_printf("\n\nLink status:");
+	pcprintf(4, 1, C_BLUE, "\n\nLink status:");
 
-	pp_printf("%s: ", "wru1");
+	pcprintf(6, 1, C_WHITE, "%s: ", "wru1");
 	if (ps.up)
-		pp_printf("Link up   ");
+		cprintf(C_GREEN, "Link up   ");
 	else
-		pp_printf("Link down ");
+		cprintf(C_RED, "Link down ");
 
 	if (ps.up) {
 		minic_get_stats(&tx, &rx);
-		pp_printf("(RX: %d, TX: %d), mode: ", rx, tx);
+		cprintf(C_GREY, "(RX: %d, TX: %d), mode: ", rx, tx);
 
 		/* FIXME: define HEXP_PORT_MODE_WR_MASTER/SLAVE somewhere
 		switch (ps.mode) {
 		case HEXP_PORT_MODE_WR_MASTER:
-			pp_printf("WR Master  ");
+			cprintf(C_WHITE, "WR Master  ");
 			break;
 		case HEXP_PORT_MODE_WR_SLAVE:
-			pp_printf("WR Slave   ");
+			cprintf(C_WHITE, "WR Slave   ");
 			break;
 		}
 		*/
 
 		if (ps.is_locked)
-			pp_printf("Locked  ");
+			cprintf(C_GREEN, "Locked  ");
 		else
-			pp_printf("NoLock  ");
+			cprintf(C_RED, "NoLock  ");
 		if (ps.rx_calibrated && ps.tx_calibrated)
-			pp_printf("Calibrated  ");
+			cprintf(C_GREEN, "Calibrated  ");
 		else
-			pp_printf("Uncalibrated  ");
+			cprintf(C_RED, "Uncalibrated  ");
 
 		/* show_servo */
-		pp_printf("\n\nSynchronization status:\n\n");
+		cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
 
 		if (!cur_servo_state.valid) {
-			pp_printf("Master mode or sync info not valid\n\n");
+			cprintf(C_RED,
+				"Master mode or sync info not valid\n\n");
 			return;
 		}
 
-		pp_printf("Servo state:               ");
-		pp_printf("%s\n", cur_servo_state.slave_servo_state);
-		pp_printf("Phase tracking:            ");
+		cprintf(C_GREY, "Servo state:               ");
+		cprintf(C_WHITE, "%s\n", cur_servo_state.slave_servo_state);
+		cprintf(C_GREY, "Phase tracking:            ");
 		if (cur_servo_state.tracking_enabled)
-			pp_printf("ON\n");
+			cprintf(C_GREEN, "ON\n");
 		else
-			pp_printf("OFF\n");
-		pp_printf("Synchronization source:    ");
-		pp_printf("%s\n", cur_servo_state.sync_source);
+			cprintf(C_RED, "OFF\n");
+		cprintf(C_GREY, "Synchronization source:    ");
+		cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);
 
-		pp_printf("Aux clock status:          ");
+		cprintf(C_GREY, "Aux clock status:          ");
 
 		aux_stat = spll_get_aux_status(0);
 
 		if (aux_stat & SPLL_AUX_ENABLED)
-			pp_printf("enabled");
+			cprintf(C_GREEN, "enabled");
 
 		if (aux_stat & SPLL_AUX_LOCKED)
-			pp_printf(", locked");
-		pp_printf("\n");
+			cprintf(C_GREEN, ", locked");
+		mprintf("\n");
 
-		pp_printf("\nTiming parameters:\n\n");
+		cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
-		pp_printf("Round-trip time (mu):      ");
-		pp_printf("%d ps\n", (int32_t) (cur_servo_state.mu));
-		pp_printf("Master-slave delay:        ");
-		pp_printf("%d ps\n",
+		cprintf(C_GREY, "Round-trip time (mu):    ");
+		cprintf(C_WHITE, "%9d ps\n", (int32_t) (cur_servo_state.mu));
+		cprintf(C_GREY, "Master-slave delay:      ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.delay_ms));
-		pp_printf("Master PHY delays:         ");
-		pp_printf("TX: %d ps, RX: %d ps\n",
+		cprintf(C_GREY, "Master PHY delays:       ");
+		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_m,
 			(int32_t) cur_servo_state.delta_rx_m);
-		pp_printf("Slave PHY delays:          ");
-		pp_printf("TX: %d ps, RX: %d ps\n",
+		cprintf(C_GREY, "Slave PHY delays:        ");
+		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_s,
 			(int32_t) cur_servo_state.delta_rx_s);
-		pp_printf("Total link asymmetry:      ");
-		pp_printf("%d ps\n",
+		cprintf(C_GREY, "Total link asymmetry:    ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.total_asymmetry));
-		pp_printf("Cable rtt delay:           ");
-		pp_printf("%d ps\n",
+		cprintf(C_GREY, "Cable rtt delay:         ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.mu) -
 			(int32_t) cur_servo_state.delta_tx_m -
 			(int32_t) cur_servo_state.delta_rx_m -
 			(int32_t) cur_servo_state.delta_tx_s -
 			(int32_t) cur_servo_state.delta_rx_s);
-		pp_printf("Clock offset:              ");
-		pp_printf("%d ps\n",
+		cprintf(C_GREY, "Clock offset:            ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_offset));
-		pp_printf("Phase setpoint:            ");
-		pp_printf("%d ps\n",
+		cprintf(C_GREY, "Phase setpoint:          ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_setpoint));
-		pp_printf("Skew:                      ");
-		pp_printf("%d ps\n",
+		cprintf(C_GREY, "Skew:                    ");
+		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_skew));
-		pp_printf("Manual phase adjustment:   ");
-		pp_printf("%d ps\n", (int32_t) (wrc_man_phase));
+		cprintf(C_GREY, "Manual phase adjustment: ");
+		cprintf(C_WHITE, "%9d ps\n", (int32_t) (wrc_man_phase));
 
-		pp_printf("Update counter:            ");
-		pp_printf("%d \n",
+		cprintf(C_GREY, "Update counter:          ");
+		cprintf(C_WHITE, "%9d \n",
 			(int32_t) (cur_servo_state.update_count));
 
 	}
