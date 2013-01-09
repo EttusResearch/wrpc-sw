@@ -21,7 +21,8 @@
 #include "pps_gen.h"
 #include "uart.h"
 
-static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN;
+static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN,
+	ptp_forced_stop = 0;
 struct pp_instance ppi_static; /* FIXME: no more static, because used in
 				   tests/measure_t24p.c */
 CONST_VERBOSITY int pp_diag_verbosity = CONFIG_PPSI_VERBOSITY;
@@ -39,6 +40,7 @@ static struct pp_frgn_master frgn_master;
 
 static int delay_ms = PP_DEFAULT_NEXT_DELAY_MS;
 static int start_tics = 0;
+static int last_link_up = 0;
 
 int wrc_ptp_init()
 {
@@ -164,6 +166,26 @@ int wrc_ptp_update()
 {
 	int i;
 	struct pp_instance *ppi = &ppi_static;
+
+	int now_link_up;
+
+	now_link_up = ep_link_up(NULL);
+
+	if (last_link_up != now_link_up) {
+		last_link_up = now_link_up;
+		if (ptp_enabled && (!now_link_up)) {
+			wrc_ptp_stop();
+			ptp_forced_stop = 1;
+			pp_printf("Link down: PTP stop\n");
+		}
+		else {
+			if (ptp_forced_stop) {
+				pp_printf("Link up: PTP start\n");
+				ptp_forced_stop = 0;
+				wrc_ptp_start();
+			}
+		}
+	}
 
 	if (ptp_enabled) {
 		static unsigned char packet[500];
