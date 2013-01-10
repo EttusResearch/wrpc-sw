@@ -18,6 +18,7 @@
 #include <pps_gen.h>
 #include <onewire.h>
 #include <util.h>
+#include "wrc_ptp.h"
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
 
@@ -63,16 +64,17 @@ void wrc_mon_gui(void)
 		minic_get_stats(&tx, &rx);
 		cprintf(C_GREY, "(RX: %d, TX: %d), mode: ", rx, tx);
 
-		/* FIXME: define HEXP_PORT_MODE_WR_MASTER/SLAVE somewhere
-		switch (ps.mode) {
-		case HEXP_PORT_MODE_WR_MASTER:
+		switch (ptp_mode) {
+		case WRC_MODE_GM:
+		case WRC_MODE_MASTER:
 			cprintf(C_WHITE, "WR Master  ");
 			break;
-		case HEXP_PORT_MODE_WR_SLAVE:
+		case WRC_MODE_SLAVE:
 			cprintf(C_WHITE, "WR Slave   ");
 			break;
+		default:
+			cprintf(C_RED, "WR Unknown   ");
 		}
-		*/
 
 		if (ps.is_locked)
 			cprintf(C_GREEN, "Locked  ");

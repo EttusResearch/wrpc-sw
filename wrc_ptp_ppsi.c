@@ -16,13 +16,14 @@
 #include <ppsi/ppsi.h>
 #include <wr-constants.h>
 #include "syscon.h"
+#include "endpoint.h"
 #include "softpll_ng.h"
 #include "wrc_ptp.h"
 #include "pps_gen.h"
 #include "uart.h"
 
-static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN,
-	ptp_forced_stop = 0;
+int ptp_mode = WRC_MODE_UNKNOWN;
+static int ptp_enabled = 0, ptp_forced_stop = 0;
 struct pp_instance ppi_static; /* FIXME: no more static, because used in
 				   tests/measure_t24p.c */
 CONST_VERBOSITY int pp_diag_verbosity = CONFIG_PPSI_VERBOSITY;
