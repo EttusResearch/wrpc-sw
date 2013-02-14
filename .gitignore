@@ -3,6 +3,7 @@
 *.ram
 *.bin
 *.*~
+*~
 include/board.h
 tools/zpu-loader
 tools/vuart_console
