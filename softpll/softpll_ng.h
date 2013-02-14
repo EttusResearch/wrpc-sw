@@ -2,7 +2,6 @@
 #define __SOFTPLL_NG_H
 
 #include <stdio.h>
-#include <stdlib.h>
 
 /* Modes */
 #define SPLL_MODE_GRAND_MASTER 1
@@ -22,6 +21,7 @@ void spll_stop_channel(int channel);
 int spll_check_lock(int channel);
 void spll_set_phase_shift(int channel, int32_t value_picoseconds);
 void spll_get_phase_shift(int channel, int32_t *current, int32_t *target);
+void spll_enable_ptracker(int ref_channel, int enable);
 int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled);
 void spll_get_num_channels(int *n_ref, int *n_out);
 int spll_shifter_busy(int channel);
