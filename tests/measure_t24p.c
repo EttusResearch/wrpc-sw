@@ -26,12 +26,8 @@
 
 #ifdef CONFIG_PPSI
 #include <ppsi/ppsi.h>
-#define UNPACK_HEADER msg_unpack_header
-#define UNPACK_FOLLOWUP msg_unpack_follow_up
 #else
 #include "ptpd.h"
-#define UNPACK_HEADER msgUnpackHeader
-#define UNPACK_FOLLOWUP msgUnpackFollowUp
 #endif
 
 #if 0 /* not used, currently */
@@ -49,8 +45,6 @@ struct meas_entry {
 };
 
 
-#ifndef CONFIG_PPSI /* FIXME */
-
 static void purge_socket(wr_socket_t *sock, char *buf)
 {
 	wr_sockaddr_t from;
@@ -59,6 +53,70 @@ static void purge_socket(wr_socket_t *sock, char *buf)
 	while (ptpd_netif_recvfrom(sock, &from, buf, 128, NULL) > 0)
 		update_rx_queues();
 }
+
+#ifdef CONFIG_PPSI
+
+extern struct pp_instance ppi_static;
+static struct pp_instance *ppi = &ppi_static;
+
+static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
+			    int phase_step, struct meas_entry *results)
+{
+	char buf[128];
+	TimeInternal ts_rx, ts_sync = {0,};
+	MsgHeader *mhdr;
+	int setpoint = phase_min, i = 0, phase;
+
+	mhdr = &ppi->msg_tmp_header;
+
+	spll_set_phase_shift(SPLL_ALL_CHANNELS, phase_min);
+
+	while (spll_shifter_busy(0)) ;
+
+	purge_socket(sock, buf);
+
+	i = 0;
+	while (setpoint <= phase_max) {
+		ptpd_netif_get_dmtd_phase(sock, &phase);
+
+		update_rx_queues();
+		int n = pp_recv_packet(ppi, buf, 128, &ts_rx);
+
+		if (n > 0) {
+			msg_unpack_header(ppi, buf);
+			if (mhdr->messageType == 0)
+				assign_TimeInternal(&ts_sync, &ts_rx);
+			else if (mhdr->messageType == 8 && ts_sync.correct) {
+				MsgFollowUp fup;
+				msg_unpack_follow_up(buf, &fup);
+
+				mprintf("Shift: %d/%dps [step %dps]        \r",
+					setpoint, phase_max, phase_step);
+				results[i].phase = phase;
+				results[i].phase_sync = ts_sync.phase;
+				results[i].ahead = ts_sync.raw_ahead;
+				results[i].delta_ns =
+				    fup.preciseOriginTimestamp.
+				    nanosecondsField - ts_sync.nanoseconds;
+				results[i].delta_ns +=
+				    (fup.preciseOriginTimestamp.secondsField.
+				     lsb - ts_sync.seconds) * 1000000000;
+
+				setpoint += phase_step;
+				spll_set_phase_shift(0, setpoint);
+				while (spll_shifter_busy(0)) ;
+				purge_socket(sock, buf);
+
+				ts_sync.correct = 0;
+				i++;
+			}
+		}
+	}
+	mprintf("\n");
+	return i;
+}
+
+#else
 
 static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 			    int phase_step, struct meas_entry *results)
@@ -82,12 +140,12 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 		int n = ptpd_netif_recvfrom(sock, &from, buf, 128, &ts_rx);
 
 		if (n > 0) {
-			UNPACK_HEADER(buf, &mhdr);
+			msgUnpackHeader(buf, &mhdr);
 			if (mhdr.messageType == 0)
 				ts_sync = ts_rx;
 			else if (mhdr.messageType == 8 && ts_sync.correct) {
 				MsgFollowUp fup;
-				UNPACK_FOLLOWUP(buf, &fup);
+				msgUnpackFollowUp(buf, &fup);
 
 				mprintf("Shift: %d/%dps [step %dps]        \r",
 					setpoint, phase_max, phase_step);
@@ -115,6 +173,8 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 	return i;
 }
 
+#endif /* CONFIG_PPSI else CONFIG_PTPNOPOSIX*/
+
 static int find_transition(struct meas_entry *results, int n, int positive)
 {
 	int i;
@@ -135,6 +195,13 @@ int measure_t24p(int *value)
 	int i, nr;
 	struct meas_entry results[128];
 
+#ifdef CONFIG_PPSI
+	if (!NP(ppi)->inited) {
+		if (pp_net_init(ppi) < 0)
+			return -1;
+		NP(ppi)->inited = 1;
+	}
+#endif
 	spll_enable_ptracker(0, 1);
 
 	sock_addr.family = PTPD_SOCK_RAW_ETHERNET;	// socket type
@@ -191,6 +258,11 @@ int measure_t24p(int *value)
 	mprintf("Verification... \n");
 	nr = meas_phase_range(sock, 0, 16000, 500, results);
 
+#ifdef CONFIG_PPSI
+	pp_net_shutdown(ppi);
+	NP(ppi)->inited = 0;
+#endif
+
 	for (i = 0; i < nr; i++)
 		mprintf("phase_dmtd: %d delta_ns: %d, phase_sync: %d\n",
 			results[i].phase, results[i].delta_ns,
@@ -201,12 +273,3 @@ int measure_t24p(int *value)
 	ptpd_netif_close_socket(sock);
 	return 0;
 }
-
-#else /* FIXME: PPSI needs porting */
-
-int measure_t24p(int *value)
-{
-	return 0;
-}
-
-#endif /* PPSI */
