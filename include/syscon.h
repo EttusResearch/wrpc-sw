@@ -4,6 +4,7 @@
 #include <inttypes.h>
 
 #include "board.h"
+#undef PACKED /* if we already included a regs file, we'd get a warning */
 #include <hw/wrc_syscon_regs.h>
 
 struct SYSCON_WB {
