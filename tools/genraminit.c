@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	if (argc < 3)
 		return -1;
