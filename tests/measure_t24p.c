@@ -188,6 +188,6 @@ int measure_t24p(int *value)
 
 	if (value)
 		*value = ttrans;
-
+	ptpd_netif_close_socket(sock);
 	return 0;
 }
