@@ -1,3 +1,6 @@
 [submodule "ptp-noposix"]
 	path = ptp-noposix
 	url = git://ohwr.org/white-rabbit/ppsi/ptp-noposix.git
+[submodule "ppsi"]
+	path = ppsi
+	url = git://ohwr.org/white-rabbit/ppsi.git
