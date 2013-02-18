@@ -4,6 +4,7 @@
 #define __PTPD_NETIF_H
 
 #include <stdio.h>
+#include <board.h>
 //#include <inttypes.h>
 
 #define PTPD_SOCK_RAW_ETHERNET 	1
@@ -20,7 +21,9 @@
 #define PTPD_NETIF_NOT_FOUND 		-3
 
 // GCC-specific
-#define PACKED __attribute__((packed))
+#ifndef PACKED
+#  define PACKED __attribute__((packed))
+#endif
 
 #define PHYS_PORT_ANY			(0xffff)
 
