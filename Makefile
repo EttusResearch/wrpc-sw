@@ -66,6 +66,25 @@ obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp.o \
 	$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
 	$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o
 
+cflags-$(CONFIG_PPSI) += \
+	-ffreestanding \
+	-Iinclude \
+	-I$(PPSI)/include \
+	-I$(PPSI)/arch-spec/include \
+	-I$(PPSI)/proto-ext-whiterabbit \
+	-Iboards/spec
+
+# FIXM: The following it temporary, untile we clean up
+cflags-$(CONFIG_PPSI) += \
+	-I$(PTP_NOPOSIX)/PTPWRd \
+	-I$(PTP_NOPOSIX)/wrsw_hal \
+	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
+
+obj-$(CONFIG_PPSI) += wrc_ptp_ppsi.o \
+	monitor/monitor_ppsi.o \
+	$(PPSI)/ppsi.o \
+	$(PPSI)/arch-spec/libarch.a
+
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS)
@@ -95,6 +114,10 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd
 
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules $(PPSI)/ppsi.o
+
+$(PPSI)/ppsi.o:
+	$(MAKE) -C $(PPSI) ARCH=spec PROTO_EXT=whiterabbit HAS_FULL_DIAG=y \
+		CROSS_COMPILE=$(CROSS_COMPILE)
 
 $(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
