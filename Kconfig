@@ -10,8 +10,46 @@ config RAMSIZE
 	 more features you may want to adjust the FPGA size and
 	 choose your preferred value here.
 
+choice
+       prompt "Choose your preferred ptp engine"
+       default PTP_NOPOSIX
+
+config PTP_NOPOSIX
+       boolean "ptp-noposix"
+       help
+	 Select this option for the ptp-noposix engine
+
+config PPSI
+       boolean "ppsi"
+       help
+	 Select this option for the ppsi engine. Warning: this option is
+	 work in progress, may not work or not compile at all.
+
+endchoice
+
+config PPSI_VERBOSITY
+	depends on PPSI
+	int "Default verbosity for PPSI"
+	help
+	  This option makes you select the verbosity of PPSI at startup:
+	  0 means silent
+	  1 means normal verbosity messages
+	  2 means more verbose messages
+	default 0
+	range 0 2
+
+config PPSI_RUNTIME_VERBOSITY
+       depends on PPSI
+       boolean "Enable runtime verbosity setting"
+       default n
+       help
+         If set, this option permits to change the verbosity of PPSI engine
+         runtime. This causes a bigger RAM occupation, so it is suggested
+         to set it only for debugging purpose.
+
 config STACKSIZE
        int "Size of the stack area needed by this program"
+       default 3584 if PPSI
        default 2048
        help
          The linker complains if the code doesn't fit into RAM, but
@@ -20,6 +58,7 @@ config STACKSIZE
 
 config MPRINTF
 	boolean "Use the old mprintf implementation for printf"
+	depends on !PPSI
 	default y
 	help
 	  wrpc-sw has traditionally used mprintf as its printf engine.
@@ -97,7 +136,4 @@ config DETERMINISTIC_BINARY
 
 	 If in doubt, say No.
 
-# The following will soon become a choice with ppsi
-config PTP_NOPOSIX
-       boolean
-       default y
+
