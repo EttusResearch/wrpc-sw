@@ -51,7 +51,7 @@ cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-I$(PTP_NOPOSIX)/libptpnetif \
 	-I$(PTP_NOPOSIX)/PTPWRd
 
-obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp.o \
+obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp_noposix.o \
 	monitor/monitor.o \
 	$(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/bmc.o \
