@@ -1,7 +1,8 @@
 
 /* State of the Helper PLL producing a clock (clk_dmtd_i) which is
-   slightly offset in frequency from the recovered/reference clock (clk_rx_i or clk_ref_i), so the
-   Main PLL can use it to perform linear phase measurements. 
+   slightly offset in frequency from the recovered/reference clock
+   (clk_rx_i or clk_ref_i), so the Main PLL can use it to perform
+   linear phase measurements.
    */
 
 #define SPLL_LOCKED 1
@@ -9,7 +10,8 @@
 
 #define HELPER_TAG_WRAPAROUND 100000000
 
-/* Maximum abs value of the phase error. If the error is bigger, it's clamped to this value. */
+/* Maximum abs value of the phase error. If the error is bigger, it's
+ * clamped to this value. */
 #define HELPER_ERROR_CLAMP 150000
 
 struct spll_helper_state {
@@ -29,7 +31,7 @@ static void helper_init(volatile struct spll_helper_state *s, int ref_channel)
 	s->pi.y_min = 5;
 	s->pi.y_max = (1 << DAC_BITS) - 5;
 	s->pi.kp = (int)(0.3 * 32.0 * 16.0);	// / 2;
-	s->pi.ki = (int)(0.03 * 32.0 * 3.0);	// / 2; 
+	s->pi.ki = (int)(0.03 * 32.0 * 3.0);	// / 2;
 
 	s->pi.anti_windup = 1;
 
@@ -78,14 +80,14 @@ static int helper_update(volatile struct spll_helper_state *s, int tag,
 		s->p_setpoint += (1 << HPLL_N);
 		s->tag_d0 = tag;
 
-		y = pi_update((spll_pi_t *) & s->pi, err);
+		y = pi_update((spll_pi_t *)&s->pi, err);
 		SPLL->DAC_HPLL = y;
 
 		spll_debug(DBG_SAMPLE_ID | DBG_HELPER, s->sample_n++, 0);
 		spll_debug(DBG_Y | DBG_HELPER, y, 0);
 		spll_debug(DBG_ERR | DBG_HELPER, err, 1);
 
-		if (ld_update((spll_lock_det_t *) & s->ld, err))
+		if (ld_update((spll_lock_det_t *)&s->ld, err))
 			return SPLL_LOCKED;
 	}
 	return SPLL_LOCKING;
@@ -102,8 +104,8 @@ static void helper_start(volatile struct spll_helper_state *s)
 	s->sample_n = 0;
 	s->tag_d0 = -1;
 
-	pi_init((spll_pi_t *) & s->pi);
-	ld_init((spll_lock_det_t *) & s->ld);
+	pi_init((spll_pi_t *)&s->pi);
+	ld_init((spll_lock_det_t *)&s->ld);
 
 	spll_enable_tagger(s->ref_src, 1);
 	spll_debug(DBG_EVENT | DBG_HELPER, DBG_EVT_START, 1);

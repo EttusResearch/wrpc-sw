@@ -16,8 +16,11 @@ volatile int irq_count = 0;
 static volatile struct SPLL_WB *SPLL;
 static volatile struct PPSG_WB *PPSG;
 
-/* The includes below contain code (not only declarations) to enable the compiler
-   to inline functions where necessary and save some CPU cycles */
+/*
+ * The includes below contain code (not only declarations) to enable
+ * the compiler to inline functions where necessary and save some CPU
+ * cycles
+ */
 
 #include "spll_defs.h"
 #include "spll_common.h"
@@ -67,7 +70,10 @@ struct softpll_state {
 
 static volatile struct softpll_state softpll;
 
-static volatile int ptracker_mask = 0;	/* fixme: should be done by spll_init() but spll_init is called to switch modes (and we won't like messing around with ptrackers there) */
+static volatile int ptracker_mask = 0;
+/* fixme: should be done by spll_init() but spll_init is called to
+ * switch modes (and we won't like messing around with ptrackers
+ * there) */
 
 void _irq_entry()
 {
@@ -124,7 +130,8 @@ void _irq_entry()
 			break;
 
 		case SEQ_WAIT_HELPER:
-			if (softpll.helper.ld.locked && !softpll.helper_locked) {
+			if (softpll.helper.ld.locked
+			    && !softpll.helper_locked) {
 				softpll.helper_locked = 1;
 
 				if (softpll.mode == SPLL_MODE_SLAVE)
@@ -307,7 +314,8 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 
 		softpll.seq_state = SEQ_CLEAR_DACS;
 		spll_resync_dmtd_counter(slave_ref_channel);
-		while (!spll_check_dmtd_resync(slave_ref_channel)) ;
+		while (!spll_check_dmtd_resync(slave_ref_channel))
+			;
 
 		helper_init(&softpll.helper, slave_ref_channel);
 		mpll_init(&softpll.mpll, slave_ref_channel, n_chan_ref);
@@ -424,7 +432,7 @@ void spll_set_phase_shift(int channel, int32_t value_picoseconds)
 		set_phase_shift(channel, value_picoseconds);
 }
 
-void spll_get_phase_shift(int channel, int32_t * current, int32_t * target)
+void spll_get_phase_shift(int channel, int32_t *current, int32_t *target)
 {
 	volatile struct spll_main_state *st =
 	    (!channel ? &softpll.mpll : &softpll.aux[channel - 1]);
@@ -435,7 +443,7 @@ void spll_get_phase_shift(int channel, int32_t * current, int32_t * target)
 		*target = to_picos(st->phase_shift_target * div);
 }
 
-int spll_read_ptracker(int channel, int32_t * phase_ps, int *enabled)
+int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled)
 {
 	volatile struct spll_ptracker_state *st = &softpll.ptrackers[channel];
 	int phase = st->phase_val;
@@ -467,7 +475,9 @@ void spll_show_stats()
 {
 	if (softpll.mode > 0)
 		TRACE_DEV
-		    ("Irq_count %d Sequencer_state %d mode %d Alignment_state %d HL%d EL%d ML%d HY=%d MY=%d DelCnt=%d\n",
+		    ("Irq_count %d Sequencer_state %d mode %d "
+		     "Alignment_state %d HL%d EL%d ML%d HY=%d "
+		     "MY=%d DelCnt=%d\n",
 		     irq_count, softpll.seq_state, softpll.mode,
 		     softpll.ext.realign_state, softpll.helper.ld.locked,
 		     softpll.ext.ld.locked, softpll.mpll.ld.locked,

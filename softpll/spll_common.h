@@ -9,8 +9,8 @@ spll_common.h - common data structures and functions
 
 */
 
-/* Number of reference/output channels. Currently we support only one SoftPLL instantiation per project,
-   so these can remain static. */
+/* Number of reference/output channels. Currently we support only one
+   SoftPLL instantiation per project, so these can remain static. */
 static int n_chan_ref, n_chan_out;
 
 /* PI regulator state */
@@ -40,9 +40,9 @@ typedef struct {
 	int y_d;
 } spll_lowpass_t;
 
-/* Processes a single sample (x) with PI control algorithm (pi). Returns the value (y) to 
-	 drive the actuator. */
-static inline int pi_update(spll_pi_t * pi, int x)
+/* Processes a single sample (x) with PI control algorithm
+ (pi). Returns the value (y) to drive the actuator. */
+static inline int pi_update(spll_pi_t *pi, int x)
 {
 	int i_new, y;
 	pi->x = x;
@@ -50,9 +50,10 @@ static inline int pi_update(spll_pi_t * pi, int x)
 
 	y = ((i_new * pi->ki + x * pi->kp) >> PI_FRACBITS) + pi->bias;
 
-	/* clamping (output has to be in <y_min, y_max>) and anti-windup:
-	   stop the integrator if the output is already out of range and the output
-	   is going further away from y_min/y_max. */
+	/* clamping (output has to be in <y_min, y_max>) and
+	   anti-windup: stop the integrator if the output is already
+	   out of range and the output is going further away from
+	   y_min/y_max. */
 	if (y < pi->y_min) {
 		y = pi->y_min;
 		if ((pi->anti_windup && (i_new > pi->integrator))
@@ -71,21 +72,22 @@ static inline int pi_update(spll_pi_t * pi, int x)
 }
 
 /* initializes the PI controller state. Currently almost a stub. */
-static inline void pi_init(spll_pi_t * pi)
+static inline void pi_init(spll_pi_t *pi)
 {
 	pi->integrator = 0;
 }
 
-/* Lock detector state machine. Takes an error sample (y) and checks if it's withing an acceptable range
-   (i.e. <-ld.threshold, ld.threshold>. If it has been inside the range for (ld.lock_samples) cyckes, the 
-   FSM assumes the PLL is locked. 
+/* Lock detector state machine. Takes an error sample (y) and checks
+   if it's withing an acceptable range (i.e. <-ld.threshold,
+   ld.threshold>. If it has been inside the range for
+   (ld.lock_samples) cyckes, the FSM assumes the PLL is locked.
    
    Return value:
    0: PLL not locked
    1: PLL locked
    -1: PLL just got out of lock
  */
-static inline int ld_update(spll_lock_det_t * ld, int y)
+static inline int ld_update(spll_lock_det_t *ld, int y)
 {
 	if (abs(y) <= ld->threshold) {
 		if (ld->lock_cnt < ld->lock_samples)
@@ -108,19 +110,19 @@ static inline int ld_update(spll_lock_det_t * ld, int y)
 	return ld->locked;
 }
 
-static void ld_init(spll_lock_det_t * ld)
+static void ld_init(spll_lock_det_t *ld)
 {
 	ld->locked = 0;
 	ld->lock_cnt = 0;
 }
 
-static void lowpass_init(spll_lowpass_t * lp, int alpha)
+static void lowpass_init(spll_lowpass_t *lp, int alpha)
 {
 	lp->y_d = 0x80000000;
 	lp->alpha = alpha;
 }
 
-static int lowpass_update(spll_lowpass_t * lp, int x)
+static int lowpass_update(spll_lowpass_t *lp, int x)
 {
 	if (lp->y_d == 0x80000000) {
 		lp->y_d = x;
@@ -134,14 +136,15 @@ static int lowpass_update(spll_lowpass_t * lp, int x)
 
 /* Enables/disables DDMTD tag generation on a given (channel). 
 
-Channels (0 ... n_chan_ref - 1) are the reference channels 	(e.g. transceivers' RX clocks 
-	or a local reference)
+Channels (0 ... n_chan_ref - 1) are the reference channels
+	(e.g. transceivers' RX clocks or a local reference)
 
-Channels (n_chan_ref ... n_chan_out + n_chan_ref-1) are the output channels (local voltage 
-	controlled oscillators). One output (usually the first one) is always used to drive the 
-	oscillator which produces the reference clock for the transceiver. Other outputs can be
-	used to discipline external oscillators (e.g. on FMCs). 
-	
+Channels (n_chan_ref ... n_chan_out + n_chan_ref-1) are the output
+	channels (local voltage controlled oscillators). One output
+	(usually the first one) is always used to drive the oscillator
+	which produces the reference clock for the transceiver. Other
+	outputs can be used to discipline external oscillators
+	(e.g. on FMCs).
 */
 
 static void spll_enable_tagger(int channel, int enable)

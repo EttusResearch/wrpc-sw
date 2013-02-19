@@ -6,11 +6,13 @@
 
 /* Alignment FSM states */
 
-/* 1st alignment stage, done before starting the ext channel PLL: alignment of the rising edge
-   of the external clock (10 MHz), with the rising edge of the local reference (62.5/125 MHz)
-   and the PPS signal. Because of non-integer ratio (6.25 or 12.5), the PLL must know which edges
-   shall be kept at phase==0. We align to the edge of the 10 MHz clock which comes right after the edge
-   of the PPS pulse (see drawing below):
+/* 1st alignment stage, done before starting the ext channel PLL:
+   alignment of the rising edge of the external clock (10 MHz), with
+   the rising edge of the local reference (62.5/125 MHz) and the PPS
+   signal. Because of non-integer ratio (6.25 or 12.5), the PLL must
+   know which edges shall be kept at phase==0. We align to the edge of
+   the 10 MHz clock which comes right after the edge of the PPS pulse
+   (see drawing below):
 
 PLL reference (62.5 MHz)   ____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|
 External clock (10 MHz)    ^^^^^^^^^|________________________|^^^^^^^^^^^^^^^^^^^^^^^^^|________________________|^^^^^^^^^^^^^^^^^^^^^^^^^|___
@@ -19,8 +21,10 @@ External PPS               ___________|^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #define REALIGN_STAGE1 1
 #define REALIGN_STAGE1_WAIT 2
 
-/* 2nd alignment stage, done after the ext channel PLL has locked. We make sure that the switch's internal PPS signal
-   is produced exactly on the edge of PLL reference in-phase with 10 MHz clock edge, which has come right after the PPS input
+/* 2nd alignment stage, done after the ext channel PLL has locked. We
+   make sure that the switch's internal PPS signal is produced exactly
+   on the edge of PLL reference in-phase with 10 MHz clock edge, which
+   has come right after the PPS input
 
 PLL reference (62.5 MHz)   ____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|^^^^|____|
 External clock (10 MHz)    ^^^^^^^^^|________________________|^^^^^^^^^^^^^^^^^^^^^^^^^|________________________|^^^^^^^^^^^^^^^^^^^^^^^^^|___
@@ -35,7 +39,8 @@ Internal PPS               __________________________________|^^^^^^^^^|________
 /* Error state - PPS signal missing or of bad frequency */
 #define REALIGN_PPS_INVALID 5
 
-/* Realignment is disabled (i.e. the switch inputs only the reference frequency, but not time)  */
+/* Realignment is disabled (i.e. the switch inputs only the reference
+ * frequency, but not time)  */
 #define REALIGN_DISABLED 6
 
 /* Realignment done */
@@ -77,10 +82,10 @@ static void external_init(volatile struct spll_external_state *s, int ext_ref,
 	s->realign_clocks = realign_clocks;
 	s->realign_state = (realign_clocks ? REALIGN_STAGE1 : REALIGN_DISABLED);
 
-	pi_init((spll_pi_t *) & s->pi);
-	ld_init((spll_lock_det_t *) & s->ld);
-	lowpass_init((spll_lowpass_t *) & s->lp_short, 4000);
-	lowpass_init((spll_lowpass_t *) & s->lp_long, 300);
+	pi_init((spll_pi_t *)&s->pi);
+	ld_init((spll_lock_det_t *)&s->ld);
+	lowpass_init((spll_lowpass_t *)&s->lp_short, 4000);
+	lowpass_init((spll_lowpass_t *)&s->lp_long, 300);
 }
 
 static inline void realign_fsm(struct spll_external_state *s)
@@ -164,7 +169,8 @@ static int external_update(struct spll_external_state *s, int tag, int source)
 		y2 = lowpass_update(&s->lp_short, y);
 		ylt = lowpass_update(&s->lp_long, y);
 
-		if (!(SPLL->ECCR & SPLL_ECCR_EXT_REF_PRESENT)) {	/* no reference? de-lock now */
+		if (!(SPLL->ECCR & SPLL_ECCR_EXT_REF_PRESENT)) {
+			/* no reference? de-lock now */
 			ld_init(&s->ld);
 			y2 = 32000;
 		}

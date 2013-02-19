@@ -7,13 +7,14 @@ Licensed under LGPL 2.1.
 
 spll_debug.h - debugging/diagnostic interface
 
-The so-called debug inteface is a large, interrupt-driven FIFO which passes
-various realtime parameters (e.g. error value, tags, DAC drive) to an external
-application where they are further analyzed. It's very useful for optimizing PI coefficients
-and/or lock thresholds.
+The so-called debug inteface is a large, interrupt-driven FIFO which
+passes various realtime parameters (e.g. error value, tags, DAC drive)
+to an external application where they are further analyzed. It's very
+useful for optimizing PI coefficients and/or lock thresholds.
 
-The data is organized as a stream of samples, where each sample can store a number of parameters.
-For example, a stream samples with Y and ERR parameters can be used to evaluate the impact of
+The data is organized as a stream of samples, where each sample can
+store a number of parameters.  For example, a stream samples with Y
+and ERR parameters can be used to evaluate the impact of
 integral/proportional gains on the response of the system.
 
 */
@@ -40,7 +41,7 @@ what: type of the parameter and its' source. For example,
 	- DBG_ERR | DBG_HELPER means that (value) contains the phase error of the helper PLL.
 	- DBG_EVENT indicates an asynchronous event. (value) must contain the event type (DBG_EVT_xxx)
 
-last: when non-zero, indicates the last parameter in a sample. 
+last: when non-zero, indicates the last parameter in a sample.
 */
 
 static inline void spll_debug(int what, int value, int last)

@@ -49,8 +49,8 @@ static void mpll_init(volatile struct spll_main_state *s, int id_ref,
 	s->id_out = id_out;
 	s->dac_index = id_out - n_chan_ref;
 
-	pi_init((spll_pi_t *) & s->pi);
-	ld_init((spll_lock_det_t *) & s->ld);
+	pi_init((spll_pi_t *)&s->pi);
+	ld_init((spll_lock_det_t *)&s->ld);
 }
 
 static void mpll_start(volatile struct spll_main_state *s)
@@ -68,8 +68,8 @@ static void mpll_start(volatile struct spll_main_state *s)
 	s->phase_shift_current = 0;
 	s->sample_n = 0;
 
-	pi_init((spll_pi_t *) & s->pi);
-	ld_init((spll_lock_det_t *) & s->ld);
+	pi_init((spll_pi_t *)&s->pi);
+	ld_init((spll_lock_det_t *)&s->ld);
 
 	spll_enable_tagger(s->id_ref, 1);
 	spll_enable_tagger(s->id_out, 1);
@@ -146,9 +146,13 @@ static int mpll_update(volatile struct spll_main_state *s, int tag, int source)
 
 #ifndef WITH_SEQUENCING
 
-		/* Hack: the PLL is locked, so the tags are close to each other. But when we start phase shifting, after reaching
-		   full clock period, one of the reference tags will flip before the other, causing a suddent 2**HPLL_N jump in the error.
-		   So, once the PLL is locked, we just mask out everything above 2**HPLL_N.
+		/* Hack: the PLL is locked, so the tags are close to
+		   each other. But when we start phase shifting, after
+		   reaching full clock period, one of the reference
+		   tags will flip before the other, causing a suddent
+		   2**HPLL_N jump in the error.  So, once the PLL is
+		   locked, we just mask out everything above
+		   2**HPLL_N.
 
 		   Proper solution: tag sequence numbers */
 		if (s->ld.locked) {
@@ -159,10 +163,9 @@ static int mpll_update(volatile struct spll_main_state *s, int tag, int source)
 
 #endif
 
-		y = pi_update((spll_pi_t *) & s->pi, err);
-		SPLL->DAC_MAIN =
-		    SPLL_DAC_MAIN_VALUE_W(y) | SPLL_DAC_MAIN_DAC_SEL_W(s->
-								       dac_index);
+		y = pi_update((spll_pi_t *)&s->pi, err);
+		SPLL->DAC_MAIN = SPLL_DAC_MAIN_VALUE_W(y)
+			| SPLL_DAC_MAIN_DAC_SEL_W(s->dac_index);
 
 		spll_debug(DBG_MAIN | DBG_REF, s->tag_ref + s->adder_ref, 0);
 		spll_debug(DBG_MAIN | DBG_TAG, s->tag_out + s->adder_out, 0);
@@ -189,7 +192,7 @@ static int mpll_update(volatile struct spll_main_state *s, int tag, int source)
 				s->adder_ref--;
 			}
 		}
-		if (ld_update((spll_lock_det_t *) & s->ld, err))
+		if (ld_update((spll_lock_det_t *)&s->ld, err))
 			return SPLL_LOCKED;
 
 	}
