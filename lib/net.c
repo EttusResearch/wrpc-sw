@@ -8,6 +8,7 @@
 #include "board.h"
 #include "pps_gen.h"
 #include "minic.h"
+#include "endpoint.h"
 #include "softpll_ng.h"
 
 #define min(x,y) ((x) < (y) ? (x) : (y))
