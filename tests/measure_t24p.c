@@ -41,6 +41,8 @@ struct meas_entry {
 };
 
 
+#ifndef CONFIG_PPSI /* FIXME */
+
 static void purge_socket(wr_socket_t *sock, char *buf)
 {
 	wr_sockaddr_t from;
@@ -191,3 +193,12 @@ int measure_t24p(int *value)
 	ptpd_netif_close_socket(sock);
 	return 0;
 }
+
+#else /* FIXME: PPSI needs porting */
+
+int measure_t24p(int *value)
+{
+	return 0;
+}
+
+#endif /* PPSI */
