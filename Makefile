@@ -68,6 +68,7 @@ obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp.o \
 
 cflags-$(CONFIG_PPSI) += \
 	-ffreestanding \
+	-include include/ppsi-wrappers.h \
 	-Iinclude \
 	-I$(PPSI)/include \
 	-I$(PPSI)/arch-spec/include \
