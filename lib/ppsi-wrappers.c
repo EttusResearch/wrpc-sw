@@ -4,6 +4,7 @@
 #include <syscon.h>
 #include <endpoint.h>
 #include <softpll_ng.h>
+#include <ptpd_netif.h>
 
 /* Following code from ptp-noposix/libposix/freestanding-wrapper.c */
 
@@ -60,3 +61,9 @@ int halexp_get_port_state(hexp_port_state_t *state, const char *port_name)
   return 0;
 }
 
+int ptpd_netif_get_dmtd_phase(wr_socket_t *sock, int32_t *phase)
+{
+        if(phase)
+                return spll_read_ptracker(0, phase, NULL);
+        return 0;
+}
