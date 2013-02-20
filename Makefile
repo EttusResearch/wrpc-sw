@@ -81,6 +81,7 @@ cflags-$(CONFIG_PPSI) += \
 
 obj-$(CONFIG_PPSI) += wrc_ptp_ppsi.o \
 	monitor/monitor_ppsi.o \
+	lib/ppsi-wrappers.o \
 	$(PPSI)/ppsi.o \
 	$(PPSI)/arch-spec/libarch.a
 
