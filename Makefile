@@ -47,7 +47,6 @@ cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-include $(PTP_NOPOSIX)/compat.h \
 	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
 	-include $(PTP_NOPOSIX)/libposix/ptpd-wrappers.h \
-	-I$(PTP_NOPOSIX)/wrsw_hal \
 	-I$(PTP_NOPOSIX)/libptpnetif \
 	-I$(PTP_NOPOSIX)/PTPWRd
 
@@ -78,7 +77,6 @@ cflags-$(CONFIG_PPSI) += \
 # FIXM: The following it temporary, untile we clean up
 cflags-$(CONFIG_PPSI) += \
 	-I$(PTP_NOPOSIX)/PTPWRd \
-	-I$(PTP_NOPOSIX)/wrsw_hal \
 	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
 
 obj-$(CONFIG_PPSI) += wrc_ptp_ppsi.o \
