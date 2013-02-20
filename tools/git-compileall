@@ -25,7 +25,7 @@ while read a rest; do
     echo "####################### $a $rest" | tee -a $O > $tty
     git checkout $a 2>&1 | tee -a $O > $tty || send=1
     git submodule update
-    make clean
+    make -s clean
     if make -s 2>&1 | tee -a $O > $tty;
 	then true
     else
