@@ -14,6 +14,7 @@
 #include <spec.h>
 
 #include <ppsi/ppsi.h>
+#include <../proto-ext-whiterabbit/wr-api.h>
 #include <wr-constants.h>
 #include "syscon.h"
 #include "endpoint.h"
@@ -35,6 +36,7 @@ static DSCurrent  currentDS;
 static DSParent   parentDS;
 static DSPort     portDS;
 static DSTimeProperties timePropertiesDS;
+static struct wr_dsport wr_dsport;
 static struct pp_net_path net_path;
 static struct pp_servo servo;
 static struct pp_frgn_master frgn_master;
@@ -55,6 +57,7 @@ int wrc_ptp_init()
 	ppi->defaultDS   = &defaultDS;
 	ppi->currentDS   = &currentDS;
 	ppi->parentDS    = &parentDS;
+	portDS.ext_dsport = &wr_dsport;
 	ppi->portDS      = &portDS;
 	ppi->timePropertiesDS = &timePropertiesDS;
 	ppi->net_path    = &net_path;
@@ -80,7 +83,7 @@ int wrc_ptp_set_mode(int mode)
 	switch (mode) {
 	case WRC_MODE_GM:
 		/* FIXME multiport rtOpts.primarySource = TRUE; */
-		DSPOR(ppi)->wrConfig = WR_M_ONLY;
+		WR_DSPOR(ppi)->wrConfig = WR_M_ONLY;
 		OPTS(ppi)->master_only = TRUE;
 		OPTS(ppi)->slave_only = FALSE;
 		spll_init(SPLL_MODE_GRAND_MASTER, 0, 1);
@@ -89,7 +92,7 @@ int wrc_ptp_set_mode(int mode)
 
 	case WRC_MODE_MASTER:
 		/* FIXME multiport rtOpts.primarySource = FALSE; */
-		DSPOR(ppi)->wrConfig = WR_M_ONLY;
+		WR_DSPOR(ppi)->wrConfig = WR_M_ONLY;
 		OPTS(ppi)->master_only = TRUE;
 		OPTS(ppi)->slave_only = FALSE;
 		spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
@@ -98,7 +101,7 @@ int wrc_ptp_set_mode(int mode)
 
 	case WRC_MODE_SLAVE:
 		/* FIXME multiport rtOpts.primarySource = FALSE; */
-		DSPOR(ppi)->wrConfig = WR_S_ONLY;
+		WR_DSPOR(ppi)->wrConfig = WR_S_ONLY;
 		OPTS(ppi)->master_only = FALSE;
 		OPTS(ppi)->slave_only = TRUE;
 		spll_init(SPLL_MODE_SLAVE, 0, 1);
@@ -148,7 +151,7 @@ int wrc_ptp_start()
 	delay_ms = pp_state_machine(ppi, NULL, 0);
 	start_tics = timer_get_tics();
 
-	DSPOR(ppi)->linkUP = FALSE;
+	WR_DSPOR(ppi)->linkUP = FALSE;
 	wr_servo_reset();
 
 	ptp_enabled = 1;
