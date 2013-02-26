@@ -117,8 +117,8 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 .PHONY: all tools clean gitmodules $(PPSI)/ppsi.o
 
 $(PPSI)/ppsi.o:
-	$(MAKE) -C $(PPSI) ARCH=spec PROTO_EXT=whiterabbit HAS_FULL_DIAG=y \
-		CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(PPSI) ARCH=spec PROTO_EXT=whiterabbit \
+		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y
 
 $(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c

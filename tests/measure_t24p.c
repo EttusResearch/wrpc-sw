@@ -85,7 +85,7 @@ static int meas_phase_range(wr_socket_t * sock, int phase_min, int phase_max,
 		if (n > 0) {
 			msg_unpack_header(ppi, buf);
 			if (mhdr->messageType == 0)
-				assign_TimeInternal(&ts_sync, &ts_rx);
+				ts_sync = ts_rx;
 			else if (mhdr->messageType == 8 && ts_sync.correct) {
 				MsgFollowUp fup;
 				msg_unpack_follow_up(buf, &fup);
