@@ -1,4 +1,5 @@
 CFLAGS = -Wall -ggdb -I. -I../include -Imini_bone
+ALL    = genraminit genramvhd genrammif
 
 AS		= as
 LD		= ld
@@ -10,16 +11,13 @@ STRIP		= strip
 OBJCOPY		= objcopy
 OBJDUMP		= objdump
 
-all: genraminit genramvhd
+all:	$(ALL)
 
-genraminit: genraminit.o
-				${CC} -o genraminit genraminit.o
+%:	%.o
+	${CC} -o $@ $<
 
-genramvhd: genramvhd.o
-				${CC} -o genramvhd genramvhd.o
-
-%.o: 		%.c
-				${CC} -c $^ $(CFLAGS) -O0
+%.o:	%.c
+	${CC} -c $^ $(CFLAGS) -O0
 
 clean:
 	rm -f $(ALL) *.o

@@ -90,7 +90,7 @@ OUTPUT = wrc
 
 REVISION=$(shell git describe --dirty --always)
 
-all: tools $(OUTPUT).ram $(OUTPUT).vhd
+all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules
@@ -111,7 +111,10 @@ $(OUTPUT).o: $(OBJS)
 	./tools/genraminit $*.bin 0 > $@
 
 %.vhd: tools %.bin
-	./tools/genramvhd -s 90112 $*.bin > $@
+	./tools/genramvhd -s `. ./.config; echo $$CONFIG_RAMSIZE` $*.bin > $@
+
+%.mif: tools %.bin
+	./tools/genrammif $*.bin `. ./.config; echo $$CONFIG_RAMSIZE` > $@
 
 $(AUTOCONF): silentoldconfig
 
