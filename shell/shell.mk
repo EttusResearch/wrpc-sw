@@ -15,3 +15,4 @@ obj-y += \
 	shell/cmd_init.o
 
 obj-$(CONFIG_ETHERBONE) += shell/cmd_ip.o
+obj-$(CONFIG_PPSI_RUNTIME_VERBOSITY) += shell/cmd_verbose.o

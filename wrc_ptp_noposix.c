@@ -58,7 +58,8 @@ static RunTimeOpts rtOpts = {
 
 static PtpPortDS *ptpPortDS;
 static PtpClockDS ptpClockDS;
-static int ptp_enabled = 0, ptp_mode = WRC_MODE_UNKNOWN;
+int ptp_mode = WRC_MODE_UNKNOWN;
+static int ptp_enabled = 0;
 
 int wrc_ptp_init()
 {

@@ -17,12 +17,13 @@ SIZE =		$(CROSS_COMPILE)size
 AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 
 PTP_NOPOSIX = ptp-noposix
+PPSI = ppsi
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
 obj-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
 LDS = arch/lm32/ram.ld
 
-obj-y += wrc_main.o wrc_ptp.o monitor/monitor.o
+obj-y += wrc_main.o
 obj-y += softpll/softpll_ng.o
 
 
@@ -31,13 +32,11 @@ obj-y += softpll/softpll_ng.o
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
-cflags-y = -include $(AUTOCONF)	-Iinclude -I. -Isoftpll
-
+cflags-y = 	-ffreestanding -include $(AUTOCONF) -Iinclude -I. -Isoftpll
 
 cflags-$(CONFIG_PP_PRINTF) += -I$(CURDIR)/pp_printf
 
 cflags-$(CONFIG_PTP_NOPOSIX) += \
-	-ffreestanding \
 	-DPTPD_FREESTANDING \
 	-DWRPC_EXTRA_SLIM \
 	-DPTPD_MSBF \
@@ -48,11 +47,12 @@ cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-include $(PTP_NOPOSIX)/compat.h \
 	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
 	-include $(PTP_NOPOSIX)/libposix/ptpd-wrappers.h \
-	-I$(PTP_NOPOSIX)/wrsw_hal \
 	-I$(PTP_NOPOSIX)/libptpnetif \
 	-I$(PTP_NOPOSIX)/PTPWRd
 
-obj-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
+obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp_noposix.o \
+	monitor/monitor.o \
+	$(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/bmc.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/msg.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/net.o \
@@ -64,6 +64,27 @@ obj-$(CONFIG_PTP_NOPOSIX) += $(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
 	$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
 	$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o
+
+cflags-$(CONFIG_PPSI) += \
+	-ffreestanding \
+	-include include/ppsi-wrappers.h \
+	-Iinclude \
+	-I$(PPSI)/include \
+	-I$(PPSI)/arch-spec \
+	-I$(PPSI)/arch-spec/include \
+	-I$(PPSI)/proto-ext-whiterabbit \
+	-Iboards/spec
+
+# FIXM: The following it temporary, untile we clean up
+cflags-$(CONFIG_PPSI) += \
+	-I$(PTP_NOPOSIX)/PTPWRd \
+	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
+
+obj-$(CONFIG_PPSI) += wrc_ptp_ppsi.o \
+	monitor/monitor_ppsi.o \
+	lib/ppsi-wrappers.o \
+	$(PPSI)/ppsi.o \
+	$(PPSI)/arch-spec/libarch.a
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
@@ -93,7 +114,11 @@ REVISION=$(shell git describe --dirty --always)
 all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 
 .PRECIOUS: %.elf %.bin
-.PHONY: all tools clean gitmodules
+.PHONY: all tools clean gitmodules $(PPSI)/ppsi.o
+
+$(PPSI)/ppsi.o:
+	$(MAKE) -C $(PPSI) ARCH=spec PROTO_EXT=whiterabbit HAS_FULL_DIAG=y \
+		CROSS_COMPILE=$(CROSS_COMPILE)
 
 $(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
@@ -126,6 +151,7 @@ include/board.h:
 
 clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram include/board.h
+	$(MAKE) -C $(PPSI) clean
 
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@

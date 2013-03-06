@@ -21,6 +21,7 @@ int cmd_mode(const char *args[]);
 int cmd_calib(const char *args[]);
 int cmd_time(const char *args[]);
 int cmd_ip(const char *args[]);
+int cmd_verbose(const char *args[]);
 int cmd_sdb(const char *args[]);
 int cmd_mac(const char *args[]);
 int cmd_init(const char *args[]);
