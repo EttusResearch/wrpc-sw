@@ -134,13 +134,14 @@ int send_bootp(uint8_t * buf, int retry)
 	buf[IP_CHECKSUM + 0] = sum >> 8;
 	buf[IP_CHECKSUM + 1] = sum & 0xff;
 
-	mprintf("Sending BOOTP request...\n");
+	// mprintf("Sending BOOTP request...\n");
 	return BOOTP_END;
 }
 
 int process_bootp(uint8_t * buf, int len)
 {
 	uint8_t mac[6];
+	uint8_t ip[4];
 
 	get_mac_addr(mac);
 
@@ -158,8 +159,11 @@ int process_bootp(uint8_t * buf, int len)
 	if (memcmp(buf + BOOTP_CHADDR, mac, 6))
 		return 0;
 
-	mprintf("Discovered IP address!\n");
 	setIP(buf + BOOTP_YIADDR);
+	
+	getIP(ip);
+	mprintf("Discovered IP address (%d.%d.%d.%d)!\n",
+	        ip[0], ip[1], ip[2], ip[3]);
 
 	return 1;
 }
