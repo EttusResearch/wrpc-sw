@@ -64,9 +64,9 @@ void ipv4_poll(void)
 	if ((len = ptpd_netif_recvfrom(ipv4_socket, &addr,
 				       buf, sizeof(buf), 0)) > 0) {
 		if (needIP)
-			process_bootp(buf, len - 14);
+			process_bootp(buf, len);
 
-		if (!needIP && (len = process_icmp(buf, len - 14)) > 0)
+		if (!needIP && (len = process_icmp(buf, len)) > 0)
 			ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
 	}
 
