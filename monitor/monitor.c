@@ -19,6 +19,8 @@
 #include "util.h"
 #include "syscon.h"
 #include "onewire.h"
+#include "lib/ipv4.h"
+
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
 
@@ -33,6 +35,9 @@ void wrc_mon_gui(void)
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
+#ifdef CONFIG_ETHERBONE
+	uint8_t ip[4];
+#endif
 
 	if (timer_get_tics() - last < UI_REFRESH_PERIOD)
 		return;
@@ -81,6 +86,15 @@ void wrc_mon_gui(void)
 		else
 			cprintf(C_RED, "Uncalibrated  ");
 
+#ifdef CONFIG_ETHERBONE
+		cprintf(C_WHITE, "\nIPv4: ");
+		getIP(ip);
+		if (needIP)
+			cprintf(C_RED, "BOOTP running");
+		else
+			cprintf(C_GREEN, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+#endif		
+		
 		/* show_servo */
 		cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
 
