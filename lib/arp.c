@@ -7,10 +7,14 @@
  * Released according to the GNU GPL, version 2 or any later version.
  */
 #include <string.h>
-#include "endpoint.h"
 
+#include "endpoint.h"
 #include "ipv4.h"
 #include "ptpd_netif.h"
+
+#ifndef htons
+#define htons(x) x
+#endif
 
 static wr_socket_t *arp_socket;
 

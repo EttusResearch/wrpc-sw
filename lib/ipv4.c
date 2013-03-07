@@ -14,6 +14,10 @@
 #include "hw/memlayout.h"
 #include "hw/etherbone-config.h"
 
+#ifndef htons
+#define htons(x) x
+#endif
+
 int needIP = 1;
 static uint8_t myIP[4];
 static wr_socket_t *ipv4_socket;
