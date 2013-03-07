@@ -320,25 +320,33 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 	mcr = minic_readl(MINIC_REG_MCR);
 	minic_writel(MINIC_REG_MCR, mcr | MINIC_MCR_TX_START);
 
-	i = 0;
-
-	do {
+	/* wait for the DMA to finish */
+	for (i = 0; i < 1000; ++i) {
 		mcr = minic_readl(MINIC_REG_MCR);
-		if (i > 0)
+		if ((mcr & MINIC_MCR_TX_IDLE) != 0) break;
 		timer_delay(1);
-		i++;
-	} while (((mcr & MINIC_MCR_TX_IDLE) == 0) && (i < 1000));
-
+        }
+	
 	if (i == 1000)
 		mprintf("Warning: tx not terminated infinite mcr=0x%x\n",mcr);
 
-	if (hwts) {		/* wait for the timestamp */
+	if (hwts) {
 		uint32_t raw_ts;
 		uint16_t fid;
 		uint32_t counter_r, counter_f;
 		uint64_t sec;
 		uint32_t nsec;
-
+		
+		/* wait for the timestamp */
+		for (i = 0; i < 1000; ++i) {
+		        mcr = minic_readl(MINIC_REG_MCR);
+		        if ((mcr & MINIC_MCR_TX_TS_READY) != 0) break;
+		        timer_delay(1);
+                }
+                
+                if (i == 1000)
+                        mprintf("Warning: tx timestamp never became available\n");
+		
 		ts_valid = (uint8_t)(minic_readl(MINIC_REG_TSR0)
 				     & MINIC_TSR0_VALID);
 
@@ -360,11 +368,11 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		hwts->sec = sec;
 		hwts->ahead = 0;
 		hwts->nsec = counter_r * 8;
-
+		
 //        TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
 		minic.tx_count++;
-	}
-
+        }
+        
 	return size;
 }
 
