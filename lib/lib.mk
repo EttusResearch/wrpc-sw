@@ -1,5 +1,3 @@
-obj-$(CONFIG_MPRINTF) += lib/mprintf.o
-
 obj-y += lib/util.o lib/atoi.o
 obj-y += lib/net.o
 

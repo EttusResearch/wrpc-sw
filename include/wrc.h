@@ -8,15 +8,10 @@
  * Also, this brings in very common and needed headers
  */
 #include <inttypes.h>
-#ifdef CONFIG_MPRINTF
-int mprintf(char const *format, ...)
-	__attribute__((format(printf,1,2)));
-#else
 #include <pp-printf.h>
 #define mprintf pp_printf
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
-#endif
 
 #undef offsetof
 #define offsetof(TYPE, MEMBER) ((int) &((TYPE *)0)->MEMBER)

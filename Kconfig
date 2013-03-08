@@ -56,23 +56,9 @@ config STACKSIZE
 	 we must also consider the stack, or the program will crash
 	 badly at run time.
 
-config MPRINTF
-	boolean "Use the old mprintf implementation for printf"
-	depends on !PPSI
-	default y
-	help
-	  wrpc-sw has traditionally used mprintf as its printf engine.
-	  Unfortunately, the code base has unclear copyright status,
-	  and we are now able to run pp_printf instead. Such implementation
-	  however has had little testing in wrpc-sw by now. Mprintf
-	  is scheduled to be removed in the future, as soon as pp_printf
-	  is more tested on the field.
-
-	  If unsure, say y for the time being.
-
 config PP_PRINTF
        boolean
-       default !MPRINTF
+       default y
 
 choice
 	prompt "Implementation of pp_printf"
