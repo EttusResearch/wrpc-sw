@@ -32,6 +32,7 @@
 #include "wrc_ptp.h"
 
 int wrc_ui_mode = UI_SHELL_MODE;
+int wrc_phase_tracking = 1;
 
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)

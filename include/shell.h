@@ -25,6 +25,7 @@ int cmd_verbose(const char *args[]);
 int cmd_sdb(const char *args[]);
 int cmd_mac(const char *args[]);
 int cmd_init(const char *args[]);
+int cmd_ptrack(const char *args[]);
 
 int cmd_env(const char *args[]);
 int cmd_saveenv(const char *args[]);

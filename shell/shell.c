@@ -58,6 +58,7 @@ static const struct shell_cmd cmds_list[] = {
 	{"time",	cmd_time},
 	{"sfp",		cmd_sfp},
 	{"init",	cmd_init},
+	{"ptrack",	cmd_ptrack},
 #ifdef CONFIG_ETHERBONE
 	{"ip",		cmd_ip},
 #endif

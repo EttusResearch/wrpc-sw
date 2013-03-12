@@ -12,7 +12,8 @@ obj-y += \
 	shell/cmd_gui.o \
 	shell/cmd_sdb.o \
 	shell/cmd_mac.o \
-	shell/cmd_init.o
+	shell/cmd_init.o \
+	shell/cmd_ptrack.o
 
 obj-$(CONFIG_ETHERBONE) += shell/cmd_ip.o
 obj-$(CONFIG_PPSI_RUNTIME_VERBOSITY) += shell/cmd_verbose.o
