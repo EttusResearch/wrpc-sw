@@ -325,8 +325,8 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		mcr = minic_readl(MINIC_REG_MCR);
 		if ((mcr & MINIC_MCR_TX_IDLE) != 0) break;
 		timer_delay(1);
-        }
-	
+	}
+
 	if (i == 1000)
 		mprintf("Warning: tx not terminated infinite mcr=0x%x\n",mcr);
 
@@ -336,17 +336,17 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		uint32_t counter_r, counter_f;
 		uint64_t sec;
 		uint32_t nsec;
-		
+
 		/* wait for the timestamp */
 		for (i = 0; i < 1000; ++i) {
-		        mcr = minic_readl(MINIC_REG_MCR);
-		        if ((mcr & MINIC_MCR_TX_TS_READY) != 0) break;
-		        timer_delay(1);
-                }
-                
-                if (i == 1000)
-                        mprintf("Warning: tx timestamp never became available\n");
-		
+			mcr = minic_readl(MINIC_REG_MCR);
+			if ((mcr & MINIC_MCR_TX_TS_READY) != 0) break;
+			timer_delay(1);
+		}
+
+		if (i == 1000)
+			mprintf("Warning: tx timestamp never became available\n");
+
 		ts_valid = (uint8_t)(minic_readl(MINIC_REG_TSR0)
 				     & MINIC_TSR0_VALID);
 
