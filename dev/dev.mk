@@ -9,4 +9,5 @@ obj-y += \
 	dev/uart.o \
 	dev/sfp.o \
 	dev/onewire.o \
-	dev/sdb.o
+	dev/sdb.o \
+	dev/rxts_calibrator.o

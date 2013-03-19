@@ -41,8 +41,8 @@ static uint16_t pcs_read(int location)
 static void pcs_write(int location, int value)
 {
 	EP->MDIO_CR = EP_MDIO_CR_ADDR_W(location >> 2)
-		    | EP_MDIO_CR_DATA_W(value)
-		    | EP_MDIO_CR_RW;
+	    | EP_MDIO_CR_DATA_W(value)
+	    | EP_MDIO_CR_RW;
 
 	while ((EP->MDIO_ASR & EP_MDIO_ASR_READY) == 0) ;
 }
@@ -51,12 +51,12 @@ static void pcs_write(int location, int value)
 void set_mac_addr(uint8_t dev_addr[])
 {
 	EP->MACL = ((uint32_t) dev_addr[2] << 24)
-		 | ((uint32_t) dev_addr[3] << 16)
-		 | ((uint32_t) dev_addr[4] << 8)
-		 | ((uint32_t) dev_addr[5]);
+	    | ((uint32_t) dev_addr[3] << 16)
+	    | ((uint32_t) dev_addr[4] << 8)
+	    | ((uint32_t) dev_addr[5]);
 
 	EP->MACH = ((uint32_t) dev_addr[0] << 8)
-		 | ((uint32_t) dev_addr[1]);
+	    | ((uint32_t) dev_addr[1]);
 }
 
 void get_mac_addr(uint8_t dev_addr[])
@@ -151,7 +151,7 @@ int ep_link_up(uint16_t * lpa)
 int ep_get_bitslide()
 {
 	return PICOS_PER_SERIAL_BIT *
-		MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
+	    MDIO_WR_SPEC_BSLIDE_R(pcs_read(MDIO_REG_WR_SPEC));
 }
 
 /* Returns the TX/RX latencies. They are valid only when the link is up. */
@@ -185,4 +185,11 @@ int ep_cal_pattern_disable()
 	pcs_write(MDIO_REG_WR_SPEC, val);
 
 	return 0;
+}
+
+int ep_timestamper_cal_pulse()
+{
+	EP->TSCR |= EP_TSCR_RX_CAL_START;
+	timer_delay(1);
+	return EP->TSCR & EP_TSCR_RX_CAL_RESULT ? 1 : 0;
 }
