@@ -40,6 +40,9 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 void ipv4_init(const char *if_name)
 {
 	wr_sockaddr_t saddr;
+	
+	/* Reset => need a fresh IP */
+	needIP = 1;
 
 	/* Configure socket filter */
 	memset(&saddr, 0, sizeof(saddr));
