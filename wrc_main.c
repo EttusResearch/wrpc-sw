@@ -258,8 +258,10 @@ int main(void)
 			break;
 
 		case LINK_WENT_DOWN:
-			if (wrc_ptp_get_mode() == WRC_MODE_SLAVE)
+			if (wrc_ptp_get_mode() == WRC_MODE_SLAVE) {
 				spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+				shw_pps_gen_enable_output(0);
+			}
 			break;
 		}
 

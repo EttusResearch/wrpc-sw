@@ -43,7 +43,7 @@ void shw_pps_gen_init()
 
 	ppsg_write(CR, cr | PPSG_CR_CNT_SET);
 	ppsg_write(CR, cr);
-	ppsg_write(ESCR, 0x6);	/* enable PPS output */
+	ppsg_write(ESCR, 0);	/* disable PPS output */
 }
 
 /* Adjusts the nanosecond (refclk cycle) counter by atomically adding (how_much) cycles. */
