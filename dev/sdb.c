@@ -10,6 +10,15 @@
 #include <wrc.h>
 #include "hw/memlayout.h"
 
+unsigned char *BASE_MINIC;
+unsigned char *BASE_EP;
+unsigned char *BASE_SOFTPLL;
+unsigned char *BASE_PPS_GEN;
+unsigned char *BASE_SYSCON;
+unsigned char *BASE_UART;
+unsigned char *BASE_ONEWIRE;
+unsigned char *BASE_ETHERBONE_CFG;
+
 #define SDB_INTERCONNET 0x00
 #define SDB_DEVICE      0x01
 #define SDB_BRIDGE      0x02
