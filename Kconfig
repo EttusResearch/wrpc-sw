@@ -49,7 +49,7 @@ config PPSI_VERBOSITY
 config PPSI_RUNTIME_VERBOSITY
        depends on PPSI
        boolean "Enable runtime verbosity setting"
-       default n
+       default y
        help
          If set, this option permits to change the verbosity of PPSI engine
          runtime. This causes a bigger RAM occupation, so it is suggested
