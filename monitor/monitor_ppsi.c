@@ -20,6 +20,7 @@
 #include <onewire.h>
 #include <util.h>
 #include "wrc_ptp.h"
+#include "hal_exports.h"
 #include "lib/ipv4.h"
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
