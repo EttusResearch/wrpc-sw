@@ -27,6 +27,14 @@ config PPSI
 
 endchoice
 
+config CHECK_RESET
+	bool "Print a stack trace if reset happens"
+	help
+	  If the CPU is following a NULL pointer, the program will
+	  be restarted. If this option is activated, the main function
+	  detects that it is re-executed and dumps a stack trace; it
+	  then clears the stack (for next time) and restarts again.
+
 config PPSI_VERBOSITY
 	depends on PPSI
 	int "Default verbosity for PPSI"
