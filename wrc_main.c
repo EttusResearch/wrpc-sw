@@ -168,6 +168,14 @@ int main(void)
 	_endram = ENDRAM_MAGIC;
 
 	wrc_initialize();
+	
+	spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 0);
+	
+	for(;;)
+	{
+		spll_show_stats();
+		timer_delay(500);
+	}
 	shell_init();
 
 	wrc_ptp_set_mode(WRC_MODE_SLAVE);

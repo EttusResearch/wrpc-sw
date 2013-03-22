@@ -28,7 +28,6 @@ extern int abs(int val);
 /* The following from ptp-noposix */
 extern void wr_servo_reset(void);
 void update_rx_queues(void);
-void spll_enable_ptracker(int ref_channel, int enable);
 
 
 #endif /* __WRC_H__ */
