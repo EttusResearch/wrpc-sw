@@ -116,13 +116,16 @@ void wrc_mon_gui(void)
 
 		cprintf(C_GREY, "Aux clock status:          ");
 
-		aux_stat = spll_get_aux_status(0);
+		int n_ref, n_out, i;
+		spll_get_num_channels(&n_ref, &n_out);
 
-		if (aux_stat & SPLL_AUX_ENABLED)
-			cprintf(C_GREEN, "enabled");
+		for(i = 0; i<n_out - 1; i++)		
+		{
+			const char *aux_stat = spll_get_aux_status_string(i);
 
-		if (aux_stat & SPLL_AUX_LOCKED)
-			cprintf(C_GREEN, ", locked");
+			cprintf(C_GREY,"%d:", i);
+			cprintf(C_GREEN,"%s ", aux_stat);
+		}
 		mprintf("\n");
 
 		cprintf(C_BLUE, "\nTiming parameters:\n\n");
