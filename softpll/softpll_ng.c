@@ -243,6 +243,11 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 			break;
 	}
 	
+	if(s->seq_state == SEQ_WAIT_MAIN)
+	{
+		mpll_update(&s->mpll, tag_value, tag_source);
+	}
+
 	if(s->seq_state == SEQ_READY)
 	{
 		if(s->mode == SPLL_MODE_SLAVE)
@@ -299,14 +304,9 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 
 	uint32_t csr = SPLL->CSR;
 
-	spll_n_chan_ref = (csr & 0x1f);
-	spll_n_chan_out = (csr >> 8) & 0x7;
+	spll_n_chan_ref = SPLL_CSR_N_REF_R(csr);
+	spll_n_chan_out = SPLL_CSR_N_OUT_R(csr);
 	
-	TRACE_DEV("csr %x\n", csr);
-
-	printf("Spll @ %x\n", SPLL);
-	printf("N_Ref %d N_Out %d", spll_n_chan_ref, spll_n_chan_out);
-
 
 	s->mode = mode;
 	s->delock_count = 0;
@@ -318,8 +318,6 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	SPLL->OCER = 0;
 	SPLL->RCER = 0;
 	SPLL->ECCR = 0;
-	SPLL->RCGER = 0;
-	SPLL->DCCR = 0;
 	SPLL->OCCR = 0;
 	SPLL->DEGLITCH_THR = 1000;
 
@@ -360,7 +358,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	if(mode == SPLL_MODE_FREE_RUNNING_MASTER)
 		PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
 	
-	for (i = 0; i < n_chan_ref; i++)
+	for (i = 0; i < spll_n_chan_ref; i++)
 		ptracker_init(&s->ptrackers[i], spll_n_chan_ref, i,
 			      PTRACKER_AVERAGE_SAMPLES);
 
@@ -371,14 +369,10 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	/* Purge tag buffer */
 	while (!(SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY))
 		dummy = SPLL->TRR_R0;
-	dummy = SPLL->PER_HPLL;
-
+	
 	SPLL->EIC_IER = 1;
 	SPLL->OCER |= 1;
 	
-	printf("Spll @ %x\n", SPLL);
-	printf("OCER %x\n\n", SPLL->OCER);
-
 	enable_irq();
 }
 
@@ -450,7 +444,7 @@ void spll_set_phase_shift(int channel, int32_t value_picoseconds)
 	int i;
 	if (channel == SPLL_ALL_CHANNELS) {
 		spll_set_phase_shift(0, value_picoseconds);
-		for (i = 0; i < n_chan_out - 1; i++)
+		for (i = 0; i < spll_n_chan_out - 1; i++)
 			if (softpll.aux[i].seq_state == AUX_READY)
 				set_phase_shift(i + 1, value_picoseconds);
 	} else
@@ -491,9 +485,9 @@ int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled)
 void spll_get_num_channels(int *n_ref, int *n_out)
 {
 	if (n_ref)
-		*n_ref = n_chan_ref;
+		*n_ref = spll_n_chan_ref;
 	if (n_out)
-		*n_out = n_chan_out;
+		*n_out = spll_n_chan_out;
 }
 
 void spll_show_stats()
@@ -564,7 +558,7 @@ int spll_update_aux_clocks()
 	{
 		struct spll_aux_state *s = (struct spll_aux_state *) &softpll.aux[ch - 1];
 
-		if(s->seq_state != SEQ_DISABLED && !aux_locking_enabled(ch))
+		if(s->seq_state != AUX_DISABLED && !aux_locking_enabled(ch))
 		{
 			TRACE_DEV("softpll: disabled aux channel %d\n", ch);
 			spll_stop_channel(ch);
@@ -626,7 +620,7 @@ int spll_get_aux_status(int channel)
 const char *spll_get_aux_status_string(int channel)
 {
 	const char *aux_stat[] = {"disabled", "locking", "aligning", "locked"};
-	struct spll_aux_state *s = (struct spll_aux_state* )&softpll.aux[channel - 1];
+	struct spll_aux_state *s = (struct spll_aux_state* )&softpll.aux[channel];
 
 	switch(s->seq_state)
 	{

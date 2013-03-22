@@ -13,8 +13,6 @@
 #include "spll_defs.h"
 #include "spll_common.h"
 
-int n_chan_ref, n_chan_out;
-
 int pi_update(spll_pi_t *pi, int x)
 {
 	int i_new, y;
@@ -113,10 +111,10 @@ int lowpass_update(spll_lowpass_t *lp, int x)
 
 /* Enables/disables DDMTD tag generation on a given (channel). 
 
-Channels (0 ... n_chan_ref - 1) are the reference channels
+Channels (0 ... splL_n_chan_ref - 1) are the reference channels
 	(e.g. transceivers' RX clocks or a local reference)
 
-Channels (n_chan_ref ... n_chan_out + n_chan_ref-1) are the output
+Channels (spll_n_chan_ref ... spll_n_chan_out + spll_n_chan_ref-1) are the output
 	channels (local voltage controlled oscillators). One output
 	(usually the first one) is always used to drive the oscillator
 	which produces the reference clock for the transceiver. Other
@@ -126,11 +124,11 @@ Channels (n_chan_ref ... n_chan_out + n_chan_ref-1) are the output
 
 void spll_enable_tagger(int channel, int enable)
 {
-	if (channel >= n_chan_ref) {	/* Output channel? */
+	if (channel >= spll_n_chan_ref) {	/* Output channel? */
 		if (enable)
-			SPLL->OCER |= 1 << (channel - n_chan_ref);
+			SPLL->OCER |= 1 << (channel - spll_n_chan_ref);
 		else
-			SPLL->OCER &= ~(1 << (channel - n_chan_ref));
+			SPLL->OCER &= ~(1 << (channel - spll_n_chan_ref));
 	} else {		/* Reference channel */
 		if (enable)
 			SPLL->RCER |= 1 << channel;
@@ -143,8 +141,8 @@ void spll_enable_tagger(int channel, int enable)
 
 void spll_resync_dmtd_counter(int channel)
 {
-	if (channel >= n_chan_ref)	/* Output channel? */
-		SPLL->CRR_OUT = 1 << (channel - n_chan_ref);
+	if (channel >= spll_n_chan_ref)	/* Output channel? */
+		SPLL->CRR_OUT = 1 << (channel - spll_n_chan_ref);
 	else
 		SPLL->CRR_IN = 1 << channel;
 
@@ -152,8 +150,8 @@ void spll_resync_dmtd_counter(int channel)
 
 int spll_check_dmtd_resync(int channel)
 {
-	if (channel >= n_chan_ref)	/* Output channel? */
-		return (SPLL->CRR_OUT & (1 << (channel - n_chan_ref))) ? 1 : 0;
+	if (channel >= spll_n_chan_ref)	/* Output channel? */
+		return (SPLL->CRR_OUT & (1 << (channel - spll_n_chan_ref))) ? 1 : 0;
 	else
 		return (SPLL->CRR_IN & (1 << channel)) ? 1 : 0;
 }

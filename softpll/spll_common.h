@@ -26,7 +26,7 @@
 
 /* Number of reference/output channels. We don't plan to have more than one
    SoftPLL instantiation per project, so these can remain global. */
-extern int n_chan_ref, n_chan_out;
+extern int spll_n_chan_ref, spll_n_chan_out;
 
 extern volatile struct SPLL_WB *SPLL;
 extern volatile struct PPSG_WB *PPSG;

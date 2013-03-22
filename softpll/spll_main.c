@@ -38,7 +38,7 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 	s->ld.delock_samples = 100;
 	s->id_ref = id_ref;
 	s->id_out = id_out;
-	s->dac_index = id_out - n_chan_ref;
+	s->dac_index = id_out - spll_n_chan_ref;
 
 	pi_init((spll_pi_t *)&s->pi);
 	ld_init((spll_lock_det_t *)&s->ld);
