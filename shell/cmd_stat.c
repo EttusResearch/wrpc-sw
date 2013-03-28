@@ -3,7 +3,7 @@
 #include <string.h>
 #include <wrc.h>
 
-int cmd_stat(const char *args[])
+static int cmd_stat(const char *args[])
 {
 	if (!strcasecmp(args[0], "cont")) {
 		wrc_ui_mode = UI_STAT_MODE;
@@ -14,3 +14,8 @@ int cmd_stat(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(stat) = {
+	.name = "stat",
+	.exec = cmd_stat,
+};

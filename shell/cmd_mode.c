@@ -18,7 +18,7 @@
 #include "shell.h"
 #include "wrc_ptp.h"
 
-int cmd_mode(const char *args[])
+static int cmd_mode(const char *args[])
 {
 	int mode;
 	static const char *modes[] =
@@ -36,3 +36,8 @@ int cmd_mode(const char *args[])
 	}
 	return wrc_ptp_set_mode(mode);
 }
+
+DEFINE_WRC_COMMAND(mode) = {
+	.name = "mode",
+	.exec = cmd_mode,
+};

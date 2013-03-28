@@ -21,7 +21,7 @@
 
 extern int measure_t24p(uint32_t *value);
 
-int cmd_calib(const char *args[])
+static int cmd_calibration(const char *args[])
 {
 	uint32_t trans;
 
@@ -47,3 +47,8 @@ int cmd_calib(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(calibration) = {
+	.name = "calibration",
+	.exec = cmd_calibration,
+};

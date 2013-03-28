@@ -9,8 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <wrc.h>
 
+#include <wrc.h>
 #include "shell.h"
 
 #define SH_ENVIRON_SIZE 256
@@ -89,7 +89,7 @@ int env_set(const char *var, const char *value)
 	return 0;
 }
 
-int cmd_env(const char *args[])
+static int cmd_env(const char *args[])
 {
 	char *p = env_buf;
 
@@ -102,16 +102,32 @@ int cmd_env(const char *args[])
 	return 0;
 }
 
-int cmd_saveenv(const char *args[])
+DEFINE_WRC_COMMAND(env) = {
+	.name = "env",
+	.exec = cmd_env,
+};
+
+
+static int cmd_saveenv(const char *args[])
 {
 
 	return -ENOTSUP;
 }
 
-int cmd_set(const char *args[])
+DEFINE_WRC_COMMAND(saveenv) = {
+	.name = "saveenv",
+	.exec = cmd_saveenv,
+};
+
+static int cmd_set(const char *args[])
 {
 	if (!args[1])
 		return -EINVAL;
 
 	return env_set(args[0], args[1]);
 }
+
+DEFINE_WRC_COMMAND(set) = {
+	.name = "set",
+	.exec = cmd_set,
+};

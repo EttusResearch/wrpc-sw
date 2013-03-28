@@ -30,7 +30,7 @@
 
 #include "sfp.h"
 
-int cmd_sfp(const char *args[])
+static int cmd_sfp(const char *args[])
 {
 	int8_t sfpcount = 1, i, temp;
 	struct s_sfpinfo sfp;
@@ -112,3 +112,8 @@ int cmd_sfp(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(sfp) = {
+	.name = "sfp",
+	.exec = cmd_sfp,
+};

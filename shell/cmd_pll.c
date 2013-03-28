@@ -14,7 +14,7 @@
 #include "softpll_ng.h"
 #include "shell.h"
 
-int cmd_pll(const char *args[])
+static int cmd_pll(const char *args[])
 {
 	int cur, tgt;
 
@@ -56,3 +56,8 @@ int cmd_pll(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(pll) = {
+	.name = "pll",
+	.exec = cmd_pll,
+};

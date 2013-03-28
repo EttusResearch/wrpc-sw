@@ -28,7 +28,7 @@ static void decode_ip(const char *str, unsigned char *ip)
 	}
 }
 
-int cmd_ip(const char *args[])
+static int cmd_ip(const char *args[])
 {
 	unsigned char ip[4];
 
@@ -49,3 +49,8 @@ int cmd_ip(const char *args[])
 	}
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(ip) = {
+	.name = "ip",
+	.exec = cmd_ip,
+};

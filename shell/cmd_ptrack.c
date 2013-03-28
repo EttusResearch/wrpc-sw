@@ -14,7 +14,7 @@
 
 extern int wrc_phase_tracking;
 
-int cmd_ptrack(const char *args[])
+static int cmd_ptrack(const char *args[])
 {
 	if (args[0] && !strcasecmp(args[0], "enable")) {
 		wr_servo_enable_tracking(1);
@@ -28,3 +28,8 @@ int cmd_ptrack(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(ptrack) = {
+	.name = "ptrack",
+	.exec = cmd_ptrack,
+};

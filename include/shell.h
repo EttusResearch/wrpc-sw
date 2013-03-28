@@ -10,26 +10,16 @@ extern int wrc_ui_mode;
 const char *fromhex(const char *hex, int *v);
 const char *fromdec(const char *dec, int *v);
 
-int cmd_gui(const char *args[]);
-int cmd_pll(const char *args[]);
-int cmd_sfp(const char *args[]);
-int cmd_version(const char *args[]);
-int cmd_stat(const char *args[]);
-int cmd_ptp(const char *args[]);
-int cmd_sfp(const char *args[]);
-int cmd_mode(const char *args[]);
-int cmd_calib(const char *args[]);
-int cmd_time(const char *args[]);
-int cmd_ip(const char *args[]);
-int cmd_verbose(const char *args[]);
-int cmd_sdb(const char *args[]);
-int cmd_mac(const char *args[]);
-int cmd_init(const char *args[]);
-int cmd_ptrack(const char *args[]);
+struct wrc_shell_cmd {
+	char *name;
+	int (*exec) (const char *args[]);
+};
+extern struct wrc_shell_cmd __cmd_begin[], __cmd_end[];
 
-int cmd_env(const char *args[]);
-int cmd_saveenv(const char *args[]);
-int cmd_set(const char *args[]);
+/* Put the structures in their own section */
+#define DEFINE_WRC_COMMAND(_name) \
+	static struct wrc_shell_cmd __wrc_cmd_ ## _name \
+	__attribute__((section(".cmd"), __used__))
 
 char *env_get(const char *var);
 int env_set(const char *var, const char *value);

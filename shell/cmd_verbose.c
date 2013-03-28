@@ -8,10 +8,11 @@
  */
 
 #include <wrc.h>
+#include <shell.h>
 
 extern int pp_diag_verbosity;
 
-int cmd_verbose(const char *args[])
+static int cmd_verbose(const char *args[])
 {
 	int v;
 	v = args[0][0] - '0';
@@ -25,3 +26,8 @@ int cmd_verbose(const char *args[])
 	pp_diag_verbosity = v;
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(verbose) = {
+	.name = "verbose",
+	.exec = cmd_verbose,
+};

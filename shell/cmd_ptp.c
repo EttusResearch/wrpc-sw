@@ -8,7 +8,7 @@
 #include "wrc_ptp.h"
 #include "shell.h"
 
-int cmd_ptp(const char *args[])
+static int cmd_ptp(const char *args[])
 {
 	if (!strcasecmp(args[0], "start"))
 		return wrc_ptp_start();
@@ -19,3 +19,8 @@ int cmd_ptp(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(ptp) = {
+	.name = "ptp",
+	.exec = cmd_ptp,
+};

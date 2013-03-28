@@ -24,7 +24,7 @@
 #include "wrc_ptp.h"
 #include "pps_gen.h"
 
-int cmd_time(const char *args[])
+static int cmd_time(const char *args[])
 {
 	uint64_t sec;
 	uint32_t nsec;
@@ -47,3 +47,8 @@ int cmd_time(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(time) = {
+	.name = "time",
+	.exec = cmd_time,
+};

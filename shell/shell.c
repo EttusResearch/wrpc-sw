@@ -39,38 +39,6 @@
 #define KEY_BACKSPACE (127)
 #define KEY_DELETE (126)
 
-struct shell_cmd {
-	char *name;
-	int (*exec) (const char *args[]);
-};
-
-static const struct shell_cmd cmds_list[] = {
-	{"pll",		cmd_pll},
-	{"gui",		cmd_gui},
-	{"ver",		cmd_version},
-	{"stat",	cmd_stat},
-	{"ptp",		cmd_ptp},
-	{"mode",	cmd_mode},
-	{"calibration",	cmd_calib},
-	{"set",		cmd_set},
-	{"env",		cmd_env},
-	{"saveenv",	cmd_saveenv},
-	{"time",	cmd_time},
-	{"sfp",		cmd_sfp},
-	{"init",	cmd_init},
-	{"ptrack",	cmd_ptrack},
-#ifdef CONFIG_ETHERBONE
-	{"ip",		cmd_ip},
-#endif
-#if (defined CONFIG_PPSI) && (defined CONFIG_PPSI_RUNTIME_VERBOSITY)
-	{"verbose", 	cmd_verbose},
-#endif
-	{"mac",		cmd_mac},
-	{"sdb",		cmd_sdb},
-
-	{NULL,	NULL}
-};
-
 static char cmd_buf[SH_MAX_LINE_LEN + 1];
 static int cmd_pos = 0, cmd_len = 0;
 static int state = SH_PROMPT;
@@ -106,7 +74,8 @@ static void esc(char code)
 static int _shell_exec()
 {
 	char *tokptr[SH_MAX_ARGS + 1];
-	int n = 0, i = 0;
+	struct wrc_shell_cmd *p;
+	int n = 0, i = 0, rv;
 
 	memset(tokptr, 0, sizeof(tokptr));
 
@@ -134,15 +103,16 @@ static int _shell_exec()
 	if (*tokptr[0] == '#')
 		return 0;
 
-	for (i = 0; cmds_list[i].name; i++)
-		if (!strcasecmp(cmds_list[i].name, tokptr[0])) {
-			int rv = cmds_list[i].exec((const char **)tokptr + 1);
+	for (p = __cmd_begin; p < __cmd_end; p++)
+		if (!strcasecmp(p->name, tokptr[0])) {
+			rv = p->exec((const char **)(tokptr + 1));
 			if (rv < 0)
-				mprintf("Err %d\n", rv);
+				mprintf("Coomand \"%s\": error %d\n",
+					p->name, rv);
 			return rv;
 		}
 
-	mprintf("Unrecognized command.\n");
+	mprintf("Unrecognized command \"%s\".\n", tokptr[0]);
 	return -EINVAL;
 }
 

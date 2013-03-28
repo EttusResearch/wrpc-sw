@@ -30,7 +30,7 @@ static void decode_mac(const char *str, unsigned char *mac)
 	}
 }
 
-int cmd_mac(const char *args[])
+static int cmd_mac(const char *args[])
 {
 	unsigned char mac[6];
 
@@ -56,3 +56,8 @@ int cmd_mac(const char *args[])
 		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(mac) = {
+	.name = "mac",
+	.exec = cmd_mac,
+};

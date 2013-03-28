@@ -14,7 +14,7 @@
 #include "syscon.h"
 #include "i2c.h"
 
-int cmd_init(const char *args[])
+static int cmd_init(const char *args[])
 {
 	if (!mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR)) {
 		mprintf("EEPROM not found..\n");
@@ -39,3 +39,8 @@ int cmd_init(const char *args[])
 
 	return 0;
 }
+
+DEFINE_WRC_COMMAND(init) = {
+	.name = "init",
+	.exec = cmd_init,
+};
