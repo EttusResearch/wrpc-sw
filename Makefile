@@ -127,7 +127,7 @@ $(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o
 	$(SIZE) $@
 
 $(OUTPUT).o: $(OBJS)
-	$(LD) --gc-sections -e _start -r $(OBJS) -o $@
+	$(LD) --gc-sections -e _start -r $(OBJS) -T bigobj.lds -o $@
 
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@
