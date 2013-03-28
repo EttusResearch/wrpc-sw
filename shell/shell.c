@@ -125,7 +125,6 @@ int shell_exec(const char *cmd)
 
 void shell_init()
 {
-	env_init();
 	cmd_len = cmd_pos = 0;
 	state = SH_PROMPT;
 }
