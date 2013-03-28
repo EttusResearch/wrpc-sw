@@ -130,4 +130,9 @@ config DETERMINISTIC_BINARY
 
 	 If in doubt, say No.
 
-
+config CMD_CONFIG
+	boolean "Include configuration in the output binary"
+	help
+	  This options adds the "config" command to the shell, which
+	  reports the current configuration.  This adds half a kilobyte
+	  to the binary size (100b for the code plus the .config file).

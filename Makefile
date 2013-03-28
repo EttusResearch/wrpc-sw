@@ -120,14 +120,21 @@ $(PPSI)/ppsi.o:
 	$(MAKE) -C $(PPSI) ARCH=spec PROTO_EXT=whiterabbit \
 		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y
 
-$(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o
+$(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
-	${CC} -o $@ revision.o $(OUTPUT).o $(LDFLAGS)
+	${CC} -o $@ revision.o config.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 	$(SIZE) $@
 
 $(OUTPUT).o: $(OBJS)
 	$(LD) --gc-sections -e _start -r $(OBJS) -T bigobj.lds -o $@
+
+config.o: .config
+	sed '1,3d' .config > .config.bin
+	dd bs=1 count=1 if=/dev/zero 2> /dev/null >> .config.bin
+	$(OBJCOPY) -I binary -O elf32-lm32 -B lm32 \
+		--rename-section .data=.data.config  .config.bin $@
+	rm -f .config.bin
 
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@

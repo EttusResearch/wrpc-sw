@@ -15,5 +15,6 @@ obj-y += \
 	shell/cmd_ptrack.o \
 	shell/cmd_help.o
 
-obj-$(CONFIG_ETHERBONE) += shell/cmd_ip.o
-obj-$(CONFIG_PPSI_RUNTIME_VERBOSITY) += shell/cmd_verbose.o
+obj-$(CONFIG_ETHERBONE) +=			shell/cmd_ip.o
+obj-$(CONFIG_PPSI_RUNTIME_VERBOSITY) +=		shell/cmd_verbose.o
+obj-$(CONFIG_CMD_CONFIG) +=			shell/cmd_config.o
