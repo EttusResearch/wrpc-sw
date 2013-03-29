@@ -39,6 +39,12 @@ void timer_init(uint32_t enable);
 uint32_t timer_get_tics();
 void timer_delay(uint32_t how_long);
 
+/* usleep.c */
+extern void usleep_init(void);
+extern int usleep(useconds_t usec);
+
+
+
 extern volatile struct SYSCON_WB *syscon;
 
 /****************************

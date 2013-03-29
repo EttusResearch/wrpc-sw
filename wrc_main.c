@@ -224,6 +224,7 @@ int main(void)
 	_endram = ENDRAM_MAGIC;
 
 	wrc_initialize();
+	usleep_init();
 	shell_init();
 
 	wrc_ptp_set_mode(WRC_MODE_SLAVE);

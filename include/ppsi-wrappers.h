@@ -13,10 +13,3 @@
 #endif
 
 static inline uint16_t ntohs(uint16_t x) {return x;}
-
-static inline int usleep(useconds_t useconds)
-{
-	while(useconds--)
-		asm volatile("nop");
-	return 0;
-}

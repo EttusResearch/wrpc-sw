@@ -12,13 +12,6 @@
 #include "wrc_ptp.h"
 #include <syscon.h>
 
-int usleep(useconds_t useconds)
-{
-  while(useconds--) asm volatile("nop");
-
-  return 0;
-}
-
 uint64_t ptpd_netif_get_msec_tics(void)
 {
   return timer_get_tics();
