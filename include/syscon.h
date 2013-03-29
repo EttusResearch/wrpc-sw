@@ -2,6 +2,7 @@
 #define __SYSCON_H
 
 #include <inttypes.h>
+#include <sys/types.h>
 
 #include "board.h"
 #undef PACKED /* if we already included a regs file, we'd get a warning */

@@ -8,6 +8,7 @@
  * Also, this brings in very common and needed headers
  */
 #include <inttypes.h>
+#include <syscon.h>
 #include <pp-printf.h>
 #define mprintf pp_printf
 #define vprintf pp_vprintf
