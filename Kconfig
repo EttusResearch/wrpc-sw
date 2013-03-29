@@ -136,3 +136,14 @@ config CMD_CONFIG
 	  This options adds the "config" command to the shell, which
 	  reports the current configuration.  This adds half a kilobyte
 	  to the binary size (100b for the code plus the .config file).
+
+config UART_SW
+	boolean "Use software uart (not the hardware one)"
+	help
+	  The software uart is made up of two circular buffers. They
+	  waste some RAM but allow to avoid the USB cable.  Software
+	  uarts can be accessed using tools/wrpc-uart-sw.
+
+config UART
+       boolean
+       default !UART_SW
