@@ -1,5 +1,6 @@
 CFLAGS = -Wall -ggdb -I. -I../include -Imini_bone
-ALL    = genraminit genramvhd genrammif
+LDFLAGS = -lutil
+ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 
 AS		= as
 LD		= ld
