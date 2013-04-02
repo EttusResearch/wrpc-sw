@@ -12,6 +12,7 @@ tools/genraminit
 tools/genramvhd
 tools/genrammif
 tools/lm32-loader
+tools/wrpc-uart-sw
 wrc_disasm.S
 wrc.ram
 wrc.vhd
