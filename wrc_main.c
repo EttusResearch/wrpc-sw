@@ -13,6 +13,7 @@
 #include <stdarg.h>
 
 #include <wrc.h>
+#include <w1.h>
 #include "syscon.h"
 #include "uart.h"
 #include "endpoint.h"
@@ -51,13 +52,18 @@ static void wrc_initialize()
 	mprintf("WR Core: starting up...\n");
 
 	timer_init(1);
+#ifdef CONFIG_SOCKITOWM
 	owInit();
+	own_scanbus(ONEWIRE_PORT);
+#else /* CONFIG_W1 */
+	wrpc_w1_bus.detail = ONEWIRE_PORT;
+	w1_scan_bus(&wrpc_w1_bus);
+#endif
 
 	mac_addr[0] = 0x08;	//
 	mac_addr[1] = 0x00;	// CERN OUI
 	mac_addr[2] = 0x30;	//
 
-	own_scanbus(ONEWIRE_PORT);
 	if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
 		mprintf("Unable to determine MAC address\n");
 		mac_addr[0] = 0x11;	//

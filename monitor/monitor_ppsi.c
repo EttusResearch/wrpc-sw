@@ -9,6 +9,7 @@
 
 #include <inttypes.h>
 #include <wrc.h>
+#include <w1.h>
 #include <ppsi/ppsi.h>
 #include <spec.h>
 #include <wr-api.h>
@@ -183,8 +184,6 @@ int wrc_log_stats(uint8_t onetime)
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
-	int16_t brd_temp = 0;
-	int16_t brd_temp_frac = 0;
 
 	if (!onetime && timer_get_tics() - last < UI_REFRESH_PERIOD)
 		return 0;
@@ -220,8 +219,23 @@ int wrc_log_stats(uint8_t onetime)
 		spll_get_dac(1));
 	pp_printf("ucnt:%d ", (int32_t) cur_servo_state.update_count);
 
-	own_readtemp(ONEWIRE_PORT, &brd_temp, &brd_temp_frac);
-	pp_printf("temp:%d.%02d C", brd_temp, brd_temp_frac);
+#ifdef CONFIG_SOCKITOWM
+	{
+		int16_t brd_temp = 0;
+		int16_t brd_temp_frac = 0;
+
+		own_readtemp(ONEWIRE_PORT, &brd_temp, &brd_temp_frac);
+		pp_printf("temp:%d.%02d C", brd_temp, brd_temp_frac);
+	}
+#else
+	{
+		int32_t temp;
+
+		temp = w1_read_temp_bus(&wrpc_w1_bus, 0);
+		pp_printf("temp: %d.%04d C", temp >> 16,
+			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
+	}
+#endif
 
 	pp_printf("\n");
 	return 0;

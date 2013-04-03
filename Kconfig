@@ -147,3 +147,13 @@ config UART_SW
 config UART
        boolean
        default !UART_SW
+
+config W1
+	boolean "Rewritten OneWire Code"
+	help
+	  This selects a rewritten code base for onewire, meant to be
+	  cleaner than sockitowm, but currently less tested
+
+config SOCKITOWM
+       boolean
+       default !W1

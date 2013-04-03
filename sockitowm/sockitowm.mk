@@ -1,4 +1,4 @@
-obj-y += \
+obj-$(CONFIG_SOCKITOWM) += \
 	sockitowm/crcutil.o	\
 	sockitowm/eep43.o	\
 	sockitowm/findtype.o	\
