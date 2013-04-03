@@ -52,6 +52,7 @@ cflags-$(CONFIG_PTP_NOPOSIX) += \
 
 obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp_noposix.o \
 	monitor/monitor.o \
+	lib/ptp-noposix-wrappers.o \
 	$(PTP_NOPOSIX)/PTPWRd/arith.o \
 	$(PTP_NOPOSIX)/PTPWRd/bmc.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/msg.o \
@@ -62,8 +63,7 @@ obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp_noposix.o \
 	$(PTP_NOPOSIX)/PTPWRd/dep/servo.o \
 	$(PTP_NOPOSIX)/PTPWRd/protocol.o \
 	$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
-	$(PTP_NOPOSIX)/libposix/freestanding-startup.o \
-	$(PTP_NOPOSIX)/libposix/freestanding-wrapper.o
+	$(PTP_NOPOSIX)/libposix/freestanding-startup.o
 
 cflags-$(CONFIG_PPSI) += \
 	-ffreestanding \
