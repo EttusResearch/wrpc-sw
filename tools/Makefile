@@ -15,7 +15,7 @@ OBJDUMP		= objdump
 all:	$(ALL)
 
 %:	%.o
-	${CC} -o $@ $<
+	${CC} $< $(LDFLAGS) -o $@
 
 %.o:	%.c
 	${CC} -c $^ $(CFLAGS) -O0
