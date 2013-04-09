@@ -1,4 +1,4 @@
-CFLAGS = -Wall -ggdb -I. -I../include -Imini_bone
+CFLAGS = -Wall -ggdb
 LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 
@@ -14,11 +14,8 @@ OBJDUMP		= objdump
 
 all:	$(ALL)
 
-%:	%.o
-	${CC} $< $(LDFLAGS) -o $@
-
-%.o:	%.c
-	${CC} -c $^ $(CFLAGS) -O0
+%:	%.c
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 clean:
-	rm -f $(ALL) *.o
+	rm -f $(ALL) *.o *~
