@@ -171,4 +171,3 @@ DEFINE_WRC_COMMAND(w1) = {
 	.name = "w1",
 	.exec = cmd_w1,
 };
-

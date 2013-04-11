@@ -55,8 +55,14 @@ extern void w1_match_rom(struct w1_dev *dev);
 #define W1_CMDT_CP_SPAD		0x48
 #define W1_CMDT_RECALL		0xb8
 #define W1_CMDT_R_PS		0xb4
+/* EEPROM DS28EC20 */
+#define W1_CMDR_W_SPAD		0x0f
+#define W1_CMDR_R_SPAD		0xaa
+#define W1_CMDR_C_SPAD		0x55
+#define W1_CMDR_R_MEMORY	0xf0
+#define W1_CMDR_EXT_R_MEMORY	0xa5
 
-/* Temperatture conviersion takes time: by default wait, but allow flags */
+/* Temperature conversion takes time: by default wait, but allow flags */
 #define W1_FLAG_NOWAIT		0x01	/* start conversion only*/
 #define W1_FLAG_COLLECT		0x02	/* don't start, just get output */
 
