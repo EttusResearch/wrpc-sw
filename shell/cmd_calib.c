@@ -8,18 +8,17 @@
  * Released according to the GNU GPL, version 2 or any later version.
  */
 
-/* 	Command: gui
-		Arguments: none
+/* 	Command: calibration
+		Arguments: [force]
 
-		Description: launches the WR Core monitor GUI */
+		Description: launches RX timestamper calibration. */
 
 #include <string.h>
 #include <wrc.h>
 #include "shell.h"
 #include "eeprom.h"
 #include "syscon.h"
-
-extern int measure_t24p(uint32_t *value);
+#include "rxts_calibrator.h"
 
 static int cmd_calibration(const char *args[])
 {

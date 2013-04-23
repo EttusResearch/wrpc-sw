@@ -27,6 +27,7 @@ int ep_get_deltas(uint32_t * delta_tx, uint32_t * delta_rx);
 int ep_get_psval(int32_t * psval);
 int ep_cal_pattern_enable();
 int ep_cal_pattern_disable();
+int ep_timestamper_cal_pulse();
 
 void pfilter_init_default();
 

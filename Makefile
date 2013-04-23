@@ -91,7 +91,6 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS)
 
 include shell/shell.mk
-include tests/tests.mk
 include lib/lib.mk
 include pp_printf/printf.mk
 include sockitowm/sockitowm.mk
