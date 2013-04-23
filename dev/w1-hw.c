@@ -9,7 +9,7 @@
 #include <wrc.h>
 #include <string.h>
 #include <w1.h>
-#include "../sockitowm/sockit_owm_regs.h"
+#include <hw/sockit_owm_regs.h>
 
 static inline uint32_t __wait_cycle(void *base)
 {

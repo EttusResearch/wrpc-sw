@@ -37,7 +37,7 @@
 //
 
 #include "ownet.h"
-#include "sockit_owm_regs.h"
+#include <hw/sockit_owm_regs.h>
 
 #include "board.h"
 
