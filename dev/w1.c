@@ -164,6 +164,7 @@ static int cmd_w1(const char *args[])
 			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
 		}
 	}
+	return 0;
 }
 
 DEFINE_WRC_COMMAND(w1) = {
