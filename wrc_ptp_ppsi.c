@@ -22,6 +22,9 @@
 #include "wrc_ptp.h"
 #include "pps_gen.h"
 #include "uart.h"
+#include "rxts_calibrator.h"
+
+extern int32_t cal_phase_transition;
 
 int ptp_mode = WRC_MODE_UNKNOWN;
 static int ptp_enabled = 0, ptp_forced_stop = 0;
@@ -125,11 +128,14 @@ int wrc_ptp_set_mode(int mode)
 			return -EINTR;
 		}
 	}
+	pp_printf("\n");
+
+	/*t24p calibration here*/
+	calib_t24p(mode, &cal_phase_transition);
 
 	if (mode == WRC_MODE_MASTER || mode == WRC_MODE_GM)
 		shw_pps_gen_enable_output(1);
 
-	pp_printf("\n");
 	ptp_mode = mode;
 	return 0;
 }

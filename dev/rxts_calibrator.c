@@ -16,6 +16,7 @@
 #include "syscon.h"
 #include "endpoint.h"
 #include "softpll_ng.h"
+#include "wrc_ptp.h"
 
 /* New calibrator for the transition phase value. A major pain in the ass for the folks who frequently rebuild
    their gatewares. The idea is described below:
@@ -175,4 +176,48 @@ int measure_t24p(int *value)
 
 	while (!(rv = rxts_calibration_update(value))) ;
 	return rv;
+}
+
+/*SoftPLL must be locked prior calling this function*/
+static int calib_t24p_slave(int *value)
+{
+	int rv;
+
+	rxts_calibration_start();
+	while (!(rv = rxts_calibration_update(value))) ;
+
+	if (rv < 0) {
+		printf("Could not calibrate t24p, trying to read from EEPROM\n");
+		if(eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0) < 0) {
+			printf("Something went wrong while writing EEPROM\n");
+			return -1;
+		}
+
+	}
+	else {
+		printf("t24p value is %d ps, storing to EEPROM\n", *value);
+		if(eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 1) < 0) {
+			printf("Something went wrong while writing EEPROM\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static int calib_t24p_master(int *value)
+{
+	int rv;
+
+	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0);
+	printf("t24p read from EEPROM: %d ps\n", *value);
+	return rv;
+}
+
+int calib_t24p(int mode, int *value)
+{
+	if (mode == WRC_MODE_SLAVE)
+		return calib_t24p_slave(value);
+	else
+		return calib_t24p_master(value);
 }

@@ -13,5 +13,6 @@
 void rxts_calibration_start();
 int rxts_calibration_update(int *t24p_value);
 int measure_t24p(int *value);
+int calib_t24p(int mode, int *value);
 
 #endif
