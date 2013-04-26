@@ -17,33 +17,42 @@
 #include "endpoint.h"
 #include "softpll_ng.h"
 #include "wrc_ptp.h"
+#include "eeprom.h"
 
-/* New calibrator for the transition phase value. A major pain in the ass for the folks who frequently rebuild
-   their gatewares. The idea is described below:
+/* New calibrator for the transition phase value. A major pain in the ass for
+   the folks who frequently rebuild their gatewares. The idea is described
+   below:
    - lock the PLL to the master
    - scan the whole phase shifter range
-   - at each scanning step, generate a fake RX timestamp. 
-   - check if the rising edge counter is ahead of the falling edge counter (added a special bit for it in the TSU).
+   - at each scanning step, generate a fake RX timestamp.
+   - check if the rising edge counter is ahead of the falling edge counter
+     (added a special bit for it in the TSU).
    - determine phases at which positive/negative transitions occur
-   - transition phase value is in the middle between the rising and falling edges.
+   - transition phase value is in the middle between the rising and falling
+     edges.
    
-   This calibration procedure is fast enough to be run on slave nodes whenever the link goes up. For master mode,
-   the core must be run at least once as a slave to calibrate itself and store the current transition phase value
-   in the EEPROM.
+   This calibration procedure is fast enough to be run on slave nodes whenever
+   the link goes up. For master mode, the core must be run at least once as a
+   slave to calibrate itself and store the current transition phase value in
+   the EEPROM.
 */
 
-/* how finely we scan the phase shift range to determine where we have the bit flip */
+/* how finely we scan the phase shift range to determine where we have the bit
+ * flip */
 #define CAL_SCAN_STEP 100
 
-/* deglitcher threshold (to remove 1->0->1 flip bit glitches that might occur due to jitter) */
+/* deglitcher threshold (to remove 1->0->1 flip bit glitches that might occur
+   due to jitter) */
 #define CAL_DEGLITCH_THRESHOLD 5
 
-/* we scan at least one clock period to look for rising->falling edge transition plus some headroom */
-#define CAL_SCAN_RANGE (REF_CLOCK_PERIOD_PS + (3 * CAL_DEGLITCH_THRESHOLD * CAL_SCAN_STEP))
+/* we scan at least one clock period to look for rising->falling edge transition
+   plus some headroom */
+#define CAL_SCAN_RANGE (REF_CLOCK_PERIOD_PS + \
+		(3 * CAL_DEGLITCH_THRESHOLD * CAL_SCAN_STEP))
 
 #define TD_WAIT_INACTIVE	0
-#define TD_GOT_TRANSITION 1
-#define TD_DONE 					2
+#define TD_GOT_TRANSITION	1
+#define TD_DONE			2
 
 /* state of transition detector */
 struct trans_detect_state {
@@ -53,9 +62,10 @@ struct trans_detect_state {
 	int trans_phase;
 };
 
-/* finds the transition in the value of flip_bit and returns phase associated with it.
-   If no transition phase has been found yet, returns 0. Non-zero polarity means we are looking for 
-   positive transitions, 0 - negative transitions */
+/* finds the transition in the value of flip_bit and returns phase associated
+   with it. If no transition phase has been found yet, returns 0. Non-zero
+   polarity means we are looking for positive transitions, 0 - negative
+   transitions */
 static int lookup_transition(struct trans_detect_state *state, int flip_bit,
 			     int phase, int polarity)
 {
@@ -64,7 +74,8 @@ static int lookup_transition(struct trans_detect_state *state, int flip_bit,
 
 	switch (state->state) {
 	case TD_WAIT_INACTIVE:
-		/* first, wait until we have at least CAL_DEGLITCH_THRESHOLD of inactive state samples */
+		/* first, wait until we have at least CAL_DEGLITCH_THRESHOLD of
+		   inactive state samples */
 		if (flip_bit != polarity)
 			state->sample_count++;
 		else
@@ -101,8 +112,9 @@ static int lookup_transition(struct trans_detect_state *state, int flip_bit,
 static struct trans_detect_state det_rising, det_falling;
 static int cal_cur_phase;
 
-/* Starts RX timestamper calibration process state machine. Invoked by ptpnetif's check lock function when the PLL
-   has already locked, to avoid complicating the API of ptp-noposix/ppsi. */
+/* Starts RX timestamper calibration process state machine. Invoked by
+   ptpnetif's check lock function when the PLL has already locked, to avoid
+   complicating the API of ptp-noposix/ppsi. */
 
 void rxts_calibration_start()
 {
@@ -112,13 +124,15 @@ void rxts_calibration_start()
 	spll_set_phase_shift(0, 0);
 }
 
-/* Updates RX timestamper state machine. Non-zero return value means that calibration is done. */
-int rxts_calibration_update(int *t24p_value)
+/* Updates RX timestamper state machine. Non-zero return value means that
+   calibration is done. */
+int rxts_calibration_update(uint32_t *t24p_value)
 {
 	if (spll_shifter_busy(0))
 		return 0;
 
-	/* generate a fake RX timestamp and check if falling edge counter is ahead of rising edge counter */
+	/* generate a fake RX timestamp and check if falling edge counter is
+	   ahead of rising edge counter */
 	int flip = ep_timestamper_cal_pulse();
 
 	/* look for transitions (with deglitching) */
@@ -126,7 +140,8 @@ int rxts_calibration_update(int *t24p_value)
 	lookup_transition(&det_falling, flip, cal_cur_phase, 0);
 
 	if (cal_cur_phase >= CAL_SCAN_RANGE) {
-		if (det_rising.state != TD_DONE || det_falling.state != TD_DONE) {
+		if (det_rising.state != TD_DONE || det_falling.state != TD_DONE) 
+		{
 			TRACE_DEV("RXTS calibration error.\n");
 			return -1;
 		}
@@ -134,7 +149,7 @@ int rxts_calibration_update(int *t24p_value)
 		if (det_rising.trans_phase > det_falling.trans_phase)
 			det_falling.trans_phase += REF_CLOCK_PERIOD_PS;
 
-		int ttrans =
+		uint32_t ttrans =
 		    (det_falling.trans_phase + det_rising.trans_phase) / 2;
 
 		/* normalize */
@@ -158,7 +173,7 @@ int rxts_calibration_update(int *t24p_value)
 }
 
 /* legacy function for 'calibration force' command */
-int measure_t24p(int *value)
+int measure_t24p(uint32_t *value)
 {
 	int rv;
 	mprintf("Waiting for link...\n");
@@ -179,7 +194,7 @@ int measure_t24p(int *value)
 }
 
 /*SoftPLL must be locked prior calling this function*/
-static int calib_t24p_slave(int *value)
+static int calib_t24p_slave(uint32_t *value)
 {
 	int rv;
 
@@ -205,7 +220,7 @@ static int calib_t24p_slave(int *value)
 	return 0;
 }
 
-static int calib_t24p_master(int *value)
+static int calib_t24p_master(uint32_t *value)
 {
 	int rv;
 
@@ -214,7 +229,7 @@ static int calib_t24p_master(int *value)
 	return rv;
 }
 
-int calib_t24p(int mode, int *value)
+int calib_t24p(int mode, uint32_t *value)
 {
 	if (mode == WRC_MODE_SLAVE)
 		return calib_t24p_slave(value);
