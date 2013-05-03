@@ -32,9 +32,8 @@ obj-y += softpll/softpll_ng.o
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
-cflags-y = 	-ffreestanding -include $(AUTOCONF) -Iinclude -I. -Isoftpll
-
-cflags-$(CONFIG_PP_PRINTF) += -I$(CURDIR)/pp_printf
+cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude -I. -Isoftpll
+cflags-y +=	-I$(CURDIR)/pp_printf
 
 cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-DPTPD_FREESTANDING \

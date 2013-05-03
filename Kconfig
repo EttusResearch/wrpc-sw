@@ -11,12 +11,7 @@ config STACKSIZE
 	int  
 	default 2048
 
-config PP_PRINTF
-	boolean
-	default y
-
 config PRINT_BUFSIZE
-       depends on PP_PRINTF
        int
        default 128
 
@@ -88,7 +83,7 @@ config STACKSIZE
 	  at run time. (However, we have a detector for overflows).
 
 config PRINT_BUFSIZE
-	depends on PP_PRINTF && DEVELOPER
+	depends on DEVELOPER
 	int "Size for the temporary output string of pp_printf"
 	default 128
 	help
