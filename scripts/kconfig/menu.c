@@ -327,9 +327,11 @@ void menu_finalize(struct menu *parent)
 			if (!menu->prompt)
 				menu_warn(menu, "choice value must have a prompt");
 			for (prop = menu->sym->prop; prop; prop = prop->next) {
+#if 0 /* Actually, it works */
 				if (prop->type == P_DEFAULT)
 					prop_warn(prop, "defaults for choice "
 						  "values not supported");
+#endif
 				if (prop->menu == menu)
 					continue;
 				if (prop->type == P_PROMPT &&
