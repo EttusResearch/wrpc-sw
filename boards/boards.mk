@@ -1,1 +1,0 @@
-OBJS_BOARD = $(BOARD)/board.o

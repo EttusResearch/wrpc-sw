@@ -1,9 +1,5 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 
-# choose your board here.
-BOARD = spec
-
-# and don't touch the rest unless you know what you're doing.
 CROSS_COMPILE ?= lm32-elf-
 
 CC =		$(CROSS_COMPILE)gcc
@@ -148,14 +144,8 @@ config.o: .config
 
 $(AUTOCONF): silentoldconfig
 
-$(OBJS): include/board.h
-
-include/board.h:
-	ln -sf ../boards/$(BOARD)/board.h include/board.h
-
-
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram include/board.h
+	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
 	$(MAKE) -C $(PPSI) clean
 
 %.o:		%.c
