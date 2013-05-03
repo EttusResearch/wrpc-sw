@@ -184,5 +184,8 @@ scripts_basic config:
 %config:
 	$(MAKE) -f Makefile.kconfig $@
 
+defconfig:
+	$(MAKE) -f Makefile.kconfig spec_defconfig
+
 .config: silentoldconfig
 
