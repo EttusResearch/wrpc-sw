@@ -1,33 +1,98 @@
 
 mainmenu "WR PTP Core software configuration"
 
-config RAMSIZE
-       int "Size of the RAM in the FPGA for this program"
-       default 90112
-       help
-         The usual configuration for wrpc-sw is 0x16000 bytes
-	 (i.e. 88kB = 90112 bytes) but if your project has less or
-	 more features you may want to adjust the FPGA size and
-	 choose your preferred value here.
+# most options with no prompt here are prompted-for in the "advanced" section
 
-choice
-       prompt "Choose your preferred ptp engine"
-       default PTP_NOPOSIX
+config RAMSIZE
+	int
+	default 90112
+
+config STACKSIZE
+	int  
+	default 2048
+
+config PRINT_BUFSIZE
+       int
+       default 128
+
+config PRINTF_XINT
+	boolean
+	default y
 
 config PTP_NOPOSIX
-       boolean "ptp-noposix"
-       help
-	 Select this option for the ptp-noposix engine
+	boolean
+	default y
 
-config PPSI
-       boolean "ppsi"
-       help
-	 Select this option for the ppsi engine. Warning: this option is
-	 work in progress, may not work or not compile at all.
+config UART
+	boolean
+	default !UART_SW
 
-endchoice
+config SOCKITOWM
+       boolean
+       default y
+
+# The other ones can be set by non-developers
+
+config ETHERBONE
+	boolean "Compile Etherbone support in wrpc-sw"
+	help
+	  This allows to run LM32 code that is aware of Etherbone.
+	  You need to run a gateware file that includes Etherbone support.
+	  If in doubt, say No.
+
+config CMD_CONFIG
+	boolean "Include configuration in the output binary"
+	help
+	  This options adds the "config" command to the shell, which
+	  reports the current configuration.  This adds half a kilobyte
+	  to the binary size (100b for the code plus the .config file).
+
+
+
+#
+# This is a set of configuration options that should not be changed by
+# normal users. If the "developer" menu is used, the binary is tainted.
+
+comment "wrpc-sw is tainted if you change the following options"
+config DEVELOPER
+	bool "Advanced configurations, only for developers"
+	help
+	  The following options are new features under testing, or
+	  special customizations not normally useful for people not
+	  directly working on this package.  Please don't use unless
+	  you are a developer of wrpc-sw.
+
+config RAMSIZE
+	depends on DEVELOPER
+	int "Size of the RAM in the FPGA for this program"
+	default 90112
+	help
+	  The usual configuration for wrpc-sw is 0x16000 bytes
+	  (i.e. 88kB = 90112 bytes) but if your project has less or
+	  more features you may want to adjust the FPGA size and
+	  choose your preferred value here.
+
+config STACKSIZE
+	depends on DEVELOPER
+	int "Size of the stack area needed by this program"
+	default 3584 if PPSI
+	default 2048
+	help
+	  The linker complains if the code doesn't fit into RAM, but
+	  we must also consider the stack, or the program will crash
+	  at run time. (However, we have a detector for overflows).
+
+config PRINT_BUFSIZE
+	depends on DEVELOPER
+	int "Size for the temporary output string of pp_printf"
+	default 128
+	help
+	  This buffer is constant storage (i.e. wasted space), but it
+	  also constraints the maximum lenght of text that can be written
+	  in a single call to printf.
 
 config CHECK_RESET
+	depends on DEVELOPER
 	bool "Print a stack trace if reset happens"
 	help
 	  If the CPU is following a NULL pointer, the program will
@@ -35,8 +100,61 @@ config CHECK_RESET
 	  detects that it is re-executed and dumps a stack trace; it
 	  then clears the stack (for next time) and restarts again.
 
+choice
+	prompt "Implementation of pp_printf"
+	depends on DEVELOPER
+
+config PRINTF_XINT
+	bool "hex-and-int"
+	help
+	  This selects a printf that can only print decimal and hex
+	  numbers, without obeying the format modifiers. %c and %s are
+	  supported too, and %p is equivalent to %x.
+	  See pp_printf/README for details.
+
+config PRINTF_FULL
+	bool "full"
+	help
+	  This selects an implementation that supports all standard
+	  formats with modifiers, like "%08X" and "%.5s". It costs
+	  around 2k of compiled code more than XINT.
+	  See pp_printf/README for details.
+
+config PRINTF_MINI
+	bool "minimal"
+	help
+	  This selects a printf that prints all integers as hex,
+	  without obeying the format modifiers. %c and %s are
+	  supported too. See pp_printf/README for details.
+	  This is not probably what you want for wrpc-sw.
+
+config PRINTF_NONE
+	bool "empty"
+	help
+	  This selects a printf that prints the format string
+	  alone and ignores all further arguments. Minimal size,
+	  but not suited for wrpc-sw. See pp_printf/README for details.
+endchoice
+
+choice
+	prompt "Choose your preferred ptp engine"
+	depends on DEVELOPER
+
+config PTP_NOPOSIX
+	boolean "ptp-noposix"
+	help
+	  Select this option for the ptp-noposix engine
+
+config PPSI
+	boolean "ppsi"
+	help
+	  Select this option for the ppsi engine. Warning: this option is
+	  work in progress, may not work or not compile at all.
+
+endchoice
+
 config PPSI_VERBOSITY
-	depends on PPSI
+	depends on PPSI && DEVELOPER
 	int "Default verbosity for PPSI"
 	help
 	  This option makes you select the verbosity of PPSI at startup:
@@ -47,97 +165,29 @@ config PPSI_VERBOSITY
 	range 0 2
 
 config PPSI_RUNTIME_VERBOSITY
-       depends on PPSI
-       boolean "Enable runtime verbosity setting"
-       default y
-       help
-         If set, this option permits to change the verbosity of PPSI engine
-         runtime. This causes a bigger RAM occupation, so it is suggested
-         to set it only for debugging purpose.
-
-config STACKSIZE
-       int "Size of the stack area needed by this program"
-       default 3584 if PPSI
-       default 2048
-       help
-         The linker complains if the code doesn't fit into RAM, but
-	 we must also consider the stack, or the program will crash
-	 badly at run time.
-
-config PP_PRINTF
-       boolean
-       default y
-
-choice
-	prompt "Implementation of pp_printf"
-	depends on PP_PRINTF
-	default PRINTF_XINT
-
-config PRINTF_FULL
- 	bool "full"
+	depends on PPSI && DEVELOPER
+	boolean "Enable runtime verbosity setting"
+	default y
 	help
-	  This selects an implementation that supports all standard
-	  formats with modifiers, like "%08X" and "%.5s". It costs
-	  around 2k of compiled code more than XINT.
-	  See pp_printf/README for details.
-
-config PRINTF_XINT
- 	bool "hex-and-int"
-	help
-	  This selects a printf that can only print decimal and hex
-	  numbers, without obeying the format modifiers. %c and %s are
-	  supported too, and %p is equivalente to %x.
-	  See pp_printf/README for details.
-
-config PRINTF_MINI
- 	bool "minimal"
-	help
-	  This selects a printf that prints all integers as hex,
-	  without obeying the format modifiers. %c and %s are
-	  supported too. See pp_printf/README for details.
-	  This is not probably what you want for wrpc-sw.
-
-config PRINTF_NONE
- 	bool "empty"
-	help
-	  This selects a printf that prints the format string
-	  alone and ignores all further arguments. Minimal size,
-	  but not suited for wrpc-sw. See pp_printf/README for details.
-endchoice
-
-
-config PRINT_BUFSIZE
-       depends on PP_PRINTF
-       int "Size for the temporary output string of pp_printf"
-       default 128
-
-config ETHERBONE
-	boolean "Compile Etherbone support in wrpc-sw"
-	help
-	  This allows to run LM32 code that is aware of Etherbone.
-	  You need to run a gateware file that includes Etherbone support.
-	  If in doubt, say No.
+	  If set, this option permits to change the verbosity of PPSI engine
+	  runtime. This causes a bigger RAM occupation, so it is suggested
+	  to set it only for debugging purpose.
 
 config DETERMINISTIC_BINARY
-       boolean "Build a binary that is the same every time"
-       help
-         This option is used to #ifdef __DATE__ and __TIME__ strings
-	 out of the compiled WRC binary. If you set it you'll get the
-	 same binary bit-by-bit at each rebuild.  I am using this
-	 option to hack the build procedure and use a simple "diff"
-	 between the old and new output to verify I didn't introduce
-	 changes.
-
-	 If in doubt, say No.
-
-config CMD_CONFIG
-	boolean "Include configuration in the output binary"
+	depends on DEVELOPER
+	boolean "Build a binary that is the same every time"
 	help
-	  This options adds the "config" command to the shell, which
-	  reports the current configuration.  This adds half a kilobyte
-	  to the binary size (100b for the code plus the .config file).
+	  This option is used to #ifdef __DATE__ and __TIME__ strings
+	  out of the compiled WRC binary. If you set it you'll get the
+	  same binary bit-by-bit at each rebuild.  I am using this
+	  option to hack the build procedure and use a simple "diff"
+	  between the old and new output to verify I didn't introduce
+	  changes.
+
+	  If in doubt, say No.
 
 config UART_SW
+	depends on DEVELOPER
 	boolean "Use software uart (not the hardware one)"
 	help
 	  The software uart is made up of two circular buffers. They
@@ -145,10 +195,11 @@ config UART_SW
 	  uarts can be accessed using tools/wrpc-uart-sw.
 
 config UART
-       boolean
-       default !UART_SW
+	boolean
+	default !UART_SW
 
 config W1
+	depends on DEVELOPER
 	boolean "Rewritten OneWire Code"
 	help
 	  This selects a rewritten code base for onewire, meant to be

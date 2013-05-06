@@ -1,9 +1,5 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 
-# choose your board here.
-BOARD = spec
-
-# and don't touch the rest unless you know what you're doing.
 CROSS_COMPILE ?= lm32-elf-
 
 CC =		$(CROSS_COMPILE)gcc
@@ -32,9 +28,8 @@ obj-y += softpll/softpll_ng.o
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
-cflags-y = 	-ffreestanding -include $(AUTOCONF) -Iinclude -I. -Isoftpll
-
-cflags-$(CONFIG_PP_PRINTF) += -I$(CURDIR)/pp_printf
+cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude -I. -Isoftpll
+cflags-y +=	-I$(CURDIR)/pp_printf
 
 cflags-$(CONFIG_PTP_NOPOSIX) += \
 	-DPTPD_FREESTANDING \
@@ -149,14 +144,8 @@ config.o: .config
 
 $(AUTOCONF): silentoldconfig
 
-$(OBJS): include/board.h
-
-include/board.h:
-	ln -sf ../boards/$(BOARD)/board.h include/board.h
-
-
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram include/board.h
+	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
 	$(MAKE) -C $(PPSI) clean
 
 %.o:		%.c
@@ -178,8 +167,14 @@ silentoldconfig:
 	@mkdir -p include/config
 	$(MAKE) -f Makefile.kconfig $@
 
-scripts_basic config %config:
+scripts_basic config:
 	$(MAKE) -f Makefile.kconfig $@
+
+%config:
+	$(MAKE) -f Makefile.kconfig $@
+
+defconfig:
+	$(MAKE) -f Makefile.kconfig spec_defconfig
 
 .config: silentoldconfig
 
