@@ -28,14 +28,21 @@
 /*
  * The following parameters match the spec, but can be changed on env/cmdline
  */
-#define DEFAULT_VENDOR		0x10dc		/* CERN */
-#define DEFAULT_DEVICE		0x018d		/* SPEC */
 #define DEFAULT_BUS		-1		/* all */
 #define DEFAULT_BAR		0		/* first bar */
 #define DEFAULT_RAMADDR		0		/* beginning */
 #define DEFAULT_RAMSIZE		0x16000		/* 88k, default in spec */
 
 #define MAX_DEVICES		8		/* no alloc, me lazy */
+
+static struct usw_pci_id {
+	unsigned pci_v;
+	unsigned pci_d;
+} spec_devices[] = {
+	{ 0x10dc /* CERN   */, 0x018d /* SPEC   */ },
+	{ 0x1a39 /* Gennum */, 0x0004 /* GN4124 */ },
+	{ 0, },
+};
 
 struct usw_device {
 	void *mapaddr;
@@ -118,13 +125,14 @@ static int usw_access_pci(char *name, int index)
 
 
 /* Scan PCI space for vendor and device; return number of successes */
-static int usw_scan_pci(int vendor, int device, struct usw_device *arr,
+static int usw_scan_pci(struct usw_pci_id *id, struct usw_device *arr,
 			int alen)
 {
 	char path[PATH_MAX];
 	FILE *f;
 	struct dirent **namelist;
-	int i, n, val, ndevs;
+	int i, j, n, ndevs;
+	unsigned v, d;
 
 	n = scandir("/sys/bus/pci/devices", &namelist, 0, 0);
 	if (n < 0) {
@@ -145,11 +153,9 @@ static int usw_scan_pci(int vendor, int device, struct usw_device *arr,
 				strerror(errno));
 			continue;
 		}
-		if (fscanf(f, "%i", &val) != 1)
+		if (fscanf(f, "%i", &v) != 1)
 			continue;
 		fclose(f);
-		if (val != vendor)
-			continue;
 
 		/* check device */
 		sprintf(path, "/sys/bus/pci/devices/%s/device",
@@ -160,15 +166,19 @@ static int usw_scan_pci(int vendor, int device, struct usw_device *arr,
 				strerror(errno));
 			continue;
 		}
-		if (fscanf(f, "%i", &val) != 1)
+		if (fscanf(f, "%i", &d) != 1)
 			continue;
 		fclose(f);
-		if (val != device)
-			continue;
+
+		for (j = 0; id[j].pci_v; j++)
+			if (id[j].pci_v == v && id[j].pci_d == d)
+				break;
+		if (!spec_devices[j].pci_v)
+			continue; /* not found in whole array */
 
 		/* Ok, so this is ours. Celebrate, and open it */
-		fprintf(stderr, "%s: found device %s\n", prgname,
-			namelist[i]->d_name);
+		fprintf(stderr, "%s: found device %04x:%04x: %s\n", prgname,
+			v, d, namelist[i]->d_name);
 
 		if (ndevs == alen) {
 			fprintf(stderr, "%s: array overflow, ignoring card\n",
@@ -249,11 +259,9 @@ int main(int argc, char **argv)
 
 	/* FIXME: parse commandline arguments */
 
-	ndev = usw_scan_pci(DEFAULT_VENDOR, DEFAULT_DEVICE,
-			    devs, MAX_DEVICES);
+	ndev = usw_scan_pci(spec_devices, devs, MAX_DEVICES);
 	if (ndev < 1) {
-		fprintf(stderr, "%s: no %04x:%04x devices on PCI\n",
-			argv[0], DEFAULT_VENDOR, DEFAULT_DEVICE);
+		fprintf(stderr, "%s: no suitable PCI devices\n", argv[0]);
 		exit(1);
 	}
 
