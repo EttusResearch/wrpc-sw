@@ -13,6 +13,9 @@
 #define mprintf pp_printf
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
+#ifdef CONFIG_PPSI
+#  define printf(x, ...) pp_printf(x, ##__VA_ARGS__)
+#endif
 
 #undef offsetof
 #define offsetof(TYPE, MEMBER) ((int) &((TYPE *)0)->MEMBER)
