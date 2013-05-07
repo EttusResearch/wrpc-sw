@@ -11,7 +11,7 @@
 #include <wrc.h>
 #include <w1.h>
 #include <ppsi/ppsi.h>
-#include <spec.h>
+#include <wrpc.h>
 #include <wr-api.h>
 #include <minic.h>
 #include <softpll_ng.h>
