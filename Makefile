@@ -75,7 +75,7 @@ cflags-$(CONFIG_PPSI) += \
 	-I$(PTP_NOPOSIX)/PTPWRd \
 	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
 
-obj-$(CONFIG_PPSI) += wrc_ptp_ppsi.o \
+obj-$(CONFIG_PPSI) += \
 	monitor/monitor_ppsi.o \
 	lib/ppsi-wrappers.o \
 	$(PPSI)/ppsi.o \
