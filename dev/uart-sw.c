@@ -17,13 +17,17 @@ static struct wrc_uart_sw __attribute__((aligned(16)))  uart_sw_dev = {
 
 static uint16_t nreturned;
 
-void uart_init(void)
+void uart_init_sw(void)
 {
 	/* zero fields, as we may be reloaded */
 	uart_sw_dev.nwritten = uart_sw_dev.nread = 0;
 }
 
-void uart_write_byte(int b)
+void __attribute__((weak)) uart_init_hw(void)
+{}
+
+
+void uart_sw_write_byte(int b)
 {
 	int index;
 
@@ -38,7 +42,7 @@ void uart_write_byte(int b)
 	usleep(1000 * 1000 / 11520);
 }
 
-int uart_write_string(const char *s)
+int uart_sw_write_string(const char *s)
 {
 	const char *t = s;
 	while (*s)
@@ -46,10 +50,7 @@ int uart_write_string(const char *s)
 	return s - t;
 }
 
-int puts(const char *s) __attribute__((alias("uart_write_string")));
-
-
-int uart_read_byte()
+int uart_sw_read_byte()
 {
 	int index;
 
@@ -59,3 +60,14 @@ int uart_read_byte()
 	index = (nreturned++) % CONFIG_UART_SW_RSIZE;
 	return uart_sw_dev.rbuffer[index];
 }
+
+/* alias the "hw" names to these, so this applies if !CONFIG_UART */
+int puts(const char *s)
+	__attribute__((alias("uart_sw_write_string"), weak));
+void uart_write_byte(int b)
+	__attribute__((alias("uart_sw_write_byte"), weak));
+int uart_write_string(const char *s)
+	__attribute__((alias("uart_sw_write_string"), weak));
+int uart_read_byte()
+	__attribute__((alias("uart_sw_read_byte"), weak));
+

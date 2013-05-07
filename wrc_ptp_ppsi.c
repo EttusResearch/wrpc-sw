@@ -52,7 +52,8 @@ int wrc_ptp_init()
 {
 	struct pp_instance *ppi = &ppi_static; /* no malloc, one instance */
 	sdb_find_devices();
-	uart_init();
+	uart_init_sw();
+	uart_init_hw();
 
 	pp_printf("Spec: starting. Compiled on " __DATE__ "\n");
 

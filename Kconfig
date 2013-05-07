@@ -25,7 +25,7 @@ config PTP_NOPOSIX
 
 config UART
 	boolean
-	default !UART_SW
+	default y
 
 config SOCKITOWM
        boolean
@@ -186,17 +186,25 @@ config DETERMINISTIC_BINARY
 
 	  If in doubt, say No.
 
+config UART
+	boolean "Use hardware uart (and/or vuart if available)"
+	depends on DEVELOPER
+	default y
+	help
+	  This option selects the serial driver, connected to either
+	  the USB socket, or "vuart" (software fifo) or both, according
+	  to how the gateware is built. 
+
 config UART_SW
 	depends on DEVELOPER
-	boolean "Use software uart (not the hardware one)"
+	default !UART
+	boolean "Use software uart"
 	help
-	  The software uart is made up of two circular buffers. They
-	  waste some RAM but allow to avoid the USB cable.  Software
-	  uarts can be accessed using tools/wrpc-uart-sw.
-
-config UART
-	boolean
-	default !UART_SW
+	  The software uart is made up of two circular buffers. It can
+	  be used either as an alternative to the harwdare UART or as
+	  an addition. If the option is turned on, ppsi log messages
+	  are routed to the software uart. The interactive wrpc shell
+	  and diagnostics run on the hardware UART if available.
 
 config W1
 	depends on DEVELOPER

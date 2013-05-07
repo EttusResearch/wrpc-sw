@@ -47,7 +47,8 @@ static void wrc_initialize()
 	uint8_t mac_addr[6];
 
 	sdb_find_devices();
-	uart_init();
+	uart_init_sw();
+	uart_init_hw();
 
 	mprintf("WR Core: starting up...\n");
 
@@ -195,7 +196,8 @@ static void check_reset(void)
 
 	/* Ok, now init the devices so we can printf and delay */
 	sdb_find_devices();
-	uart_init();
+	uart_init_sw();
+	uart_init_hw();
 	timer_init(1);
 
 	pp_printf("\nWarning: the CPU was reset\nStack trace:\n");
