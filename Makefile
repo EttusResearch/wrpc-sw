@@ -79,7 +79,8 @@ obj-$(CONFIG_PPSI) += \
 	monitor/monitor_ppsi.o \
 	lib/ppsi-wrappers.o \
 	$(PPSI)/ppsi.o \
-	$(PPSI)/arch-wrpc/libarch.a
+	$(PPSI)/arch-wrpc/libarch.a \
+	$(PPSI)/proto-standard/libstd.a
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
