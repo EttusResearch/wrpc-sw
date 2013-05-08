@@ -29,7 +29,7 @@ config UART
 
 config SOCKITOWM
        boolean
-       default y
+       default !W1
 
 # The other ones can be set by non-developers
 
