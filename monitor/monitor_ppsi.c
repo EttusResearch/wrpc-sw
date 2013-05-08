@@ -11,7 +11,7 @@
 #include <wrc.h>
 #include <w1.h>
 #include <ppsi/ppsi.h>
-#include <spec.h>
+#include <wrpc.h>
 #include <wr-api.h>
 #include <minic.h>
 #include <softpll_ng.h>
@@ -20,6 +20,7 @@
 #include <onewire.h>
 #include <util.h>
 #include "wrc_ptp.h"
+#include "hal_exports.h"
 #include "lib/ipv4.h"
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
