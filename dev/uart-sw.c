@@ -32,7 +32,7 @@ void uart_sw_write_byte(int b)
 	int index;
 
 	if (b == '\n')
-		uart_write_byte('\r');
+		uart_sw_write_byte('\r');
 
 	index = uart_sw_dev.nwritten % CONFIG_UART_SW_WSIZE;
 	uart_sw_dev.wbuffer[index] = b;
@@ -46,7 +46,7 @@ int uart_sw_write_string(const char *s)
 {
 	const char *t = s;
 	while (*s)
-		uart_write_byte(*(s++));
+		uart_sw_write_byte(*(s++));
 	return s - t;
 }
 
