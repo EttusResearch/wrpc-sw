@@ -115,7 +115,9 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 
 $(obj-ppsi):
 	$(MAKE) -C $(PPSI) ARCH=wrpc PROTO_EXT=whiterabbit \
-		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y
+		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y \
+		USER_CFLAGS="-DDIAG_PUTS=uart_sw_write_string"
+
 
 $(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
