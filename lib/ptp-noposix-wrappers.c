@@ -11,6 +11,8 @@
 #include "../PTPWRd/datatypes.h"
 #include "wrc_ptp.h"
 #include <syscon.h>
+#include <rxts_calibrator.h>
+#include <wrc.h>
 
 uint64_t ptpd_netif_get_msec_tics(void)
 {
@@ -74,7 +76,7 @@ static int read_phase_val(hexp_port_state_t *state)
   return 0;
 }
 
-extern int32_t cal_phase_transition;
+extern uint32_t cal_phase_transition;
 extern int32_t sfp_alpha;
 
 int halexp_get_port_state(hexp_port_state_t *state, const char *port_name)
@@ -131,7 +133,22 @@ int ptpd_netif_locking_enable(int txrx, const char *ifaceName, int priority)
 
 int ptpd_netif_locking_poll(int txrx, const char *ifaceName, int priority)
 {
-  return spll_check_lock(0) ? PTPD_NETIF_READY : PTPD_NETIF_ERROR;
+	int locked;
+	static int t24p_calibrated = 0;
+
+	locked = spll_check_lock(0);
+
+	if(!locked) {
+		t24p_calibrated = 0;
+	}
+	else if(locked && !t24p_calibrated) {
+		/*run t24p calibration if needed*/
+		mprintf("running t24p calibration\n");
+		calib_t24p(WRC_MODE_SLAVE, &cal_phase_transition);
+		t24p_calibrated = 1;
+	}
+
+	return locked ? PTPD_NETIF_READY : PTPD_NETIF_ERROR;
 }
 
 int ptpd_netif_read_calibration_data(const char *ifaceName, uint64_t *deltaTx,

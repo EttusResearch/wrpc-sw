@@ -18,9 +18,6 @@
 #include "wrc_ptp.h"
 #include "pps_gen.h"
 #include "uart.h"
-#include "rxts_calibrator.h"
-
-extern int32_t cal_phase_transition;
 
 static RunTimeOpts rtOpts = {
 	.ifaceName = {"wr1"},
@@ -140,9 +137,6 @@ int wrc_ptp_set_mode(int mode)
 		}
 	}
 	mprintf("\n");
-
-	/*t24p calibration here*/
-	calib_t24p(mode, &cal_phase_transition);
 
 	if (mode == WRC_MODE_MASTER || mode == WRC_MODE_GM)
 		shw_pps_gen_enable_output(1);

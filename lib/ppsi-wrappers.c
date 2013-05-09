@@ -31,7 +31,7 @@ static int read_phase_val(hexp_port_state_t *state)
   return 0;
 }
 
-extern int32_t cal_phase_transition;
+extern uint32_t cal_phase_transition;
 extern int32_t sfp_alpha;
 
 int halexp_get_port_state(hexp_port_state_t *state, const char *port_name)

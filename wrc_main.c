@@ -22,13 +22,14 @@
 #include "ptpd.h"
 #include "ptpd_netif.h"
 #include "i2c.h"
-//#include "eeprom.h"
+#include "eeprom.h"
 #include "softpll_ng.h"
 #include "onewire.h"
 #include "pps_gen.h"
 #include "sockitowm.h"
 #include "shell.h"
 #include "lib/ipv4.h"
+#include "rxts_calibrator.h"
 
 #include "wrc_ptp.h"
 
@@ -61,6 +62,11 @@ static void wrc_initialize()
 	w1_scan_bus(&wrpc_w1_bus);
 #endif
 
+	/*initialize I2C bus*/
+	mi2c_init(WRPC_FMC_I2C);
+	/*check if EEPROM is onboard*/
+	eeprom_present(WRPC_FMC_I2C, FMC_EEPROM_ADR);
+
 	mac_addr[0] = 0x08;	//
 	mac_addr[1] = 0x00;	// CERN OUI
 	mac_addr[2] = 0x30;	//
@@ -85,6 +91,8 @@ static void wrc_initialize()
 	minic_init();
 	shw_pps_gen_init();
 	wrc_ptp_init();
+	//try reading t24 phase transition from EEPROM
+	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
 
 #ifdef CONFIG_ETHERBONE
 	ipv4_init("wru1");

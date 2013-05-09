@@ -225,7 +225,11 @@ static int calib_t24p_master(uint32_t *value)
 	int rv;
 
 	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0);
-	printf("t24p read from EEPROM: %d ps\n", *value);
+	if(rv < 0)
+		printf("Something went wrong while reading from EEPROM: %d\n", rv);
+	else
+		printf("t24p read from EEPROM: %d ps\n", *value);
+
 	return rv;
 }
 
