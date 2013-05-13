@@ -2,8 +2,7 @@
  * Temperature input for DS18S20 (family 0x10)
  * Alessandro Rubini, 2013 GNU GPL2 or later
  */
-#include <wrc.h>
-#include <w1.h>
+#include "w1.h"
 
 int32_t w1_read_temp(struct w1_dev *dev, unsigned long flags)
 {

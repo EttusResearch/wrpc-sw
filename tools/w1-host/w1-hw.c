@@ -6,10 +6,11 @@
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
-#include <wrc.h>
 #include <string.h>
-#include <w1.h>
-#include <hw/sockit_owm_regs.h>
+#include "w1.h"
+#include "../../include/hw/sockit_owm_regs.h"
+
+extern void *BASE_ONEWIRE;
 
 static inline uint32_t __wait_cycle(void *base)
 {
