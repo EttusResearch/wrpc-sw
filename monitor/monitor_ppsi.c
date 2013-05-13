@@ -188,7 +188,7 @@ void wrc_mon_gui(void)
 	return;
 }
 
-static inline cprintf_ti(int color, struct TimeInternal *ti)
+static inline void cprintf_ti(int color, struct TimeInternal *ti)
 {
 	if ((ti->seconds > 0) ||
 		((ti->seconds == 0) && (ti->nanoseconds >= 0)))
