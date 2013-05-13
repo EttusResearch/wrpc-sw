@@ -29,6 +29,12 @@ struct ptpdexp_sync_state_t;
 extern ptpdexp_sync_state_t cur_servo_state;
 extern int wrc_man_phase;
 
+extern struct pp_servo servo;
+extern struct pp_instance ppi_static;
+struct pp_instance *ppi = &ppi_static;
+
+static void wrc_mon_std_servo(void);
+
 void wrc_mon_gui(void)
 {
 	static uint32_t last = 0;
@@ -69,6 +75,11 @@ void wrc_mon_gui(void)
 	if (ps.up) {
 		minic_get_stats(&tx, &rx);
 		cprintf(C_GREY, "(RX: %d, TX: %d), mode: ", rx, tx);
+
+		if (!WR_DSPOR(ppi)->wrModeOn) {
+			wrc_mon_std_servo();
+			return;
+		}
 
 		switch (ptp_mode) {
 		case WRC_MODE_GM:
@@ -176,6 +187,43 @@ void wrc_mon_gui(void)
 
 	return;
 }
+
+static inline cprintf_ti(int color, struct TimeInternal *ti)
+{
+	if ((ti->seconds > 0) ||
+		((ti->seconds == 0) && (ti->nanoseconds >= 0)))
+		cprintf(color, "%2i.%09i s", ti->seconds, ti->nanoseconds);
+	else {
+		if (ti->seconds == 0)
+			cprintf(color, "-%i.%09i s", ti->seconds, -ti->nanoseconds);
+		else
+			cprintf(color, "%2i.%09i s", ti->seconds, -ti->nanoseconds);
+	}
+
+}
+
+static void wrc_mon_std_servo(void)
+{
+	cprintf(C_RED, "WR Off");
+
+	/* show standard servo */
+	cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
+
+	cprintf(C_GREY, "Clock offset:                 ");
+
+	if (DSCUR(ppi)->offsetFromMaster.seconds)
+		cprintf_ti(C_WHITE, &DSCUR(ppi)->offsetFromMaster);
+	else {
+		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->offsetFromMaster.nanoseconds);
+
+		cprintf(C_GREY, "\nOne-way delay averaged:       ");
+		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->meanPathDelay.nanoseconds);
+
+		cprintf(C_GREY, "\nObserved drift:               ");
+		cprintf(C_WHITE, "%9i ns", SRV(ppi)->obs_drift);
+	}
+}
+
 
 int wrc_log_stats(uint8_t onetime)
 {
