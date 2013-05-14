@@ -1,0 +1,30 @@
+#
+# Even though in I2C eeproms we are going to be a subdirectory, not starting
+# at offset zero at all, we want to start at zero *wihin* our space.
+# This is actually the default, but stating it is better.
+.
+	position = 0
+
+# Then, we have a number of writable files. By default (i.e. no config)
+# all existing files are created as read-only files with current contents
+# and exact size.
+#
+# Allocation granularity is 64 bytes
+
+mac-address
+	write = 1
+	maxsize = 6
+
+wr-init
+	write = 1
+	maxsize = 256
+
+# each sfp takes 29 bytes, 4 of them fit in 128 bytes
+sfp-database
+	write = 1
+	maxsize = 128
+
+# I don't know what this is
+calibration
+	write = 1
+	maxsize = 128

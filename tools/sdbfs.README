@@ -1,0 +1,53 @@
+
+SDB (Self Describing Bus) is designed withing the fpga-config-space OHWR
+project. See http://www.ohwr.org/projects/fpga-config-space/wiki
+
+The "sdbfs" implementation of SDB is a storage layout that lays out
+data in a device using the same data structures we deviced for memory
+spaces.
+
+The tools/sdbfs directory includes the template to generate an sdbfs
+to be written in the device's eeprom. It includes 4 files, which
+have their "device-id" in SDB, using the first 4 characters of the name:
+seen as devices from an sdn 
+
+         file name           sdb device name
+         -----------------------------------
+         mac-ddress             mac-
+         wr-init                wr-i
+         sfp-database           sfp-
+         calibration            cali
+
+All the files are empty at this point, but ./tools/sdbfs/--SDB-CONFIG--
+assigns a size to each of them.  The code in wrpc-sw can read and write
+the files.
+
+All related tools (gensdbfs and so on) and their documentation live in
+the fpga-config-space packages, sdbfs subdirectory.
+
+
+To create the filesystem image: "gensdbfs tools/sdbfs /tmp/sdb-wrpc.bin"
+(please note that empty files have no data to be stored, so no space is
+wasted on disk for them and the output file is short).
+
+To check: "sdb-read -l /tmp/sdb-wrpc.bin":
+
+   46696c6544617461:2e202020 @ 00000000-0000037f .
+   46696c6544617461:77722d69 @ 00000140-0000023f wr-init
+   46696c6544617461:6d61632d @ 00000240-00000245 mac-address
+   46696c6544617461:7366702d @ 00000280-000002ff sfp-database
+   46696c6544617461:63616c69 @ 00000300-0000037f calibration
+
+This states where the various files are.
+
+To write to w1-eeprom:  "tools/wrpc-w1-write 0 320 < /tmp/sdb-wrpc.bin"
+(this assumes that the size is 320 bytes.
+
+The next boot of lm32 will show it found the files:
+
+   sdbfs: found at 0 in W1
+   file 0x2e202020 @    0, name .
+   file 0x77722d69 @  320, name wr-init
+   file 0x6d61632d @  576, name mac-address
+   file 0x7366702d @  640, name sfp-database
+   file 0x63616c69 @  768, name calibration
