@@ -58,6 +58,7 @@ static void wrc_initialize()
 	owInit();
 	own_scanbus(ONEWIRE_PORT);
 #else /* CONFIG_W1 */
+	wrpc_w1_init();
 	wrpc_w1_bus.detail = ONEWIRE_PORT;
 	w1_scan_bus(&wrpc_w1_bus);
 #endif

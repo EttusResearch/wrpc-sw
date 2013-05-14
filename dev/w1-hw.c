@@ -62,3 +62,14 @@ struct w1_ops wrpc_w1_ops = {
 };
 
 struct w1_bus wrpc_w1_bus;
+
+/* Init from sockitowm code */
+#define CLK_DIV_NOR (CPU_CLOCK / 200000 - 1)	/* normal mode */
+#define CLK_DIV_OVD (CPU_CLOCK / 1000000 - 1)	/* overdrive mode (not used) */
+void wrpc_w1_init(void)
+{
+	IOWR_SOCKIT_OWM_CDR(BASE_ONEWIRE,
+			    ((CLK_DIV_NOR & SOCKIT_OWM_CDR_N_MSK) |
+			     ((CLK_DIV_OVD << SOCKIT_OWM_CDR_O_OFST) &
+			      SOCKIT_OWM_CDR_O_MSK)));
+}

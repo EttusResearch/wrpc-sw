@@ -82,5 +82,6 @@ extern int w1_write_eeprom_bus(struct w1_bus *bus,
 
 extern struct w1_ops wrpc_w1_ops;
 extern struct w1_bus wrpc_w1_bus;
+extern void wrpc_w1_init(void);
 
 #endif /* __BATHOS_W1_H__ */
