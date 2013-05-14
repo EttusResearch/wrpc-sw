@@ -252,8 +252,6 @@ int shell_boot_script(void)
 {
 	uint8_t next = 0;
 
-	//first check if EEPROM is really there
-	eeprom_present(WRPC_FMC_I2C, FMC_EEPROM_ADR);
 	if (!has_eeprom)
 		return -1;
 
