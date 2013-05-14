@@ -1,7 +1,7 @@
 CFLAGS = -Wall -ggdb
 LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
-ALL   += wrpc-w1-read #wrpc-w1-write
+ALL   += wrpc-w1-read wrpc-w1-write
 
 AS		= as
 LD		= ld
@@ -21,6 +21,8 @@ all:	$(ALL)
 wrpc-w1-read: wrpc-w1-read.c w1-host/libw1.a
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
+wrpc-w1-write: wrpc-w1-write.c w1-host/libw1.a
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 w1-host/libw1.a:
 	$(MAKE) -C w1-host
 
