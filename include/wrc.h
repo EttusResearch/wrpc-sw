@@ -20,7 +20,7 @@
 #undef offsetof
 #define offsetof(TYPE, MEMBER) ((int) &((TYPE *)0)->MEMBER)
 #undef ARRAY_SIZE
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0])
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 void wrc_mon_gui(void);
 void shell_init(void);

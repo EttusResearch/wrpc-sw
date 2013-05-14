@@ -28,10 +28,6 @@ struct s_sfpinfo {
 } __attribute__ ((__packed__));
 
 uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr);
-int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t * buf,
-		size_t size);
-int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
-		 uint8_t * buf, size_t size);
 
 int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr);
 int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size,

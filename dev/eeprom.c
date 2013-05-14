@@ -68,8 +68,8 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	return 0;
 }
 
-int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t * buf,
-		size_t size)
+static int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
+		       uint8_t * buf, size_t size)
 {
 	int i;
 	unsigned char c;
@@ -97,7 +97,7 @@ int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset, uint8_t * buf,
 	return size;
 }
 
-int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
+static int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
 		 uint8_t * buf, size_t size)
 {
 	int i, busy;
