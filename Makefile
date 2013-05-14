@@ -150,7 +150,7 @@ config.o: .config
 $(AUTOCONF): silentoldconfig
 
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram
+	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram $(LDS)
 	$(MAKE) -C $(PPSI) clean
 
 %.o:		%.c
