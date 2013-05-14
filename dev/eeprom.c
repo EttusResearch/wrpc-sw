@@ -256,26 +256,6 @@ int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
 		return used;
 }
 
-int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr)
-{
-	uint16_t used = 0xffff, i;
-	uint16_t pattern = 0xff;
-
-	if (eeprom_read(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t *) & used,
-	     sizeof(used)) != sizeof(used))
-		return EE_RET_I2CERR;
-
-	if (used == 0xffff)
-		used = 0;
-	for (i = 0; i < used; ++i)
-		eeprom_write(i2cif, i2c_addr, EE_BASE_INIT + sizeof(used) + i,
-			     (uint8_t *) & pattern, 1);
-	used = 0xffff;
-	eeprom_write(i2cif, i2c_addr, EE_BASE_INIT, (uint8_t *) & used, 2);
-
-	return used;
-}
-
 /*
  * Appends a new shell command at the end of boot script
  */

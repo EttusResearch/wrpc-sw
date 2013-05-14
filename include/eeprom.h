@@ -45,6 +45,5 @@ int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
 
 int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
                        uint8_t add, uint8_t pos);
-int8_t eeprom_init_purge(uint8_t i2cif, uint8_t i2c_addr);
 
 #endif

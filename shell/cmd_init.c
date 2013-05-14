@@ -24,8 +24,6 @@ static int cmd_init(const char *args[])
 	if (args[0] && !strcasecmp(args[0], "erase")) {
 		if (eeprom_init_erase(WRPC_FMC_I2C, FMC_EEPROM_ADR) < 0)
 			mprintf("Could not erase init script\n");
-	} else if (args[0] && !strcasecmp(args[0], "purge")) {
-		eeprom_init_purge(WRPC_FMC_I2C, FMC_EEPROM_ADR);
 	} else if (args[1] && !strcasecmp(args[0], "add")) {
 		if (eeprom_init_add(WRPC_FMC_I2C, FMC_EEPROM_ADR, args) < 0)
 			mprintf("Could not add the command\n");
