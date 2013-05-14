@@ -1,0 +1,58 @@
+
+srctree = $(LINUX)
+
+#
+# This set of contortions comes from the kernel Makefile. We need this
+# in order to properly compile libsdbfs for the kernel without being
+# in a kernel build environment (for example, to check for compile errors).
+#
+
+ARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
+                                  -e s/arm.*/arm/ -e s/sa110/arm/ \
+                                  -e s/s390x/s390/ -e s/parisc64/parisc/ \
+                                  -e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
+                                  -e s/sh[234].*/sh/ )
+
+SRCARCH         := $(ARCH)
+
+# Additional ARCH settings for x86
+ifeq ($(ARCH),i386)
+        SRCARCH := x86
+endif
+ifeq ($(ARCH),x86_64)
+        SRCARCH := x86
+endif
+
+# Additional ARCH settings for sparc
+ifeq ($(ARCH),sparc32)
+       SRCARCH := sparc
+endif
+ifeq ($(ARCH),sparc64)
+       SRCARCH := sparc
+endif
+
+# Additional ARCH settings for sh
+ifeq ($(ARCH),sh64)
+       SRCARCH := sh
+endif
+
+# Additional ARCH settings for tile
+ifeq ($(ARCH),tilepro)
+       SRCARCH := tile
+endif
+ifeq ($(ARCH),tilegx)
+       SRCARCH := tile
+endif
+
+# Where to locate arch specific headers
+hdr-arch  := $(SRCARCH)
+
+ifeq ($(ARCH),m68knommu)
+       hdr-arch  := m68k
+endif
+
+# Use LINUXINCLUDE when you must reference the include/ directory.
+# Needed to be compatible with the O= option
+LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
+                   -Iarch/$(hdr-arch)/include/generated \
+                   -I$(srctree)/include

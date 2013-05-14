@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Check endianness at compile time, so we can pass the -D to CFLAGS
+
+CC=$1
+if [ "x$CC" == "x" ]; then
+    echo "$0: pass the compiler path (\$CC) as argument" >& 2
+    exit 1
+fi
+
+# Check endianness, by making an object file
+TMPC=$(mktemp /tmp/endian-c-XXXXXX)
+TMPO=$(mktemp /tmp/endian-o-XXXXXX)
+echo "int i = 0xbbee;" > $TMPC
+
+$CC -x c -c $TMPC -o $TMPO
+OBJCOPY=$(echo $CC | sed 's/gcc$/objcopy/')
+if $OBJCOPY -O binary $TMPO /dev/stdout | od -t x1 -An | \
+    grep -q 'bb ee'; then
+    echo " -DSDBFS_BIG_ENDIAN"
+else
+    echo " -DSDBFS_LITTLE_ENDIAN"
+fi
+rm -f $TMPC $TMPO
