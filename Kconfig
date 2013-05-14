@@ -216,3 +216,13 @@ config W1
 config SOCKITOWM
        boolean
        default !W1
+
+config SDB_EEPROM
+	depends on DEVELOPER && W1
+	boolean "Use SDB to manage EEPROM (instead of legacy code)"
+	help
+	  New experimental code to unify W1 and EEPROM storage
+
+config LEGACY_EEPROM
+	boolean
+	default !SDB_EEPROM
