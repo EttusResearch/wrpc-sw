@@ -35,6 +35,29 @@ struct pp_instance *ppi = &ppi_static;
 
 static void wrc_mon_std_servo(void);
 
+int wrc_mon_status()
+{
+	struct pp_state_table_item *ip = NULL;
+	for (ip = pp_state_table; ip->state != PPS_END_OF_TABLE; ip++) {
+		if (ip->state == ppi->state)
+			break;
+	}
+
+	cprintf(C_BLUE, "\n\nPTP status: ");
+	cprintf(C_WHITE, "%s", ip ? ip->name : "unknown");
+
+	if ((!cur_servo_state.valid) || (ppi->state != PPS_SLAVE)) {
+		cprintf(C_RED,
+			"\n\nSync info not valid\n\n");
+		return 0;
+	}
+
+	/* show_servo */
+	cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
+
+	return 1;
+}
+
 void wrc_mon_gui(void)
 {
 	static uint32_t last = 0;
@@ -108,16 +131,10 @@ void wrc_mon_gui(void)
 			cprintf(C_RED, "BOOTP running");
 		else
 			cprintf(C_GREEN, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-#endif		
+#endif
 
-		/* show_servo */
-		cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
-
-		if (!cur_servo_state.valid) {
-			cprintf(C_RED,
-				"Master mode or sync info not valid\n\n");
+		if (wrc_mon_status() == 0)
 			return;
-		}
 
 		cprintf(C_GREY, "Servo state:               ");
 		cprintf(C_WHITE, "%s\n", cur_servo_state.slave_servo_state);
@@ -206,8 +223,8 @@ static void wrc_mon_std_servo(void)
 {
 	cprintf(C_RED, "WR Off");
 
-	/* show standard servo */
-	cprintf(C_BLUE, "\n\nSynchronization status:\n\n");
+	if (wrc_mon_status() == 0)
+		return;
 
 	cprintf(C_GREY, "Clock offset:                 ");
 
