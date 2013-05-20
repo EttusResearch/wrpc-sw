@@ -398,11 +398,28 @@ int spll_check_lock(int channel)
 		    && softpll.aux[channel - 1].ld.locked;
 }
 
+#ifdef CONFIG_PPSI /* use __div64_32 from ppsi library to save libgcc memory */
+static int32_t from_picos(int32_t ps)
+{
+	extern uint32_t __div64_32(uint64_t *n, uint32_t base);
+	uint64_t ups = ps;
+
+	if (ps >= 0) {
+		ups *= 1 << HPLL_N;
+		__div64_32(&ups, CLOCK_PERIOD_PICOSECONDS);
+		return ups;
+	}
+	ups = -ps * (1 << HPLL_N);
+	__div64_32(&ups, CLOCK_PERIOD_PICOSECONDS);
+	return -ups;
+}
+#else /* previous implementation: ptp-noposix has no __div64_32 available */
 static int32_t from_picos(int32_t ps)
 {
 	return (int32_t) ((int64_t) ps * (int64_t) (1 << HPLL_N) /
 			  (int64_t) CLOCK_PERIOD_PICOSECONDS);
 }
+#endif
 
 static int32_t to_picos(int32_t units)
 {
