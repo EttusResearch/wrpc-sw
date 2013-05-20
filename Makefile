@@ -95,6 +95,8 @@ include sockitowm/sockitowm.mk
 include dev/dev.mk
 
 
+obj-y += check-error.o
+
 CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall \
 	-ffunction-sections -fdata-sections -Os \
 	-include include/trace.h -ggdb
