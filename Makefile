@@ -97,7 +97,7 @@ include dev/dev.mk
 
 CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall \
 	-ffunction-sections -fdata-sections -Os \
-	-include include/trace.h
+	-include include/trace.h -ggdb
 
 LDFLAGS = $(LDFLAGS_PLATFORM) \
 	-Wl,--gc-sections -Os -lgcc -lc
