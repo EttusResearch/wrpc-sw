@@ -176,17 +176,17 @@ int rxts_calibration_update(uint32_t *t24p_value)
 int measure_t24p(uint32_t *value)
 {
 	int rv;
-	mprintf("Waiting for link...\n");
+	pp_printf("Waiting for link...\n");
 	while (!ep_link_up(NULL))
 		timer_delay(100);
 
 	spll_init(SPLL_MODE_SLAVE, 0, 1);
-	printf("Locking PLL...\n");
+	pp_printf("Locking PLL...\n");
 	while (!spll_check_lock(0))
 		timer_delay(100);
-	printf("\n");
+	pp_printf("\n");
 
-	printf("Calibrating RX timestamper...\n");
+	pp_printf("Calibrating RX timestamper...\n");
 	rxts_calibration_start();
 
 	while (!(rv = rxts_calibration_update(value))) ;
@@ -202,17 +202,17 @@ static int calib_t24p_slave(uint32_t *value)
 	while (!(rv = rxts_calibration_update(value))) ;
 
 	if (rv < 0) {
-		printf("Could not calibrate t24p, trying to read from EEPROM\n");
+		pp_printf("Could not calibrate t24p, trying to read from EEPROM\n");
 		if(eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0) < 0) {
-			printf("Something went wrong while writing EEPROM\n");
+			pp_printf("Something went wrong while writing EEPROM\n");
 			return -1;
 		}
 
 	}
 	else {
-		printf("t24p value is %d ps, storing to EEPROM\n", *value);
+		pp_printf("t24p value is %d ps, storing to EEPROM\n", *value);
 		if(eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 1) < 0) {
-			printf("Something went wrong while writing EEPROM\n");
+			pp_printf("Something went wrong while writing EEPROM\n");
 			return -1;
 		}
 	}
@@ -226,9 +226,9 @@ static int calib_t24p_master(uint32_t *value)
 
 	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0);
 	if(rv < 0)
-		printf("Something went wrong while reading from EEPROM: %d\n", rv);
+		pp_printf("Something went wrong while reading from EEPROM: %d\n", rv);
 	else
-		printf("t24p read from EEPROM: %d ps\n", *value);
+		pp_printf("t24p read from EEPROM: %d ps\n", *value);
 
 	return rv;
 }
