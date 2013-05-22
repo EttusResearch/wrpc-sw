@@ -1,9 +1,6 @@
-zpu-loader
-vuart_console
 genraminit
 genramvhd
 genrammif
-lm32-loader
 wrpc-uart-sw
 wrpc-w1-read
 wrpc-w1-write
