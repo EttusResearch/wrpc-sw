@@ -237,6 +237,7 @@ void pfilter_init_default()
 	pfilter_cmp(11, 0x0001, 0x00ff, MOV, 7);	/* r7 = 1 when IP type = ICMP */
 	pfilter_cmp(11, 0x0011, 0x00ff, MOV, 8);	/* r8 = 1 when IP type = UDP */
 
+#ifdef CONFIG_ETHERBONE
 	pfilter_logic3(10, 3, OR, 0, AND, 4);	/* r10 = IP(unicast) */
 	pfilter_logic3(11, 1, OR, 3, AND, 4);	/* r11 = IP(unicast+broadcast) */
 
@@ -255,6 +256,19 @@ void pfilter_init_default()
 	pfilter_logic2(R_CLASS(7), 11, AND, 8);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
 	pfilter_logic2(R_CLASS(6), 1, AND, 9);	/* class 6: streamer broadcasts => external fabric */
 	pfilter_logic2(R_CLASS(0), 15, MOV, 0);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
+
+#else
+	pfilter_logic3(10, 3, OR, 2, AND, 5);	/* r10 = PTP (multicast or unicast) */
+	pfilter_logic2(11, 1, AND, 9);		/* r11 = streamer broadcast */
+	pfilter_logic3(12, 10, OR, 11, NOT, 0); /* r12 = all non-PTP and non-streamer traffic */
+
+	pfilter_logic2(R_CLASS(7), 12, MOV, 0);	/* class 7: all non PTP and non-streamer
+						   traffic => external fabric */
+	pfilter_logic2(R_CLASS(6), 11, MOV, 0); /* class 6: streamer broadcasts =>
+						   external fabric */
+	pfilter_logic2(R_CLASS(0), 10, MOV, 0); /* class 0: PTP frames => LM32 */
+	
+#endif
 
 	pfilter_load();
 
