@@ -20,8 +20,6 @@ obj-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
 LDS = arch/lm32/ram.ld
 
 obj-y += wrc_main.o
-obj-y += softpll/softpll_ng.o
-
 
 # our linker script is preprocessed, so have a rule here
 %.ld: %.ld.S $(AUTOCONF)
@@ -93,6 +91,7 @@ include lib/lib.mk
 include pp_printf/printf.mk
 include sockitowm/sockitowm.mk
 include dev/dev.mk
+include softpll/softpll.mk
 
 
 obj-y += check-error.o
@@ -139,6 +138,7 @@ config.o: .config
 
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@
+	scp $@ twlostow@cs-ccr-dev3:/user/twlostow
 
 %.ram: tools %.bin
 	./tools/genraminit $*.bin 0 > $@

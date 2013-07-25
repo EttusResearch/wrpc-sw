@@ -8,11 +8,13 @@ WARNING: These parameters must be in sync with the generics of the HDL instantia
 
 #include <stdio.h>
 
+#include "board.h"
+
 /* Reference clock frequency, in [Hz] */
-#define CLOCK_FREQ 125000000
+#define CLOCK_FREQ  REF_CLOCK_FREQ_HZ
 
 /* Reference clock period, in picoseconds */
-#define CLOCK_PERIOD_PICOSECONDS 8000
+#define CLOCK_PERIOD_PICOSECONDS REF_CLOCK_PERIOD_PS
 
 /* optional DMTD clock division to improve FPGA timing closure by avoiding
    clock nets directly driving FD inputs. Must be consistent with the
@@ -35,7 +37,7 @@ WARNING: These parameters must be in sync with the generics of the HDL instantia
 #define MAX_CHAN_REF 1
 
 /* Max. allowed number of auxillary channels */
-#define MAX_CHAN_AUX 1
+#define MAX_CHAN_AUX 2
 
 /* Max. allowed number of phase trackers */
 #define MAX_PTRACKERS 1
