@@ -34,10 +34,20 @@ static int cmd_time(const char *args[])
 	if (args[2] && !strcasecmp(args[0], "set")) {
 		if (wrc_ptp_get_mode() != WRC_MODE_SLAVE) {
 			shw_pps_gen_set_time((uint64_t) atoi(args[1]),
-					 atoi(args[2]));
+					 atoi(args[2]), PPSG_SET_ALL);
 			return 0;
 		} else
 			return -EBUSY;
+	} else if (args[0] && !strcasecmp(args[0], "setsec")) {
+		if (wrc_ptp_get_mode() != WRC_MODE_SLAVE) {
+			shw_pps_gen_set_time((int64_t) atoi(args[1]), 0, PPSG_SET_SEC);
+			return 0;
+		}
+	} else if (args[0] && !strcasecmp(args[0], "setnsec")) {
+		if (wrc_ptp_get_mode() != WRC_MODE_SLAVE) {
+			shw_pps_gen_set_time(0, atoi(args[1]), PPSG_SET_NSEC);
+			return 0;
+		}
 	} else if (args[0] && !strcasecmp(args[0], "raw")) {
 		mprintf("%d %d\n", (uint32_t) sec, nsec);
 		return 0;

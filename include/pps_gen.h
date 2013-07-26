@@ -5,6 +5,9 @@
 
 #define PPSG_ADJUST_SEC 0x1
 #define PPSG_ADJUST_NSEC 0x2
+#define PPSG_SET_SEC 0x1
+#define PPSG_SET_NSEC 0x2
+#define PPSG_SET_ALL 0x3
 
 /* Initializes the PPS Generator. 0 on success, negative on failure. */
 void shw_pps_gen_init(void);
@@ -22,6 +25,6 @@ int shw_pps_gen_enable_output(int enable);
 void shw_pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds);
 
 /* Sets the time to <seconds,nanoseconds>. */
-void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds);
+void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds, int counter);
 
 #endif

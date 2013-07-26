@@ -70,7 +70,7 @@ int shw_pps_gen_adjust(int counter, int64_t how_much)
 }
 
 /* Sets the current time */
-void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
+void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds, int counter)
 {
 	ppsg_write(ADJ_UTCLO, (uint32_t) (seconds & 0xffffffffLL));
 	ppsg_write(ADJ_UTCHI, (uint32_t) (seconds >> 32) & 0xff);
@@ -78,7 +78,12 @@ void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds)
 		   (int32_t) ((int64_t) nanoseconds * 1000LL /
 			      (int64_t) REF_CLOCK_PERIOD_PS));
 
-	ppsg_write(CR, (ppsg_read(CR) & 0xfffffffb) | PPSG_CR_CNT_SET);
+	if (counter == PPSG_SET_ALL)
+		ppsg_write(CR, (ppsg_read(CR) & 0xfffffffb) | PPSG_CR_CNT_SET);
+	else if (counter == PPSG_SET_SEC)
+		ppsg_write(ESCR, (ppsg_read(ESCR) & 0xffffffe7) | PPSG_ESCR_SEC_SET);
+	else if (counter == PPSG_SET_NSEC)
+		ppsg_write(ESCR, (ppsg_read(ESCR) & 0xffffffe7) | PPSG_ESCR_NSEC_SET);
 }
 
 uint64_t pps_get_utc(void)
