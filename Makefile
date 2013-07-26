@@ -138,7 +138,6 @@ config.o: .config
 
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@
-	scp $@ twlostow@cs-ccr-dev3:/user/twlostow
 
 %.ram: tools %.bin
 	./tools/genraminit $*.bin 0 > $@
