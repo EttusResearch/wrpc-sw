@@ -115,10 +115,6 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 			spll_enable_tagger(MAIN_CHANNEL, 1);
 			
 			softpll.dac_timeout = timer_get_tics();
-		
-			if (softpll.mode == SPLL_MODE_SLAVE)
-				spll_resync_dmtd_counter(softpll.mpll.id_ref);
-		
 			softpll.seq_state = SEQ_WAIT_CLEAR_DACS;
 			
 			break;
@@ -146,7 +142,7 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 		/* State "Start external reference PLL": starts up BB PLL for locking local reference to 10 MHz input */
 		case SEQ_START_EXT:
 		{
-		//	external_update(&s->ext, tag_value, tag_source);
+			spll_enable_tagger(MAIN_CHANNEL, 0);
 			external_start(&s->ext);
 
 			s->seq_state = SEQ_WAIT_EXT;
@@ -194,10 +190,7 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 		case SEQ_WAIT_MAIN:
 		{
 			if (s->mpll.ld.locked) 
-			{
-				update_ptrackers(s, tag_value, tag_source);
 				s->seq_state = SEQ_READY;
-			}
 			break;
 		}
 
@@ -227,7 +220,9 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 	if(s->mode == SPLL_MODE_GRAND_MASTER) {
 		switch(s->seq_state) {
 			case SEQ_WAIT_EXT:
+			case SEQ_START_HELPER:
 			case SEQ_WAIT_HELPER:
+			case SEQ_START_MAIN:
 			case SEQ_WAIT_MAIN:
 			case SEQ_READY:
 				external_update(&s->ext, tag_value, tag_source);
@@ -237,6 +232,7 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 
 	switch(s->seq_state) {
 		case SEQ_WAIT_HELPER:
+		case SEQ_START_MAIN:
 		case SEQ_WAIT_MAIN:
 		case SEQ_READY:
 			helper_update(&s->helper, tag_value, tag_source);
@@ -258,8 +254,9 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 			for (i = 0; i < spll_n_chan_out - 1; i++)
 				mpll_update(&s->aux[i].pll.dmtd, tag_value, tag_source); // fixme: bb hooks here
 
-			update_ptrackers(s, tag_value, tag_source);
 		}
+
+		update_ptrackers(s, tag_value, tag_source);
 	}
 }
 
@@ -340,14 +337,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 		s->seq_state = SEQ_CLEAR_DACS;
 
 
-	if(mode == SPLL_MODE_SLAVE) {
-		spll_resync_dmtd_counter(slave_ref_channel);
-			while (!spll_check_dmtd_resync(slave_ref_channel))
-				;
-	}
-
 	helper_init(&s->helper, spll_n_chan_ref);
-
 	mpll_init(&s->mpll, slave_ref_channel, spll_n_chan_ref);
 
 	for (i = 0; i < spll_n_chan_out - 1; i++) {
@@ -513,12 +503,12 @@ void spll_show_stats()
 		TRACE_DEV
 		    ("softpll: irq_count %d sequencer_state %d mode %d "
 		     "alignment_state %d HL%d EL%d ML%d HY=%d "
-		     "MY=%d DelCnt=%d\n",
+		     "MY=%d EY=%d DelCnt=%d extsc=%d\n",
 		     irq_count, softpll.seq_state, softpll.mode,
 		     softpll.ext.realign_state, softpll.helper.ld.locked,
 		     softpll.ext.ld.locked, softpll.mpll.ld.locked,
-		     softpll.helper.pi.y, softpll.mpll.pi.y,
-		     softpll.delock_count);
+		     softpll.helper.pi.y, softpll.mpll.pi.y, softpll.ext.pi.y,
+		     softpll.delock_count, softpll.ext.sample_n);
 
 }
 
