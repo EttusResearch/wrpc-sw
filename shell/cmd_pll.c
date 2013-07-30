@@ -26,6 +26,8 @@ static int cmd_pll(const char *args[])
 		if (!args[1])
 			return -EINVAL;
 		mprintf("%d\n", spll_check_lock(atoi(args[1])));
+	} else if (!strcasecmp(args[0], "stat")) {
+		spll_show_stats();
 	} else if (!strcasecmp(args[0], "sps")) {
 		if (!args[2])
 			return -EINVAL;
