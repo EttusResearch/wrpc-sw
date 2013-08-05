@@ -73,7 +73,5 @@ void lowpass_init(spll_lowpass_t *lp, int alpha);
 int lowpass_update(spll_lowpass_t *lp, int x);
 
 void spll_enable_tagger(int channel, int enable);
-void spll_resync_dmtd_counter(int channel);
-int spll_check_dmtd_resync(int channel);
 
 #endif // __SPLL_COMMON_H

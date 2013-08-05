@@ -190,7 +190,10 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 		case SEQ_WAIT_MAIN:
 		{
 			if (s->mpll.ld.locked) 
+			{
+				start_ptrackers(s);
 				s->seq_state = SEQ_READY;
+			}
 			break;
 		}
 
