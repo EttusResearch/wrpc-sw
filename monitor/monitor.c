@@ -25,6 +25,22 @@
 
 #define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
 
+#define PRINT64_FACTOR	1000000000
+char* print64(unsigned long long x)
+{
+	uint32_t h_half, l_half;
+	static char buf[2*10+1];	//2x 32-bit value + \0
+	if (x < PRINT64_FACTOR)
+		sprintf(buf, "%u", (uint32_t)x);
+	else{
+		h_half = (uint32_t)(x/PRINT64_FACTOR);
+		l_half = (uint32_t)(x-h_half*PRINT64_FACTOR);
+		sprintf(buf, "%u%u", h_half, l_half);
+	}
+	return buf;
+}
+
+
 extern ptpdexp_sync_state_t cur_servo_state;
 extern int wrc_man_phase;
 
@@ -132,10 +148,9 @@ void wrc_mon_gui(void)
 		cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
 		cprintf(C_GREY, "Round-trip time (mu):    ");
-		cprintf(C_WHITE, "%9d ps\n", (int32_t) (cur_servo_state.mu));
+		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.mu));
 		cprintf(C_GREY, "Master-slave delay:      ");
-		cprintf(C_WHITE, "%9d ps\n",
-			(int32_t) (cur_servo_state.delay_ms));
+		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.delay_ms));
 		cprintf(C_GREY, "Master PHY delays:       ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_m,
@@ -148,12 +163,12 @@ void wrc_mon_gui(void)
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.total_asymmetry));
 		cprintf(C_GREY, "Cable rtt delay:         ");
-		cprintf(C_WHITE, "%9d ps\n",
-			(int32_t) (cur_servo_state.mu) -
-			(int32_t) cur_servo_state.delta_tx_m -
-			(int32_t) cur_servo_state.delta_rx_m -
-			(int32_t) cur_servo_state.delta_tx_s -
-			(int32_t) cur_servo_state.delta_rx_s);
+		cprintf(C_WHITE, "%9s ps\n", print64(cur_servo_state.mu -
+					cur_servo_state.delta_tx_m -
+					cur_servo_state.delta_rx_m -
+					cur_servo_state.delta_tx_s -
+					cur_servo_state.delta_rx_s));
+
 		cprintf(C_GREY, "Clock offset:            ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_offset));
@@ -201,19 +216,18 @@ int wrc_log_stats(uint8_t onetime)
 	aux_stat = spll_get_aux_status(0);
 	mprintf("aux:%x ", aux_stat);
 	mprintf("sec:%d nsec:%d ", (uint32_t) sec, nsec);	/* fixme: clock is not always 125 MHz */
-	mprintf("mu:%d ", (int32_t) cur_servo_state.mu);
-	mprintf("dms:%d ", (int32_t) cur_servo_state.delay_ms);
+	mprintf("mu:%s ", print64(cur_servo_state.mu));
+	mprintf("dms:%s ", print64(cur_servo_state.delay_ms));
 	mprintf("dtxm:%d drxm:%d ", (int32_t) cur_servo_state.delta_tx_m,
 		(int32_t) cur_servo_state.delta_rx_m);
 	mprintf("dtxs:%d drxs:%d ", (int32_t) cur_servo_state.delta_tx_s,
 		(int32_t) cur_servo_state.delta_rx_s);
 	mprintf("asym:%d ", (int32_t) (cur_servo_state.total_asymmetry));
-	mprintf("crtt:%d ",
-		(int32_t) (cur_servo_state.mu) -
-		(int32_t) cur_servo_state.delta_tx_m -
-		(int32_t) cur_servo_state.delta_rx_m -
-		(int32_t) cur_servo_state.delta_tx_s -
-		(int32_t) cur_servo_state.delta_rx_s);
+	mprintf("crtt:%s ", print64(cur_servo_state.mu -
+				cur_servo_state.delta_tx_m -
+				cur_servo_state.delta_rx_m -
+				cur_servo_state.delta_tx_s -
+				cur_servo_state.delta_rx_s));
 	mprintf("cko:%d ", (int32_t) (cur_servo_state.cur_offset));
 	mprintf("setp:%d ", (int32_t) (cur_servo_state.cur_setpoint));
 	mprintf("hd:%d md:%d ad:%d ", spll_get_dac(-1), spll_get_dac(0),
