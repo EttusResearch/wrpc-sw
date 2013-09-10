@@ -1,0 +1,25 @@
+#
+# Automatically generated make config: don't edit
+#
+CONFIG_RAMSIZE=131072
+CONFIG_STACKSIZE=10240
+CONFIG_PRINT_BUFSIZE=128
+CONFIG_PRINTF_XINT=y
+CONFIG_PTP_NOPOSIX=y
+CONFIG_UART=y
+# CONFIG_SOCKITOWM is not set
+CONFIG_ETHERBONE=y
+CONFIG_CMD_CONFIG=y
+
+#
+# wrpc-sw is tainted if you change the following options
+#
+CONFIG_DEVELOPER=y
+# CONFIG_CHECK_RESET is not set
+# CONFIG_PRINTF_FULL is not set
+# CONFIG_PRINTF_MINI is not set
+# CONFIG_PRINTF_NONE is not set
+# CONFIG_PPSI is not set
+# CONFIG_DETERMINISTIC_BINARY is not set
+# CONFIG_UART_SW is not set
+CONFIG_W1=y
