@@ -36,7 +36,7 @@ struct pp_instance *ppi = &ppi_static;
 static void wrc_mon_std_servo(void);
 
 #define PRINT64_FACTOR	1000000000LL
-char* print64(unsigned long long x)
+char* print64(uint64_t x)
 {
 	uint32_t h_half, l_half;
 	static char buf[2*10+1];	//2x 32-bit value + \0
