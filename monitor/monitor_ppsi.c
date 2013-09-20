@@ -280,14 +280,14 @@ int wrc_log_stats(uint8_t onetime)
 	aux_stat = spll_get_aux_status(0);
 	pp_printf("aux:%x ", aux_stat);
 	pp_printf("sec:%d nsec:%d ", (uint32_t) sec, nsec);	/* fixme: clock is not always 125 MHz */
-	pp_printf("mu:%d ", print64(cur_servo_state.mu));
-	pp_printf("dms:%d ", print64(cur_servo_state.delay_ms));
+	pp_printf("mu:%s ", print64(cur_servo_state.mu));
+	pp_printf("dms:%s ", print64(cur_servo_state.delay_ms));
 	pp_printf("dtxm:%d drxm:%d ", (int32_t) cur_servo_state.delta_tx_m,
 		(int32_t) cur_servo_state.delta_rx_m);
 	pp_printf("dtxs:%d drxs:%d ", (int32_t) cur_servo_state.delta_tx_s,
 		(int32_t) cur_servo_state.delta_rx_s);
 	pp_printf("asym:%d ", (int32_t) (cur_servo_state.total_asymmetry));
-	pp_printf("crtt:%d ", print64(cur_servo_state.mu -
+	pp_printf("crtt:%s ", print64(cur_servo_state.mu -
 				cur_servo_state.delta_tx_m -
 				cur_servo_state.delta_rx_m -
 				cur_servo_state.delta_tx_s -
