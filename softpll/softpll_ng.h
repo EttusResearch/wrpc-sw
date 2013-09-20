@@ -119,5 +119,9 @@ void spll_set_dac(int out_channel, int value);
 /* Returns current DAC sample value for output (out_channel) */
 int spll_get_dac(int out_channel);
 
+/* For the shell command */
+void spll_show_stats(void);
+
+
 #endif // __SOFTPLL_NG_H
 
