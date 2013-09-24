@@ -1,6 +1,7 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 
 CROSS_COMPILE ?= lm32-elf-
+export CROSS_COMPILE
 
 CC =		$(CROSS_COMPILE)gcc
 LD =		$(CROSS_COMPILE)ld
@@ -93,8 +94,10 @@ include sockitowm/sockitowm.mk
 include dev/dev.mk
 include softpll/softpll.mk
 
-
 obj-y += check-error.o
+
+obj-y += sdb-lib/libsdbfs.a
+cflags-y += -Isdb-lib
 
 CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall \
 	-ffunction-sections -fdata-sections -Os \
@@ -119,6 +122,8 @@ $(obj-ppsi):
 		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y \
 		USER_CFLAGS="-DDIAG_PUTS=uart_sw_write_string"
 
+sdb-lib/libsdbfs.a:
+	$(MAKE) -C sdb-lib
 
 $(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
@@ -153,6 +158,7 @@ $(AUTOCONF): silentoldconfig
 clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram $(LDS)
 	$(MAKE) -C $(PPSI) clean
+	$(MAKE) -C sdb-lib clean
 
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
