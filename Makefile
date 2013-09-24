@@ -1,6 +1,7 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 
 CROSS_COMPILE ?= lm32-elf-
+export CROSS_COMPILE
 
 CC =		$(CROSS_COMPILE)gcc
 LD =		$(CROSS_COMPILE)ld
