@@ -228,7 +228,7 @@ static void check_reset(void) {}
 void w()
 {
   uint64_t i;
-  for (i=0;i<1024*1024*1000;i++)
+  for (i=0;i<1024*1024*100;i++)
     asm volatile ("nop");
 }
 
@@ -248,22 +248,27 @@ int main(void)
 	timer_init(0);
 
   mprintf("preinit\n");
-	//w();
+	w();
 	mprintf("flash init\n");
 
-	uint8_t d = 0xaa, r = 0x01;
+	uint8_t d[4] = { 0xaa, 0xbb, 0xcc, 0xdd};
 	flash_init();
 
-//  flash_serase(0x00);
-//  while (r & 0x01)
-//	{
-//	  r = flash_rsr();
-//	  mprintf("%d\n", r);
-//	}
-
-//	flash_write(1, 0x00, &d);
   flash_read(256, 0x00, rdat);
-//  mprintf("0x%02x", rdat[0]);
+  for (i = 0; i < 256; i++)
+  {
+    mprintf("0x%02x ", rdat[i]);
+  }
+  mprintf("\n");
+
+  mprintf("erase\n");
+  flash_serase(0x00);
+  while (flash_rsr() & 0x01)
+    ;
+
+  mprintf("write\n");
+	flash_write(4, 0x00, d);
+  flash_read(256, 0x00, rdat);
   for (i = 0; i < 256; i++)
   {
     mprintf("0x%02x ", rdat[i]);

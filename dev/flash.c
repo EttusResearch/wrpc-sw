@@ -98,6 +98,7 @@ void flash_write(int nrbytes, uint32_t addr, uint8_t *dat)
   bbspi_transfer(0,(addr & 0xFF));
   for ( i = 0; i < nrbytes; i++ )
   {
+    mprintf("dat: %02x\n", dat[i]);
     bbspi_transfer(0,dat[i]);
   }
   bbspi_transfer(1,0);
@@ -107,15 +108,10 @@ void flash_read(int nrbytes, uint32_t addr, uint8_t *dat)
 {
   int cnt = 0;
   int i;
-//  d = 1;
   bbspi_transfer(1,0);
-//  mprintf("cmd\n");
   bbspi_transfer(0,0x0b);
-//  mprintf("addr0\n");
   bbspi_transfer(0,(addr & 0xFF0000) >> 16);
-//  mprintf("addr1\n");
   bbspi_transfer(0,(addr & 0xFF00) >> 8);
-//  mprintf("addr2\n");
   bbspi_transfer(0,(addr & 0xFF));
   bbspi_transfer(0,0);
 
