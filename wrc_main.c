@@ -28,6 +28,7 @@
 #include "shell.h"
 #include "lib/ipv4.h"
 #include "rxts_calibrator.h"
+#include "flash.h"
 
 #include "wrc_ptp.h"
 
@@ -224,12 +225,53 @@ static void check_reset(void) {}
 
 #endif
 
+void w()
+{
+  uint64_t i;
+  for (i=0;i<1024*1024*1000;i++)
+    asm volatile ("nop");
+}
 
 int main(void)
 {
+  uint8_t rdat[256];
+  int i;
+
 	check_reset();
 	wrc_ui_mode = UI_SHELL_MODE;
 	_endram = ENDRAM_MAGIC;
+
+  sdb_find_devices();
+	uart_init_sw();
+	uart_init_hw();
+
+	timer_init(0);
+
+  mprintf("preinit\n");
+	//w();
+	mprintf("flash init\n");
+
+	uint8_t d = 0xaa, r = 0x01;
+	flash_init();
+
+//  flash_serase(0x00);
+//  while (r & 0x01)
+//	{
+//	  r = flash_rsr();
+//	  mprintf("%d\n", r);
+//	}
+
+//	flash_write(1, 0x00, &d);
+  flash_read(256, 0x00, rdat);
+//  mprintf("0x%02x", rdat[0]);
+  for (i = 0; i < 256; i++)
+  {
+    mprintf("0x%02x ", rdat[i]);
+  }
+  mprintf("\n");
+
+
+  return 0;
 
 	wrc_initialize();
 	usleep_init();
