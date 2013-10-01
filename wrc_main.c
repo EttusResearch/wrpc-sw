@@ -251,7 +251,7 @@ int main(void)
 	w();
 	mprintf("flash init\n");
 
-	uint8_t d[4] = { 0xaa, 0xbb, 0xcc, 0xdd};
+	uint8_t d[4] = { 0x11, 0x22, 0x33, 0x44};
 	flash_init();
 
   flash_read(256, 0x00, rdat);
