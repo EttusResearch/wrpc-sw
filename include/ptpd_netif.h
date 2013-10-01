@@ -242,5 +242,6 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 				       int clock_period);
 int ptpd_netif_enable_timing_output(int enable);
 int ptpd_netif_enable_phase_tracking(const char *if_name);
+void ptpd_netif_set_phase_transition(uint32_t phase);
 
 #endif

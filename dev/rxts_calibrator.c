@@ -18,6 +18,7 @@
 #include "softpll_ng.h"
 #include "wrc_ptp.h"
 #include "eeprom.h"
+#include "ptpd_netif.h"
 
 /* New calibrator for the transition phase value. A major pain in the ass for
    the folks who frequently rebuild their gatewares. The idea is described
@@ -235,8 +236,14 @@ static int calib_t24p_master(uint32_t *value)
 
 int calib_t24p(int mode, uint32_t *value)
 {
+	int ret;
+
 	if (mode == WRC_MODE_SLAVE)
-		return calib_t24p_slave(value);
+		ret = calib_t24p_slave(value);
 	else
-		return calib_t24p_master(value);
+		ret = calib_t24p_master(value);
+
+	//update phtrans value in socket struct
+	ptpd_netif_set_phase_transition(*value);
+	return ret;
 }

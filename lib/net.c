@@ -56,10 +56,13 @@ int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)
 	return 0;
 }
 
-void ptpd_netif_set_phase_transition(wr_socket_t * sock, int phase)
+void ptpd_netif_set_phase_transition(uint32_t phase)
 {
-	struct my_socket *s = (struct my_socket *)sock;
-	s->phase_transition = phase;
+	int i;
+
+	for (i=0; i< NET_MAX_SOCKETS; ++i) {
+		socks[i].phase_transition = phase;
+	}
 }
 
 wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,

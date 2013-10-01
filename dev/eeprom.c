@@ -225,13 +225,17 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
 int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
 		      uint8_t write)
 {
+	int8_t ret;
 	if (write) {
 		*val |= (1 << 31);
 		if (eeprom_write(i2cif, i2c_addr, EE_BASE_CAL, (uint8_t *) val,
 		     sizeof(*val)) != sizeof(*val))
-			return EE_RET_I2CERR;
+			ret = EE_RET_I2CERR;
 		else
-			return 1;
+			ret = 1;
+
+		*val &= 0x7fffffff;	//return ph_trans value without validity bit
+		return ret;
 	} else {
 		if (eeprom_read(i2cif, i2c_addr, EE_BASE_CAL, (uint8_t *) val,
 		     sizeof(*val)) != sizeof(*val))
