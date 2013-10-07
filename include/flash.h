@@ -41,10 +41,14 @@
  
 #include "types.h"
 
+/* Flash interface functions */
 void flash_init();
-void flash_write(int nrbytes, uint32_t addr, uint8_t *dat);
-void flash_read(int nrbytes, uint32_t addr, uint8_t *dat);
+int flash_write(uint32_t addr, uint8_t *buf, int count);
+int flash_read(uint32_t addr, uint8_t *buf, int count);
 void flash_serase(uint32_t addr);
 uint8_t flash_rsr();
+
+
+/* SDB flash interface functions */
 
 #endif // __FLASH_H_

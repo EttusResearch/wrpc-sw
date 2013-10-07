@@ -65,11 +65,9 @@ static uint8_t bbspi_transfer(uint8_t cspin, uint8_t val)
     {
       gpio_out(GPIO_SPI_MOSI, 0);
     }
-    delay();
     gpio_out(GPIO_SPI_SCLK, 1);
     retval <<= 1;
     retval |= gpio_in(GPIO_SPI_MISO);
-    delay();
     val <<= 1;
   }
 
@@ -78,6 +76,9 @@ static uint8_t bbspi_transfer(uint8_t cspin, uint8_t val)
   return retval;
 }
 
+/*
+ * Init function (just set the SPI pins for idle)
+ */
 void flash_init()
 {
   gpio_out(GPIO_SPI_NCS, 1);
@@ -85,7 +86,10 @@ void flash_init()
   gpio_out(GPIO_SPI_MOSI, 0);
 }
 
-void flash_write(int nrbytes, uint32_t addr, uint8_t *dat)
+/*
+ * Write data to flash chip
+ */
+int flash_write(uint32_t addr, uint8_t *buf, int count)
 {
   int i;
 
@@ -96,17 +100,20 @@ void flash_write(int nrbytes, uint32_t addr, uint8_t *dat)
   bbspi_transfer(0,(addr & 0xFF0000) >> 16);
   bbspi_transfer(0,(addr & 0xFF00) >> 8);
   bbspi_transfer(0,(addr & 0xFF));
-  for ( i = 0; i < nrbytes; i++ )
+  for ( i = 0; i < count; i++ )
   {
-    mprintf("dat: %02x\n", dat[i]);
-    bbspi_transfer(0,dat[i]);
+    bbspi_transfer(0,buf[i]);
   }
   bbspi_transfer(1,0);
+
+  return count;
 }
 
-void flash_read(int nrbytes, uint32_t addr, uint8_t *dat)
+/*
+ * Read data from flash
+ */
+int flash_read(uint32_t addr, uint8_t *buf, int count)
 {
-  int cnt = 0;
   int i;
   bbspi_transfer(1,0);
   bbspi_transfer(0,0x0b);
@@ -114,14 +121,18 @@ void flash_read(int nrbytes, uint32_t addr, uint8_t *dat)
   bbspi_transfer(0,(addr & 0xFF00) >> 8);
   bbspi_transfer(0,(addr & 0xFF));
   bbspi_transfer(0,0);
-
-  for ( i = 0; i < nrbytes; i++ )
+  for ( i = 0; i < count; i++ )
   {
-    dat[i] = bbspi_transfer(0, 0);
+    buf[i] = bbspi_transfer(0, 0);
   }
   bbspi_transfer(1,0);
+
+  return count;
 }
 
+/*
+ * Sector erase
+ */
 void flash_serase(uint32_t addr)
 {
   bbspi_transfer(1,0);
@@ -134,6 +145,9 @@ void flash_serase(uint32_t addr)
   bbspi_transfer(1,0);
 }
 
+/*
+ * Read status register
+ */
 uint8_t flash_rsr()
 {
   uint8_t retval;

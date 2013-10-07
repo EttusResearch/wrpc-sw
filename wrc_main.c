@@ -234,49 +234,51 @@ void w()
 
 int main(void)
 {
-  uint8_t rdat[256];
-  int i;
+	uint8_t rdat[256];
+	int i;
 
 	check_reset();
 	wrc_ui_mode = UI_SHELL_MODE;
 	_endram = ENDRAM_MAGIC;
 
-  sdb_find_devices();
+	sdb_find_devices();
 	uart_init_sw();
 	uart_init_hw();
 
 	timer_init(0);
 
-  mprintf("preinit\n");
+	mprintf("preinit\n");
 	w();
 	mprintf("flash init\n");
 
-	uint8_t d[4] = { 0x11, 0x22, 0x33, 0x44};
+	uint8_t d[4] = { 0xaa, 0xbb, 0xcc, 0xdd};
 	flash_init();
 
-  flash_read(256, 0x00, rdat);
-  for (i = 0; i < 256; i++)
-  {
-    mprintf("0x%02x ", rdat[i]);
-  }
-  mprintf("\n");
+	flash_read(0x00, rdat, 256);
+	for (i = 0; i < 256; i++)
+	{
+		mprintf("0x%02x ", rdat[i]);
+	}
+	mprintf("\n");
 
-  mprintf("erase\n");
-  flash_serase(0x00);
-  while (flash_rsr() & 0x01)
-    ;
+//	mprintf("erase\n");
+//	flash_serase(0x00);
+//	while (flash_rsr() & 0x01)
+//		;
+//
+//	mprintf("write\n");
+//	flash_write(0x00, d, 4);
+//	while (flash_rsr() & 0x01)
+//		;
+	flash_read(0x100, rdat, 256);
+	for (i = 0; i < 256; i++)
+	{
+		mprintf("0x%02x ", rdat[i]);
+	}
+	mprintf("\n");
 
-  mprintf("write\n");
-	flash_write(4, 0x00, d);
-  flash_read(256, 0x00, rdat);
-  for (i = 0; i < 256; i++)
-  {
-    mprintf("0x%02x ", rdat[i]);
-  }
-  mprintf("\n");
 
-
-  return 0;
+	return 0;
 
 	wrc_initialize();
 	usleep_init();
