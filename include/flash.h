@@ -46,9 +46,10 @@ void flash_init();
 int flash_write(uint32_t addr, uint8_t *buf, int count);
 int flash_read(uint32_t addr, uint8_t *buf, int count);
 void flash_serase(uint32_t addr);
+void flash_berase();
 uint8_t flash_rsr();
 
-
 /* SDB flash interface functions */
+int flash_sdb_check();
 
 #endif // __FLASH_H_

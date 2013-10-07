@@ -3,7 +3,7 @@
 # at offset zero at all, we want to start at zero *wihin* our space.
 # This is actually the default, but stating it is better.
 .
-	position = 0
+	position = 0x170000
 
 # Then, we have a number of writable files. By default (i.e. no config)
 # all existing files are created as read-only files with current contents

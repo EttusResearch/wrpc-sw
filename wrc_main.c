@@ -253,30 +253,16 @@ int main(void)
 
 	uint8_t d[4] = { 0xaa, 0xbb, 0xcc, 0xdd};
 	flash_init();
-
-	flash_read(0x00, rdat, 256);
+	flash_read(0x170000,rdat,256);
 	for (i = 0; i < 256; i++)
-	{
-		mprintf("0x%02x ", rdat[i]);
-	}
-	mprintf("\n");
-
-//	mprintf("erase\n");
-//	flash_serase(0x00);
-//	while (flash_rsr() & 0x01)
-//		;
-//
-//	mprintf("write\n");
-//	flash_write(0x00, d, 4);
-//	while (flash_rsr() & 0x01)
-//		;
-	flash_read(0x100, rdat, 256);
+		printf("0x%02X ", rdat[i]);
+	printf("\n");
+	flash_read(0x170100,rdat,256);
 	for (i = 0; i < 256; i++)
-	{
-		mprintf("0x%02x ", rdat[i]);
-	}
-	mprintf("\n");
+		printf("0x%02X ", rdat[i]);
+	printf("\n");
 
+//	flash_sdb_check();
 
 	return 0;
 

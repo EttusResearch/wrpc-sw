@@ -40,13 +40,14 @@
 #include "types.h"
 #include "syscon.h"
 
-static void delay()
-{
-  int i;
-  for (i = 0; i < 1; i++)
-    asm volatile ("nop");
-}
+#define SDBFS_BIG_ENDIAN
+#include "libsdbfs.h"
 
+#include <wrc.h>
+
+/*****************************************************************************/
+/* 		Flash interface					     	     */
+/*****************************************************************************/
 /*
  * Bit-bang SPI transfer function
  */
@@ -146,6 +147,19 @@ void flash_serase(uint32_t addr)
 }
 
 /*
+ * Bulk erase
+ */
+void
+flash_berase()
+{
+	bbspi_transfer(1,0);
+	bbspi_transfer(0,0x06);
+	bbspi_transfer(1,0);
+	bbspi_transfer(0,0xc7);
+	bbspi_transfer(1,0);
+}
+
+/*
  * Read status register
  */
 uint8_t flash_rsr()
@@ -156,4 +170,74 @@ uint8_t flash_rsr()
   retval = bbspi_transfer(0,0);
   bbspi_transfer(1,0);
   return retval;
+}
+
+
+/*****************************************************************************/
+/* 			SDB						     */
+/*****************************************************************************/
+
+/* The sdb filesystem itself */
+static struct sdbfs wrc_sdb = {
+	.name = "wrpc-storage",
+	.blocksize = 1, /* Not currently used */
+	/* .read and .write according to device type */
+};
+
+/*
+ * SDB read and write functions
+ */
+static int sdb_flash_read(struct sdbfs *fs, int offset, void *buf, int count)
+{
+	return flash_read(offset, buf, count);
+}
+
+static int sdb_flash_write(struct sdbfs *fs, int offset, void *buf, int count)
+{
+	return flash_write(offset, buf, count);
+}
+
+
+/*
+ * A trivial dumper, just to show what's up in there
+ */
+static void flash_sdb_list(struct sdbfs *fs)
+{
+	struct sdb_device *d;
+	int new = 1;
+	while ( (d = sdbfs_scan(fs, new)) != NULL) {
+		d->sdb_component.product.record_type = '\0';
+		mprintf("file 0x%08x @ %4i, name %s\n",
+			  (int)(d->sdb_component.product.device_id),
+			  (int)(d->sdb_component.addr_first),
+			  (char *)(d->sdb_component.product.name));
+		new = 0;
+	}
+}
+
+/*
+ * Check for SDB presence on flash
+ */
+int flash_sdb_check()
+{
+	uint32_t magic = 0;
+	int i;
+
+	uint32_t entry_point[3] = {0x000000, 0x170000, 0x2e0000};
+
+	for (i = 0; i < ARRAY_SIZE(entry_point); i++)
+	{
+		flash_read(entry_point[i], (uint8_t *)&magic, 4);
+		if (magic == SDB_MAGIC)
+			break;
+	}
+	if (magic == SDB_MAGIC)
+	{
+		mprintf("Found SDB magic at address 0x%06X!\n", entry_point[i]);
+		wrc_sdb.drvdata = NULL;
+		wrc_sdb.read = sdb_flash_read;
+		wrc_sdb.write = sdb_flash_write;
+		flash_sdb_list(&wrc_sdb);
+	}
+	return 0;
 }
