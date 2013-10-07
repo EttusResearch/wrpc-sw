@@ -144,6 +144,7 @@ clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram $(LDS)
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
+	$(MAKE) -C tools clean
 
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
