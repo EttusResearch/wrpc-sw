@@ -82,8 +82,8 @@ extern void *BASE_SYSCON;
 
 static int spec_write_flash(struct spec_device *spec, int addr, int len)
 {
-	uint8_t buf[len];
-	int i, r;
+	uint8_t *buf = malloc(len);
+	int i, r, plen = len;
 
 	BASE_SYSCON = spec->mapaddr + SPEC_SYSCON_OFFSET;
 
@@ -104,9 +104,9 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 		return 1;
 	}
 
+	/* Let's some data to the flash */
 	while (len)
 	{
-		int j;
 		/* Set write length */
 		i = len;
 		if (len > 256)
@@ -144,10 +144,10 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 //		while (flash_rsr() & 0x01)
 //			;
 
-		/* Setup next length and address */
+		/* Setup next length, address and buffer pointer */
 		len  -= i;
 		addr += i;
-		memcpy(buf, buf+i, len % 256);
+		buf  += i;
 
 //		if (i != len) {
 //			fprintf(stderr, "Tried to write %i bytes, retval %i\n",
