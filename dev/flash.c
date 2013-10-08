@@ -223,7 +223,7 @@ int flash_sdb_check()
 	uint32_t magic = 0;
 	int i;
 
-	uint32_t entry_point[3] = {0x000000, 0x170000, 0x2e0000};
+	uint32_t entry_point[6] = {0x000000, 0x100, 0x200, 0x300, 0x170000, 0x2e0000};
 
 	for (i = 0; i < ARRAY_SIZE(entry_point); i++)
 	{
@@ -235,6 +235,7 @@ int flash_sdb_check()
 	{
 		mprintf("Found SDB magic at address 0x%06X!\n", entry_point[i]);
 		wrc_sdb.drvdata = NULL;
+		wrc_sdb.entrypoint = entry_point[i];
 		wrc_sdb.read = sdb_flash_read;
 		wrc_sdb.write = sdb_flash_write;
 		flash_sdb_list(&wrc_sdb);

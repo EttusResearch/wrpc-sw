@@ -236,6 +236,7 @@ int main(void)
 {
 	uint8_t rdat[256];
 	int i;
+	uint32_t addr;
 
 	check_reset();
 	wrc_ui_mode = UI_SHELL_MODE;
@@ -251,18 +252,22 @@ int main(void)
 	w();
 	mprintf("flash init\n");
 
-	uint8_t d[4] = { 0xaa, 0xbb, 0xcc, 0xdd};
 	flash_init();
-	flash_read(0x170000,rdat,256);
-	for (i = 0; i < 256; i++)
-		printf("0x%02X ", rdat[i]);
-	printf("\n");
-	flash_read(0x170100,rdat,256);
-	for (i = 0; i < 256; i++)
-		printf("0x%02X ", rdat[i]);
-	printf("\n");
 
-//	flash_sdb_check();
+//#define ADDRSTART 0x100
+//#define ADDRMAX   0x600
+//	addr = 0x100;
+//	mprintf("reading from 0x%06X to 0x%06X\n", addr, ADDRMAX);
+//	for (addr = ADDRSTART; addr < ADDRMAX; addr += 256)
+//	{
+//		flash_read(addr,rdat,256);
+//		for (i = 0; i < 256; i++)
+//			printf("0x%02X ", rdat[i]);
+//		printf("\n");
+//	}
+//	mprintf("done; current address 0x%06X\n", addr);
+
+	flash_sdb_check();
 
 	return 0;
 
