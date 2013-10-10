@@ -190,3 +190,7 @@ defconfig:
 
 .config: silentoldconfig
 
+# This forces more compilations than needed, but it's useful
+# (we depend on .config and not on include/generated/autoconf.h
+# because the latter is touched by silentoldconfig at each build)
+$(obj-y): .config $(wildcard include/*.h)
