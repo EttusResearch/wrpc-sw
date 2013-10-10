@@ -358,3 +358,40 @@ int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
 
 	return i;
 }
+
+#ifdef CONFIG_W1
+#include <w1.h>
+/*
+ * The "persistent mac" thing was part of onewire.c, and it's not something
+ * I can understand, I admit.
+ *
+ * Now, cards with w1 eeprom already use sdb-eeprom.c as far as I
+ * know, while this eeprom.c file is still selected for devices that
+ * have i2c eeprom and never saved a persistent mac address. But maybe
+ * they prefer w1 for temperature (well, sockitowm will go)
+ */
+int8_t set_persistent_mac(uint8_t portnum, uint8_t * mac)
+{
+	pp_printf("Can't save persistent MAC address\n");
+	return -1;
+}
+
+int32_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
+{
+	int i, class;
+	uint64_t rom;
+
+	pp_printf("%s: Using W1 serial number\n", __func__);
+	for (i = 0; i < W1_MAX_DEVICES; i++) {
+		class = w1_class(wrpc_w1_bus.devs + i);
+		if (class != 0x28 && class != 0x42)
+			continue;
+		rom = wrpc_w1_bus.devs[i].rom;
+		mac[3] = rom >> 24;
+		mac[4] = rom >> 16;
+		mac[5] = rom >> 8;
+	}
+	return 0;
+}
+
+#endif /* CONFIG_W1 */
