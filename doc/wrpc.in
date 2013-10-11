@@ -605,9 +605,10 @@ synchronization status:
   wrc# gui
 @end example
 
-The information is presented in a clear, auto-refreshing screen (full
+The information is presented in a clear, auto-refreshing screen. To exit
+from this console mode press <Esc>. Full
 description about information reported by gui is provided in @ref{WRPC GUI 
-elements}):
+elements}.
 
 @sp 1
 @center @image{wrpc_mon, 12cm,,wrpc sync monitor}
