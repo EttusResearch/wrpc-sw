@@ -127,8 +127,6 @@ static int wrc_check_link()
 	return rv;
 }
 
-int wrc_extra_debug = 0;
-
 void wrc_debug_printf(int subsys, const char *fmt, ...)
 {
 	va_list ap;
@@ -138,7 +136,7 @@ void wrc_debug_printf(int subsys, const char *fmt, ...)
 
 	va_start(ap, fmt);
 
-	if (wrc_extra_debug || (!wrc_extra_debug && (subsys & TRACE_SERVO)))
+	if (subsys & (1 << 5) /* was: TRACE_SERVO -- see commit message */)
 		vprintf(fmt, ap);
 
 	va_end(ap);
@@ -236,7 +234,6 @@ static void check_reset(void) {}
 int main(void)
 {
 	check_reset();
-	wrc_extra_debug = 1;
 	wrc_ui_mode = UI_SHELL_MODE;
 	_endram = ENDRAM_MAGIC;
 
