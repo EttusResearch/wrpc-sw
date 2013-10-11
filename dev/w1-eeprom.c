@@ -164,7 +164,7 @@ DEFINE_WRC_COMMAND(w1w) = {
 	.exec = cmd_w1_w,
 };
 
-/* A shell command, for testing read: "w1w <offset> <len> */
+/* A shell command, for testing read: "w1r <offset> <len> */
 static int cmd_w1_r(const char *args[])
 {
 	int offset, i, blen;
