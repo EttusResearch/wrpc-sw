@@ -49,7 +49,6 @@ void wrc_mon_gui(void)
 	static uint32_t last = 0;
 	hexp_port_state_t ps;
 	int tx, rx;
-	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
 #ifdef CONFIG_ETHERBONE

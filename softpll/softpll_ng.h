@@ -107,6 +107,7 @@ int spll_update_aux_clocks();
 
 /* Returns the status of given aux clock output (SPLL_AUX_) */
 int spll_get_aux_status(int out_channel);
+const char *spll_get_aux_status_string(int channel);
 
 /* Debug/testing functions */
 
