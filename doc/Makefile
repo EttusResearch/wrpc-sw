@@ -18,9 +18,11 @@ ALL    = $(INFO) $(HTML) $(TXT) $(PDF)
 
 MAKEINFO ?= makeinfo
 
+RELEASE=$(shell git describe --always --dirty)
+
 %.texi: %.in
 	@rm -f $@
-	sed -f ./infofilter $< > $@
+	sed s/__RELEASE_GIT_ID__/$(RELEASE)/ $< | sed -f ./infofilter > $@
 	emacs -batch --no-site-file -l fixinfo $@
 	chmod -w $@
 

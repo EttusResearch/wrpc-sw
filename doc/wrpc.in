@@ -36,7 +36,7 @@
 @setchapternewpage off
 
 @set update-month October 2013
-@set release 2.1
+@set release __RELEASE_GIT_ID__
 @set tagname wrpc-v2.1
 @c WARNING: in @example I Can't use @value{tagname}, so please look for this
 @c string when updating the document.
