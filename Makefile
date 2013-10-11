@@ -69,11 +69,6 @@ cflags-$(CONFIG_PPSI) += \
 	-I$(PPSI)/proto-ext-whiterabbit \
 	-Iboards/spec
 
-# FIXME: The following is temporary, until we clean up
-cflags-$(CONFIG_PPSI) += \
-	-I$(PTP_NOPOSIX)/PTPWRd \
-	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
-
 obj-ppsi = \
 	$(PPSI)/ppsi.o \
 	$(PPSI)/proto-standard/libstd.a

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <wrc.h>
 #include "board.h"
 #include "trace.h"
 #include "hw/softpll_regs.h"

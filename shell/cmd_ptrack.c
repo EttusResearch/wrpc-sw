@@ -10,7 +10,12 @@
 #include <string.h>
 #include <wrc.h>
 #include "shell.h"
-#include "ptpd.h"
+#ifdef CONFIG_PPSI
+#  include <ppsi/ppsi.h>
+#  include "wr-api.h"
+#else
+#  include "ptpd.h"
+#endif
 
 extern int wrc_phase_tracking;
 
