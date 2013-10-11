@@ -35,9 +35,9 @@
 
 @setchapternewpage off
 
-@set update-month August 2013
-@set release 2.0
-@set tagname wrpc-v2.0
+@set update-month October 2013
+@set release 2.1
+@set tagname wrpc-v2.1
 @c WARNING: in @example I Can't use @value{tagname}, so please look for this
 @c string when updating the document.
 
@@ -45,7 +45,7 @@
 
 @titlepage
 @title White Rabbit PTP Core User's Manual
-@subtitle @value{update-month}
+@subtitle @value{update-month} (@value{release})
 @subtitle Building and Running
 @author Grzegorz Daniluk (CERN BE-CO-HT)
 @end titlepage
@@ -250,7 +250,8 @@ you may need to check out a stable release tag for this repository. Please refer
 to the project's documentation to find which version of this package you need
 to build.
 
-@b{Note:} alternatively, for the v2.0 release of WR PTP Core, you can get
+@b{Note:} alternatively, for the v2.0 and v2.1 releases
+of WR PTP Core, you can get
 the release sources from the tarball available in the @i{files} tab of
 @code{wr-cores}:
 
