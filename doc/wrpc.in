@@ -678,7 +678,13 @@ of the tools used to build and run it, you can write to our mailing list
 @appendix WRPC Shell Commands
 
 @multitable @columnfractions .5 .5
+@item @code{help} reports the available commands in this instance of WRPC
+
 @item @code{ver} @tab prints which version of wrpc is running
+
+@item @code{config} @tab prints the Kconfig file used to build this instance of WRPC. It is an optional command, enabled at build time by @t{CONFIG_CMD_CONFIG}
+
+@item @code{verbose <digits>} @tab Set PPSi verbosity. See the PPSi manual about the meaning of the digits (hint: @t{verbose 1111} is a good first bet too see how the PTP system is working)
 
 @item @code{pll init <mode> <ref_channel> <align_pps>} @tab manually run spll_init()
 function to initialize SoftPll
@@ -700,9 +706,7 @@ function to initialize SoftPll
 @item @code{ptp stop} @tab stops WR PTP daemon
 
 @item @code{mode} @tab prints available WR PTP modes
-@item @code{mode gm} @tab sets WRPC to operate as Grandmaster clock (requires external 10MHz and 1-PPS reference)(*)
-@item @code{mode master} @tab sets WRPC to operate as Free-running Master(*)
-@item @code{mode slave} @tab sets WRPC to operate as Slave node(*)
+@item @code{mode gm|master|slave} @tab sets WRPC to operate as Grandmaster clock (requires external 10MHz and 1-PPS reference), PTP Master or PTP Slave. After setting the mode @t{ptp start} must be re-issued
 
 @item @code{calibration} @tab tries to read t2/4 phase transition from EEPROM, if not found runs calibration procedure
 @item @code{calibration force} @tab starts calibration procedure that measures t2/4 phase transition, and stores the result to EEPROM
@@ -717,7 +721,7 @@ function to initialize SoftPll
 @item @code{sfp erase} @tab cleans the SFP database stored in FMC EEPROM
 @item @code{sfp add <ID> <deltaTx> <deltaRx> <alpha>} @tab stores calibration parameters for SFP to the database in FMC EEPROM
 @item @code{sfp show} @tab prints all SFP transceivers stored in database
-@item @code{sfp match} @tab tries to get calibration parameters from database for currently used SFP transceiver(**)
+@item @code{sfp match} @tab tries to get calibration parameters from database for currently used SFP transceiver (@t{sfp detect} must be executed before @t{match})
 
 @item @code{init erase} @tab cleans initialization script in FMC EEPROM
 @item @code{init add <cmd>} @tab adds shell command at the end of initialization script
@@ -731,17 +735,14 @@ function to initialize SoftPll
 
 @item @code{sdb} @tab prints devices connected to the Wishbone bus inside WRPC
 
-@item @code{ip get} @tab prints the IPv4 address of the WRPC(***)
-@item @code{ip set <ip>} @tab sets the IPv4 address of the WRPC(***)
+@item @code{ip get}
+@item @code{ip set <ip>} @tab reports or sets the IPv4 address of the WRPC (only available if @t{CONFIG_ETHERBONE} is set at build time
+
+@item @code{w1w <offset> <byte> [<byte> ...]}
+@item @code{w1r <offset> <len>} @tab If @t{CONFIG_W1} is set and a OneWire @sc{eeprom} esists, write and read data. For writing, @t{byte} values are decimal
 
 @end multitable
 
-  * after executing @t{mode} command, @t{ptp start} is required to start WR PTP
-daemon in new mode
-
- ** requires running @t{sfp detect} first
-
-*** available only with Etherbone support compiled in
 
 
 @c ##########################################################################
