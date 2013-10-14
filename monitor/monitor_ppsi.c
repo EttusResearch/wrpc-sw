@@ -310,7 +310,11 @@ int wrc_log_stats(uint8_t onetime)
 	{
 		int32_t temp;
 
-		temp = w1_read_temp_bus(&wrpc_w1_bus, 0);
+		//first read the value from previous measurement,
+		//first one will be random, I know
+		temp = w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_COLLECT);
+		//then initiate new conversion for next loop cycle
+		w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_NOWAIT);
 		pp_printf("temp: %d.%04d C", temp >> 16,
 			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
 	}
