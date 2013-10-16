@@ -248,7 +248,7 @@ static void wrc_mon_std_servo(void)
 		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->offsetFromMaster.nanoseconds);
 
 		cprintf(C_GREY, "\nOne-way delay averaged:       ");
-		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->oneWayDelay.nanoseconds);
+		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->meanPathDelay.nanoseconds);
 
 		cprintf(C_GREY, "\nObserved drift:               ");
 		cprintf(C_WHITE, "%9i ns", SRV(ppi)->obs_drift);
