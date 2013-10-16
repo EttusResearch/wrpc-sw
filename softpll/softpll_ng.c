@@ -323,7 +323,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	SPLL->DEGLITCH_THR = 1000;
 
 	PPSG->ESCR = 0;
-	PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_CNT_RST | PPSG_CR_PWIDTH_W(100);
+	PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_CNT_RST | PPSG_CR_PWIDTH_W(PPS_WIDTH);
 
 	if(mode == SPLL_MODE_GRAND_MASTER)
 	{

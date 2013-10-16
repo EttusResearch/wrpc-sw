@@ -24,6 +24,9 @@ void shell_init(void);
 int wrc_log_stats(uint8_t onetime);
 void wrc_debug_printf(int subsys, const char *fmt, ...);
 
+/* Default width (in 8ns units) of the pulses on the PPS output */
+#define PPS_WIDTH (10 * 1000 * 1000 / 8) /* 10ms */
+
 
 /* This is in the library, somewhere */
 extern int abs(int val);

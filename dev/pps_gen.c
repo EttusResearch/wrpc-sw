@@ -19,10 +19,6 @@
 /* Warning: references to "UTC" in the registers DO NOT MEAN actual UTC time, it's just a plain second counter
 	 It doesn't care about leap seconds. */
 
-/* Default width (in 8ns units) of the pulses on the PPS output */
-
-#define PPS_WIDTH 100000
-
 #define ppsg_write(reg, val) \
 	*(volatile uint32_t *) (BASE_PPS_GEN + (offsetof(struct PPSG_WB, reg))) = (val)
 
