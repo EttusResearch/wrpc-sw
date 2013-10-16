@@ -153,26 +153,6 @@ config PPSI
 
 endchoice
 
-config PPSI_VERBOSITY
-	depends on PPSI && DEVELOPER
-	int "Default verbosity for PPSI"
-	help
-	  This option makes you select the verbosity of PPSI at startup:
-	  0 means silent
-	  1 means normal verbosity messages
-	  2 means more verbose messages
-	default 0
-	range 0 2
-
-config PPSI_RUNTIME_VERBOSITY
-	depends on PPSI && DEVELOPER
-	boolean "Enable runtime verbosity setting"
-	default y
-	help
-	  If set, this option permits to change the verbosity of PPSI engine
-	  runtime. This causes a bigger RAM occupation, so it is suggested
-	  to set it only for debugging purpose.
-
 config DETERMINISTIC_BINARY
 	depends on DEVELOPER
 	boolean "Build a binary that is the same every time"
