@@ -1,0 +1,17 @@
+#!/bin/sh
+# A trivial script to build with all known configurations
+# (please add a configs/ file to test your special case
+
+T=$(mktemp /tmp/wrpc-config.XXXXXX)
+
+configs=$(ls configs)
+for c in $configs; do
+    echo "##### Building with '$c'"
+    if ! make $c 2>&1 >> $T; then
+	echo "Error in configuration (see $T)"
+	exit 1
+    fi
+    make -s clean
+    make -s
+done
+rm $T
