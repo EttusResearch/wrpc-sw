@@ -85,7 +85,6 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 include shell/shell.mk
 include lib/lib.mk
 include pp_printf/printf.mk
-include sockitowm/sockitowm.mk
 include dev/dev.mk
 include softpll/softpll.mk
 

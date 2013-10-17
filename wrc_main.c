@@ -25,7 +25,6 @@
 #include "softpll_ng.h"
 #include "onewire.h"
 #include "pps_gen.h"
-#include "sockitowm.h"
 #include "shell.h"
 #include "lib/ipv4.h"
 #include "rxts_calibrator.h"
@@ -53,14 +52,9 @@ static void wrc_initialize()
 	mprintf("WR Core: starting up...\n");
 
 	timer_init(1);
-#ifdef CONFIG_SOCKITOWM
-	owInit();
-	own_scanbus(ONEWIRE_PORT);
-#else /* CONFIG_W1 */
 	wrpc_w1_init();
 	wrpc_w1_bus.detail = ONEWIRE_PORT;
 	w1_scan_bus(&wrpc_w1_bus);
-#endif
 
 	/*initialize I2C bus*/
 	mi2c_init(WRPC_FMC_I2C);
