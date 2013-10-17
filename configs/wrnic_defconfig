@@ -7,7 +7,7 @@ CONFIG_PRINT_BUFSIZE=128
 CONFIG_PRINTF_XINT=y
 CONFIG_PTP_NOPOSIX=y
 CONFIG_UART=y
-CONFIG_SOCKITOWM=y
+CONFIG_W1=y
 # CONFIG_ETHERBONE is not set
 # CONFIG_CMD_CONFIG is not set
 
@@ -15,3 +15,4 @@ CONFIG_SOCKITOWM=y
 # wrpc-sw is tainted if you change the following options
 #
 # CONFIG_DEVELOPER is not set
+CONFIG_LEGACY_EEPROM=y

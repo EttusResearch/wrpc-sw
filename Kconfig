@@ -27,9 +27,9 @@ config UART
 	boolean
 	default y
 
-config SOCKITOWM
+config W1
        boolean
-       default !W1
+       default y
 
 # The other ones can be set by non-developers
 
@@ -185,17 +185,6 @@ config UART_SW
 	  an addition. If the option is turned on, ppsi log messages
 	  are routed to the software uart. The interactive wrpc shell
 	  and diagnostics run on the hardware UART if available.
-
-config W1
-	depends on DEVELOPER
-	boolean "Rewritten OneWire Code"
-	help
-	  This selects a rewritten code base for onewire, meant to be
-	  cleaner than sockitowm, but currently less tested
-
-config SOCKITOWM
-       boolean
-       default !W1
 
 config SDB_EEPROM
 	depends on DEVELOPER && W1
