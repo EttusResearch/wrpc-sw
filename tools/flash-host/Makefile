@@ -5,4 +5,4 @@ libflash.a: flash.o
 
 clean:
 	rm -f *.o *.a *~
-	
+

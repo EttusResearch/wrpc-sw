@@ -10,12 +10,12 @@
  *
  * version: 1.0
  *
- * description: 
+ * description:
  *
  * dependencies:
  *
  * references:
- * 
+ *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE
  *==============================================================================
@@ -32,21 +32,21 @@
  * last changes:
  *    2013-09-25   Theodor Stana     t.stana@cern.ch     File created
  *==============================================================================
- * TODO: - 
+ * TODO: -
  *==============================================================================
  */
- 
+
 #ifndef __FLASH_H_
 #define __FLASH_H_
- 
+
 #include "types.h"
 
 /* Flash interface functions */
-void flash_init();
-int flash_write(uint32_t addr, uint8_t *buf, int count);
-int flash_read(uint32_t addr, uint8_t *buf, int count);
-void flash_serase(uint32_t addr);
-void flash_berase();
+void 	flash_init();
+int 	flash_write(uint32_t addr, uint8_t *buf, int count);
+int 	flash_read(uint32_t addr, uint8_t *buf, int count);
+void 	flash_serase(uint32_t addr);
+void 	flash_berase();
 uint8_t flash_rsr();
 
 /* SDB flash interface functions */

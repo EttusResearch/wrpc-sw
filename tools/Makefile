@@ -44,7 +44,7 @@ flash-write: flash-write.c flash-host/libflash.a
 	$(CC) $(CFLAGS) -Iflash-host $^ -o $@
 
 flash-host/libflash.a:
-	$(MAKE) -C flash-host 
+	$(MAKE) -C flash-host
 
 
 clean:

@@ -10,12 +10,12 @@
  *
  * version: 1.0
  *
- * description: 
+ * description:
  *
  * dependencies:
  *
  * references:
- * 
+ *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE
  *==============================================================================
@@ -82,8 +82,14 @@ extern void *BASE_SYSCON;
 
 static int spec_write_flash(struct spec_device *spec, int addr, int len)
 {
-	uint8_t *buf = malloc(len);
 	int i, r, plen = len;
+
+	uint8_t *buf = malloc(len);
+
+	if (buf == NULL) {
+		fprintf(stderr, "Memory not available for write buffer!");
+		return -1;
+	}
 
 	BASE_SYSCON = spec->mapaddr + SPEC_SYSCON_OFFSET;
 
@@ -104,9 +110,8 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 		return 1;
 	}
 
-	/* Let's some data to the flash */
-	while (len)
-	{
+	/* Let's send some data to the flash */
+	while (len) {
 		/* Set write length */
 		i = len;
 		if (len > 256)
@@ -132,15 +137,14 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 		}
 
 		/* Write to flash */
-		if (verbose)
-		{
+		if (verbose) {
 			fprintf(stderr, "Writing %3i bytes at address 0x%06X\n",
 				i, addr);
 		}
 		flash_write(addr, buf, i);
 		sleep(1);
 
-		/* FIXME: As above, RSR is a mistery... */
+		/* FIXME: As above, RSR is a mystery... */
 //		while (flash_rsr() & 0x01)
 //			;
 
@@ -155,6 +159,8 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 //			return 1;
 //		}
 	}
+
+	free(buf);
 
 	return 0;
 
@@ -205,6 +211,7 @@ static int spec_scan_pci(struct spec_pci_id *id, struct spec_device *arr,
 	unsigned v, d;
 
 	n = scandir("/sys/bus/pci/devices", &namelist, 0, 0);
+
 	if (n < 0) {
 		fprintf(stderr, "%s: /sys/bus/pci/devices: %s\n", prgname,
 			strerror(errno));
