@@ -296,27 +296,27 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
 /*
  * Phase transition ("calibration" file)
  */
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
+#define VALIDITY_BIT 0x80000000
+int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * valp,
 		      uint8_t write)
 {
 	int ret = -1;
+	uint32_t value;
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_CALIB) < 0)
 		return -1;
 	if (write) {
-		*val |= (1 << 31);
-		if (sdbfs_fwrite(&wrc_sdb, 0, val, sizeof(*val))
-		    != sizeof(*val))
+		value = *valp | VALIDITY_BIT;
+		if (sdbfs_fwrite(&wrc_sdb, 0, &value, sizeof(value))
+		    != sizeof(value))
 			goto out;
 		ret = 1;
 	} else {
-		if (sdbfs_fread(&wrc_sdb, 0, val, sizeof(*val))
-		    != sizeof(*val))
+		if (sdbfs_fread(&wrc_sdb, 0, &value, sizeof(value))
+		    != sizeof(value))
 			goto out;
-		if (!(*val & (1 << 31)))
-			ret = 0;
-		*val &= 0x7fffffff;	/*  ph_trans value without valid bit */
-		ret= 1;
+		*valp = value & ~VALIDITY_BIT;
+		ret = (value & VALIDITY_BIT) != 0;
 	}
 out:
 	sdbfs_close(&wrc_sdb);
