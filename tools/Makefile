@@ -1,4 +1,5 @@
-EB ?= no
+EB    ?= no
+SDBFS ?= no
 
 CFLAGS = -Wall -ggdb -DEXTERNAL_W1 -I../include
 LDFLAGS = -lutil
@@ -7,6 +8,9 @@ ALL   += wrpc-w1-read wrpc-w1-write
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
+endif
+ifneq ($(SDBFS),no)
+ALL += sdb-wrpc.bin
 endif
 
 AS		= as
@@ -32,6 +36,9 @@ wrpc-w1-write: wrpc-w1-write.c ../dev/w1.c ../dev/w1-eeprom.c ../dev/w1-hw.c
 
 eb-w1-write: eb-w1-write.c ../dev/w1.c ../dev/w1-eeprom.c eb-w1.c
 	$(CC) $(CFLAGS) -I $(EB) $^ $(LDFLAGS) -o $@ -L $(EB) -letherbone
+
+sdb-wrpc.bin: sdbfs
+	$(SDBFS)/gensdbfs $< $@
 
 clean:
 	rm -f $(ALL) *.o *~
