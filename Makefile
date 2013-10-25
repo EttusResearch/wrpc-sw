@@ -27,7 +27,7 @@ obj-y += wrc_main.o
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
-cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude -I. -Isoftpll
+cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude/std -Iinclude -I. -Isoftpll
 cflags-y +=	-I$(CURDIR)/pp_printf
 
 cflags-$(CONFIG_PTP_NOPOSIX) += \
