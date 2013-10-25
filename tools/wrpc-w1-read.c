@@ -20,7 +20,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
-#include "w1-host/w1.h"
+#include <w1.h>
 
 #define SPEC_W1_OFFSET 0x20600 /* from "sdb" on the shell, current gateware */
 
