@@ -60,6 +60,12 @@ typedef struct {
 	int y_d;
 } spll_lowpass_t;
 
+typedef struct {
+	int coefs[5]; /* Biquad coefficients: b0 b1 b2 a1 a2 */
+	int shift;		/* bit shift for the coeffs / output */
+	int yd[2], xd[2]; /* I/O delay lines */
+} spll_biquad_t;
+
 /* initializes the PI controller state. Currently almost a stub. */
 void pi_init(spll_pi_t *pi);
 
@@ -73,5 +79,8 @@ void lowpass_init(spll_lowpass_t *lp, int alpha);
 int lowpass_update(spll_lowpass_t *lp, int x);
 
 void spll_enable_tagger(int channel, int enable);
+
+void biquad_init(spll_biquad_t *bq, const int *coefs, int shift);
+int biquad_update(spll_biquad_t *bq, int x);
 
 #endif // __SPLL_COMMON_H

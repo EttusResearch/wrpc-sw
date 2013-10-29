@@ -11,7 +11,14 @@
 
 #include "spll_helper.h"
 #include "spll_debug.h"
- 
+
+const int helper_precomp_coefs [] = 
+{ /*b0*/ 60648,
+  /*b1*/ 60648,
+  /*b2*/ 0,
+  /*a1*/ 55760,
+  /*a2*/ 0};
+   
 void helper_init(struct spll_helper_state *s, int ref_channel)
 {
 
@@ -59,6 +66,8 @@ int helper_update(struct spll_helper_state *s, int tag,
 				err = HELPER_ERROR_CLAMP;
 		}
 
+//		err = biquad_update(&s->precomp, err);
+
 		if ((tag + s->p_adder) > HELPER_TAG_WRAPAROUND
 		    && s->p_setpoint > HELPER_TAG_WRAPAROUND) {
 			s->p_adder -= HELPER_TAG_WRAPAROUND;
@@ -94,6 +103,8 @@ void helper_start(struct spll_helper_state *s)
 
 	pi_init((spll_pi_t *)&s->pi);
 	ld_init((spll_lock_det_t *)&s->ld);
+
+	biquad_init(&s->precomp, helper_precomp_coefs, 16);
 
 	spll_enable_tagger(s->ref_src, 1);
 	spll_debug(DBG_EVENT | DBG_HELPER, DBG_EVT_START, 1);

@@ -138,3 +138,31 @@ void spll_enable_tagger(int channel, int enable)
 
 //      TRACE("%s: ch %d, OCER 0x%x, RCER 0x%x\n", __FUNCTION__, channel, SPLL->OCER, SPLL->RCER);
 }
+
+void biquad_init(spll_biquad_t *bq, const int *coefs, int shift)
+{
+	memset(bq, 0, sizeof(spll_biquad_t));
+	memcpy(bq->coefs, coefs, 5 * sizeof(int));
+	bq->shift = shift;
+}
+
+int biquad_update(spll_biquad_t *bq, int x)
+{
+	register int y = 0;
+	
+	y += bq->coefs[0] * x;
+	y += bq->coefs[1] * bq->xd[0];
+	y += bq->coefs[2] * bq->xd[1];
+	y -= bq->coefs[3] * bq->yd[0];
+	y -= bq->coefs[4] * bq->yd[1];
+	y >>= bq->shift;
+	
+	bq->xd[1] = bq->xd[0];
+	bq->xd[0] = x;
+	
+	bq->yd[1] = bq->yd[0];
+	bq->yd[0] = y;
+	
+	return y;
+}
+
