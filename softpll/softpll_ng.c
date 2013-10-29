@@ -92,10 +92,10 @@ static inline void start_ptrackers(struct softpll_state *s)
 
 static inline void update_ptrackers(struct softpll_state *s, int tag_value, int tag_source)
 {
-	int i;
-	for (i = 0; i < spll_n_chan_ref; i++)
-		if (ptracker_mask & (1 << i))
-			ptracker_update(&s->ptrackers[i], tag_value, tag_source);
+	if(tag_source > spll_n_chan_ref)
+		return;
+		
+	ptrackers_update(s->ptrackers, tag_value, tag_source);
 }
 
 static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int tag_source)
@@ -353,8 +353,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 		PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
 	
 	for (i = 0; i < spll_n_chan_ref; i++)
-		ptracker_init(&s->ptrackers[i], spll_n_chan_ref, i,
-			      PTRACKER_AVERAGE_SAMPLES);
+		ptracker_init(&s->ptrackers[i], i, PTRACKER_AVERAGE_SAMPLES);
 
 	TRACE_DEV
 	    ("softpll: mode %s, %d ref channels, %d out channels\n",
@@ -489,7 +488,7 @@ int spll_read_ptracker(int channel, int32_t *phase_ps, int *enabled)
 
 	*phase_ps = to_picos(phase);
 	if (enabled)
-		*enabled = ptracker_mask & (1 << st->id_b) ? 1 : 0;
+		*enabled = ptracker_mask & (1 << st->id) ? 1 : 0;
 	return st->ready;
 }
 
@@ -513,7 +512,6 @@ void spll_show_stats()
 		     softpll.ext.ld.locked, softpll.mpll.ld.locked,
 		     softpll.helper.pi.y, softpll.mpll.pi.y, softpll.ext.pi.y,
 		     softpll.delock_count, softpll.ext.sample_n);
-
 }
 
 int spll_shifter_busy(int channel)

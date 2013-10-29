@@ -11,85 +11,75 @@
 
 #include "spll_ptracker.h"
 
-void ptracker_init(struct spll_ptracker_state *s, int id_a,
-			  int id_b, int num_avgs)
-{
-	s->tag_a = s->tag_b = -1;
+static int tag_ref = -1;
 
-	s->id_a = id_a;
-	s->id_b = id_b;
+void ptracker_init(struct spll_ptracker_state *s, int id, int num_avgs)
+{
+	s->id = id;
 	s->ready = 0;
 	s->n_avg = num_avgs;
 	s->acc = 0;
 	s->avg_count = 0;
-	s->sample_n = 0;
-	s->preserve_sign = 0;
+	s->enabled = 0;
+
 }
 
 void ptracker_start(struct spll_ptracker_state *s)
 {
-	s->tag_a = s->tag_b = -1;
+	s->preserve_sign = 0;
+	s->enabled = 1;
 	s->ready = 0;
 	s->acc = 0;
 	s->avg_count = 0;
-	s->sample_n = 0;
-	s->preserve_sign = 0;
 
-	spll_enable_tagger(s->id_a, 1);
-	spll_enable_tagger(s->id_b, 1);
+	spll_enable_tagger(s->id, 1);
+	spll_enable_tagger(spll_n_chan_ref, 1);
 }
 
-#define PTRACK_WRAP_LO (1<<(HPLL_N-2))
-#define PTRACK_WRAP_HI (3*(1<<(HPLL_N-2)))
-
-int ptracker_update(struct spll_ptracker_state *s, int tag,
+int ptrackers_update(struct spll_ptracker_state *ptrackers, int tag,
 			   int source)
 {
-
-	if (source == s->id_a)
-		s->tag_a = tag;
-	if (source == s->id_b)
-		s->tag_b = tag;
-
-	if (s->tag_a >= 0 && s->tag_b >= 0) {
-		int delta = (s->tag_a - s->tag_b) & ((1 << HPLL_N) - 1);
-
-		s->sample_n++;
-
-		if (s->avg_count == 0) {
-
-			if (delta <= PTRACK_WRAP_LO)
-				s->preserve_sign = -1;
-			else if (delta >= PTRACK_WRAP_HI)
-				s->preserve_sign = 1;
-			else
-				s->preserve_sign = 0;
-
-			s->avg_count++;
-			s->acc = delta;
-		} else {
-
-			if (delta <= PTRACK_WRAP_LO && s->preserve_sign > 0)
-				s->acc += delta + (1 << HPLL_N);
-			else if (delta >= PTRACK_WRAP_HI
-				 && s->preserve_sign < 0)
-				s->acc += delta - (1 << HPLL_N);
-			else
-				s->acc += delta;
-
-			s->avg_count++;
-
-			if (s->avg_count == s->n_avg) {
-				s->phase_val = s->acc / s->n_avg;
-				s->ready = 1;
-				s->acc = 0;
-				s->avg_count = 0;
-			}
-
-		}
-
-		s->tag_b = s->tag_a = -1;
+	const int adj_tab[16] = { /* psign */ 
+														/* 0   - 1/4   */  0, 0, 0, -(1<<HPLL_N),
+														/* 1/4 - 1/2  */   0, 0, 0, 0,
+														/* 1/2 - 3/4  */   0, 0, 0, 0,
+														/* 3/4 - 1   */    (1<<HPLL_N), 0, 0, 0};
+												
+	if(source == spll_n_chan_ref)
+	{
+		tag_ref = tag;
+		return 0;
 	}
 
-	return SPLL_LOCKING;
+
+	register struct spll_ptracker_state *s = ptrackers + source;
+
+	if(!s->enabled)
+		return 0;
+
+	register int delta = (tag_ref - tag) & ((1 << HPLL_N) - 1);
+	register int index = delta >> (HPLL_N - 2);
+
+
+	if (s->avg_count == 0) {
+		/* hack: two since PTRACK_WRAP_LO/HI are in 1/4 and 3/4 of the scale,
+		   we can use the two MSBs of delta and a trivial LUT instead, removing 2 branches */
+		s->preserve_sign = index << 2;
+		s->acc = delta;
+		s->avg_count ++;
+	} else {
+
+		/* same hack again, using another lookup table to adjust for wraparound */
+		s->acc += delta + adj_tab[ index + s->preserve_sign ];
+		s->avg_count ++;
+
+		if (s->avg_count == s->n_avg) {
+			s->phase_val = s->acc / s->n_avg;
+			s->ready = 1;
+			s->acc = 0;
+			s->avg_count = 0;
+		}
+	}
+
+	return 0;
 }
