@@ -90,6 +90,7 @@ static unsigned char *find_device_deep(unsigned int base, unsigned int sdb,
 			    find_device_deep(base +
 					     record->bridge.sdb_component.
 					     addr_first.low,
+					     base +
 					     record->bridge.sdb_child.low,
 					     devid);
 			if (out)
@@ -119,6 +120,7 @@ static void print_devices_deep(unsigned int base, unsigned int sdb)
 			print_devices_deep(base +
 					   record->bridge.sdb_component.
 					   addr_first.low,
+					   base +
 					   record->bridge.sdb_child.low);
 
 		if (record->empty.record_type != SDB_DEVICE)
