@@ -340,8 +340,14 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	else
 		s->seq_state = SEQ_CLEAR_DACS;
 
+	int helper_ref;
+	
+	if( mode == SPLL_MODE_SLAVE)
+		helper_ref = slave_ref_channel; // Slave mode: lock the helper to an uplink port
+	else
+		helper_ref = spll_n_chan_ref; // Master/GM mode: lock the helper to the local ref clock
 
-	helper_init(&s->helper, spll_n_chan_ref);
+	helper_init(&s->helper, helper_ref);
 	mpll_init(&s->mpll, slave_ref_channel, spll_n_chan_ref);
 
 	for (i = 0; i < spll_n_chan_out - 1; i++) {
