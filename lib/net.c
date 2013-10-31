@@ -136,7 +136,7 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 	// TS counter will appear
 	ts->raw_phase = dmtd_phase;
 
-	phase = clock_period - 1 - dmtd_phase;
+	phase = dmtd_phase;
 
 	// calculate the range within which falling edge timestamp is stable
 	// (no possible transitions)
@@ -147,6 +147,8 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 	trip_hi = transition_point + clock_period / 4;
 	if (trip_hi >= clock_period)
 		trip_hi -= clock_period;
+
+	// pp_printf("linearize: %d %d %d %d -- %d\n", trip_lo, transition_point, trip_hi, ep_get_bitslide(), phase);
 
 	if (inside_range(trip_lo, trip_hi, phase)) {
 		// We are within +- 25% range of transition area of
@@ -160,7 +162,7 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 		// and eventually increase the counter by 1 to simulate a
 		// timestamp transition exactly at s->phase_transition
 		//DMTD phase value
-		if (inside_range(trip_lo, transition_point, phase))
+		if (inside_range(transition_point, trip_hi, phase))
 			ts->nsec += clock_period / 1000;
 
 	}
@@ -168,7 +170,6 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 	ts->phase = phase - transition_point - 1;
 	if (ts->phase < 0)
 		ts->phase += clock_period;
-	ts->phase = clock_period - 1 - ts->phase;
 }
 
 /* Slow, but we don't care much... */
