@@ -28,7 +28,7 @@ void external_init(volatile struct spll_external_state *s, int ext_ref,
 	s->pi.bias = 32768;
 
 	/* Phase branch lock detection */
-	s->ld.threshold = 250;
+	s->ld.threshold = 1000;
 	s->ld.lock_samples = 10000;
 	s->ld.delock_samples = 9990;
 	s->ref_src = ext_ref;
