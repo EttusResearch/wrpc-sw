@@ -2,10 +2,16 @@
  * Onewire generic interface
  * Alessandro Rubini, 2013 GNU GPL2 or later
  */
-#include <wrc.h>
 #include <string.h>
-#include <shell.h>
 #include <w1.h>
+
+#ifndef EXTERNAL_W1
+#include <wrc.h>
+#include <shell.h>
+#else
+#include <unistd.h>
+#define pp_printf(...) do {} while (0)
+#endif
 
 static const struct w1_ops *ops = &wrpc_w1_ops; /* local shorter name */
 
@@ -146,6 +152,8 @@ void w1_match_rom(struct w1_dev *dev)
 	}
 }
 
+#ifndef EXTERNAL_W1
+
 /* A shell command, for checking */
 static int cmd_w1(const char *args[])
 {
@@ -171,3 +179,5 @@ DEFINE_WRC_COMMAND(w1) = {
 	.name = "w1",
 	.exec = cmd_w1,
 };
+
+#endif

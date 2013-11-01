@@ -4,9 +4,14 @@
  */
 #include <stdlib.h>
 #include <string.h>
+#include <w1.h>
+
+#ifndef EXTERNAL_W1
 #include <wrc.h>
 #include <shell.h>
-#include <w1.h>
+#else
+#include <unistd.h>
+#endif
 
 #define LSB_ADDR(X) ((X) & 0xFF)
 #define MSB_ADDR(X) (((X) & 0xFF00)>>8)
@@ -138,6 +143,7 @@ int w1_write_eeprom_bus(struct w1_bus *bus,
 	return -1;
 }
 
+#ifndef EXTERNAL_W1
 #define BLEN 32
 
 /* A shell command, for testing write: "w1w <offset> <byte> [<byte> ...]" */
@@ -190,3 +196,5 @@ DEFINE_WRC_COMMAND(w1r) = {
 	.name = "w1r",
 	.exec = cmd_w1_r,
 };
+
+#endif

@@ -4,3 +4,5 @@ genrammif
 wrpc-uart-sw
 wrpc-w1-read
 wrpc-w1-write
+eb-w1-write
+sdb-wrpc.bin
