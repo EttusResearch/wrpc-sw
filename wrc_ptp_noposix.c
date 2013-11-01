@@ -163,6 +163,7 @@ int wrc_ptp_start()
 int wrc_ptp_stop()
 {
 	ptp_enabled = 0;
+	shw_pps_gen_enable_output(0);
 	wr_servo_reset();
 	return 0;
 }
