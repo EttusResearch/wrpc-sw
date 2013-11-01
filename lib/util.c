@@ -85,6 +85,7 @@ void cprintf(int color, const char *fmt, ...)
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
+	mprintf("\e[m");
 }
 
 void pcprintf(int row, int col, int color, const char *fmt, ...)
@@ -95,6 +96,7 @@ void pcprintf(int row, int col, int color, const char *fmt, ...)
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
+	mprintf("\e[m");
 }
 
 void term_clear()
