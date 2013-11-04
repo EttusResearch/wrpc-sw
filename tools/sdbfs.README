@@ -43,6 +43,9 @@ This states where the various files are.
 To write to w1-eeprom:  "tools/wrpc-w1-write 0 320 < /tmp/sdb-wrpc.bin"
 (this assumes that the size is 320 bytes.
 
+To write to the flash: "tools/flash-write 0 320 < /tmp/sdb-wrpc.bin"
+(again, assuming a 320-byte-sized image file).
+
 The next boot of lm32 will show it found the files:
 
    sdbfs: found at 0 in W1
@@ -51,3 +54,6 @@ The next boot of lm32 will show it found the files:
    file 0x6d61632d @  576, name mac-address
    file 0x7366702d @  640, name sfp-database
    file 0x63616c69 @  768, name calibration
+
+To read the flash: "tools/flash-read 0 320 > /tmp/flash.bin",
+and then check the flash image file: "sdb-read -l /tmp/flash.bin".

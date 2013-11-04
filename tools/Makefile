@@ -4,7 +4,7 @@ SDBFS ?= no
 CFLAGS = -Wall -ggdb -I../include
 LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
-ALL   += wrpc-w1-read wrpc-w1-write flash-write
+ALL   += wrpc-w1-read wrpc-w1-write flash-write flash-read
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
@@ -43,9 +43,11 @@ sdb-wrpc.bin: sdbfs
 flash-write: flash-write.c flash-host/libflash.a
 	$(CC) $(CFLAGS) -Iflash-host $^ -o $@
 
+flash-read: flash-read.c flash-host/libflash.a
+	$(CC) $(CFLAGS) -Iflash-host $^ -o $@
+
 flash-host/libflash.a:
 	$(MAKE) -C flash-host
-
 
 clean:
 	rm -f $(ALL) *.o *~
