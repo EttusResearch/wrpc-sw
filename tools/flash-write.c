@@ -79,11 +79,14 @@ int verbose;
 
 extern void *BASE_SYSCON;
 
+int c =0;
 
 static int spec_write_flash(struct spec_device *spec, int addr, int len)
 {
-	int i, r, plen = len;
+	int i;
+	int startlen = len;
 
+	/* Initializations */
 	uint8_t *buf = malloc(len);
 
 	if (buf == NULL) {
@@ -110,7 +113,7 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 		return 1;
 	}
 
-	/* Let's send some data to the flash */
+	/* Sending the data to the flash */
 	while (len) {
 		/* Set write length */
 		i = len;
@@ -118,22 +121,14 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 			i = 256;
 
 		/* Erase if sector boundary */
-		if ((addr % 0x10000) == 0)
-		{
-			if (verbose)
-			{
+		if ((addr % 0x10000) == 0) {
+			if (verbose) {
 				fprintf(stderr, "Erasing at address 0x%06X\n",
 					addr);
 			}
 			flash_serase(addr);
-			sleep(1);
-			/* FIXME: Can't understand why rsr is not working... */
-//			r = 0x01;
-//			while (r & 0x01)
-//			{
-//				r = flash_rsr();
-//				printf("%d\n", r);
-//			}
+			while (flash_rsr() & 0x01)
+				;
 		}
 
 		/* Write to flash */
@@ -142,24 +137,17 @@ static int spec_write_flash(struct spec_device *spec, int addr, int len)
 				i, addr);
 		}
 		flash_write(addr, buf, i);
-		sleep(1);
-
-		/* FIXME: As above, RSR is a mystery... */
-//		while (flash_rsr() & 0x01)
-//			;
+		while (flash_rsr() & 0x01)
+			;
 
 		/* Setup next length, address and buffer pointer */
 		len  -= i;
 		addr += i;
 		buf  += i;
-
-//		if (i != len) {
-//			fprintf(stderr, "Tried to write %i bytes, retval %i\n",
-//				len, i);
-//			return 1;
-//		}
 	}
 
+	/* pull back buffer so we can free */
+	buf -= startlen;
 	free(buf);
 
 	return 0;

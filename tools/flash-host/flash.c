@@ -72,9 +72,19 @@ static inline void gpio_out(int pin, int val)
 
 static inline int gpio_in(int pin)
 {
-	return syscon->GPSR & pin ? 1 : 0;
+	return syscon->GPSR & (1 << pin) ? 1 : 0;
 }
 
+
+/*
+ * Delay function
+ */
+static void delay()
+{
+	int i;
+	for (i = 0; i < 4; i++)
+		asm volatile ("nop");
+}
 
 /*
  * Bit-bang SPI transfer function
@@ -83,6 +93,7 @@ static uint8_t bbspi_transfer(uint8_t cspin, uint8_t val)
 {
 	uint8_t i, retval = 0;
 	gpio_out(GPIO_SPI_NCS, cspin);
+	delay();
 	for (i = 0; i < 8; i++) {
 		gpio_out(GPIO_SPI_SCLK, 0);
 		if (val & 0x80) {
@@ -91,10 +102,12 @@ static uint8_t bbspi_transfer(uint8_t cspin, uint8_t val)
 		else {
 			gpio_out(GPIO_SPI_MOSI, 0);
 		}
+		delay();
 		gpio_out(GPIO_SPI_SCLK, 1);
 		retval <<= 1;
 		retval |= gpio_in(GPIO_SPI_MISO);
 		val <<= 1;
+		delay();
 	}
 
 	gpio_out(GPIO_SPI_SCLK, 0);
