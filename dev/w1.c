@@ -4,14 +4,7 @@
  */
 #include <string.h>
 #include <w1.h>
-
-#ifndef EXTERNAL_W1
-#include <wrc.h>
-#include <shell.h>
-#else
 #include <unistd.h>
-#define pp_printf(...) do {} while (0)
-#endif
 
 static const struct w1_ops *ops = &wrpc_w1_ops; /* local shorter name */
 
@@ -136,7 +129,6 @@ int w1_scan_bus(struct w1_bus *bus)
 			/* error on this one */
 			return i;
 		}
-		pp_printf("W1: %08x%08x\n", (int)(d->rom >> 32), (int)d->rom);
 	}
 	return i;
 }
@@ -151,33 +143,3 @@ void w1_match_rom(struct w1_dev *dev)
 		w1_write_byte(dev->bus, (int)(dev->rom >> i) );
 	}
 }
-
-#ifndef EXTERNAL_W1
-
-/* A shell command, for checking */
-static int cmd_w1(const char *args[])
-{
-	int i;
-	struct w1_dev *d;
-	int32_t temp;
-
-	w1_scan_bus(&wrpc_w1_bus);
-	for (i = 0; i < W1_MAX_DEVICES; i++) {
-		d = wrpc_w1_bus.devs + i;
-		if (d->rom) {
-			pp_printf("device %i: %08x%08x\n", i,
-				  (int)(d->rom >> 32), (int)d->rom);
-		temp = w1_read_temp(d, 0);
-		pp_printf("temp: %d.%04d\n", temp >> 16,
-			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
-		}
-	}
-	return 0;
-}
-
-DEFINE_WRC_COMMAND(w1) = {
-	.name = "w1",
-	.exec = cmd_w1,
-};
-
-#endif

@@ -1,7 +1,7 @@
 EB    ?= no
 SDBFS ?= no
 
-CFLAGS = -Wall -ggdb -DEXTERNAL_W1 -I../include
+CFLAGS = -Wall -ggdb -I../include
 LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 ALL   += wrpc-w1-read wrpc-w1-write
