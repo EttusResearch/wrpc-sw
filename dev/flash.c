@@ -11,10 +11,29 @@
  * version: 1.0
  *
  * description:
+ *    This file provides interface functions to access the M25P32 flash chip
+ *    on-board SPEC cards. These functions can also be used to access other
+ *    flash chips from the M25P family, such as the M25P128 available on the
+ *    SVEC cards.
+ *
+ *    Apart from that, it offers functions for working with an SDB file system
+ *    present on such chips. The file-system must previously be created using
+ *    the gensdbfs tool [1], and uploaded by writing to the flash, using the
+ *    flash-write tool [2]. Then, the SDB file system can be checked using
+ *    the flash_sdb_check function below.
  *
  * dependencies:
+ *    libsdbfs.h - the SDBFS library providing the SDB file system structure and
+ *                 functions to scan for an SDB file system
+ *    syscon.h   - contains the low-level GPIO access functions
  *
  * references:
+ *    [1] - Alessandro Rubini -- A Flash file-system based on SDB data
+ *          Structures, Sept. 2012
+ *          http://www.ohwr.org/attachments/download/1594/sdbfs-2012-09-19.pdf
+ *    [2] - sdbfs.README file, obtained by downloading the repository at
+ *          http://www.ohwr.org/projects/wrpc-sw/repository
+ *          and navigating to the tools/ folder
  *
  *==============================================================================
  * GNU LESSER GENERAL PUBLIC LICENSE
@@ -48,13 +67,25 @@
 /*****************************************************************************/
 /* 		Flash interface					     	     */
 /*****************************************************************************/
+
+/*
+ * Delay function - limit SPI clock speed to 10 MHz
+ */
+static void delay()
+{
+	int i;
+	for (i = 0; i < (int)(CPU_CLOCK/10000000); i++)
+		asm volatile ("nop");
+}
+
 /*
  * Bit-bang SPI transfer function
  */
 static uint8_t bbspi_transfer(int cspin, uint8_t val)
 {
-	int i, retval = 0;
+	int i;
 	gpio_out(GPIO_SPI_NCS, cspin);
+	delay();
 	for (i = 0; i < 8; i++) {
 		gpio_out(GPIO_SPI_SCLK, 0);
 		if (val & 0x80) {
@@ -63,15 +94,16 @@ static uint8_t bbspi_transfer(int cspin, uint8_t val)
 		else {
 			gpio_out(GPIO_SPI_MOSI, 0);
 		}
+		delay();
 		gpio_out(GPIO_SPI_SCLK, 1);
-		retval <<= 1;
-		retval |= gpio_in(GPIO_SPI_MISO);
 		val <<= 1;
+		val |= gpio_in(GPIO_SPI_MISO);
+		delay();
 	}
 
 	gpio_out(GPIO_SPI_SCLK, 0);
 
-	return retval;
+	return val;
 }
 
 /*
@@ -218,7 +250,14 @@ int flash_sdb_check()
 	uint32_t magic = 0;
 	int i;
 
-	uint32_t entry_point[6] = {0x000000, 0x100, 0x200, 0x300, 0x170000, 0x2e0000};
+	uint32_t entry_point[6] = {
+				0x000000,	// flash base
+				0x100, 		// second page in flash
+				0x200, 		// IPMI with MultiRecord
+				0x300, 		// IPMI with larger MultiRecord
+				0x170000, 	// after first FPGA bitstream
+				0x2e0000	// after MultiBoot bitstream
+				};
 
 	for (i = 0; i < ARRAY_SIZE(entry_point); i++) {
 		flash_read(entry_point[i], (uint8_t *)&magic, 4);

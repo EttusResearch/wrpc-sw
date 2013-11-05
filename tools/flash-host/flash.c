@@ -91,7 +91,7 @@ static void delay()
  */
 static uint8_t bbspi_transfer(uint8_t cspin, uint8_t val)
 {
-	uint8_t i, retval = 0;
+	uint8_t i;
 	gpio_out(GPIO_SPI_NCS, cspin);
 	delay();
 	for (i = 0; i < 8; i++) {
@@ -104,15 +104,14 @@ static uint8_t bbspi_transfer(uint8_t cspin, uint8_t val)
 		}
 		delay();
 		gpio_out(GPIO_SPI_SCLK, 1);
-		retval <<= 1;
-		retval |= gpio_in(GPIO_SPI_MISO);
 		val <<= 1;
+		val |= gpio_in(GPIO_SPI_MISO);
 		delay();
 	}
 
 	gpio_out(GPIO_SPI_SCLK, 0);
 
-	return retval;
+	return val;
 }
 
 /*
