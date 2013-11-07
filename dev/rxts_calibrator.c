@@ -129,6 +129,8 @@ void rxts_calibration_start()
    calibration is done. */
 int rxts_calibration_update(uint32_t *t24p_value)
 {
+	int32_t ttrans;
+
 	if (spll_shifter_busy(0))
 		return 0;
 
@@ -154,19 +156,23 @@ int rxts_calibration_update(uint32_t *t24p_value)
 			det_rising.trans_phase -= REF_CLOCK_PERIOD_PS;
 
 		/* Use falling edge as second sample of rising edge */
-		uint32_t ttrans = det_falling.trans_phase;
-		ttrans += REF_CLOCK_PERIOD_PS/2;
-		if (ttrans >= REF_CLOCK_PERIOD_PS)
-			ttrans -= REF_CLOCK_PERIOD_PS;
+		if (det_falling.trans_phase > det_rising.trans_phase)
+			ttrans = det_falling.trans_phase - REF_CLOCK_PERIOD_PS/2;
+		else if(det_falling.trans_phase < det_rising.trans_phase)
+			ttrans = det_falling.trans_phase + REF_CLOCK_PERIOD_PS/2;
 		ttrans += det_rising.trans_phase;
 		ttrans /= 2;
+
+		/*normalize ttrans*/
+		if(ttrans < 0) ttrans += REF_CLOCK_PERIOD_PS;
+		if(ttrans >= REF_CLOCK_PERIOD_PS) ttrans -= REF_CLOCK_PERIOD_PS;
 
 
 		TRACE_DEV("RXTS calibration: R@%dps, F@%dps, transition@%dps\n",
 			  det_rising.trans_phase, det_falling.trans_phase,
 			  ttrans);
 
-		*t24p_value = ttrans;
+		*t24p_value = (uint32_t)ttrans;
 		return 1;
 	}
 
