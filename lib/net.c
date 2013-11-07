@@ -169,18 +169,9 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 
 	ts->phase = phase - transition_point;
 
-	/* normalize timestamp after subtraction */
+	/* normalize phase after subtraction */
 	if(ts->phase < 0)
-	{
 		ts->phase += clock_period;
-		ts->nsec -= clock_period / 1000;
-	}
-	
-	if(ts->nsec < 0)
-	{
-		ts->nsec += 1000000000;
-		ts->sec--;
-	}
 }
 
 /* Slow, but we don't care much... */
