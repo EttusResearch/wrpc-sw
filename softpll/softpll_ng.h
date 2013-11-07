@@ -114,6 +114,8 @@ const char *spll_get_aux_status_string(int channel);
 /* Returns how many time the PLL has de-locked since last call of spll_init() */
 int spll_get_delock_count();
 
+void spll_show_stats(void);
+
 /* Sets VCXO tuning DAC corresponding to output (out_channel) to a given value */
 void spll_set_dac(int out_channel, int value);
 

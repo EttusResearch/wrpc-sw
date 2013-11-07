@@ -9,7 +9,7 @@
 
 /* spll_common.c - common data structures and functions used by the SoftPLL */
 
-
+#include <string.h>
 #include "spll_defs.h"
 #include "spll_common.h"
 
