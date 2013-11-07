@@ -13,9 +13,9 @@ obj-y += \
 	shell/cmd_mac.o \
 	shell/cmd_init.o \
 	shell/cmd_ptrack.o \
-	shell/cmd_help.o \
-	shell/cmd_verbose.o
+	shell/cmd_help.o
 
 obj-$(CONFIG_ETHERBONE) +=			shell/cmd_ip.o
+obj-$(CONFIG_PPSI) +=				shell/cmd_verbose.o
 obj-$(CONFIG_CMD_CONFIG) +=			shell/cmd_config.o
 obj-$(CONFIG_CMD_SLEEP) +=			shell/cmd_sleep.o
