@@ -122,6 +122,10 @@ void rxts_calibration_start()
 	cal_cur_phase = 0;
 	det_rising.prev_val = det_falling.prev_val = -1;
 	det_rising.state = det_falling.state = TD_WAIT_INACTIVE;
+	det_rising.sample_count = 0;
+	det_falling.sample_count = 0;
+	det_rising.trans_phase = 0;
+	det_falling.trans_phase = 0;
 	spll_set_phase_shift(0, 0);
 }
 
@@ -129,7 +133,7 @@ void rxts_calibration_start()
    calibration is done. */
 int rxts_calibration_update(uint32_t *t24p_value)
 {
-	int32_t ttrans;
+	int32_t ttrans = 0;
 
 	if (spll_shifter_busy(0))
 		return 0;
