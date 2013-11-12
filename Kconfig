@@ -75,7 +75,6 @@ config RAMSIZE
 config STACKSIZE
 	depends on DEVELOPER
 	int "Size of the stack area needed by this program"
-	default 3584 if PPSI
 	default 2048
 	help
 	  The linker complains if the code doesn't fit into RAM, but
