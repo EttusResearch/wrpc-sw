@@ -12,14 +12,14 @@ config STACKSIZE
 	default 2048
 
 config PRINT_BUFSIZE
-       int
-       default 128
+	int
+	default 128
 
 config PRINTF_XINT
 	boolean
 	default y
 
-config PTP_NOPOSIX
+config PPSI
 	boolean
 	default y
 
@@ -28,8 +28,8 @@ config UART
 	default y
 
 config W1
-       boolean
-       default y
+	boolean
+	default y
 
 # The other ones can be set by non-developers
 
@@ -140,16 +140,15 @@ choice
 	prompt "Choose your preferred ptp engine"
 	depends on DEVELOPER
 
+config PPSI
+	boolean "ppsi"
+	help
+	  Select this option for the ppsi engine
+
 config PTP_NOPOSIX
 	boolean "ptp-noposix"
 	help
 	  Select this option for the ptp-noposix engine
-
-config PPSI
-	boolean "ppsi"
-	help
-	  Select this option for the ppsi engine. Warning: this option is
-	  work in progress, may not work or not compile at all.
 
 endchoice
 
