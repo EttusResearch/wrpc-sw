@@ -111,10 +111,20 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules $(PPSI)/ppsi.o
 
+# we need to remove "ptpdump" support for ppsi if RAM size is small and
+# we include etherbone
+ifneq ($CONFIG_RAMSIZE,131072)
+  ifdef CONFIG_ETHERBONE
+    PPSI_USER_CFLAGS = -DCONFIG_NO_PTPDUMP
+  endif
+endif
+
+PPSI_USER_CFLAGS += -DDIAG_PUTS=uart_sw_write_string
+
 $(obj-ppsi):
 	$(MAKE) -C $(PPSI) ARCH=wrpc PROTO_EXT=whiterabbit \
 		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y \
-		USER_CFLAGS="-DDIAG_PUTS=uart_sw_write_string"
+		USER_CFLAGS="$(PPSI_USER_CFLAGS)"
 
 sdb-lib/libsdbfs.a:
 	$(MAKE) -C sdb-lib
