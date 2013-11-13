@@ -107,7 +107,7 @@ static int _shell_exec()
 		if (!strcasecmp(p->name, tokptr[0])) {
 			rv = p->exec((const char **)(tokptr + 1));
 			if (rv < 0)
-				mprintf("Coomand \"%s\": error %d\n",
+				mprintf("Command \"%s\": error %d\n",
 					p->name, rv);
 			return rv;
 		}
