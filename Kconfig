@@ -1,6 +1,15 @@
 
 mainmenu "WR PTP Core software configuration"
 
+# Later we'll build wr_cpu.bin for wr-switch from this code base
+config WR_SWITCH
+	bool
+	default n
+
+config WR_NODE
+	bool
+	default y
+
 # most options with no prompt here are prompted-for in the "advanced" section
 
 config RAMSIZE
