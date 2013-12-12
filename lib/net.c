@@ -49,6 +49,7 @@ int ptpd_netif_init()
 	return PTPD_NETIF_OK;
 }
 
+//#define TRACE_WRAP mprintf
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)
 {
 	get_mac_addr((uint8_t *) mac);
@@ -64,6 +65,7 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 		socks[i].phase_transition = phase;
 	}
 }
+
 
 wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
 				      wr_sockaddr_t * bind_addr)
@@ -116,62 +118,73 @@ int ptpd_netif_close_socket(wr_socket_t * sock)
 	return 0;
 }
 
-static inline int inside_range(int min, int max, int x)
-{
-	if (min < max)
-		return (x >= min && x <= max);
-	else
-		return (x <= max || x >= min);
-}
-
+/*
+ * The new, fully verified linearization algorithm.
+ * Merges the phase, measured by the DDMTD with the number of clock ticks,
+ * and makes sure there are no jumps resulting from different moments of transitions in the
+ * coarse counter and the phase values.
+ * As a result, we get the full, sub-ns RX timestamp.
+ *
+ * Have a look at the note at http://ohwr.org/documents/xxx for details.
+ */
 void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 				       int cntr_ahead, int transition_point,
 				       int clock_period)
 {
-	int trip_lo, trip_hi;
-	int phase;
+	int nsec_f, nsec_r;
 
-	// "phase" transition: DMTD output value (in picoseconds)
-	// at which the transition of rising edge
-	// TS counter will appear
-	ts->raw_phase = dmtd_phase;
+	ts->raw_phase =  dmtd_phase;
 
-	phase = dmtd_phase;
+/* The idea is simple: the asynchronous RX timestamp trigger is tagged by two counters:
+   one counting at the rising clock edge, and the other on the falling. That means, the rising
+   timestamp is 180 degree in advance wrs to the falling one. */
 
-	// calculate the range within which falling edge timestamp is stable
-	// (no possible transitions)
-	trip_lo = transition_point - clock_period / 4;
-	if (trip_lo < 0)
-		trip_lo += clock_period;
+/* Calculate the nanoseconds value for both timestamps. The rising edge one
+   is just the HW register */
+  nsec_r = ts->nsec;
+/* The falling edge TS is the rising - 1 thick if the "rising counter ahead" bit is set. */
+ 	nsec_f = cntr_ahead ? ts->nsec - (clock_period / 1000) : ts->nsec;
+        
 
-	trip_hi = transition_point + clock_period / 4;
-	if (trip_hi >= clock_period)
-		trip_hi -= clock_period;
+/* Adjust the rising edge timestamp phase so that it "jumps" roughly around the point
+   where the counter value changes */
+	int phase_r = ts->raw_phase - transition_point;
+	if(phase_r < 0) /* unwrap negative value */
+		phase_r += clock_period;
 
-	// pp_printf("linearize: %d %d %d %d -- %d\n", trip_lo, transition_point, trip_hi, ep_get_bitslide(), phase);
+/* Do the same with the phase for the falling edge, but additionally shift it by extra 180 degrees
+  (so that it matches the falling edge counter) */ 
+	int phase_f = ts->raw_phase - transition_point + (clock_period / 2);
+	if(phase_f < 0)
+		phase_f += clock_period;
+	if(phase_f >= clock_period)
+		phase_f -= clock_period;
 
-	if (inside_range(trip_lo, trip_hi, phase)) {
-		// We are within +- 25% range of transition area of
-		// rising counter. Take the falling edge counter value as the
-		// "reliable" one. cntr_ahead will be 1 when the rising edge
-		//counter is 1 tick ahead of the falling edge counter
+/* If we are within +- 25% from the transition in the rising edge counter, pick the falling one */	
+  if( phase_r > 3 * clock_period / 4 || phase_r < clock_period / 4 )
+  {
+		ts->nsec = nsec_f;
 
-		ts->nsec -= cntr_ahead ? (clock_period / 1000) : 0;
-
-		// check if the phase is before the counter transition value
-		// and eventually increase the counter by 1 to simulate a
-		// timestamp transition exactly at s->phase_transition
-		//DMTD phase value
-		if (inside_range(transition_point, trip_hi, phase))
-			ts->nsec += clock_period / 1000;
-
+		/* The falling edge timestamp is half a cycle later with respect to the rising one. Add
+			 the extra delay, as rising edge is our reference */
+		ts->phase = phase_f + clock_period / 2;
+		if(ts->phase >= clock_period) /* Handle overflow */
+		{
+			ts->phase -= clock_period;
+			ts->nsec += (clock_period / 1000);
+		}
+	} else { /* We are closer to the falling edge counter transition? Pick the opposite timestamp */
+		ts->nsec = nsec_r;
+		ts->phase = phase_r;
 	}
 
-	ts->phase = phase - transition_point;
+	/* In an unlikely case, after all the calculations, the ns counter may be overflown. */
+	if(ts->nsec >= 1000000000)
+	{
+		ts->nsec -= 1000000000;
+		ts->sec++;
+	}
 
-	/* normalize phase after subtraction */
-	if(ts->phase < 0)
-		ts->phase += clock_period;
 }
 
 /* Slow, but we don't care much... */
@@ -259,7 +272,6 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
                                                                                                                    from->mac_dest[0],from->mac_dest[1],from->mac_dest[2],from->mac_dest[3],
                                                                                                                    from->mac_dest[4],from->mac_dest[5],from->mac_dest[6],from->mac_dest[7]);*/
 	return min(size - sizeof(struct ethhdr), data_length);
-	return 0;
 }
 
 int ptpd_netif_select(wr_socket_t * wrSock)
@@ -283,6 +295,7 @@ int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 	    minic_tx_frame((uint8_t *) & hdr, (uint8_t *) data,
 			   data_length + ETH_HEADER_SIZE, &hwts);
 
+
 	if (tx_timestamp) {
 		tx_timestamp->sec = hwts.sec;
 		tx_timestamp->nsec = hwts.nsec;
@@ -291,6 +304,7 @@ int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 	}
 	return rval;
 }
+
 
 void update_rx_queues()
 {
