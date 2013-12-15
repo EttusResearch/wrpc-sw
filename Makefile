@@ -17,7 +17,7 @@ PTP_NOPOSIX = ptp-noposix
 PPSI = ppsi
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
-obj-y = arch/lm32/crt0.o arch/lm32/irq.o arch/lm32/debug.o
+obj-y = arch/lm32/crt0.o arch/lm32/irq.o
 LDS = arch/lm32/ram.ld
 
 obj-y += wrc_main.o
