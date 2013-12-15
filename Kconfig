@@ -3,22 +3,15 @@ mainmenu "WR PTP Core software configuration"
 
 # Later we'll build wr_cpu.bin for wr-switch from this code base
 config WR_SWITCH
-	bool
+	bool "Build rt_cpu.bin, for the WR-Switch FPGA"
 	default n
+	select UART
 
 config WR_NODE
 	bool
-	default y
+	default !WR_SWITCH
 
 # most options with no prompt here are prompted-for in the "advanced" section
-
-config RAMSIZE
-	int
-	default 90112
-
-config STACKSIZE
-	int  
-	default 2048
 
 config PRINT_BUFSIZE
 	int
@@ -27,6 +20,18 @@ config PRINT_BUFSIZE
 config PRINTF_XINT
 	boolean
 	default y
+
+config RAMSIZE
+	int
+	default 28672 if WR_SWITCH
+	default 90112
+
+# CONFIG_WR_SWITCH has no further options at all at this point
+if WR_NODE
+
+config STACKSIZE
+	int  
+	default 2048
 
 config PPSI
 	boolean
@@ -218,3 +223,6 @@ config SDB_EEPROM
 config LEGACY_EEPROM
 	boolean
 	default !SDB_EEPROM
+
+endif
+# CONFIG_WR_NODE
