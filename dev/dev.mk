@@ -1,4 +1,4 @@
-obj-y += \
+obj-$(CONFIG_WR_NODE) += \
 	dev/endpoint.o \
 	dev/ep_pfilter.o \
 	dev/i2c.o \
@@ -8,6 +8,8 @@ obj-y += \
 	dev/sfp.o \
 	dev/sdb.o \
 	dev/rxts_calibrator.o
+
+obj-$(CONFIG_WR_SWITCH) += dev/timer-wrs.o dev/ad9516.o
 
 obj-$(CONFIG_LEGACY_EEPROM) += dev/eeprom.o
 obj-$(CONFIG_SDB_EEPROM) += dev/sdb-eeprom.o

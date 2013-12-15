@@ -18,16 +18,20 @@ PPSI = ppsi
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
 obj-y = arch/lm32/crt0.o arch/lm32/irq.o
-LDS = arch/lm32/ram.ld
+LDS-$(CONFIG_WR_NODE)   = arch/lm32/ram.ld
+LDS-$(CONFIG_WR_SWITCH) = arch/lm32/ram-wrs.ld
 
-obj-y += wrc_main.o
+obj-$(CONFIG_WR_NODE)   += wrc_main.o
+obj-$(CONFIG_WR_SWITCH) += wrs_main.o
+obj-$(CONFIG_WR_SWITCH) += ipc/minipc-mem-server.o ipc/rt_ipc.o 
 
 # our linker script is preprocessed, so have a rule here
 %.ld: %.ld.S $(AUTOCONF)
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
-cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude/std -Iinclude -I. -Isoftpll
+cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude/std -Iinclude \
+			-I. -Isoftpll -Iipc
 cflags-y +=	-I$(CURDIR)/pp_printf
 
 cflags-$(CONFIG_PTP_NOPOSIX) += \
@@ -80,7 +84,7 @@ obj-$(CONFIG_PPSI) += \
 
 CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
-	-nostdlib -T $(LDS)
+	-nostdlib -T $(LDS-y)
 
 include shell/shell.mk
 include lib/lib.mk
@@ -88,10 +92,10 @@ include pp_printf/printf.mk
 include dev/dev.mk
 include softpll/softpll.mk
 
-obj-y += check-error.o
+obj-$(CONFIG_WR_NODE) += check-error.o
 
-obj-y += sdb-lib/libsdbfs.a
-cflags-y += -Isdb-lib
+obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
+cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 
 CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall \
 	-ffunction-sections -fdata-sections -Os \
@@ -102,7 +106,9 @@ LDFLAGS = $(LDFLAGS_PLATFORM) \
 
 OBJS = $(obj-y)
 
-OUTPUT = wrc
+OUTPUT-$(CONFIG_WR_NODE)   = wrc
+OUTPUT-$(CONFIG_WR_SWITCH) = rt_cpu
+OUTPUT := $(OUTPUT-y)
 
 REVISION=$(shell git describe --dirty --always)
 
@@ -129,7 +135,7 @@ $(obj-ppsi):
 sdb-lib/libsdbfs.a:
 	$(MAKE) -C sdb-lib
 
-$(OUTPUT).elf: $(LDS) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
+$(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
 	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
 	${CC} -o $@ revision.o config.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
