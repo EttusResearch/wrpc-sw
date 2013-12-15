@@ -4,6 +4,7 @@
 /* RT CPU Memory layout */
 
 #define CPU_CLOCK 62500000
+#define REF_CLOCK_PERIOD_PS 16000
 
 #define UART_BAUDRATE 115200
 

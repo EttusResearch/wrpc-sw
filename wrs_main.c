@@ -1,5 +1,5 @@
+#include <wrc.h>
 #include "uart.h"
-#include "syscon.h"
 
 #include "softpll_ng.h"
 
