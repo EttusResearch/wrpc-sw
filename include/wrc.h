@@ -24,9 +24,15 @@ void shell_init(void);
 int wrc_log_stats(uint8_t onetime);
 void wrc_debug_printf(int subsys, const char *fmt, ...);
 
-/* Default width (in 8ns units) of the pulses on the PPS output */
-#define PPS_WIDTH (10 * 1000 * 1000 / 8) /* 10ms */
+/* This header is included by softpll: manage wrc/wrs difference */
+#ifdef CONFIG_WR_NODE
+#define NS_PER_CLOCK 8
+#else /* CONFIG_WR_SWITCH */
+#define NS_PER_CLOCK 16
+#endif
 
+/* Default width (in 8ns/16ns units) of the pulses on the PPS output */
+#define PPS_WIDTH (10 * 1000 * 1000 / NS_PER_CLOCK) /* 10ms */
 
 /* This is in the library, somewhere */
 extern int abs(int val);

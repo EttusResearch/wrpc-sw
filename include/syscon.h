@@ -4,6 +4,16 @@
 #include <inttypes.h>
 #include <sys/types.h>
 
+#ifdef CONFIG_WR_SWITCH
+
+#define TICS_PER_SECOND 100000
+
+uint32_t timer_get_tics();
+void timer_delay(uint32_t how_long);
+int timer_expired(uint32_t t_start, uint32_t how_long);
+
+#else /* CONFIG_WR_NODE */
+
 #include "board.h"
 #undef PACKED /* if we already included a regs file, we'd get a warning */
 #include <hw/wrc_syscon_regs.h>
@@ -68,4 +78,5 @@ static inline int sysc_get_memsize()
 	return (SYSC_HWFR_MEMSIZE_R(syscon->HWFR) + 1) * 16;
 }
 
+#endif /* CONFIG_WR_NODE */
 #endif
