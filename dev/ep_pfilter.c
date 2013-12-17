@@ -245,24 +245,15 @@ void pfilter_init_default()
 	pfilter_logic3(15, 10, AND, 7, OR, 14);	/* r15 = ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
 
 	/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
-	pfilter_cmp(18, 0xebd0, 0xffff, MOV, 14);
-	pfilter_logic2(16, 14, OR, 0);	/* r16 = 1 when dport = ETHERBONE */
-	/* pfilter_cmp is able to move values only up to register 15, that's why I use
-	 * here temporarily register 14 and then move value to register 16 using
-	 * pfilter_logic2 */
-
 	pfilter_cmp(18, 0x0044, 0xffff, MOV, 14);	/* r14 = 1 when dport = BOOTPC */
 
 	pfilter_logic3(14, 14, AND, 8, AND, 11);	/* r14 = BOOTP/UDP/IP(unicast|broadcast) */
 	pfilter_logic2(15, 14, OR, 15);	/* r15 = BOOTP/UDP/IP(unicast|broadcast) or ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
-	pfilter_logic2(17, 15, OR, 16);	/* r17 = r15 or Etherbone */
 
-	pfilter_logic3(20, 11, AND, 8, OR, 17);	/* r16 = Something we accept */
+	pfilter_logic3(20, 11, AND, 8, OR, 15);	/* r16 = Something we accept */
 
 	pfilter_logic3(R_DROP, 20, OR, 9, NOT, 0);	/* None match? drop */
 
-
-	pfilter_logic2(R_CLASS(5), 16, OR, 0); /* class 5: Etherbone packet => Etherbone Core */
 	pfilter_logic2(R_CLASS(7), 11, AND, 8);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
 	pfilter_logic2(R_CLASS(6), 1, AND, 9);	/* class 6: streamer broadcasts => external fabric */
 	pfilter_logic2(R_CLASS(0), 15, MOV, 0);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
