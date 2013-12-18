@@ -191,7 +191,7 @@ void wrc_mon_gui(void)
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.total_asymmetry));
 		cprintf(C_GREY, "Cable rtt delay:         ");
-		cprintf(C_WHITE, "%9d ps\n", print64(cur_servo_state.mu -
+		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.mu -
 					cur_servo_state.delta_tx_m -
 					cur_servo_state.delta_rx_m -
 					cur_servo_state.delta_tx_s -
