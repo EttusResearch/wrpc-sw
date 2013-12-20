@@ -35,7 +35,7 @@
 
 @setchapternewpage off
 
-@set update-month October 2013
+@set update-month December 2013
 @set release __RELEASE_GIT_ID__
 @set tagname wrpc-v2.1
 @c WARNING: in @example I Can't use @value{tagname}, so please look for this
@@ -490,11 +490,8 @@ and running on your @sc{spec}. Congratulations !
 @node Writing EEPROM and calibration
 @section Writing EEPROM and calibration
 
-By default @sc{wrpc} starts in @sc{wr} Slave mode and uses the default calibration
-values for Axcen AXGE-3454-0531 @sc{sfp}. This might be fine for running @sc{wrpc}
-for the first time and synchronizing it to another @sc{spec} running the same
-firmware. It is however recommended to perform few additional steps through the
-@sc{wrpc} shell.
+You should perform few configuration steps through the @sc{wrpc} shell before
+you start testing and using the firmware.
 
 @b{Note:} the examples below describe only a subset of @sc{wrpc} Shell commands
 required to make a basic configuration and calibration. A full description of
@@ -517,18 +514,21 @@ transceivers with deltaTx, deltaRx and alpha parameters associated with them.
 
 @example
 wrc# sfp erase
-wrc# sfp add AXGE-1254-0531 180456 148066 72169888
-wrc# sfp add AXGE-3454-0531 180456 148066 -73685416
+wrc# sfp add AXGE-1254-0531 180707 148323 72169888
+wrc# sfp add AXGE-3454-0531 180707 148323 -73685416
 @end example
 
 To check the content of the @sc{sfp} database you can execute the @i{sfp show} shell
 command.
 
 @b{Note:} The deltaTx and deltaRx parameters above are the default ones for
-@i{wrpc-2.1} release bitstream available on @i{ohwr.org} and most probably will
-be the cause of some constant offset when @sc{wrpc} is re-synthesized or
-connected to the @sc{WR} Switch. To find the new values you should read the
-@sc{wr} Calibration procedure (@i{http://www.ohwr.org/documents/213}).
+@i{wrpc-2.1} release bitstream available on @i{ohwr.org} running on @sc{spec} v4 board
+and calibrated to the port 1 of @sc{wr} Switch v3.3. Those values as well as the parameters for the
+@sc{wr} Switch are available on the calibration wiki page
+(@i{http://www.ohwr.org/projects/white-rabbit/wiki/Calibration}). However, if
+you re-synthesize the firmware or want to have most accurate estimation of fixed
+delays and alpha of your fiber you should read and perform the @sc{wr}
+Calibration procedure (@i{http://www.ohwr.org/documents/213}).
 
 @sp 1
 The @sc{wr ptp} Core's mode of operation (GrandMaster/Master/Slave) can be set using the
