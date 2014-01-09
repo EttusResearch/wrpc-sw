@@ -40,6 +40,14 @@ config ETHERBONE
 	  You need to run a gateware file that includes Etherbone support.
 	  If in doubt, say No.
 
+config WRNIC
+	boolean "Compile White Rabbit NIC support in wrpc-sw"
+	help
+	  This allows to run LM32 code that is aware of Etherbone and
+	  NIC. You need to run a gateware file that includes Etherbone
+	  and NIC support. This option needs ETHERBONE enabled.
+	  If in doubt, say No.
+
 config CMD_CONFIG
 	boolean "Include configuration in the output binary"
 	help
