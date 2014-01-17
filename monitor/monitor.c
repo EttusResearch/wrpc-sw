@@ -23,7 +23,7 @@
 #include "lib/ipv4.h"
 
 
-#define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
+int UI_REFRESH_PERIOD = TICS_PER_SECOND;	/* 1 sec */
 
 #define PRINT64_FACTOR	1000000000
 char* print64(unsigned long long x)

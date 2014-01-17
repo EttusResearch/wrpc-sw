@@ -23,7 +23,7 @@
 #include "hal_exports.h"
 #include "lib/ipv4.h"
 
-#define UI_REFRESH_PERIOD TICS_PER_SECOND	/* 1 sec */
+int UI_REFRESH_PERIOD = TICS_PER_SECOND;	/* 1 sec */
 
 struct ptpdexp_sync_state_t;
 extern ptpdexp_sync_state_t cur_servo_state;

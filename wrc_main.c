@@ -34,6 +34,8 @@
 int wrc_ui_mode = UI_SHELL_MODE;
 int wrc_phase_tracking = 1;
 
+extern int UI_REFRESH_PERIOD;
+
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)
 int32_t sfp_alpha = 73622176;	//default values if could not read EEPROM
@@ -142,13 +144,13 @@ static void ui_update()
 
 	if (wrc_ui_mode == UI_GUI_MODE) {
 		wrc_mon_gui();
-		if (uart_read_byte() == 27) {
+		if (uart_read_byte() == 27 || UI_REFRESH_PERIOD == 0) {
 			shell_init();
 			wrc_ui_mode = UI_SHELL_MODE;
 		}
 	} else if (wrc_ui_mode == UI_STAT_MODE) {
 		wrc_log_stats(0);
-		if (uart_read_byte() == 27) {
+		if (uart_read_byte() == 27 || UI_REFRESH_PERIOD == 0) {
 			shell_init();
 			wrc_ui_mode = UI_SHELL_MODE;
 		}
