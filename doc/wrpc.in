@@ -630,7 +630,7 @@ wrc# gui
 The information is presented in a clear, auto-refreshing screen. To exit
 from this console mode press <Esc>. Full
 description about information reported by gui is provided in @ref{WRPC GUI 
-elements}.
+elements}. 
 
 @b{Note:} the @i{Synchronization status} and @i{Timing parameters} in @i{gui}
 are available only in @sc{wr} Slave mode. When running as @sc{wr} Master, you
@@ -642,11 +642,11 @@ packet counters, lock and calibration status.
 @sp 1
 
 If you want to store the statistics from @sc{wrpc} operation, it's probably
-better to use the @i{stat cont} shell command. It reports the same information
+better to use the @i{stat} shell command. It reports the same information
 as GUI but in a form which is easier to parse and analyze:
 
 @example
-wrc# stat cont
+wrc# stat
 lnk:1 rx:416 tx:118 lock:1 sv:1 ss:'TRACK_PHASE' aux:0 sec:94197 \
 nsec:793068184 mu:836241 dms:400556 dtxm:10 drxm:163610 dtxs:0 drxs:128400 \
 asym:35129 crtt:544221 cko:-5 setp:7667 hd:61479 md:37221 ad:65000 ucnt:101 \
@@ -657,6 +657,10 @@ asym:35129 crtt:544233 cko:-4 setp:7663 hd:61485 md:37259 ad:65000 ucnt:102 \
 temp: 45.6875 C
 (...)
 @end example
+
+@sp 1
+In addition, you can use the @i{refresh} command to change 
+update time period of the gui and the stat commands.
 
 @sp 1
 If you have a @sc{dio} Mezzanine board plugged to your @sc{spec}, you can check
@@ -737,9 +741,10 @@ function to initialize SoftPll
 
 @item @code{gui} @tab starts GUI @sc{wrpc} monitor
 
-@item @code{stat} @tab prints one line log message
-@item @code{stat cont} @tab prints log message for each second (Esc to exit back to shell)
+@item @code{stat} @tab prints the log message for each period (Esc to exit back to shell)
 @item @code{stat bts} @tab prints bitslide value for established @sc{wr} Link, needed by calibration procedure
+
+@item @code{refresh} @tab changes the update time period of the gui and the stat commands. Default period is 1 second. If you set the period to 0, the log message is only generated one time.
 
 @item @code{ptp start} @tab start @sc{wr ptp} daemon
 @item @code{ptp stop} @tab stops @sc{wr ptp} daemon
