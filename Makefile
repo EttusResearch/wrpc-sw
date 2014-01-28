@@ -26,7 +26,7 @@ obj-$(CONFIG_WR_SWITCH) += wrs_main.o
 obj-$(CONFIG_WR_SWITCH) += ipc/minipc-mem-server.o ipc/rt_ipc.o 
 
 # our linker script is preprocessed, so have a rule here
-%.ld: %.ld.S $(AUTOCONF)
+%.ld: %.ld.S $(AUTOCONF) .config
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
