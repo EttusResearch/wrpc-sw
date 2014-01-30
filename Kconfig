@@ -55,7 +55,15 @@ config CMD_CONFIG
 	  reports the current configuration.  This adds half a kilobyte
 	  to the binary size (100b for the code plus the .config file).
 
-
+config NIC_PFILTER
+	depends on ETHERBONE
+	bool "Add packet filter rules for wr-nic"
+	help
+	  When using wr-nic, the host must receive frames that are not
+	  ptp nor etherbone ones.  This adds the needed filter rules
+	  to that effect.  Such rules are not needed when no Etherbone
+	  is there, because in that case all non-ptp frames reach the
+	  host.
 
 #
 # This is a set of configuration options that should not be changed by
