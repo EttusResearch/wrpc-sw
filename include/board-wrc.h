@@ -31,4 +31,11 @@
 int board_init();
 int board_update();
 
+/* spll parameter that are board-specific */
+#define BOARD_DIVIDE_DMTD_CLOCKS	1
+#define BOARD_MAX_CHAN_REF		1
+#define BOARD_MAX_CHAN_AUX		2
+#define BOARD_MAX_PTRACKERS		1
+
+
 #endif /* __BOARD_WRC_H */
