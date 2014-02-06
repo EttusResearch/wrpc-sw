@@ -15,7 +15,7 @@
 #include "wrc_ptp.h"
 #include <syscon.h>
 
-extern int UI_REFRESH_PERIOD;
+extern int wrc_ui_refperiod;
 
 static int cmd_refresh(const char *args[])
 {
@@ -29,7 +29,7 @@ static int cmd_refresh(const char *args[])
 		return 0;
 	}
 	
-	UI_REFRESH_PERIOD = sec*TICS_PER_SECOND;
+	wrc_ui_refperiod = sec*TICS_PER_SECOND;
 	mprintf("\n");
 }
 

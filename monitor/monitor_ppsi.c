@@ -23,7 +23,7 @@
 #include "hal_exports.h"
 #include "lib/ipv4.h"
 
-int UI_REFRESH_PERIOD = TICS_PER_SECOND;	/* 1 sec */
+extern int wrc_ui_refperiod;
 
 struct ptpdexp_sync_state_t;
 extern ptpdexp_sync_state_t cur_servo_state;
@@ -86,7 +86,7 @@ void wrc_mon_gui(void)
 	uint8_t ip[4];
 #endif
 
-	if (timer_get_tics() - last < UI_REFRESH_PERIOD)
+	if (timer_get_tics() - last < wrc_ui_refperiod)
 		return;
 
 	last = timer_get_tics();
@@ -265,7 +265,7 @@ int wrc_log_stats(uint8_t onetime)
 	uint64_t sec;
 	uint32_t nsec;
 
-	if (!onetime && timer_get_tics() - last < UI_REFRESH_PERIOD)
+	if (!onetime && timer_get_tics() - last < wrc_ui_refperiod)
 		return 0;
 
 	last = timer_get_tics();
