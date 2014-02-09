@@ -10,6 +10,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <wrc.h>
 
 #include "minipc.h"
 
@@ -95,7 +96,7 @@ int rts_lock_channel(int channel, int priority)
 	return 0;
 }
 
-int rts_init()
+void rts_init()
 {
     clear_state();
 }
@@ -177,6 +178,7 @@ static int rts_set_mode_func(const struct minipc_pd *pd, uint32_t *args, void *r
 {
 		pstate.ipc_count++;
     *(int *) ret = rts_set_mode(args[0]);
+    return 0;
 }
 
 
@@ -184,12 +186,14 @@ static int rts_lock_channel_func(const struct minipc_pd *pd, uint32_t *args, voi
 {
 		pstate.ipc_count++;
     *(int *) ret = rts_lock_channel(args[0], (int)args[1]);
+    return 0;
 }
 
 static int rts_adjust_phase_func(const struct minipc_pd *pd, uint32_t *args, void *ret)
 {
 		pstate.ipc_count++;
     *(int *) ret = rts_adjust_phase((int)args[0], (int)args[1]);
+    return 0;
 }
 
 static int rts_enable_ptracker_func(const struct minipc_pd *pd, uint32_t *args, void *ret)
@@ -197,23 +201,23 @@ static int rts_enable_ptracker_func(const struct minipc_pd *pd, uint32_t *args, 
 		pstate.ipc_count++;
 		spll_enable_ptracker((int)args[0], (int)args[1]);
     *(int *) ret = 0;
+    return 0;
 }
 
 static int rts_debug_command_func(const struct minipc_pd *pd, uint32_t *args, void *ret)
 {
 		pstate.ipc_count++;
     *(int *) ret = rts_debug_command((int)args[0], (int)args[1]);
+    return 0;
 }
 
 
 
-/* The mailbox is mapped at 0x7000 in the linker script */
-static __attribute__((section(".mbox"))) _mailbox[1024];
 static struct minipc_ch *server;
 
 int rtipc_init()
 {
-
+	/* The mailbox is mapped at 0x7000 in the linker script */
 	server = minipc_server_create("mem:7000", 0);
 	if (!server)
 		return 1;

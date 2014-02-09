@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <wrc.h>
 
 #include "board.h"
 #include "syscon.h"
@@ -185,7 +186,7 @@ int ad9516_set_output_divider(int output, int ratio, int phase_offset)
 	ad9516_write_reg(0x232, 0x0);
 	ad9516_write_reg(0x232, 0x1);
 	ad9516_write_reg(0x232, 0x0);
-
+	return 0;
 }
 
 int ad9516_set_vco_divider(int ratio) /* Sets the VCO divider (2..6) or 0 to enable static output */
@@ -195,6 +196,7 @@ int ad9516_set_vco_divider(int ratio) /* Sets the VCO divider (2..6) or 0 to ena
 	else
 		ad9516_write_reg(0x1e0, (ratio-2));
 	ad9516_write_reg(0x232, 0x1);
+	return 0;
 }
 
 void ad9516_sync_outputs()
@@ -271,4 +273,5 @@ int rts_debug_command(int command, int value)
 			}
 			break;
 	}
+	return 0;
 }
