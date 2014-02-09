@@ -8,7 +8,7 @@
 const char *build_revision;
 const char *build_date;
 
-main()
+int main(void)
 {
 	uint32_t start_tics = 0;
 

@@ -44,5 +44,11 @@ void update_rx_queues(void);
 /* refresh period for _gui_ and _stat_ commands */
 extern int wrc_ui_refperiod;
 
+/* Init functions for the wrs build */
+int ad9516_init(void);
+void rts_init(void);
+int rtipc_init(void);
+void rts_update(void);
+void rtipc_action(void);
 
 #endif /* __WRC_H__ */

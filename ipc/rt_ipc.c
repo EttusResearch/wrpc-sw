@@ -96,12 +96,12 @@ int rts_lock_channel(int channel, int priority)
 	return 0;
 }
 
-void rts_init()
+void rts_init(void)
 {
     clear_state();
 }
 
-void rts_update()
+void rts_update(void)
 {
     int i;
     int n_ref;
@@ -215,7 +215,7 @@ static int rts_debug_command_func(const struct minipc_pd *pd, uint32_t *args, vo
 
 static struct minipc_ch *server;
 
-int rtipc_init()
+int rtipc_init(void)
 {
 	/* The mailbox is mapped at 0x7000 in the linker script */
 	server = minipc_server_create("mem:7000", 0);
@@ -241,7 +241,7 @@ int rtipc_init()
 }
 
 
-void rtipc_action()
+void rtipc_action(void)
 {
 		minipc_server_action(server, 1000);
 }

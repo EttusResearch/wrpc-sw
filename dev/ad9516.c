@@ -212,7 +212,7 @@ void ad9516_sync_outputs()
 	ad9516_write_reg(0x232, 1);
 }
 
-int ad9516_init(int ref_source)
+int ad9516_init(void)
 {
 	TRACE("Initializing AD9516 PLL...\n");
 
