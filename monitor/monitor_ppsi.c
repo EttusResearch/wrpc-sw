@@ -23,8 +23,6 @@
 #include "hal_exports.h"
 #include "lib/ipv4.h"
 
-extern int wrc_ui_refperiod;
-
 struct ptpdexp_sync_state_t;
 extern ptpdexp_sync_state_t cur_servo_state;
 extern int wrc_man_phase;

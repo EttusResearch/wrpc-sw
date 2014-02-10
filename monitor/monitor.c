@@ -23,8 +23,6 @@
 #include "lib/ipv4.h"
 
 
-extern int wrc_ui_refperiod;
-
 #define PRINT64_FACTOR	1000000000
 char* print64(unsigned long long x)
 {

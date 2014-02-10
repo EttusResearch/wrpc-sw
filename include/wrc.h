@@ -35,5 +35,8 @@ extern int abs(int val);
 extern void wr_servo_reset(void);
 void update_rx_queues(void);
 
+/* refresh period for _gui_ and _stat_ commands */
+extern int wrc_ui_refperiod;
+
 
 #endif /* __WRC_H__ */
