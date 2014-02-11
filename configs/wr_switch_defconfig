@@ -1,0 +1,9 @@
+#
+# Automatically generated make config: don't edit
+#
+CONFIG_WR_SWITCH=y
+# CONFIG_WR_NODE is not set
+CONFIG_PRINT_BUFSIZE=128
+CONFIG_PRINTF_XINT=y
+CONFIG_RAMSIZE=28672
+CONFIG_UART=y

@@ -28,8 +28,15 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 	s->pi.y_max = 65530;
 	s->pi.anti_windup = 1;
 	s->pi.bias = 65000;
-	s->pi.kp = 1100;	// / 2;
-	s->pi.ki = 30;		// / 2;
+#if defined(CONFIG_WR_SWITCH)
+	s->pi.kp = 1500;		// / 2;
+	s->pi.ki = 7;			// / 2;
+#elif defined(CONFIG_WR_NODE)
+	s->pi.kp = 1100;		// / 2;
+	s->pi.ki = 30;			// / 2;
+#else
+#error "Please set CONFIG for wr switch or wr node"
+#endif
 	s->delock_count = 0;
 
 	/* Freqency branch lock detection */

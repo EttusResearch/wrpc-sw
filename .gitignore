@@ -6,9 +6,8 @@
 *.mif
 *.*~
 *~
-wrc_disasm.S
-wrc.ram
-wrc.vhd
+*_disasm.S
+*.vhd
 
 *.cmd
 *.o

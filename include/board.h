@@ -1,30 +1,14 @@
-#ifndef __BOARD_H
-#define __BOARD_H
-
-#include <hw/memlayout.h>
-
-/* Board-specific parameters */
-
-/* WR Core system/CPU clock frequency in Hz */
-#define CPU_CLOCK 62500000ULL
-
-/* WR Reference clock period (picoseconds) and frequency (Hz) */
-#define REF_CLOCK_PERIOD_PS 8000
-#define REF_CLOCK_FREQ_HZ 125000000
-
-/* Baud rate of the builtin UART (does not apply to the VUART) */
-#define UART_BAUDRATE 115200ULL
-
-/* Maximum number of simultaneously created sockets */
-#define NET_MAX_SOCKETS 4
-
-/* Socket buffer size, determines the max. RX packet size */
-#define NET_SKBUF_SIZE 512
-
-/* Number of auxillary clock channels - usually equal to the number of FMCs */
-#define NUM_AUX_CLOCKS 1
-
-int board_init();
-int board_update();
-
+/*
+ * We build for both wr-switch and wr-node (core).
+ *
+ * Unfortunately, our submodules include <board.h> without using
+ * our own Kconfig defines. Thus, assume wr-node unless building
+ * specifically for wr-switch (which doesn't refer to submodules).
+ * Same appplies to ./tools/, where we can avoid a Makefile
+ * patch for add "-include ../include/generated/autoconf.h"
+ */
+#if defined(CONFIG_WR_SWITCH)
+#  include "board-wrs.h"
+#else
+#  include "board-wrc.h"
 #endif
