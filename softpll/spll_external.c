@@ -28,13 +28,7 @@ void external_init(volatile struct spll_external_state *s, int ext_ref,
 	s->pi.bias = 32768;
 
 	/* Phase branch lock detection */
-#if defined(CONFIG_WR_SWITCH)
-	s->ld.threshold = 250;
-#elif defined(CONFIG_WR_NODE)
 	s->ld.threshold = 400;
-#else
-#error "Please set CONFIG for wr switch or wr node"
-#endif
 	s->ld.lock_samples = 10000;
 	s->ld.delock_samples = 9990;
 	s->ref_src = ext_ref;
