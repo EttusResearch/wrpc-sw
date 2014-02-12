@@ -8,6 +8,16 @@
 uint32_t timer_get_tics(void);
 void timer_delay(uint32_t tics);
 
+/* The following ones come from the kernel, but simplified */
+#ifndef time_after
+#define time_after(a,b)		\
+	((long)(b) - (long)(a) < 0)
+#define time_before(a,b)	time_after(b,a)
+#define time_after_eq(a,b)	\
+	 ((long)(a) - (long)(b) >= 0)
+#define time_before_eq(a,b)	time_after_eq(b,a)
+#endif
+
 /* This can be used for up to 2^32 / TICS_PER_SECONDS == 42 seconds in wrs */
 static inline void timer_delay_ms(int ms)
 {
