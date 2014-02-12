@@ -10,6 +10,9 @@
 
 uint64_t ptpd_netif_get_msec_tics(void)
 {
+#if TICS_PER_SECOND != 1000
+#error "This code assumes 1kHz timer"
+#endif
   return timer_get_tics();
 }
 

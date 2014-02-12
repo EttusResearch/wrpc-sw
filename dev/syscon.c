@@ -35,12 +35,11 @@ uint32_t timer_get_tics(void)
 
 void timer_delay(uint32_t tics)
 {
-	uint32_t t_start;
+	uint32_t t_end;
 
 //  timer_init(1);
-	do {
-		t_start = timer_get_tics();
-	} while (t_start > UINT32_MAX - tics);	//in case of overflow
 
-	while (t_start + tics > timer_get_tics()) ;
+	t_end = timer_get_tics() + tics;
+	while (time_before(timer_get_tics(), t_end))
+	       ;
 }

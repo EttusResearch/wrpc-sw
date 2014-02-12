@@ -10,7 +10,7 @@ const char *build_date;
 
 int main(void)
 {
-	uint32_t start_tics = 0;
+	uint32_t start_tics = timer_get_tics();
 
 	uart_init_hw();
 	
@@ -25,8 +25,8 @@ int main(void)
 	for(;;)
 	{
 			uint32_t tics = timer_get_tics();
-			
-			if(tics - start_tics > TICS_PER_SECOND/5)
+
+			if(time_after(tics, start_tics + TICS_PER_SECOND/5))
 			{
 //				TRACE("tick!\n");
 				spll_show_stats();

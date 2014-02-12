@@ -128,7 +128,7 @@ int wrc_ptp_set_mode(int mode)
 	while (!spll_check_lock(0) && lock_timeout) {
 		timer_delay_ms(1000);
 		mprintf(".");
-		if (timer_get_tics() - start_tics > lock_timeout) {
+		if (time_after(timer_get_tics(), start_tics + lock_timeout)) {
 			mprintf("\nLock timeout.\n");
 			return -ETIMEDOUT;
 		} else if (uart_read_byte() == 27) {

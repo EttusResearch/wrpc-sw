@@ -44,7 +44,7 @@ extern int wrc_man_phase;
 
 void wrc_mon_gui(void)
 {
-	static uint32_t last = 0;
+	static uint32_t last;
 	hexp_port_state_t ps;
 	int tx, rx;
 	uint64_t sec;
@@ -53,7 +53,9 @@ void wrc_mon_gui(void)
 	uint8_t ip[4];
 #endif
 
-	if (timer_get_tics() - last < wrc_ui_refperiod)
+	if (!last)
+		last = timer_get_tics();
+	if (time_before(timer_get_tics(), last + wrc_ui_refperiod))
 		return;
 
 	last = timer_get_tics();
@@ -191,14 +193,16 @@ void wrc_mon_gui(void)
 
 int wrc_log_stats(uint8_t onetime)
 {
-	static uint32_t last = 0;
+	static uint32_t last;
 	hexp_port_state_t ps;
 	int tx, rx;
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
 
-	if (!onetime && timer_get_tics() - last < wrc_ui_refperiod)
+	if (!last)
+		last = timer_get_tics();
+	if (!onetime && time_before(timer_get_tics(), last + wrc_ui_refperiod))
 		return 0;
 
 	last = timer_get_tics();

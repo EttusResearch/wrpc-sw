@@ -9,12 +9,8 @@ uint32_t timer_get_tics(void)
 
 void timer_delay(uint32_t tics)
 {
-  uint32_t t_start;
+	uint32_t t_end = timer_get_tics() + tics;
 
-  t_start = timer_get_tics();
-
-	if(t_start + tics < t_start)
-		while(t_start + tics < timer_get_tics());
-
-	while(t_start + tics > timer_get_tics());
+	while (time_before(timer_get_tics(), t_end))
+	       ;
 }

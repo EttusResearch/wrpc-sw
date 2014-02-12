@@ -52,15 +52,14 @@ static inline void realign_fsm(struct spll_external_state *s)
 		SPLL->ECCR |= SPLL_ECCR_ALIGN_EN;
 
 		s->realign_state = REALIGN_STAGE1_WAIT;
-		s->realign_timer = timer_get_tics();
+		s->realign_timer = timer_get_tics() + 2 * TICS_PER_SECOND;
 		break;
 
 	case REALIGN_STAGE1_WAIT:
 
 		if (SPLL->ECCR & SPLL_ECCR_ALIGN_DONE)
 			s->realign_state = REALIGN_STAGE2;
-		else if (timer_get_tics() - s->realign_timer >
-			 2 * TICS_PER_SECOND) {
+		else if (time_after(timer_get_tics(), s->realign_timer)) {
 			SPLL->ECCR &= ~SPLL_ECCR_ALIGN_EN;
 			s->realign_state = REALIGN_PPS_INVALID;
 		}
@@ -75,7 +74,8 @@ static inline void realign_fsm(struct spll_external_state *s)
 			PPSG->ESCR = PPSG_ESCR_SYNC;
 
 			s->realign_state = REALIGN_STAGE2_WAIT;
-			s->realign_timer = timer_get_tics();
+			s->realign_timer = timer_get_tics()
+				+ 2 * TICS_PER_SECOND;
 		}
 		break;
 
@@ -83,8 +83,7 @@ static inline void realign_fsm(struct spll_external_state *s)
 		if (PPSG->ESCR & PPSG_ESCR_SYNC) {
 			PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
 			s->realign_state = REALIGN_DONE;
-		} else if (timer_get_tics() - s->realign_timer >
-			   2 * TICS_PER_SECOND) {
+		} else if (time_after(timer_get_tics(), s->realign_timer)) {
 			PPSG->ESCR = 0;
 			s->realign_state = REALIGN_PPS_INVALID;
 		}
