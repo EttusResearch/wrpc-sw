@@ -8,6 +8,7 @@
 #include <hw/memlayout.h>
 
 /* Board-specific parameters */
+#define TICS_PER_SECOND 1000
 
 /* WR Core system/CPU clock frequency in Hz */
 #define CPU_CLOCK 62500000ULL

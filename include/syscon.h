@@ -3,17 +3,20 @@
 
 #include <inttypes.h>
 #include <sys/types.h>
-
-#ifdef CONFIG_WR_SWITCH
-
-#define TICS_PER_SECOND 100000
+#include "board.h"
 
 uint32_t timer_get_tics(void);
 void timer_delay(uint32_t tics);
 
-#else /* CONFIG_WR_NODE */
+/* This can be used for up to 2^32 / TICS_PER_SECONDS == 42 seconds in wrs */
+static inline void timer_delay_ms(int ms)
+{
+	timer_delay(ms * TICS_PER_SECOND / 1000);
+}
 
-#include "board.h"
+
+#ifdef CONFIG_WR_NODE
+
 #undef PACKED /* if we already included a regs file, we'd get a warning */
 #include <hw/wrc_syscon_regs.h>
 
@@ -43,10 +46,7 @@ struct s_i2c_if {
 
 extern struct s_i2c_if i2c_if[2];
 
-#define TICS_PER_SECOND 1000
 void timer_init(uint32_t enable);
-uint32_t timer_get_tics(void);
-void timer_delay(uint32_t tics);
 
 /* usleep.c */
 extern void usleep_init(void);
