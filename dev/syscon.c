@@ -28,19 +28,19 @@ void timer_init(uint32_t enable)
 		syscon->TCR &= ~SYSC_TCR_ENABLE;
 }
 
-uint32_t timer_get_tics()
+uint32_t timer_get_tics(void)
 {
 	return syscon->TVR;
 }
 
-void timer_delay(uint32_t how_long)
+void timer_delay(uint32_t tics)
 {
 	uint32_t t_start;
 
 //  timer_init(1);
 	do {
 		t_start = timer_get_tics();
-	} while (t_start > UINT32_MAX - how_long);	//in case of overflow
+	} while (t_start > UINT32_MAX - tics);	//in case of overflow
 
-	while (t_start + how_long > timer_get_tics()) ;
+	while (t_start + tics > timer_get_tics()) ;
 }
