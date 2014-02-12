@@ -1,72 +1,17 @@
 /*
- *==============================================================================
- * CERN (BE-CO-HT)
- * Source file for M25P flash controller
- *==============================================================================
+ * This work is part of the White Rabbit project
  *
- * author: Theodor Stana (t.stana@cern.ch)
+ * Copyright (C) 2013 CERN (www.cern.ch)
+ * Author: Theodor Stana <t.stana@cern.ch>
  *
- * date of creation: 2013-09-25
- *
- * version: 1.0
- *
- * description:
- *    This file provides interface functions to access the M25P32 flash chip
- *    on-board SPEC cards. These functions can also be used to access other
- *    flash chips from the M25P family, such as the M25P128 available on the
- *    SVEC cards.
- *
- *    Apart from that, it offers functions for working with an SDB file system
- *    present on such chips. The file-system must previously be created using
- *    the gensdbfs tool [1], and uploaded by writing to the flash, using the
- *    flash-write tool [2]. Then, the SDB file system can be checked using
- *    the flash_sdb_check function below.
- *
- * dependencies:
- *    libsdbfs.h - the SDBFS library providing the SDB file system structure and
- *                 functions to scan for an SDB file system
- *    syscon.h   - contains the low-level GPIO access functions
- *
- * references:
- *    [1] - Alessandro Rubini -- A Flash file-system based on SDB data
- *          Structures, Sept. 2012
- *          http://www.ohwr.org/attachments/download/1594/sdbfs-2012-09-19.pdf
- *    [2] - sdbfs.README file, obtained by downloading the repository at
- *          http://www.ohwr.org/projects/wrpc-sw/repository
- *          and navigating to the tools/ folder
- *
- *==============================================================================
- * GNU LESSER GENERAL PUBLIC LICENSE
- *==============================================================================
- * This source file is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by the
- * Free Software Foundation; either version 2.1 of the License, or (at your
- * option) any later version. This source is distributed in the hope that it
- * will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty
- * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details. You should have
- * received a copy of the GNU Lesser General Public License along with this
- * source; if not, download it from http://www.gnu.org/licenses/lgpl-2.1.html
- *==============================================================================
- * last changes:
- *    2013-09-25   Theodor Stana     t.stana@cern.ch     File created
- *==============================================================================
- * TODO: -
- *==============================================================================
+ * Released according to the GNU LGPL, version 2.1 or any later version.
  */
-
-#include "flash.h"
-#include "types.h"
-#include "syscon.h"
+#include <wrc.h>
+#include <flash.h>
+#include <types.h>
 
 #define SDBFS_BIG_ENDIAN
-#include "libsdbfs.h"
-
-#include <wrc.h>
-
-/*****************************************************************************/
-/* 		Flash interface					     	     */
-/*****************************************************************************/
+#include <libsdbfs.h>
 
 /*
  * Delay function - limit SPI clock speed to 10 MHz
@@ -84,14 +29,14 @@ static void delay()
 static uint8_t bbspi_transfer(int cspin, uint8_t val)
 {
 	int i;
+
 	gpio_out(GPIO_SPI_NCS, cspin);
 	delay();
 	for (i = 0; i < 8; i++) {
 		gpio_out(GPIO_SPI_SCLK, 0);
 		if (val & 0x80) {
 			gpio_out(GPIO_SPI_MOSI, 1);
-		}
-		else {
+		} else {
 			gpio_out(GPIO_SPI_MOSI, 0);
 		}
 		delay();
@@ -234,7 +179,7 @@ static void flash_sdb_list(struct sdbfs *fs)
 	int new = 1;
 	while ( (d = sdbfs_scan(fs, new)) != NULL) {
 		d->sdb_component.product.record_type = '\0';
-		mprintf("file 0x%08x @ %4i, name %s\n",
+		pp_printf("file 0x%08x @ %4i, name %19s\n",
 			  (int)(d->sdb_component.product.device_id),
 			  (int)(d->sdb_component.addr_first),
 			  (char *)(d->sdb_component.product.name));
@@ -250,12 +195,12 @@ int flash_sdb_check()
 	uint32_t magic = 0;
 	int i;
 
-	uint32_t entry_point[6] = {
+	uint32_t entry_point[] = {
 				0x000000,	// flash base
-				0x100, 		// second page in flash
-				0x200, 		// IPMI with MultiRecord
-				0x300, 		// IPMI with larger MultiRecord
-				0x170000, 	// after first FPGA bitstream
+				0x100,		// second page in flash
+				0x200,		// IPMI with MultiRecord
+				0x300,		// IPMI with larger MultiRecord
+				0x170000,	// after first FPGA bitstream
 				0x2e0000	// after MultiBoot bitstream
 				};
 
@@ -264,13 +209,14 @@ int flash_sdb_check()
 		if (magic == SDB_MAGIC)
 			break;
 	}
-	if (magic == SDB_MAGIC) {
-		mprintf("Found SDB magic at address 0x%06X!\n", entry_point[i]);
-		wrc_sdb.drvdata = NULL;
-		wrc_sdb.entrypoint = entry_point[i];
-		wrc_sdb.read = sdb_flash_read;
-		wrc_sdb.write = sdb_flash_write;
-		flash_sdb_list(&wrc_sdb);
-	}
+	if (i == ARRAY_SIZE(entry_point))
+		return -1;
+
+	pp_printf("Found SDB magic at address 0x%06x\n", entry_point[i]);
+	wrc_sdb.drvdata = NULL;
+	wrc_sdb.entrypoint = entry_point[i];
+	wrc_sdb.read = sdb_flash_read;
+	wrc_sdb.write = sdb_flash_write;
+	flash_sdb_list(&wrc_sdb);
 	return 0;
 }
