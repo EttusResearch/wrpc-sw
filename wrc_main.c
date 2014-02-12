@@ -166,7 +166,7 @@ static void check_stack(void)
 {
 	while (_endram != ENDRAM_MAGIC) {
 		mprintf("Stack overflow!\n");
-		timer_delay(1000);
+		timer_delay_ms(1000);
 	}
 }
 
@@ -209,7 +209,7 @@ static void check_reset(void)
 		save += 4;
 	}
 	pp_printf("Rebooting in 1 second\n\n\n");
-	timer_delay(1000);
+	timer_delay_ms(1000);
 
 	/* Zero the stack and start over (so we dump correctly next time) */
 	for (p = &_endram; p < &_fstack; p++)

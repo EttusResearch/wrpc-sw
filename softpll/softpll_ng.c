@@ -283,13 +283,6 @@ void _irq_entry()
 	clear_irq();
 }
 
-void spll_clear_dacs()
-{
-	SPLL->DAC_HPLL = 0;
-	SPLL->DAC_MAIN = 0;
-	timer_delay(100);
-}
-
 void spll_init(int mode, int slave_ref_channel, int align_pps)
 {
 	static const char *modes[] = { "", "grandmaster", "freemaster", "slave", "disabled" };

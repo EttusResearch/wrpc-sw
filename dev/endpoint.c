@@ -114,7 +114,7 @@ int ep_enable(int enabled, int autoneg)
 /* Reset the GTP Transceiver - it's important to do the GTP phase alignment every time
    we start up the software, otherwise the calibration RX/TX deltas may not be correct */
 	pcs_write(MDIO_REG_MCR, MDIO_MCR_PDOWN);	/* reset the PHY */
-	timer_delay(200);
+	timer_delay_ms(200);
 	pcs_write(MDIO_REG_MCR, MDIO_MCR_RESET);	/* reset the PHY */
 	pcs_write(MDIO_REG_MCR, 0);	/* reset the PHY */
 
@@ -190,6 +190,6 @@ int ep_cal_pattern_disable()
 int ep_timestamper_cal_pulse()
 {
 	EP->TSCR |= EP_TSCR_RX_CAL_START;
-	timer_delay(1);
+	timer_delay_ms(1);
 	return EP->TSCR & EP_TSCR_RX_CAL_RESULT ? 1 : 0;
 }

@@ -324,7 +324,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 	for (i = 0; i < 1000; ++i) {
 		mcr = minic_readl(MINIC_REG_MCR);
 		if ((mcr & MINIC_MCR_TX_IDLE) != 0) break;
-		timer_delay(1);
+		timer_delay_ms(1);
 	}
 
 	if (i == 1000)
@@ -341,7 +341,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		for (i = 0; i < 100; ++i) {
 			mcr = minic_readl(MINIC_REG_MCR);
 			if ((mcr & MINIC_MCR_TX_TS_READY) != 0) break;
-			timer_delay(1);
+			timer_delay_ms(1);
 		}
 
 		ts_valid = 1;

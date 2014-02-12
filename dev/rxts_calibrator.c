@@ -193,12 +193,12 @@ int measure_t24p(uint32_t *value)
 	int rv;
 	pp_printf("Waiting for link...\n");
 	while (!ep_link_up(NULL))
-		timer_delay(100);
+		timer_delay_ms(100);
 
 	spll_init(SPLL_MODE_SLAVE, 0, 1);
 	pp_printf("Locking PLL...\n");
 	while (!spll_check_lock(0))
-		timer_delay(100);
+		timer_delay_ms(100);
 	pp_printf("\n");
 
 	pp_printf("Calibrating RX timestamper...\n");
