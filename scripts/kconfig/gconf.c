@@ -267,7 +267,7 @@ void init_main_window(const gchar * glade_file)
 					  NULL);
 
 	sprintf(title, _("WRPC v%s Configuration"),
-		getenv("KERNELVERSION"));
+		getenv("VERSION"));
 	gtk_window_set_title(GTK_WINDOW(main_wnd), title);
 
 	gtk_widget_show(main_wnd);

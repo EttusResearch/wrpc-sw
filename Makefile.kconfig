@@ -1,4 +1,6 @@
 
+VERSION = $(shell git describe --always --dirty)
+export VERSION
 # Do not:
 # o  use make's built-in rules and variables
 #    (this increases performance and avoids hard-to-debug behaviour);

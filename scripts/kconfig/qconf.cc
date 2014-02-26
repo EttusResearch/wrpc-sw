@@ -1276,7 +1276,7 @@ ConfigMainWindow::ConfigMainWindow(void)
 
 	QDesktopWidget *d = configApp->desktop();
 	snprintf(title, sizeof(title), _("WRPC v%s Configuration"),
-		getenv("KERNELVERSION"));
+		getenv("VERSION"));
 	setCaption(title);
 
 	width = configSettings->readNumEntry("/window width", d->width() - 64);
