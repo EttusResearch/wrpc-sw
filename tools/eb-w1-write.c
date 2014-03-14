@@ -81,7 +81,7 @@ static int write_w1(int w1base, int w1len)
 
 static int help(void)
 {
-	fprintf(stderr, "%s: Use: \"%s [-v] <device> <addr> <len>\n",
+	fprintf(stderr, "%s: Use: \"%s [-v] [-i <index>] <device> <addr> <len>\n",
 		prgname, prgname);
 	return 1;
 }
@@ -94,15 +94,24 @@ static void die(const char *reason, eb_status_t status)
 
 int main(int argc, char **argv)
 {
-	int c;
+	int c, i;
 	eb_status_t status;
 	eb_socket_t socket;
-	struct sdb_device sdb;
+	struct sdb_device sdb[10];;
+	char *tail;
 
 	prgname = argv[0];
+	i = -1;
 
-	while ((c = getopt(argc, argv, "v")) != -1) {
+	while ((c = getopt(argc, argv, "i:v")) != -1) {
 		switch(c) {
+		case 'i':
+			i = strtol(optarg, &tail, 0);
+			if (*tail != 0) {
+				fprintf(stderr, "Specify a proper number, not '%s'!\n", optarg);
+				exit(1);
+			}
+			break;
 		case 'v':
 			verbose++;
 			break;
@@ -120,15 +129,24 @@ int main(int argc, char **argv)
 		die(argv[optind], status);
 	
 	/* Find the W1 device */
-	c = 1;
-	if ((status = eb_sdb_find_by_identity(device, W1_VENDOR, W1_DEVICE, &sdb, &c)) != EB_OK)
+	c = sizeof(sdb) / sizeof(struct sdb_device);
+	if ((status = eb_sdb_find_by_identity(device, W1_VENDOR, W1_DEVICE, &sdb[0], &c)) != EB_OK)
 		die("eb_sdb_find_by_identity", status);
-	if (c != 1) {
-		fprintf(stderr, "Found %d 1wire controllers on that device\n", c);
+	
+	if (i == -1) {
+		if (c > 1) {
+			fprintf(stderr, "Found %d 1wire controllers on that device; pick one with -i #\n", c);
+			exit(1);
+		} else {
+			i = 0;
+		}
+	}
+	if (i >= c) {
+		fprintf(stderr, "Could not find 1wire controller #%d on that device (%d total)\n", i, c);
 		exit(1);
 	}
 	
-	BASE_ONEWIRE = sdb.sdb_component.addr_first;
+	BASE_ONEWIRE = sdb[i].sdb_component.addr_first;
 	
 	return write_w1(atoi(argv[optind + 1]), atoi(argv[optind + 2]));
 }
