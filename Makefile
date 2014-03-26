@@ -74,8 +74,7 @@ cflags-$(CONFIG_PPSI) += \
 	-Iboards/spec
 
 obj-ppsi = \
-	$(PPSI)/ppsi.o \
-	$(PPSI)/proto-standard/libstd.a
+	$(PPSI)/ppsi.o
 
 obj-$(CONFIG_PPSI) += \
 	monitor/monitor_ppsi.o \
@@ -128,7 +127,8 @@ endif
 PPSI_USER_CFLAGS += -DDIAG_PUTS=uart_sw_write_string
 
 $(obj-ppsi):
-	$(MAKE) -C $(PPSI) ARCH=wrpc PROTO_EXT=whiterabbit \
+	test -f $(PPSI)/.config || $(MAKE) -C $(PPSI) wrpc_defconfig
+	$(MAKE) -C $(PPSI) WRPCSW_ROOT=.. \
 		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y \
 		USER_CFLAGS="$(PPSI_USER_CFLAGS)"
 
