@@ -13,152 +13,171 @@
 #include "spll_external.h"
 #include "spll_debug.h"
 
-#define BB_ERROR_BITS 16
+#include "trace.h"
+#include "irq.h"
+
+#define ALIGN_STATE_EXT_OFF 0
+#define ALIGN_STATE_START 1
+#define ALIGN_STATE_INIT_CSYNC 2
+#define ALIGN_STATE_WAIT_CSYNC 3
+#define ALIGN_STATE_START_ALIGNMENT 7
+#define ALIGN_STATE_WAIT_SAMPLE 4
+#define ALIGN_STATE_COMPENSATE_DELAY 5
+#define ALIGN_STATE_LOCKED 6
+#define ALIGN_STATE_START_MAIN 8
+
+#define ALIGN_SAMPLE_PERIOD 100000
+#define ALIGN_TARGET 0
+
+#define EXT_PERIOD_NS 100
+#define EXT_FREQ_HZ 10000000
+#define EXT_PPS_LATENCY_PS 30000 // fixme: make configurable
+
 
 void external_init(volatile struct spll_external_state *s, int ext_ref,
 			  int realign_clocks)
 {
+    int idx = spll_n_chan_ref + spll_n_chan_out;
 
-	s->pi.y_min = 5;
-	s->pi.y_max = (1 << DAC_BITS) - 5;
-	s->pi.kp = (int)(300);
-	s->pi.ki = (int)(1);
 
-	s->pi.anti_windup = 1;
-	s->pi.bias = 32768;
+    helper_init(s->helper, idx);
+    mpll_init(s->main, idx, spll_n_chan_ref);
 
-	/* Phase branch lock detection */
-	s->ld.threshold = 400;
-	s->ld.lock_samples = 10000;
-	s->ld.delock_samples = 9990;
-	s->ref_src = ext_ref;
-	s->ph_err_cur = 0;
-	s->ph_err_d0 = 0;
-	s->ph_raw_d0 = 0;
-
-	s->realign_clocks = realign_clocks;
-	s->realign_state = (realign_clocks ? REALIGN_STAGE1 : REALIGN_DISABLED);
-
-	pi_init((spll_pi_t *)&s->pi);
-	ld_init((spll_lock_det_t *)&s->ld);
-	lowpass_init((spll_lowpass_t *)&s->lp_short, 4000);
-	lowpass_init((spll_lowpass_t *)&s->lp_long, 300);
-}
-
-static inline void realign_fsm(struct spll_external_state *s)
-{
-	switch (s->realign_state) {
-	case REALIGN_STAGE1:
-		SPLL->ECCR |= SPLL_ECCR_ALIGN_EN;
-
-		s->realign_state = REALIGN_STAGE1_WAIT;
-		s->realign_timer = timer_get_tics() + 2 * TICS_PER_SECOND;
-		break;
-
-	case REALIGN_STAGE1_WAIT:
-
-		if (SPLL->ECCR & SPLL_ECCR_ALIGN_DONE)
-			s->realign_state = REALIGN_STAGE2;
-		else if (time_after(timer_get_tics(), s->realign_timer)) {
-			SPLL->ECCR &= ~SPLL_ECCR_ALIGN_EN;
-			s->realign_state = REALIGN_PPS_INVALID;
-		}
-		break;
-
-	case REALIGN_STAGE2:
-		if (s->ld.locked) {
-			PPSG->CR = PPSG_CR_CNT_RST | PPSG_CR_CNT_EN;
-			PPSG->ADJ_UTCLO = 0;
-			PPSG->ADJ_UTCHI = 0;
-			PPSG->ADJ_NSEC = 0;
-			PPSG->ESCR = PPSG_ESCR_SYNC;
-
-			s->realign_state = REALIGN_STAGE2_WAIT;
-			s->realign_timer = timer_get_tics()
-				+ 2 * TICS_PER_SECOND;
-		}
-		break;
-
-	case REALIGN_STAGE2_WAIT:
-		if (PPSG->ESCR & PPSG_ESCR_SYNC) {
-			PPSG->ESCR = PPSG_ESCR_PPS_VALID | PPSG_ESCR_TM_VALID;
-			s->realign_state = REALIGN_DONE;
-		} else if (time_after(timer_get_tics(), s->realign_timer)) {
-			PPSG->ESCR = 0;
-			s->realign_state = REALIGN_PPS_INVALID;
-		}
-		break;
-
-	case REALIGN_PPS_INVALID:
-	case REALIGN_DISABLED:
-	case REALIGN_DONE:
-		return;
-	}
-}
-
-int external_update(struct spll_external_state *s, int tag, int source)
-{
-	int err, y, y2, ylt;
-
-	if (source == s->ref_src) {
-		int wrap = tag & (1 << BB_ERROR_BITS) ? 1 : 0;
-
-		realign_fsm(s);
-
-		tag &= ((1 << BB_ERROR_BITS) - 1);
-
-//              mprintf("err %d\n", tag);
-		if (wrap) {
-			if (tag > s->ph_raw_d0)
-				s->ph_err_offset -= (1 << BB_ERROR_BITS);
-			else if (tag <= s->ph_raw_d0)
-				s->ph_err_offset += (1 << BB_ERROR_BITS);
-		}
-
-		s->ph_raw_d0 = tag;
-
-		err = (tag + s->ph_err_offset) - s->ph_err_d0;
-		s->ph_err_d0 = (tag + s->ph_err_offset);
-
-		y = pi_update(&s->pi, err);
-
-		y2 = lowpass_update(&s->lp_short, y);
-		ylt = lowpass_update(&s->lp_long, y);
-
-		if (!(SPLL->ECCR & SPLL_ECCR_EXT_REF_PRESENT)) {
-			/* no reference? de-lock now */
-			ld_init(&s->ld);
-			y2 = 32000;
-		}
-
-		SPLL->DAC_MAIN = y2 & 0xffff;
-
-		spll_debug(DBG_ERR | DBG_EXT, ylt, 0);
-		spll_debug(DBG_SAMPLE_ID | DBG_EXT, s->sample_n++, 0);
-		spll_debug(DBG_Y | DBG_EXT, y2, 1);
-
-		if (ld_update(&s->ld, y2 - ylt))
-			return SPLL_LOCKED;
-	}
-	return SPLL_LOCKING;
+    s->align_state = ALIGN_STATE_EXT_OFF;
+    s->enabled = 0;
 }
 
 void external_start(struct spll_external_state *s)
 {
-
-	SPLL->ECCR = 0;
-
-	s->sample_n = 0;
-	s->realign_state =
-	    (s->realign_clocks ? REALIGN_STAGE1 : REALIGN_DISABLED);
+    helper_start(s->helper);
 
 	SPLL->ECCR = SPLL_ECCR_EXT_EN;
 
-	spll_debug(DBG_EVENT | DBG_EXT, DBG_EVT_START, 1);
+	s->align_state = ALIGN_STATE_START;
+	s->enabled = 1;
+	spll_debug (DBG_EVENT | DBG_EXT, DBG_EVT_START, 1);
 }
 
 int external_locked(struct spll_external_state *s)
 {
-	return (s->ld.locked
-		&& (s->realign_clocks ? s->realign_state == REALIGN_DONE : 1));
+	if (!s->helper->ld.locked || !s->main->ld.locked)
+		return 0;
+
+	switch(s->align_state) {
+		case ALIGN_STATE_EXT_OFF:
+		case ALIGN_STATE_START:
+		case ALIGN_STATE_START_MAIN:
+		case ALIGN_STATE_INIT_CSYNC:
+		case ALIGN_STATE_WAIT_CSYNC:
+			return 0;
+		default:
+			return 1;
+	}
+}
+
+static int align_sample(int channel, int *v)
+{
+	int mask = (1 << channel);
+
+	if(SPLL->AL_CR & mask) {
+		SPLL->AL_CR = mask; // ack
+		int ci = SPLL->AL_CIN;
+		if(ci > 100 && ci < (EXT_FREQ_HZ - 100) ) { // give some metastability margin, when the counter transitions from EXT_FREQ_HZ-1 to 0
+			*v = ci * EXT_PERIOD_NS;
+			return 1;
+		}
+	}
+	return 0; // sample not valid
+}
+
+void external_align_fsm( struct spll_external_state *s )
+{
+	int v;
+	switch(s->align_state) {
+
+		case ALIGN_STATE_EXT_OFF:
+			break;
+
+		case ALIGN_STATE_START:
+			if(s->helper->ld.locked) {
+				disable_irq();
+				mpll_start(s->main);
+				enable_irq();
+				s->align_state = ALIGN_STATE_START_MAIN;
+			}
+			break;
+
+		case ALIGN_STATE_START_MAIN:
+			SPLL->AL_CR = 2;
+			if(s->helper->ld.locked && s->main->ld.locked) {
+				PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(10);
+			PPSG->ADJ_NSEC = 3;
+			PPSG->ESCR = PPSG_ESCR_SYNC;
+			s->align_state = ALIGN_STATE_INIT_CSYNC;
+			TRACE_DEV("EXT: DMTD locked.\n");
+			}
+			break;
+
+		case ALIGN_STATE_INIT_CSYNC:
+			if (PPSG->ESCR & PPSG_ESCR_SYNC) {
+			    PPSG->ESCR = PPSG_ESCR_PPS_VALID; // enable PPS output (even though it's not aligned yet)
+				s->align_timer = timer_get_tics() + 2 * TICS_PER_SECOND;
+				s->align_state = ALIGN_STATE_WAIT_CSYNC;
+			}
+			break;
+
+		case ALIGN_STATE_WAIT_CSYNC:
+			if(timer_get_tics() >= s->align_timer) {
+				s->align_state = ALIGN_STATE_START_ALIGNMENT;
+				s->align_shift = 0;
+				TRACE_DEV("EXT: CSync complete.\n");
+			}
+			break;
+
+		case ALIGN_STATE_START_ALIGNMENT:
+			if(align_sample(1, &v)) {
+				v %= ALIGN_SAMPLE_PERIOD;
+				if(v == 0 || v >= ALIGN_SAMPLE_PERIOD / 2) {
+					s->align_target = EXT_PERIOD_NS;
+					s->align_step = -100;
+				} else if (s > 0) {
+					s->align_target = 0;
+					s->align_step = 100;
+				}
+
+				TRACE_DEV("EXT: Align target %d, step %d.\n", s->align_target, s->align_step);
+				s->align_state = ALIGN_STATE_WAIT_SAMPLE;
+			}
+			break;
+
+		case ALIGN_STATE_WAIT_SAMPLE:
+			if(!mpll_shifter_busy(s->main) && align_sample(1, &v)) {
+				v %= ALIGN_SAMPLE_PERIOD;
+				if(v != s->align_target) {
+					s->align_shift += s->align_step;
+					mpll_set_phase_shift(s->main, s->align_shift);
+				} else if (v == s->align_target) {
+					s->align_shift += EXT_PPS_LATENCY_PS;
+				mpll_set_phase_shift(s->main, s->align_shift);
+					s->align_state = ALIGN_STATE_COMPENSATE_DELAY;
+				}
+			}
+			break;
+
+		case ALIGN_STATE_COMPENSATE_DELAY:
+			if(!mpll_shifter_busy(s->main)) {
+				TRACE_DEV("EXT: Align done.\n");
+				s->align_state = ALIGN_STATE_LOCKED;
+			}
+			break;
+
+		case ALIGN_STATE_LOCKED:
+			if(!external_locked(s)) {
+				s->align_state = ALIGN_STATE_START;
+			}
+			break;
+
+		default:
+			break;
+	}
 }

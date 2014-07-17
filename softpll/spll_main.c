@@ -27,10 +27,10 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 	s->pi.y_min = 5;
 	s->pi.y_max = 65530;
 	s->pi.anti_windup = 1;
-	s->pi.bias = 65000;
+	s->pi.bias = 30000;
 #if defined(CONFIG_WR_SWITCH)
-	s->pi.kp = 1500;		// / 2;
-	s->pi.ki = 7;			// / 2;
+	s->pi.kp = 1100;		// / 2;
+	s->pi.ki = 30;			// / 2;
 #elif defined(CONFIG_WR_NODE)
 	s->pi.kp = 1100;		// / 2;
 	s->pi.ki = 30;			// / 2;
@@ -47,12 +47,16 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 	s->id_out = id_out;
 	s->dac_index = id_out - spll_n_chan_ref;
 
+	TRACE("ref %d out %d idx %x", s->id_ref, s->id_out, s->dac_index);
+
 	pi_init((spll_pi_t *)&s->pi);
 	ld_init((spll_lock_det_t *)&s->ld);
 }
 
 void mpll_start(struct spll_main_state *s)
 {
+	TRACE("MPLL_Start [dac %d]\n", s->dac_index);
+
 	s->adder_ref = s->adder_out = 0;
 	s->tag_ref = -1;
 	s->tag_out = -1;
@@ -83,63 +87,28 @@ int mpll_update(struct spll_main_state *s, int tag, int source)
 {
 	int err, y;
 
-#ifdef WITH_SEQUENCING
-	int new_ref = -1, new_out = -1;
-
-	if (source == s->id_ref) {
-		new_ref = tag;
-		s->seq_ref++;
-	} else if (source == s->id_out) {
-		new_out = tag;
-		s->seq_out++;
-	}
-
-	switch (s->match_state) {
-	case MATCH_NEXT_TAG:
-		if (new_ref > 0 && s->seq_out < s->seq_ref) {
-			s->tag_ref = new_ref;
-			s->match_seq = s->seq_ref;
-			s->match_state = MATCH_WAIT_OUT;
-		}
-
-		if (new_out > 0 && s->seq_out > s->seq_ref) {
-			s->tag_out = new_out;
-			s->match_seq = s->seq_out;
-			s->match_state = MATCH_WAIT_REF;
-		}
-		break;
-	case MATCH_WAIT_REF:
-		if (new_ref > 0 && s->seq_ref == s->match_seq) {
-			s->match_state = MATCH_NEXT_TAG;
-			s->tag_ref = new_ref;
-		}
-		break;
-
-	case MATCH_WAIT_OUT:
-		if (new_out > 0 && s->seq_out == s->match_seq) {
-			s->match_state = MATCH_NEXT_TAG;
-			s->tag_out = new_out;
-		}
-		break;
-	}
-#else
 	if (source == s->id_ref)
 		s->tag_ref = tag;
+
 	if (source == s->id_out)
 		s->tag_out = tag;
 
-#endif
-
-	if (s->tag_ref >= 0 && s->tag_out >= 0) {
-
-		if (s->tag_ref_d >= 0 && s->tag_ref_d > s->tag_ref)
+	if (s->tag_ref >= 0) {
+		if(s->tag_ref_d >= 0 && s->tag_ref_d > s->tag_ref)
 			s->adder_ref += (1 << TAG_BITS);
-		if (s->tag_out_d >= 0 && s->tag_out_d > s->tag_out)
-			s->adder_out += (1 << TAG_BITS);
 
 		s->tag_ref_d = s->tag_ref;
-		s->tag_out_d = s->tag_out;
+	}
 
+
+	if (s->tag_out >= 0) {
+		if(s->tag_out_d >= 0 && s->tag_out_d > s->tag_out)
+			s->adder_out += (1 << TAG_BITS);
+
+		s->tag_out_d = s->tag_out;
+	}
+
+	if (s->tag_ref >= 0 && s->tag_out >= 0) {
 		err = s->adder_ref + s->tag_ref - s->adder_out - s->tag_out;
 
 #ifndef WITH_SEQUENCING
@@ -192,16 +161,39 @@ int mpll_update(struct spll_main_state *s, int tag, int source)
 		}
 		if (ld_update((spll_lock_det_t *)&s->ld, err))
 			return SPLL_LOCKED;
-
 	}
 
 	return SPLL_LOCKING;
 }
 
-int mpll_set_phase_shift(struct spll_main_state *s,
-				int desired_shift)
+#ifdef CONFIG_PPSI /* use __div64_32 from ppsi library to save libgcc memory */
+static int32_t from_picos(int32_t ps)
 {
-	s->phase_shift_target = desired_shift;
+	extern uint32_t __div64_32(uint64_t *n, uint32_t base);
+	uint64_t ups = ps;
+
+	if (ps >= 0) {
+		ups *= 1 << HPLL_N;
+		__div64_32(&ups, CLOCK_PERIOD_PICOSECONDS);
+		return ups;
+	}
+	ups = -ps * (1 << HPLL_N);
+	__div64_32(&ups, CLOCK_PERIOD_PICOSECONDS);
+	return -ups;
+}
+#else /* previous implementation: ptp-noposix has no __div64_32 available */
+static int32_t from_picos(int32_t ps)
+{
+	return (int32_t) ((int64_t) ps * (int64_t) (1 << HPLL_N) /
+			  (int64_t) CLOCK_PERIOD_PICOSECONDS);
+}
+#endif
+
+int mpll_set_phase_shift(struct spll_main_state *s,
+				int desired_shift_ps)
+{
+	int div = (DIVIDE_DMTD_CLOCKS_BY_2 ? 2 : 1);
+	s->phase_shift_target = from_picos(desired_shift_ps) / div;
 	return 0;
 }
 

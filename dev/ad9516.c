@@ -153,7 +153,6 @@ int ad9516_set_output_divider(int output, int ratio, int phase_offset)
 			ad9516_write_reg(base + 1, div_ctl | (1<<7) | (phase_offset & 0xf)); 
 		} else {
 			uint8_t div_ctl = ad9516_read_reg(base + 1);
-			TRACE("DivCtl: %x\n", div_ctl);
 			ad9516_write_reg(base + 1, (div_ctl & (~(1<<7))) | (phase_offset & 0xf));  /* disable bypass bit */
 			ad9516_write_reg(base, (lcycles << 4) | hcycles);
 		}
