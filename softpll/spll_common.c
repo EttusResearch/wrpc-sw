@@ -125,6 +125,7 @@ Channels (spll_n_chan_ref ... spll_n_chan_out + spll_n_chan_ref-1) are the outpu
 
 void spll_enable_tagger(int channel, int enable)
 {
+	TRACE_DEV("EnableTagger %d %d\n", channel, enable);
 	if (channel >= spll_n_chan_ref) {	/* Output channel? */
 		if (enable)
 			SPLL->OCER |= 1 << (channel - spll_n_chan_ref);
@@ -137,7 +138,7 @@ void spll_enable_tagger(int channel, int enable)
 			SPLL->RCER &= ~(1 << channel);
 	}
 
-//      TRACE("%s: ch %d, OCER 0x%x, RCER 0x%x\n", __FUNCTION__, channel, SPLL->OCER, SPLL->RCER);
+	TRACE_DEV("%s: ch %d, OCER 0x%x, RCER 0x%x\n", __FUNCTION__, channel, SPLL->OCER, SPLL->RCER);
 }
 
 void biquad_init(spll_biquad_t *bq, const int *coefs, int shift)
@@ -167,3 +168,13 @@ int biquad_update(spll_biquad_t *bq, int x)
 	return y;
 }
 
+const char *stringlist_lookup(const struct stringlist_entry *slist, int id)
+{
+	int i;
+
+	for(i=0; slist[i].str; i++) {
+		if(slist[i].id == id)
+			return slist[i].str;
+	}
+	return "<unknown>";
+}

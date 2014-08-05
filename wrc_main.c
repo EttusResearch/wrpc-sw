@@ -269,7 +269,7 @@ int main(void)
 
 		ui_update();
 		wrc_ptp_update();
-		spll_update_aux_clocks();
+		spll_update();
 		check_stack();
 	}
 }

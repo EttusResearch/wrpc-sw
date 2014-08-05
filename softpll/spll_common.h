@@ -66,6 +66,21 @@ typedef struct {
 	int yd[2], xd[2]; /* I/O delay lines */
 } spll_biquad_t;
 
+/* long-term-average filter */
+typedef struct {
+    int acc;
+    int n;
+    int window;
+    int pos;
+    int size;
+    int log[16];
+} spll_lta_t;
+
+struct stringlist_entry {
+	int id;
+	const char *str;
+};
+
 /* initializes the PI controller state. Currently almost a stub. */
 void pi_init(spll_pi_t *pi);
 
@@ -82,5 +97,7 @@ void spll_enable_tagger(int channel, int enable);
 
 void biquad_init(spll_biquad_t *bq, const int *coefs, int shift);
 int biquad_update(spll_biquad_t *bq, int x);
+
+const char *stringlist_lookup(const struct stringlist_entry *slist, int id);
 
 #endif // __SPLL_COMMON_H

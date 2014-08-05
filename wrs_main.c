@@ -14,7 +14,7 @@ int main(void)
 
 	uart_init_hw();
 	
-	TRACE("WR Switch Real Time Subsystem (c) CERN 2011 - 2013\n");
+	TRACE("WR Switch Real Time Subsystem (c) CERN 2011 - 2014\n");
 	TRACE("Revision: %s, built %s.\n", build_revision, build_date);
 	TRACE("--");
 
@@ -28,12 +28,12 @@ int main(void)
 
 			if(time_after(tics, start_tics + TICS_PER_SECOND/5))
 			{
-//				TRACE("tick!\n");
 				spll_show_stats();
 				start_tics = tics;
 			}
 	    rts_update();
 	    rtipc_action();
+		spll_update();
 	}
 
 	return 0;

@@ -126,6 +126,7 @@ int wrc_ptp_set_mode(int mode)
 	shw_pps_gen_enable_output(0);
 
 	while (!spll_check_lock(0) && lock_timeout) {
+		spll_update();
 		timer_delay_ms(1000);
 		mprintf(".");
 		if (time_after(timer_get_tics(), start_tics + lock_timeout)) {

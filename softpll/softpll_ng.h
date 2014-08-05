@@ -39,6 +39,10 @@
 #define SPLL_PD_DDMTD 0
 #define SPLL_PD_BANGBANG 1
 
+/* Channels for spll_measure_frequency() */
+#define SPLL_OSC_REF 0
+#define SPLL_OSC_DMTD 1
+#define SPLL_OSC_EXT 2
 
 /* Note on channel naming:
  - ref_channel means a PHY recovered clock input. There can be one (as in WR core) or more (WR switch).
@@ -101,9 +105,10 @@ void spll_enable_ptracker(int ref_channel, int enable);
 /* Reads tracked phase shift value for given reference channel */
 int spll_read_ptracker(int ref_channel, int32_t *phase_ps, int *enabled);
 
-/* Calls aux clock handling state machine. Must be called regularly (although it is not time-critical)
-   in the main loop of the program if aux clocks are used in the design. */
-int spll_update_aux_clocks();
+/* Calls non-realtime update state machine. Must be called regularly (although
+ * it is not time-critical) in the main loop of the program if aux clocks or
+ * external reference are used in the design. */
+void spll_update();
 
 /* Returns the status of given aux clock output (SPLL_AUX_) */
 int spll_get_aux_status(int out_channel);
@@ -121,6 +126,8 @@ void spll_set_dac(int out_channel, int value);
 
 /* Returns current DAC sample value for output (out_channel) */
 int spll_get_dac(int out_channel);
+
+void check_vco_frequencies();
 
 #endif // __SOFTPLL_NG_H
 
