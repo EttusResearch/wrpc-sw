@@ -208,43 +208,45 @@ int measure_t24p(uint32_t *value)
 	return rv;
 }
 
-/*SoftPLL must be locked prior calling this function*/
-static int calib_t24p_slave(uint32_t *value)
-{
-	int rv;
-
-	rxts_calibration_start();
-	while (!(rv = rxts_calibration_update(value))) ;
-
-	if (rv < 0) {
-		pp_printf("Could not calibrate t24p, trying to read from EEPROM\n");
-		if(eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0) < 0) {
-			pp_printf("Something went wrong while writing EEPROM\n");
-			return -1;
-		}
-
-	}
-	else {
-		pp_printf("t24p value is %d ps, storing to EEPROM\n", *value);
-		if(eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 1) < 0) {
-			pp_printf("Something went wrong while writing EEPROM\n");
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
+/* Delays for master must have been calibrated while running as slave */
 static int calib_t24p_master(uint32_t *value)
 {
 	int rv;
 
 	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0);
-	if(rv < 0)
-		pp_printf("Something went wrong while reading from EEPROM: %d\n", rv);
-	else
-		pp_printf("t24p read from EEPROM: %d ps\n", *value);
+	if(rv < 0) {
+		pp_printf("Error %d while reading EEPROM\n", rv);
+		return rv;
+	}
+	pp_printf("t24p read from EEPROM: %d ps\n", *value);
+	return rv;
+}
 
+
+/*SoftPLL must be locked prior calling this function*/
+static int calib_t24p_slave(uint32_t *value)
+{
+	int rv;
+	uint32_t prev;
+
+	rxts_calibration_start();
+	while (!(rv = rxts_calibration_update(value)))
+		/* FIXME: timeout */;
+	if (rv < 0) {
+		/* Fall back on master == eeprom-or-error */
+		return calib_t24p_master(value);
+	}
+
+	/*
+	 * Let's see if we have a matching value in EEPROM:
+	 * accept a 200ps difference, otherwise rewrite eeprom
+	 */
+	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, &prev, 0 /* rd */);
+	if (rv < 0 || (prev < *value - 200) || (prev > *value + 200)) {
+		rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 1);
+		pp_printf("Wrote new t24p value: %d ps (%s)\n", *value,
+			  rv < 0 ? "Failed" : "Success");
+	}
 	return rv;
 }
 
