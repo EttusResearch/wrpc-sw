@@ -670,14 +670,21 @@ static int calc_apr(int meas_min, int meas_max, int f_center )
 
 	int64_t delta_low =  meas_min - f_center;
 	int64_t delta_hi = meas_max - f_center;
+	int ppm_lo, ppm_hi;
 
 	if(delta_low >= 0)
 		return -1;
 	if(delta_hi <= 0)
 		return -1;
 
-	int ppm_lo = -(int64_t)delta_low * 1000000LL / f_center;
-	int ppm_hi = (int64_t)delta_hi * 1000000LL / f_center;
+	/* __div64_32 divides 64 by 32; result is in the 64 argument. */
+	delta_low = -(int64_t)delta_low * 1000000LL;
+	__div64_32(&delta_low, f_center);
+	ppm_lo = delta_low;
+
+	delta_hi = delta_hi * 1000000LL;
+	__div64_32(&delta_hi, f_center);
+	ppm_hi = delta_hi;
 
 	return ppm_lo < ppm_hi ? ppm_lo : ppm_hi;
 }
