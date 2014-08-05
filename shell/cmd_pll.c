@@ -14,49 +14,6 @@
 #include "softpll_ng.h"
 #include "shell.h"
 
-static int calc_apr(int meas_min, int meas_max, int f_center )
-{
-	// apr_min is in PPM
-
-    int64_t delta_low =  meas_min - f_center;
-    int64_t delta_hi = meas_max - f_center;
-
-    if(delta_low >= 0)
-	return -1;
-    if(delta_hi <= 0)
-	return -1;
-
-    int ppm_lo = -(int64_t)delta_low * 1000000LL / f_center;
-    int ppm_hi = (int64_t)delta_hi * 1000000LL / f_center;
-
-    return ppm_lo < ppm_hi ? ppm_lo : ppm_hi;
-}
-
-extern void disable_irq();
-
-static void check_vco_frequencies()
-{
-    disable_irq();
-
-    int f_min, f_max;
-    pp_printf("SoftPLL VCO Frequency/APR test:\n");
-
-    spll_set_dac(-1, 0);
-    f_min = spll_measure_frequency(SPLL_OSC_DMTD);
-    spll_set_dac(-1, 65535);
-    f_max = spll_measure_frequency(SPLL_OSC_DMTD);
-    pp_printf("DMTD VCO:  Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, 62500000));
-
-    spll_set_dac(0, 0);
-    f_min = spll_measure_frequency(SPLL_OSC_REF);
-    spll_set_dac(0, 65535);
-    f_max = spll_measure_frequency(SPLL_OSC_REF);
-    pp_printf("REF VCO:   Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, 125000000));
-
-    f_min = spll_measure_frequency(SPLL_OSC_EXT);
-    pp_printf("EXT clock: Freq=%d Hz\n", f_min);
-}
-
 static int cmd_pll(const char *args[])
 {
 	int cur, tgt;

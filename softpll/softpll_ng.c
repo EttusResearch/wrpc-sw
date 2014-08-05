@@ -644,7 +644,7 @@ void spll_update()
 	spll_update_aux_clocks();
 }
 
-int spll_measure_frequency(int osc)
+static int spll_measure_frequency(int osc)
 {
 	volatile uint32_t *reg;
 
@@ -662,4 +662,45 @@ int spll_measure_frequency(int osc)
 
     timer_delay_ms(2000);
     return (*reg ) & (0xfffffff);
+}
+
+static int calc_apr(int meas_min, int meas_max, int f_center )
+{
+	// apr_min is in PPM
+
+	int64_t delta_low =  meas_min - f_center;
+	int64_t delta_hi = meas_max - f_center;
+
+	if(delta_low >= 0)
+		return -1;
+	if(delta_hi <= 0)
+		return -1;
+
+	int ppm_lo = -(int64_t)delta_low * 1000000LL / f_center;
+	int ppm_hi = (int64_t)delta_hi * 1000000LL / f_center;
+
+	return ppm_lo < ppm_hi ? ppm_lo : ppm_hi;
+}
+
+void check_vco_frequencies()
+{
+	disable_irq();
+
+	int f_min, f_max;
+	TRACE_DEV("SoftPLL VCO Frequency/APR test:\n");
+
+	spll_set_dac(-1, 0);
+	f_min = spll_measure_frequency(SPLL_OSC_DMTD);
+	spll_set_dac(-1, 65535);
+	f_max = spll_measure_frequency(SPLL_OSC_DMTD);
+	TRACE_DEV("DMTD VCO:  Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, 62500000));
+
+	spll_set_dac(0, 0);
+	f_min = spll_measure_frequency(SPLL_OSC_REF);
+	spll_set_dac(0, 65535);
+	f_max = spll_measure_frequency(SPLL_OSC_REF);
+	TRACE_DEV("REF VCO:   Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, REF_CLOCK_FREQ_HZ));
+
+	f_min = spll_measure_frequency(SPLL_OSC_EXT);
+	TRACE_DEV("EXT clock: Freq=%d Hz\n", f_min);
 }

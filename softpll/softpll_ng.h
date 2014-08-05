@@ -127,7 +127,7 @@ void spll_set_dac(int out_channel, int value);
 /* Returns current DAC sample value for output (out_channel) */
 int spll_get_dac(int out_channel);
 
-int spll_measure_frequency(int osc);
+void check_vco_frequencies();
 
 #endif // __SOFTPLL_NG_H
 
