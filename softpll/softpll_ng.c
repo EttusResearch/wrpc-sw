@@ -658,6 +658,8 @@ static int spll_measure_frequency(int osc)
 		case SPLL_OSC_EXT:
 			reg = &SPLL->F_EXT;
 			break;
+		default:
+			return 0;
 	}
 
     timer_delay_ms(2000);

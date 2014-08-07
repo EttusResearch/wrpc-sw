@@ -13,6 +13,7 @@
 #include "spll_external.h"
 #include "spll_debug.h"
 
+#include <pp-printf.h>
 #include "trace.h"
 #include "irq.h"
 
@@ -58,7 +59,7 @@ void external_start(struct spll_external_state *s)
 	spll_debug (DBG_EVENT | DBG_EXT, DBG_EVT_START, 1);
 }
 
-int external_locked(struct spll_external_state *s)
+int external_locked(volatile struct spll_external_state *s)
 {
 	if (!s->helper->ld.locked || !s->main->ld.locked)
 		return 0;
@@ -90,7 +91,7 @@ static int align_sample(int channel, int *v)
 	return 0; // sample not valid
 }
 
-void external_align_fsm( struct spll_external_state *s )
+void external_align_fsm(volatile struct spll_external_state *s)
 {
 	int v;
 	switch(s->align_state) {
