@@ -40,6 +40,7 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 #error "Please set CONFIG for wr switch or wr node"
 #endif
 	s->delock_count = 0;
+	s->enabled = 0;
 
 	/* Freqency branch lock detection */
 	s->ld.threshold = 1200;
@@ -71,7 +72,7 @@ void mpll_start(struct spll_main_state *s)
 	s->phase_shift_target = 0;
 	s->phase_shift_current = 0;
 	s->sample_n = 0;
-
+	s->enabled = 1;
 	pi_init((spll_pi_t *)&s->pi);
 	ld_init((spll_lock_det_t *)&s->ld);
 
@@ -83,10 +84,14 @@ void mpll_start(struct spll_main_state *s)
 void mpll_stop(struct spll_main_state *s)
 {
 	spll_enable_tagger(s->id_out, 0);
+	s->enabled = 0;
 }
 
 int mpll_update(struct spll_main_state *s, int tag, int source)
 {
+	if(!s->enabled)
+	    return SPLL_LOCKED;
+
 	int err, y;
 
 	if (source == s->id_ref)
