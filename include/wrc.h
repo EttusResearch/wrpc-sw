@@ -45,7 +45,7 @@ void update_rx_queues(void);
 extern int wrc_ui_refperiod;
 
 /* Init functions for the wrs build */
-int ad9516_init(void);
+int ad9516_init(int scb_ver);
 void rts_init(void);
 int rtipc_init(void);
 void rts_update(void);
