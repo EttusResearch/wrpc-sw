@@ -118,7 +118,7 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 
 # we need to remove "ptpdump" support for ppsi if RAM size is small and
 # we include etherbone
-ifneq ($CONFIG_RAMSIZE,131072)
+ifneq ($(CONFIG_RAMSIZE),131072)
   ifdef CONFIG_ETHERBONE
     PPSI_USER_CFLAGS = -DCONFIG_NO_PTPDUMP
   endif
