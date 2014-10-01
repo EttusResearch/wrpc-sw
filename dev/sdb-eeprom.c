@@ -117,7 +117,7 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
  * setting if no sdbfs is there, but CONFIG_SDB_EEPROM depends on
  * CONFIG_W1 anyways.
  */
-int32_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
+int get_persistent_mac(uint8_t portnum, uint8_t * mac)
 {
 	int ret;
 	int i, class;
@@ -156,7 +156,7 @@ int32_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
 	return 0;
 }
 
-int8_t set_persistent_mac(uint8_t portnum, uint8_t * mac)
+int set_persistent_mac(uint8_t portnum, uint8_t * mac)
 {
 	int ret;
 

@@ -370,13 +370,13 @@ int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
  * have i2c eeprom and never saved a persistent mac address. But maybe
  * they prefer w1 for temperature (well, sockitowm will go)
  */
-int8_t set_persistent_mac(uint8_t portnum, uint8_t * mac)
+int set_persistent_mac(uint8_t portnum, uint8_t * mac)
 {
 	pp_printf("Can't save persistent MAC address\n");
 	return -1;
 }
 
-int32_t get_persistent_mac(uint8_t portnum, uint8_t * mac)
+int get_persistent_mac(uint8_t portnum, uint8_t * mac)
 {
 	int i, class;
 	uint64_t rom;
