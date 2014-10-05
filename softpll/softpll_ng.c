@@ -443,8 +443,11 @@ static void set_phase_shift(int channel, int32_t value_picoseconds)
 {
 	struct spll_main_state *st = (struct spll_main_state *)
 	    (!channel ? &softpll.mpll : &softpll.aux[channel - 1].pll.dmtd);
-	int div = (DIVIDE_DMTD_CLOCKS_BY_2 ? 2 : 1);
-	mpll_set_phase_shift(st, from_picos(value_picoseconds) / div);
+	int32_t desired_shift = from_picos(value_picoseconds);
+
+	if (DIVIDE_DMTD_CLOCKS_BY_2)
+		desired_shift >>= 1;
+	mpll_set_phase_shift(st, desired_shift);
 	softpll.mpll_shift_ps = value_picoseconds;
 }
 
