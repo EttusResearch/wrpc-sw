@@ -1,7 +1,7 @@
 #ifndef __LIBSDBFS_H__
 #define __LIBSDBFS_H__
 
-/* The library can work in three different environments */
+/* The library can work in different environments, take care of them */
 #ifdef __KERNEL__
 #  include "libsdbfs-kernel.h"
 #elif defined(__unix__)
@@ -12,6 +12,7 @@
 
 #include <sdb.h> /* Please point your "-I" to some sensible place */
 
+#define SDBFS_DEPTH 4 /* Max number of subdirectory depth */
 /*
  * Data structures: please not that the library intself doesn't use
  * malloc, so it's the caller who must deal withallocation/removal.
@@ -24,8 +25,9 @@ struct sdbfs {
 	/* Some fields are informative */
 	char *name;			/* may be null */
 	void *drvdata;			/* driver may need some detail.. */
-	int blocksize;
+	unsigned long blocksize;
 	unsigned long entrypoint;
+	unsigned long flags;
 
 	/* The "driver" must offer some methods */
 	void *data;			/* Use this if directly mapped */
@@ -35,23 +37,30 @@ struct sdbfs {
 	int (*erase)(struct sdbfs *fs, int offset, int count);
 
 	/* The following fields are library-private */
-	struct sdb_device current_record;
 	struct sdb_device *currentp;
-	int nleft;
-	unsigned long f_offset;
+	struct sdb_device current_record;
 	unsigned long f_len;
-	unsigned long read_offset;
-	unsigned long flags;
+	unsigned long f_offset;		/* start of file */
+	unsigned long read_offset;	/* current location */
 	struct sdbfs *next;
+	/* The following ones are directory-aware */
+	unsigned long base[SDBFS_DEPTH];	/* for relative addresses */
+	unsigned long this[SDBFS_DEPTH];	/* current sdb record */
+	int nleft[SDBFS_DEPTH];
+	int depth;
 };
 
-#define SDBFS_F_VERBOSE		0x0001
-
+/* Some flags are set by the user, some (convert32) by the library */
+#define SDBFS_F_VERBOSE		0x0001 /* not really used yet */
+#define SDBFS_F_CONVERT32	0x0002 /* swap SDB words as they are read */
+#define SDBFS_F_ZEROBASED	0x0004 /* zero is a valid data pointer */
 
 /* Defined in glue.c */
-int sdbfs_dev_create(struct sdbfs *fs, int verbose);
+int sdbfs_dev_create(struct sdbfs *fs);
 int sdbfs_dev_destroy(struct sdbfs *fs);
 struct sdbfs *sdbfs_dev_find(const char *name);
+unsigned long sdbfs_find_name(struct sdbfs *fs, const char *name);
+unsigned long sdbfs_find_id(struct sdbfs *fs, uint64_t vid, uint32_t did);
 int sdbfs_open_name(struct sdbfs *fs, const char *name);
 int sdbfs_open_id(struct sdbfs *fs, uint64_t vid, uint32_t did);
 int sdbfs_close(struct sdbfs *fs);
