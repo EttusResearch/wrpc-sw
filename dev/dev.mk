@@ -6,7 +6,7 @@ obj-$(CONFIG_WR_NODE) += \
 	dev/pps_gen.o \
 	dev/syscon.o \
 	dev/sfp.o \
-	dev/sdb.o \
+	dev/devicelist.o \
 	dev/rxts_calibrator.o
 
 obj-$(CONFIG_WR_SWITCH) += dev/timer-wrs.o dev/ad9516.o
