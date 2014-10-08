@@ -64,7 +64,7 @@ static void eeprom_sdb_list(struct sdbfs *fs)
 }
 /* The sdb filesystem itself */
 static struct sdbfs wrc_sdb = {
-	.name = "wrpc-storage",
+	.name = "eeprom",
 	.blocksize = 1, /* Not currently used */
 	/* .read and .write according to device type */
 };
@@ -97,6 +97,7 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 		wrc_sdb.read = sdb_w1_read;
 		wrc_sdb.write = sdb_w1_write;
 		has_eeprom = 1;
+		sdbfs_dev_create(&wrc_sdb);
 		eeprom_sdb_list(&wrc_sdb);
 		return 0;
 	}
