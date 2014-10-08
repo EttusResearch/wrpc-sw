@@ -165,21 +165,10 @@ config PRINTF_NONE
 	  but not suited for wrpc-sw. See pp_printf/README for details.
 endchoice
 
-choice
-	prompt "Choose your preferred ptp engine"
-	depends on DEVELOPER
-
 config PPSI
-	boolean "ppsi"
+	boolean
 	help
-	  Select this option for the ppsi engine
-
-config PTP_NOPOSIX
-	boolean "ptp-noposix"
-	help
-	  Select this option for the ptp-noposix engine
-
-endchoice
+	  Select this option for the ppsi engine (now only option)
 
 config DETERMINISTIC_BINARY
 	depends on DEVELOPER

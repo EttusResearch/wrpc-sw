@@ -1,8 +1,8 @@
 /*
  * This includes stuff that is needed to link ppsi into wrpc-sw
  *
- * It is included by the command line (-include) like ptp-noposix's
- * ptpd-wrappers.h is. It is a subset of that file, with only needed stuff
+ * It is included by the command line (-include).
+ * It is a subset of the older "ptpd-wrappers.h", in ptp-noposix
  */
 #include <sys/types.h>
 #include <stdlib.h>

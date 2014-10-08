@@ -9,7 +9,6 @@
 extern void __you_should_not_call_printf_from_wrpc_sw(void);
 extern void __you_should_not_divide_ll_in_wrpc_sw(void);
 
-#undef printf /* Under ptp-noposix, this is #defined to mprintf */
 int printf(const char *fmt, ...)
 {
 	__you_should_not_call_printf_from_wrpc_sw();
