@@ -13,7 +13,6 @@ SIZE =		$(CROSS_COMPILE)size
 
 AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 
-PTP_NOPOSIX = ptp-noposix
 PPSI = ppsi
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
@@ -33,35 +32,6 @@ obj-$(CONFIG_WR_SWITCH) += ipc/minipc-mem-server.o ipc/rt_ipc.o
 cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude/std -Iinclude \
 			-I. -Isoftpll -Iipc
 cflags-y +=	-I$(CURDIR)/pp_printf
-
-cflags-$(CONFIG_PTP_NOPOSIX) += \
-	-DPTPD_FREESTANDING \
-	-DWRPC_EXTRA_SLIM \
-	-DPTPD_MSBF \
-	-DPTPD_DBG \
-	-DPTPD_NO_DAEMON \
-	-DNEW_SINGLE_WRFSM \
-	-DPTPD_TRACE_MASK=0 \
-	-include $(PTP_NOPOSIX)/compat.h \
-	-include $(PTP_NOPOSIX)/PTPWRd/dep/trace.h \
-	-include $(PTP_NOPOSIX)/libposix/ptpd-wrappers.h \
-	-I$(PTP_NOPOSIX)/libptpnetif \
-	-I$(PTP_NOPOSIX)/PTPWRd
-
-obj-$(CONFIG_PTP_NOPOSIX) += wrc_ptp_noposix.o \
-	monitor/monitor.o \
-	lib/ptp-noposix-wrappers.o \
-	$(PTP_NOPOSIX)/PTPWRd/arith.o \
-	$(PTP_NOPOSIX)/PTPWRd/bmc.o \
-	$(PTP_NOPOSIX)/PTPWRd/dep/msg.o \
-	$(PTP_NOPOSIX)/PTPWRd/dep/net.o \
-	$(PTP_NOPOSIX)/PTPWRd/dep/sys.o \
-	$(PTP_NOPOSIX)/PTPWRd/dep/timer.o \
-	$(PTP_NOPOSIX)/PTPWRd/dep/wr_servo.o \
-	$(PTP_NOPOSIX)/PTPWRd/dep/servo.o \
-	$(PTP_NOPOSIX)/PTPWRd/protocol.o \
-	$(PTP_NOPOSIX)/PTPWRd/wr_protocol.o \
-	$(PTP_NOPOSIX)/libposix/freestanding-startup.o
 
 cflags-$(CONFIG_PPSI) += \
 	-ffreestanding \
@@ -179,8 +149,7 @@ tools:
 # if needed, check out the submodules (first time only), so users
 # who didn't read carefully the manual won't get confused
 gitmodules:
-	@test -d ptp-noposix/libposix || echo "Checking out submodules"
-	@test -d ptp-noposix/libposix || git submodule update --init
+	@test -d ppsi/arch-wrpc || echo "Checking out submodules"
 	@test -d ppsi/arch-wrpc || git submodule update --init
 
 
