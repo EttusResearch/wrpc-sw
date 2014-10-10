@@ -134,7 +134,7 @@ static int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
 	return size;
 }
 
-int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr)
+int32_t eeprom_sfpdb_erase(void)
 {
 	uint8_t sfpcount = 0;
 

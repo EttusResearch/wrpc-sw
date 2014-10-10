@@ -275,7 +275,7 @@ int set_persistent_mac(uint8_t portnum, uint8_t * mac)
 
 
 /* Just a dummy function that writes '0' to sfp count field of the SFP DB */
-int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr)
+int32_t eeprom_sfpdb_erase(void)
 {
 	uint8_t sfpcount = 0;
 	int ret;

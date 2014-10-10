@@ -51,7 +51,7 @@ static int cmd_sfp(const char *args[])
 //    return 0;
 //  }
 	else if (!strcasecmp(args[0], "erase")) {
-		if (eeprom_sfpdb_erase(WRPC_FMC_I2C, FMC_EEPROM_ADR) ==
+		if (eeprom_sfpdb_erase() ==
 		    EE_RET_I2CERR)
 			mprintf("Could not erase DB\n");
 	} else if (args[4] && !strcasecmp(args[0], "add")) {
