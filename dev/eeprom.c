@@ -58,14 +58,20 @@
 
 uint8_t has_eeprom = 0;
 
-uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
+static int i2cif, i2c_addr; /* globals, using the names we always used */
+
+void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 {
+	/* Save these to globals, they are never passed any more */
+	i2cif = chosen_i2cif;
+	i2c_addr = chosen_i2c_addr;
+
 	has_eeprom = 1;
 	if (!mi2c_devprobe(i2cif, i2c_addr))
 		if (!mi2c_devprobe(i2cif, i2c_addr))
 			has_eeprom = 0;
 
-	return 0;
+	return;
 }
 
 static int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,

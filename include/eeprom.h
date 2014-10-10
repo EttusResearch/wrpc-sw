@@ -27,7 +27,7 @@ struct s_sfpinfo {
 	uint8_t chksum;
 } __attribute__ ((__packed__));
 
-uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr);
+void eeprom_init(int i2cif, int i2c_addr);
 
 int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr);
 int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size,

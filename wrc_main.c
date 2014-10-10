@@ -60,7 +60,7 @@ static void wrc_initialize()
 	/*initialize I2C bus*/
 	mi2c_init(WRPC_FMC_I2C);
 	/*check if EEPROM is onboard*/
-	eeprom_present(WRPC_FMC_I2C, FMC_EEPROM_ADR);
+	eeprom_init(WRPC_FMC_I2C, FMC_EEPROM_ADR);
 
 	mac_addr[0] = 0x08;	//
 	mac_addr[1] = 0x00;	// CERN OUI

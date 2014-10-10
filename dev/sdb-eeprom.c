@@ -138,11 +138,11 @@ static struct sdbfs wrc_sdb = {
 uint8_t has_eeprom = 0; /* modified at init time */
 
 /*
- * Init: returns 0 for success; it changes has_eeprom above
+ * Init: sets "int has_eeprom" above
  *
  * This is called by wrc_main, after initializing both w1 and i2c
  */
-uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
+void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 {
 	uint32_t magic = 0;
 	static unsigned entry_points[] = {0, 64, 128, 256, 512, 1024};
@@ -169,10 +169,10 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	/*
 	 * If w1 failed, look for i2c: start from low offsets.
 	 */
-	if (!mi2c_devprobe(i2cif, i2c_addr))
-		return 0;
-	i2c_params.ifnum = i2cif;
-	i2c_params.addr = i2c_addr;
+	i2c_params.ifnum = chosen_i2cif;
+	i2c_params.addr = chosen_i2c_addr;
+	if (!mi2c_devprobe(i2c_params.ifnum, i2c_params.addr))
+		return;
 
 	/* While looking for the magic number, use sdb-based read function */
 	for (i = 0; i < ARRAY_SIZE(entry_points); i++) {
@@ -185,7 +185,7 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	}
 	if (i == ARRAY_SIZE(entry_points)) {
 		pp_printf("No SDB filesystem in i2c eeprom\n");
-		return 0;
+		return;
 	}
 
 found_exit:
@@ -193,7 +193,7 @@ found_exit:
 	has_eeprom = 1;
 	sdbfs_dev_create(&wrc_sdb);
 	eeprom_sdb_list(&wrc_sdb);
-	return 0;
+	return;
 }
 
 /*
