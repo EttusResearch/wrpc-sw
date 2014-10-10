@@ -146,7 +146,7 @@ int32_t eeprom_sfpdb_erase(void)
 		return sfpcount;
 }
 
-int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
+int eeprom_get_sfp(struct s_sfpinfo * sfp,
 		       uint8_t add, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
@@ -208,8 +208,7 @@ int eeprom_match_sfp(struct s_sfpinfo * sfp)
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR,
-				      &dbsfp, 0, i);
+		temp = eeprom_get_sfp(&dbsfp, 0, i);
 		if (!i) {
 			sfpcount = temp;	//only in first round valid sfpcount is returned from eeprom_get_sfp
 			if (sfpcount == 0 || sfpcount == 0xFF)

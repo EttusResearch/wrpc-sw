@@ -66,7 +66,7 @@ static int cmd_sfp(const char *args[])
 		sfp.dTx = atoi(args[2]);
 		sfp.dRx = atoi(args[3]);
 		sfp.alpha = atoi(args[4]);
-		temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &sfp, 1, 0);
+		temp = eeprom_get_sfp(&sfp, 1, 0);
 		if (temp == EE_RET_DBFULL)
 			mprintf("SFP DB is full\n");
 		else if (temp == EE_RET_I2CERR)
@@ -75,8 +75,7 @@ static int cmd_sfp(const char *args[])
 			mprintf("%d SFPs in DB\n", temp);
 	} else if (args[0] && !strcasecmp(args[0], "show")) {
 		for (i = 0; i < sfpcount; ++i) {
-			temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR,
-					      &sfp, 0, i);
+			temp = eeprom_get_sfp(&sfp, 0, i);
 			if (!i) {
 				sfpcount = temp;	//only in first round valid sfpcount is returned from eeprom_get_sfp
 				if (sfpcount == 0 || sfpcount == 0xFF) {
