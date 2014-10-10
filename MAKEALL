@@ -5,6 +5,10 @@
 T=$(mktemp /tmp/wrpc-config.XXXXXX)
 
 configs=$(ls configs)
+if [ $# -ne 0 ]; then
+    configs="$*"
+fi
+
 for c in $configs; do
     echo "##### Building with '$c'"
     if ! make $c 2>&1 >> $T; then
