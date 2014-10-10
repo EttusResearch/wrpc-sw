@@ -99,7 +99,7 @@ static int cmd_sfp(const char *args[])
 			return 0;
 		}
 		strncpy(sfp.pn, pn, SFP_PN_LEN);
-		if (eeprom_match_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR, &sfp) > 0) {
+		if (eeprom_match_sfp(&sfp) > 0) {
 			mprintf("SFP matched, dTx=%d, dRx=%d, alpha=%d\n",
 				sfp.dTx, sfp.dRx, sfp.alpha);
 			sfp_deltaTx = sfp.dTx;

@@ -201,7 +201,7 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
 	return sfpcount;
 }
 
-int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
+int eeprom_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
 	int8_t i, temp;

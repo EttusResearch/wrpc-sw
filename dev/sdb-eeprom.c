@@ -350,14 +350,14 @@ out:
 	return 0;
 }
 
-int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
+int eeprom_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
 	int8_t i, temp;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = eeprom_get_sfp(i2cif, i2c_addr,
+		temp = eeprom_get_sfp(i2c_params.ifnum, i2c_params.addr,
 				      &dbsfp, 0, i);
 		if (!i) {
 			// first round: valid sfpcount is returned
