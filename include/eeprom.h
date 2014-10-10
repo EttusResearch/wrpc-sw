@@ -30,8 +30,6 @@ struct s_sfpinfo {
 void eeprom_init(int i2cif, int i2c_addr);
 
 int eeprom_sfpdb_erase(void);
-int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size,
-			   uint16_t * section_sz);
 int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo *sfp);
 
 int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
