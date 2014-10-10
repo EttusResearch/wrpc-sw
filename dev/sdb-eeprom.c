@@ -420,7 +420,7 @@ out:
  * ------------------------------------------------
  */
 
-int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
+int eeprom_init_erase(void)
 {
 	uint16_t used = 0;
 	int ret;
@@ -435,7 +435,7 @@ int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
 /*
  * Appends a new shell command at the end of boot script
  */
-int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
+int eeprom_init_add(const char *args[])
 {
 	int len, i = 1; /* args[0] is "add" */
 	uint8_t separator = ' ';
@@ -481,7 +481,7 @@ out:
 	return ret;
 }
 
-int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
+int eeprom_init_show(void)
 {
 	int i, ret = -1;
 	uint16_t used;
@@ -511,8 +511,7 @@ out:
 	return ret;
 }
 
-int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
-			   uint8_t bufsize, uint8_t next)
+int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 {
 	int i = 0, ret = -1;
 	uint16_t used;
