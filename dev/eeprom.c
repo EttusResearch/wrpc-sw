@@ -227,7 +227,7 @@ int eeprom_match_sfp(struct s_sfpinfo * sfp)
 	return 0;
 }
 
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
+int eeprom_phtrans(uint32_t * val,
 		      uint8_t write)
 {
 	int8_t ret;

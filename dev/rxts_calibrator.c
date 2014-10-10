@@ -213,7 +213,7 @@ static int calib_t24p_master(uint32_t *value)
 {
 	int rv;
 
-	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 0);
+	rv = eeprom_phtrans(value, 0);
 	if(rv < 0) {
 		pp_printf("Error %d while reading EEPROM\n", rv);
 		return rv;
@@ -241,9 +241,9 @@ static int calib_t24p_slave(uint32_t *value)
 	 * Let's see if we have a matching value in EEPROM:
 	 * accept a 200ps difference, otherwise rewrite eeprom
 	 */
-	rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, &prev, 0 /* rd */);
+	rv = eeprom_phtrans(&prev, 0 /* rd */);
 	if (rv < 0 || (prev < *value - 200) || (prev > *value + 200)) {
-		rv = eeprom_phtrans(WRPC_FMC_I2C, FMC_EEPROM_ADR, value, 1);
+		rv = eeprom_phtrans(value, 1);
 		pp_printf("Wrote new t24p value: %d ps (%s)\n", *value,
 			  rv < 0 ? "Failed" : "Success");
 	}

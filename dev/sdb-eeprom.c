@@ -381,7 +381,7 @@ int eeprom_match_sfp(struct s_sfpinfo * sfp)
  * Phase transition ("calibration" file)
  */
 #define VALIDITY_BIT 0x80000000
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * valp,
+int eeprom_phtrans(uint32_t * valp,
 		      uint8_t write)
 {
 	int ret = -1;

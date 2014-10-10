@@ -34,7 +34,7 @@ int eeprom_match_sfp(struct s_sfpinfo *sfp);
 int eeprom_get_sfp(struct s_sfpinfo * sfp,
                        uint8_t add, uint8_t pos);
 
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
+int eeprom_phtrans(uint32_t * val,
 		      uint8_t write);
 
 int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr);
