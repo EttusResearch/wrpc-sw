@@ -94,19 +94,6 @@ void spll_get_phase_shift(int out_channel, int32_t *current, int32_t *target);
 /* Returns non-zero if the given output channel is busy phase shifting to a new preset */
 int spll_shifter_busy(int out_channel);
 
-/* Returns phase detector type used by particular output channel. There are two phase detectors available:
-- DDMTD: locks only 62.5 / 125 MHz. Provides independent phase shift control for each output.
-- Bang-Bang: locks to any frequency that is a result of rational (M/N) multiplication of the reference frequency.
-  The frequency can be set by spll_set_aux_frequency(). BB detector follows phase setpoint of channel 0 (WR reference),
-  there is no per-output shift control.
-*/
-int spll_get_phase_detector_type(int out_channel);
-
-/* Sets the aux clock freuency when a BB detector is in use. 
-   Must be called prior to spll_start_channel(). If the frequency is out of available range,
-   returns negative value */
-int spll_set_aux_frequency(int out_channel, int32_t frequency);
-
 /* Enables/disables phase tracking on channel (ref_channel). Phase is always measured between
    the WR local reference (out_channel 0) and ref_channel */
 void spll_enable_ptracker(int ref_channel, int enable);
