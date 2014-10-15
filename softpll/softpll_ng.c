@@ -426,7 +426,7 @@ void spll_set_phase_shift(int channel, int32_t value_picoseconds)
 {
 	int i;
 	if (channel == SPLL_ALL_CHANNELS) {
-		spll_set_phase_shift(0, value_picoseconds);
+		set_phase_shift(0, value_picoseconds);
 		for (i = 0; i < spll_n_chan_out - 1; i++)
 			if (softpll.aux[i].seq_state == AUX_READY)
 				set_phase_shift(i + 1, value_picoseconds);
