@@ -599,21 +599,6 @@ int spll_get_aux_status(int channel)
 	return rval;
 }
 
-const char *spll_get_aux_status_string(int channel)
-{
-	const char *aux_stat[] = {"disabled", "locking", "aligning", "locked"};
-	struct spll_aux_state *s = (struct spll_aux_state* )&softpll.aux[channel];
-
-	switch(s->seq_state)
-	{
-		case AUX_DISABLED: return aux_stat[0];
-		case AUX_LOCK_PLL: return aux_stat[1];
-		case AUX_ALIGN_PHASE: return aux_stat[2];
-		case AUX_READY: return aux_stat[3];
-	}
-	return "";
-}
-
 int spll_get_dac(int index)
 {
 	if (index < 0)
