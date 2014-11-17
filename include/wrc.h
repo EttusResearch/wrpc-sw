@@ -19,6 +19,15 @@
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
+/* Allow "if" at C language level, to avoid ifdef */
+#ifdef CONFIG_WR_SWITCH
+#  define is_wr_switch 1
+#  define is_wr_node 0
+#else
+#  define is_wr_switch 0
+#  define is_wr_node 1
+#endif
+
 void wrc_mon_gui(void);
 void shell_init(void);
 int wrc_log_stats(uint8_t onetime);
