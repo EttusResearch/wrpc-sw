@@ -61,7 +61,12 @@ include pp_printf/printf.mk
 include dev/dev.mk
 include softpll/softpll.mk
 
-obj-$(CONFIG_WR_NODE) += check-error.o
+# ppsi already has div64 (the same one), so only pick it if not using ppsi
+ifndef CONFIG_PPSI
+obj-y += pp_printf/div64.o
+endif
+# And always complain if we pick the libgcc division: 64/32 = 32 is enough here.
+obj-y += check-error.o
 
 obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
 cflags-$(CONFIG_WR_NODE) += -Isdb-lib

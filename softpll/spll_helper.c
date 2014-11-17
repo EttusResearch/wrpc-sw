@@ -65,7 +65,6 @@ int helper_update(struct spll_helper_state *s, int tag,
 				err = HELPER_ERROR_CLAMP;
 		}
 
-//		err = biquad_update(&s->precomp, err);
 
 		if ((tag + s->p_adder) > HELPER_TAG_WRAPAROUND
 		    && s->p_setpoint > HELPER_TAG_WRAPAROUND) {
@@ -107,4 +106,16 @@ void helper_start(struct spll_helper_state *s)
 
 	spll_enable_tagger(s->ref_src, 1);
 	spll_debug(DBG_EVENT | DBG_HELPER, DBG_EVT_START, 1);
+}
+
+void helper_switch_reference(struct spll_helper_state *s, int new_ref)
+{
+#if 0
+	disable_irq();
+	s->ref-src = 1;
+	s->tag_d0 = -1;
+	s->p-addr = 0;
+	enable_irq();
+	spll_enable_tagger(s->ref_src, 1);
+#endif
 }

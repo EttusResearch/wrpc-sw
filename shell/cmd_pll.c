@@ -53,7 +53,9 @@ static int cmd_pll(const char *args[])
 		if (!args[1])
 			return -EINVAL;
 		mprintf("%d\n", spll_get_dac(atoi(args[1])));
-	} else
+	} else if(!strcasecmp(args[0], "checkvco"))
+		check_vco_frequencies();
+	else
 		return -EINVAL;
 
 	return 0;

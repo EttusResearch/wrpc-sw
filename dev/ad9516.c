@@ -153,7 +153,6 @@ int ad9516_set_output_divider(int output, int ratio, int phase_offset)
 			ad9516_write_reg(base + 1, div_ctl | (1<<7) | (phase_offset & 0xf)); 
 		} else {
 			uint8_t div_ctl = ad9516_read_reg(base + 1);
-			TRACE("DivCtl: %x\n", div_ctl);
 			ad9516_write_reg(base + 1, (div_ctl & (~(1<<7))) | (phase_offset & 0xf));  /* disable bypass bit */
 			ad9516_write_reg(base, (lcycles << 4) | hcycles);
 		}
@@ -212,7 +211,7 @@ void ad9516_sync_outputs()
 	ad9516_write_reg(0x232, 1);
 }
 
-int ad9516_init(void)
+int ad9516_init(int scb_version)
 {
 	TRACE("Initializing AD9516 PLL...\n");
 
@@ -235,14 +234,41 @@ int ad9516_init(void)
 		return -1;
 	}
 
-	ad9516_load_regset(ad9516_base_config, ARRAY_SIZE(ad9516_base_config), 0);
+	if( scb_version >= 34)	//New SCB v3.4. 10MHz Output.
+		ad9516_load_regset(ad9516_base_config_34, ARRAY_SIZE(ad9516_base_config_34), 0);
+	else 				//Old one
+		ad9516_load_regset(ad9516_base_config_33, ARRAY_SIZE(ad9516_base_config_33), 0);
+
 	ad9516_load_regset(ad9516_ref_tcxo, ARRAY_SIZE(ad9516_ref_tcxo), 1);
 	ad9516_wait_lock();
 
 	ad9516_sync_outputs();
-	ad9516_set_output_divider(9, 4, 0);  /* AUX/SWCore = 187.5 MHz */
-	ad9516_set_output_divider(7, 12, 0); /* REF = 62.5 MHz */
-	ad9516_set_output_divider(4, 12, 0);  /* GTX = 62.5 MHz */
+
+	if( scb_version >= 34) {	//New SCB v3.4. 10MHz Output.
+
+		ad9516_set_output_divider(2, 4, 0);  	// OUT2. 187.5 MHz.
+		ad9516_set_output_divider(3, 4, 0);  	// OUT3. 187.5 MHz.
+
+		ad9516_set_output_divider(4, 3, 0);  	// OUT4. 250 MHz.
+		ad9516_set_output_divider(5, 3, 0);  	// OUT5. 250 MHz.
+
+		/*The following PLL outputs have been configured through the ad9516_base_config_34 register,
+		 * so it doesn't need to replicate the configuration:
+		 *
+		 * Output 6 => 62.5 MHz
+		 * Output 7	=> 62.5 MHz
+		 * Output 8	=> 10 MHz
+		 * Output 9	=> 10 MHz
+		 */
+		ad9516_write_reg(0x143, 0x1); //Temporary Powerdown 10MHz output
+
+	} else {	//Old one
+
+		ad9516_set_output_divider(9, 4, 0);  /* AUX/SWCore = 187.5 MHz */
+		ad9516_set_output_divider(7, 12, 0); /* REF = 62.5 MHz */
+		ad9516_set_output_divider(4, 12, 0);  /* GTX = 62.5 MHz */
+	}
+
 	ad9516_sync_outputs();
 	ad9516_set_vco_divider(2); 
 	

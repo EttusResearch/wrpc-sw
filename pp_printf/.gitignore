@@ -1,1 +1,3 @@
+*.o
 example-printf
+example-printf64

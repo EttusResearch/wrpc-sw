@@ -16,6 +16,7 @@ The printf engine, vsprintf(), comes in four flavours:
 In summary:
 
     - the "full" version is a normal printf (GPL2, from older Linux kernel)
+      (as a build-time option, it supports int64_t items, as "ll" or "L")
 
     - the "xint" version accepts all formats and prints hex and int only
 
@@ -41,6 +42,10 @@ This comes from u-boot, which means that it is an earlier printf as
 used in the Linux kernel. It is licensed according to the GNU GPL
 version 2.  It includes all formats and prefixes and so on. It is
 clearly bugless because everybody is using it.
+
+In July 2014 I made some changes, which includes adding 64-bit items,
+but the feature is disabled by default. There is a whole section later
+in this file about this.
 
 It is selected at compile time by setting the make variable
 "CONFIG_PRINTF_FULL" to "y". You can do that in the environment,
@@ -72,6 +77,10 @@ Result (as you see, format modifiers are respected):
 
 Footprint: 1400-3200 bytes, plus 100-400 bytes for the frontend.
 
+(With the 2014 changes the footprint is a few hundred bytes less, but
+I lacked the time to make comprehensive builds; if you enable 64-bit
+support, you'll get a size impact of a few hunderd bytes: for ARM,
+around 200 bytes in vsprintf-full plus 200 for div64.o).
 
 	The xint implementation in detail
 	================================
@@ -164,9 +173,82 @@ the constant strings in .rodata.  I don't support this in the package,
 though, and I discourage from doing it, for the usual
 preprocessor-related reasons.
 
+	int64_t support
+	===============
+
+vsprintf-full.c now supports printing 64-bit items. It works in all
+platforms, including the 16-bit AVR CPU.  The feature is disabled by
+default because it has run-time impact (all integer conversions are
+performed using 64-bit division.
+
+Moreover, 64-bit supports requires 64-bit division. As customary in
+the kernel/bootloader world we avoid picking the libgcc
+implementation, and rely on the smaller __div64_32() function,
+instead, which only supports a 32-bit divisor and thus a 32-bit
+remainder; but this is all we need.  The function is available in
+"lib64.c", by Bernardo Innocenti, which is used in the kernel and many
+other projects.
+
+So, to enable 64-bit support in pp-printf, please use
+
+   CONFIG_PRINTF_64BIT=y
+
+in your environment or command-line of make. If your project uses
+Kconfig, you'll rely on it instead (I'm running pp-printf in 3
+Kconfig-based projects and it works great).
+
+If you already have __div64_32() in your project, you are done:
+vsprintf-full.o will have an undefined symbol, that your final link
+will resolve.  If you miss the function, you can use the local
+version. To do that, set
+
+   CONFIG_PRINTF_LOCAL_DIV64=y
+
+in your environment or the command line of make.
+
+The test program for 64-bit formats is not built by default. To build
+it, you should
+
+   make CONFIG_PRINTF_64BIT=y example-printf64
+
+This automatically picks div64.o: you'll get a link error if you also
+set CONFIG_PRINTF_LOCAL_DIV64=y. This is not a problem as the test
+is meant to be run locally, only once or so.
+
+The test prints one thousand, one million and so on using the various
+formats, ending with the maximum positive and maximum negative::
+
+    positive:                     1000
+    negative:                    -1000
+    neg-unsigned: 18446744073709550616
+    pos-hex:        0x00000000000003e8
+    pos-HEX:        0x00000000000003E8
+    neg-hex:        0xfffffffffffffc18
+
+    [...]
+
+    positive:      1000000000000000000
+    negative:     -1000000000000000000
+    neg-unsigned: 17446744073709551616
+    pos-hex:        0x0de0b6b3a7640000
+    pos-HEX:        0x0DE0B6B3A7640000
+    neg-hex:        0xf21f494c589c0000
+
+    max positive:  9223372036854775807
+    max negative: -9223372036854775808
+
+You may want to verify with your own target platform, before using the
+code in production (you can avoid that if you trust me, but I wouldn't
+blindly trust programmers, in general).
+
 
 	Footprint of the various implementations
 	========================================
+
+NOTE: these figures refer to the 2012 master. The "full"
+implementation is now a few hundred bytes smaller.
+Also, I made no measures for the 64-bit version, which adds a few
+hundred bytes (and run-time overhead of every integer print).
 
 This table excludes the static buffer (256 in .bss by default) and
 only lists the code size (command "size", column "text"), compiled
