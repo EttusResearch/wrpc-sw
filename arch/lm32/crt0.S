@@ -130,8 +130,6 @@ _crt0:
     /* Setup stack and global pointer */
     mvhi    sp, hi(_fstack)
     ori     sp, sp, lo(_fstack)
-    mvhi    gp, hi(_gp)
-    ori     gp, gp, lo(_gp)
 	
     mvhi    r1, hi(_fbss)
     ori     r1, r1, lo(_fbss)

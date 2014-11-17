@@ -14,6 +14,4 @@ _reset_handler:
     xor     r0, r0, r0
     mvhi    sp, hi(_fstack)
     ori     sp, sp, lo(_fstack)
-    mvhi    gp, hi(_gp)
-    ori     gp, gp, lo(_gp)
 		calli 	main

@@ -49,7 +49,6 @@ SECTIONS
 
 	.data : {
 		*(.data .data.*)
-		_gp = ALIGN(16) + 0x7ff0; /* FIXME: what is this? */
 	} > ram
 
 	.bss : {
