@@ -31,8 +31,9 @@ ENTRY(_start)
 
 MEMORY
 {
-    ram : ORIGIN = 0x00000000, LENGTH = 0x7000
+    ram  : ORIGIN = 0x0000, LENGTH = 0x7000
     mbox : ORIGIN = 0x7000, LENGTH = 0x1000
+    stats : ORIGIN = 0x8000, LENGTH = 0x1000
 }
 
 SECTIONS
@@ -59,6 +60,12 @@ SECTIONS
 		_fmbox = .;
 		*(.mbox)
 	} > mbox
+
+	.stats : {
+		. = ALIGN(4);
+		_fstats = .;
+		*(.stats)
+	} > stats
 
 	/* First location in stack is highest address in RAM */
 	PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);

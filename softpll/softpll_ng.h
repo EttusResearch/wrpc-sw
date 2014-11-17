@@ -129,5 +129,20 @@ int spll_get_dac(int out_channel);
 
 void check_vco_frequencies();
 
+/* info reported through .stat section */
+struct spll_stats {
+	int magic;	/* 0x5b1157a7 = SPLLSTAT ?;)*/
+	int ver;		/* version of the structure */
+	char valid;	/* is the stat info valid */
+	int mode;
+	int irq_cnt;
+	int seq_state;
+	int align_state;
+	int H_lock;
+	int M_lock;
+	int H_y, M_y;
+	int del_cnt;
+};
+
 #endif // __SOFTPLL_NG_H
 

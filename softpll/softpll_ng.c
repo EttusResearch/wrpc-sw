@@ -19,6 +19,10 @@ volatile struct PPSG_WB *PPSG;
 
 int spll_n_chan_ref, spll_n_chan_out;
 
+#if defined(CONFIG_WR_SWITCH)
+struct spll_stats *stats_ptr = 0x8000;
+#endif
+
 /*
  * The includes below contain code (not only declarations) to enable
  * the compiler to inline functions where necessary and save some CPU
@@ -636,12 +640,32 @@ void spll_set_dac(int index, int value)
 
 void spll_update()
 {
+	struct spll_stats temp_stats;
 	switch(softpll.mode) {
 		case SPLL_MODE_GRAND_MASTER:
 			external_align_fsm(&softpll.ext);
 			break;
 	}
 	spll_update_aux_clocks();
+
+#if defined(CONFIG_WR_SWITCH)
+	/* for WRS update .stat section in memory */
+	temp_stats.magic = 0x5b1157a7;
+	temp_stats.ver	 = 1;
+	temp_stats.valid = 0;
+	temp_stats.mode  = softpll.mode;
+	temp_stats.irq_cnt = irq_count;
+	temp_stats.seq_state = softpll.seq_state;
+	temp_stats.align_state = softpll.ext.align_state;
+	temp_stats.H_lock = softpll.helper.ld.locked;
+	temp_stats.M_lock = softpll.mpll.ld.locked;
+	temp_stats.H_y = softpll.helper.pi.y;
+	temp_stats.M_y = softpll.mpll.pi.y;
+	temp_stats.del_cnt = softpll.delock_count;
+	stats_ptr->valid = 0;
+	*stats_ptr = temp_stats;
+	stats_ptr->valid = 1;
+#endif
 }
 
 static int spll_measure_frequency(int osc)
