@@ -23,7 +23,7 @@ config PRINTF_XINT
 
 config RAMSIZE
 	int
-	default 28672 if WR_SWITCH
+	default 65536 if WR_SWITCH
 	default 90112
 
 # CONFIG_WR_SWITCH has no further options at all at this point
