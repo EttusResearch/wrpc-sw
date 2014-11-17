@@ -643,8 +643,9 @@ void spll_update()
 	}
 	spll_update_aux_clocks();
 
+	/* currently we have statistics only in the switch */
 	if (is_wr_switch) {
-		/* currently we have statistics only in the switch */
+		stats.sequence++;
 		stats.mode  = softpll.mode;
 		stats.irq_cnt = irq_count;
 		stats.seq_state = softpll.seq_state;
@@ -654,6 +655,7 @@ void spll_update()
 		stats.H_y = softpll.helper.pi.y;
 		stats.M_y = softpll.mpll.pi.y;
 		stats.del_cnt = softpll.delock_count;
+		stats.sequence++;
 	}
 }
 

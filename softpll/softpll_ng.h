@@ -132,7 +132,8 @@ void check_vco_frequencies();
 /* info reported through .stat section */
 struct spll_stats {
 	int magic;	/* 0x5b1157a7 = SPLLSTAT ?;)*/
-	int ver;		/* version of the structure */
+	int ver;	/* version of the structure */
+	int sequence;	/* sequence number, so the host can retry */
 	int mode;
 	int irq_cnt;
 	int seq_state;
