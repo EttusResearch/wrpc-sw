@@ -652,7 +652,6 @@ void spll_update()
 	/* for WRS update .stat section in memory */
 	temp_stats.magic = 0x5b1157a7;
 	temp_stats.ver	 = 1;
-	temp_stats.valid = 0;
 	temp_stats.mode  = softpll.mode;
 	temp_stats.irq_cnt = irq_count;
 	temp_stats.seq_state = softpll.seq_state;
@@ -662,9 +661,7 @@ void spll_update()
 	temp_stats.H_y = softpll.helper.pi.y;
 	temp_stats.M_y = softpll.mpll.pi.y;
 	temp_stats.del_cnt = softpll.delock_count;
-	stats_ptr->valid = 0;
 	*stats_ptr = temp_stats;
-	stats_ptr->valid = 1;
 #endif
 }
 
