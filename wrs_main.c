@@ -10,6 +10,15 @@ const char *build_date;
 
 int scb_ver = 33;		//SCB version.
 
+/*
+ * We export softpll internal status to the ARM cpu, for SNMP. Thus,
+ * we place this structure at a known address in the linker script
+ */
+struct spll_stats stats __attribute__((section(".stats"))) = {
+	.magic = 0x5b1157a7,
+	.ver = 1,
+};
+
 int main(void)
 {
 	uint32_t start_tics = timer_get_tics();

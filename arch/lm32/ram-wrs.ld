@@ -31,9 +31,10 @@ ENTRY(_start)
 
 MEMORY
 {
-    ram  : ORIGIN = 0x0000, LENGTH = 0x7000
-    mbox : ORIGIN = 0x7000, LENGTH = 0x1000
-    stats : ORIGIN = 0x8000, LENGTH = 0x1000
+    ram   : ORIGIN = 0x0000, LENGTH = 0x6800
+    stats : ORIGIN = 0x6800, LENGTH = 0x0800
+    mbox  : ORIGIN = 0x7000, LENGTH = 0x1000
+    stack : ORIGIN = 0x8000, LENGTH = 0x8000
 }
 
 SECTIONS
@@ -55,20 +56,31 @@ SECTIONS
 		_ebss = .;
 	} > ram
 
-	.mbox : {
-		. = ALIGN(4);
-		_fmbox = .;
-		*(.mbox)
-	} > mbox
-
+	/*
+	 * Currently (2014-11) the above goes up to around 0x5a00,
+	 * so we can "safely" place statistics at a known address.
+	 * If we need to move them later, we have a magic number
+	 * in there.
+	 */
 	.stats : {
-		. = ALIGN(4);
-		_fstats = .;
 		*(.stats)
 	} > stats
 
-	/* First location in stack is highest address in RAM */
-	PROVIDE(_fstack = ORIGIN(ram) + LENGTH(ram) - 4);
+	/*
+	 * The rt IPC buffer is placed at 0x7000. The value is hardwired
+	 * in the RPC initialization calls (minipc_server_create() and
+	 * wr-switch-sw::wrsw_hal in minipc_client_create()). However,
+	 * we'd better have an ELF section here, so that the compier
+	 * will complain if we overflow the stats structure above.
+	 * We'll be able to move this address ahead when stats move,
+	 * by using the magic in stats (there's no magic in minipc)
+	 */
+	.mbox : {
+		*(.mbox)
+	} > mbox
+
+	/* First location in stack is highest address in RAM (stack area) */
+	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
 }
 
 /* We need to provide mprintf to ptp-noposix object files, if missing */

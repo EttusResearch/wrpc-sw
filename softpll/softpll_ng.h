@@ -143,5 +143,8 @@ struct spll_stats {
 	int del_cnt;
 };
 
+/* This only exists in wr-switch, but we should use it always */
+extern struct spll_stats stats;
+
 #endif // __SOFTPLL_NG_H
 
