@@ -12,8 +12,8 @@
 #include <w1.h>
 #include <eeprom.h>
 
-//#include "types.h"
-//#include "i2c.h"
+#include "types.h"
+#include "i2c.h"
 //#include "eeprom.h"
 //#include "board.h"
 //#include "syscon.h"
@@ -43,8 +43,72 @@ static int sdb_w1_write(struct sdbfs *fs, int offset, void *buf, int count)
 	return w1_write_eeprom_bus(fs->drvdata, offset, buf, count);
 }
 
-/* The methods for I2C access -- FIXME */
+/*
+ * I2C code.
+ * The functions in ./eeprom.c (legacy) are replicated here with the sdb
+ * calling convention. So we miss the low-level and high-level layer splitting
+ */
+struct i2c_params {
+	int ifnum;
+	int addr;
+};
 
+static struct i2c_params i2c_params;
+
+static int sdb_i2c_read(struct sdbfs *fs, int offset, void *buf, int count)
+{
+	int i;
+	struct i2c_params *p = fs->drvdata;
+	unsigned char *cb = buf;
+
+	mi2c_start(p->ifnum);
+	if (mi2c_put_byte(p->ifnum, p->addr << 1) < 0) {
+		mi2c_stop(p->ifnum);
+		return -1;
+	}
+	mi2c_put_byte(p->ifnum, (offset >> 8) & 0xff);
+	mi2c_put_byte(p->ifnum, offset & 0xff);
+	mi2c_repeat_start(p->ifnum);
+	mi2c_put_byte(p->ifnum, (p->addr << 1) | 1);
+	for (i = 0; i < count - 1; ++i) {
+		mi2c_get_byte(p->ifnum, cb, 0);
+		cb++;
+	}
+	mi2c_get_byte(p->ifnum, cb, 1);
+	cb++;
+	mi2c_stop(p->ifnum);
+
+	return count;
+}
+
+static int sdb_i2c_write(struct sdbfs *fs, int offset, void *buf, int count)
+{
+	int i, busy;
+	struct i2c_params *p = fs->drvdata;
+	unsigned char *cb = buf;
+
+	for (i = 0; i < count; i++) {
+		mi2c_start(p->ifnum);
+
+		if (mi2c_put_byte(p->ifnum, p->addr << 1) < 0) {
+			mi2c_stop(p->ifnum);
+			return -1;
+		}
+		mi2c_put_byte(p->ifnum, (offset >> 8) & 0xff);
+		mi2c_put_byte(p->ifnum, offset & 0xff);
+		mi2c_put_byte(p->ifnum, *cb++);
+		offset++;
+		mi2c_stop(p->ifnum);
+
+		do {		/* wait until the chip becomes ready */
+			mi2c_start(p->ifnum);
+			busy = mi2c_put_byte(p->ifnum, p->addr << 1);
+			mi2c_stop(p->ifnum);
+		} while (busy);
+
+	}
+	return count;
+}
 
 /*
  * A trivial dumper, just to show what's up in there
@@ -62,11 +126,13 @@ static void eeprom_sdb_list(struct sdbfs *fs)
 		new = 0;
 	}
 }
-/* The sdb filesystem itself */
+/* The sdb filesystem itself, build-time initialized for i2c */
 static struct sdbfs wrc_sdb = {
-	.name = "wrpc-storage",
+	.name = "eeprom",
 	.blocksize = 1, /* Not currently used */
-	/* .read and .write according to device type */
+	.drvdata = &i2c_params,
+	.read = sdb_i2c_read,
+	.write = sdb_i2c_write,
 };
 
 uint8_t has_eeprom = 0; /* modified at init time */
@@ -82,7 +148,7 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	static unsigned entry_points[] = {0, 64, 128, 256, 512, 1024};
 	int i, ret;
 
-	/* Look for w1 first: if there is no eeprom if fails fast */
+	/* Look for w1 first: if there is no eeprom it fails fast */
 	for (i = 0; i < ARRAY_SIZE(entry_points); i++) {
 		ret = w1_read_eeprom_bus(&wrpc_w1_bus, entry_points[i],
 					 (void *)&magic, sizeof(magic));
@@ -93,21 +159,40 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	}
 	if (magic == SDB_MAGIC) {
 		pp_printf("sdbfs: found at %i in W1\n", entry_points[i]);
+		/* override default i2c settings with w1 ones */
 		wrc_sdb.drvdata = &wrpc_w1_bus;
 		wrc_sdb.read = sdb_w1_read;
 		wrc_sdb.write = sdb_w1_write;
-		has_eeprom = 1;
-		eeprom_sdb_list(&wrc_sdb);
-		return 0;
+		goto found_exit;
 	}
 
 	/*
-	 * If w1 failed, look for i2c: start from high offsets by now.
-	 * FIXME: this is a hack, until we have subdirectory support
+	 * If w1 failed, look for i2c: start from low offsets.
 	 */
-	for (i = ARRAY_SIZE(entry_points) - i; i >= 0; i--) {
-		/* FIXME: i2c */
+	if (!mi2c_devprobe(i2cif, i2c_addr))
+		return 0;
+	i2c_params.ifnum = i2cif;
+	i2c_params.addr = i2c_addr;
+
+	/* While looking for the magic number, use sdb-based read function */
+	for (i = 0; i < ARRAY_SIZE(entry_points); i++) {
+		uint32_t magic;
+
+		sdb_i2c_read(&wrc_sdb, entry_points[i], (void *)&magic,
+			    sizeof(magic));
+		if (magic == SDB_MAGIC)
+			break;
 	}
+	if (i == ARRAY_SIZE(entry_points)) {
+		pp_printf("No SDB filesystem in i2c eeprom\n");
+		return 0;
+	}
+
+found_exit:
+	/* found: register the filesystem */
+	has_eeprom = 1;
+	sdbfs_dev_create(&wrc_sdb);
+	eeprom_sdb_list(&wrc_sdb);
 	return 0;
 }
 

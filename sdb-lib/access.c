@@ -21,7 +21,7 @@ int sdbfs_fstat(struct sdbfs *fs, struct sdb_device *record_return)
 
 int sdbfs_fread(struct sdbfs *fs, int offset, void *buf, int count)
 {
-	int ret = count;
+	int ret;
 
 	if (!fs->currentp)
 		return -ENOENT;
@@ -29,6 +29,7 @@ int sdbfs_fread(struct sdbfs *fs, int offset, void *buf, int count)
 		offset = fs->read_offset;
 	if (offset + count > fs->f_len)
 		count = fs->f_len - offset;
+	ret = count;
 	if (fs->data)
 		memcpy(buf, fs->data + fs->f_offset + offset, count);
 	else
@@ -40,7 +41,7 @@ int sdbfs_fread(struct sdbfs *fs, int offset, void *buf, int count)
 
 int sdbfs_fwrite(struct sdbfs *fs, int offset, void *buf, int count)
 {
-	int ret = count;
+	int ret;
 
 	if (!fs->currentp)
 		return -ENOENT;
@@ -48,6 +49,7 @@ int sdbfs_fwrite(struct sdbfs *fs, int offset, void *buf, int count)
 		offset = fs->read_offset;
 	if (offset + count > fs->f_len)
 		count = fs->f_len - offset;
+	ret = count;
 	if (fs->data)
 		memcpy(buf, fs->data + fs->f_offset + offset, count);
 	else

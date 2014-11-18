@@ -204,10 +204,11 @@ config UART_SW
 	  and diagnostics run on the hardware UART if available.
 
 config SDB_EEPROM
-	depends on DEVELOPER && W1
+	default y
 	boolean "Use SDB to manage EEPROM (instead of legacy code)"
 	help
-	  New experimental code to unify W1 and EEPROM storage
+	  Use SDB to manage eeproms, both W1 and I2C. If not, legacy code
+	  will be selected.
 
 config LEGACY_EEPROM
 	boolean
