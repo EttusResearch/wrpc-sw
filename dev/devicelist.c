@@ -52,23 +52,37 @@ void sdb_print_devices(void)
 	}
 }
 
-struct wrc_device {
-	unsigned char **base;
-	/* uint64_t vid; -- lazily, we know it's CERN always */
-	uint32_t did;
-};
+/* To save a little size, we enumerate our vendors */
 #define VID_CERN	0x0000ce42LL
 #define VID_GSI		0x00000651LL
 
+enum {
+	VID_IS_CERN,
+	VID_IS_GSI
+};
+
+static int vendors[] = {
+	[VID_IS_CERN] = VID_CERN,
+	[VID_IS_GSI] = VID_GSI,
+};
+
+struct wrc_device {
+	unsigned char **base;
+	int vendor;
+	uint32_t did;
+};
+
+static uint64_t vid
+
 struct wrc_device devs[] = {
-	{&BASE_MINIC,         0xab28633a},
-	{&BASE_EP,            0x650c2d4f},
-	{&BASE_SOFTPLL,       0x65158dc0},
-	{&BASE_PPS_GEN,       0xde0d8ced},
-	{&BASE_SYSCON,        0xff07fc47},
-	{&BASE_UART,          0xe2d13d04},
-	{&BASE_ONEWIRE,       0x779c5443},
-	{&BASE_ETHERBONE_CFG, 0x68202b22},
+	{&BASE_MINIC,         VID_IS_CERN,	0xab28633a},
+	{&BASE_EP,            VID_IS_CERN,	0x650c2d4f},
+	{&BASE_SOFTPLL,       VID_IS_CERN,	0x65158dc0},
+	{&BASE_PPS_GEN,       VID_IS_CERN,	0xde0d8ced},
+	{&BASE_SYSCON,        VID_IS_CERN,	0xff07fc47},
+	{&BASE_UART,          VID_IS_CERN,	0xe2d13d04},
+	{&BASE_ONEWIRE,       VID_IS_CERN,	0x779c5443},
+	{&BASE_ETHERBONE_CFG, VID_IS_GSI,	0x68202b22},
 };
 
 void sdb_find_devices(void)
@@ -83,6 +97,6 @@ void sdb_find_devices(void)
 	}
 	for (d = devs, i = 0; i < ARRAY_SIZE(devs); d++, i++) {
 		*(d->base) = (void *)sdbfs_find_id(&wrc_fpga_sdb,
-						   VID_CERN, d->did);
+						   vnedirs[d->vendor], d->did);
 	}
 }
