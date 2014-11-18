@@ -138,11 +138,11 @@ static struct sdbfs wrc_sdb = {
 uint8_t has_eeprom = 0; /* modified at init time */
 
 /*
- * Init: returns 0 for success; it changes has_eeprom above
+ * Init: sets "int has_eeprom" above
  *
  * This is called by wrc_main, after initializing both w1 and i2c
  */
-uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
+void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 {
 	uint32_t magic = 0;
 	static unsigned entry_points[] = {0, 64, 128, 256, 512, 1024};
@@ -169,10 +169,10 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	/*
 	 * If w1 failed, look for i2c: start from low offsets.
 	 */
-	if (!mi2c_devprobe(i2cif, i2c_addr))
-		return 0;
-	i2c_params.ifnum = i2cif;
-	i2c_params.addr = i2c_addr;
+	i2c_params.ifnum = chosen_i2cif;
+	i2c_params.addr = chosen_i2c_addr;
+	if (!mi2c_devprobe(i2c_params.ifnum, i2c_params.addr))
+		return;
 
 	/* While looking for the magic number, use sdb-based read function */
 	for (i = 0; i < ARRAY_SIZE(entry_points); i++) {
@@ -185,7 +185,7 @@ uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
 	}
 	if (i == ARRAY_SIZE(entry_points)) {
 		pp_printf("No SDB filesystem in i2c eeprom\n");
-		return 0;
+		return;
 	}
 
 found_exit:
@@ -193,7 +193,7 @@ found_exit:
 	has_eeprom = 1;
 	sdbfs_dev_create(&wrc_sdb);
 	eeprom_sdb_list(&wrc_sdb);
-	return 0;
+	return;
 }
 
 /*
@@ -275,7 +275,7 @@ int set_persistent_mac(uint8_t portnum, uint8_t * mac)
 
 
 /* Just a dummy function that writes '0' to sfp count field of the SFP DB */
-int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr)
+int32_t eeprom_sfpdb_erase(void)
 {
 	uint8_t sfpcount = 0;
 	int ret;
@@ -287,7 +287,7 @@ int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr)
 	return ret == 1 ? 0 : -1;
 }
 
-int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
+int eeprom_get_sfp(struct s_sfpinfo * sfp,
 		       uint8_t add, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
@@ -350,15 +350,14 @@ out:
 	return 0;
 }
 
-int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
+int eeprom_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
 	int8_t i, temp;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = eeprom_get_sfp(i2cif, i2c_addr,
-				      &dbsfp, 0, i);
+		temp = eeprom_get_sfp(&dbsfp, 0, i);
 		if (!i) {
 			// first round: valid sfpcount is returned
 			sfpcount = temp;
@@ -382,7 +381,7 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
  * Phase transition ("calibration" file)
  */
 #define VALIDITY_BIT 0x80000000
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * valp,
+int eeprom_phtrans(uint32_t * valp,
 		      uint8_t write)
 {
 	int ret = -1;
@@ -421,7 +420,7 @@ out:
  * ------------------------------------------------
  */
 
-int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
+int eeprom_init_erase(void)
 {
 	uint16_t used = 0;
 	int ret;
@@ -436,7 +435,7 @@ int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
 /*
  * Appends a new shell command at the end of boot script
  */
-int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
+int eeprom_init_add(const char *args[])
 {
 	int len, i = 1; /* args[0] is "add" */
 	uint8_t separator = ' ';
@@ -482,7 +481,7 @@ out:
 	return ret;
 }
 
-int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
+int eeprom_init_show(void)
 {
 	int i, ret = -1;
 	uint16_t used;
@@ -512,8 +511,7 @@ out:
 	return ret;
 }
 
-int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
-			   uint8_t bufsize, uint8_t next)
+int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 {
 	int i = 0, ret = -1;
 	uint16_t used;

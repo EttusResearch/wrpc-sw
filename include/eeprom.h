@@ -27,23 +27,19 @@ struct s_sfpinfo {
 	uint8_t chksum;
 } __attribute__ ((__packed__));
 
-uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr);
+void eeprom_init(int i2cif, int i2c_addr);
 
-int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr);
-int32_t eeprom_sfp_section(uint8_t i2cif, uint8_t i2c_addr, size_t size,
-			   uint16_t * section_sz);
-int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo *sfp);
+int eeprom_sfpdb_erase(void);
+int eeprom_match_sfp(struct s_sfpinfo *sfp);
+int eeprom_get_sfp(struct s_sfpinfo * sfp,
+                       uint8_t add, uint8_t pos);
 
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
+int eeprom_phtrans(uint32_t * val,
 		      uint8_t write);
 
-int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr);
-int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[]);
-int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr);
-int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
-			   uint8_t bufsize, uint8_t next);
-
-int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
-                       uint8_t add, uint8_t pos);
+int eeprom_init_erase(void);
+int eeprom_init_add(const char *args[]);
+int eeprom_init_show(void);
+int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next);
 
 #endif

@@ -58,14 +58,20 @@
 
 uint8_t has_eeprom = 0;
 
-uint8_t eeprom_present(uint8_t i2cif, uint8_t i2c_addr)
+static int i2cif, i2c_addr; /* globals, using the names we always used */
+
+void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 {
+	/* Save these to globals, they are never passed any more */
+	i2cif = chosen_i2cif;
+	i2c_addr = chosen_i2c_addr;
+
 	has_eeprom = 1;
 	if (!mi2c_devprobe(i2cif, i2c_addr))
 		if (!mi2c_devprobe(i2cif, i2c_addr))
 			has_eeprom = 0;
 
-	return 0;
+	return;
 }
 
 static int eeprom_read(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
@@ -128,7 +134,7 @@ static int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
 	return size;
 }
 
-int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr)
+int32_t eeprom_sfpdb_erase(void)
 {
 	uint8_t sfpcount = 0;
 
@@ -140,7 +146,7 @@ int32_t eeprom_sfpdb_erase(uint8_t i2cif, uint8_t i2c_addr)
 		return sfpcount;
 }
 
-int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
+int eeprom_get_sfp(struct s_sfpinfo * sfp,
 		       uint8_t add, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
@@ -195,15 +201,14 @@ int32_t eeprom_get_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp,
 	return sfpcount;
 }
 
-int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
+int eeprom_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
 	int8_t i, temp;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = eeprom_get_sfp(WRPC_FMC_I2C, FMC_EEPROM_ADR,
-				      &dbsfp, 0, i);
+		temp = eeprom_get_sfp(&dbsfp, 0, i);
 		if (!i) {
 			sfpcount = temp;	//only in first round valid sfpcount is returned from eeprom_get_sfp
 			if (sfpcount == 0 || sfpcount == 0xFF)
@@ -222,7 +227,7 @@ int8_t eeprom_match_sfp(uint8_t i2cif, uint8_t i2c_addr, struct s_sfpinfo * sfp)
 	return 0;
 }
 
-int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
+int eeprom_phtrans(uint32_t * val,
 		      uint8_t write)
 {
 	int8_t ret;
@@ -249,7 +254,7 @@ int8_t eeprom_phtrans(uint8_t i2cif, uint8_t i2c_addr, uint32_t * val,
 	}
 }
 
-int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
+int eeprom_init_erase(void)
 {
 	uint16_t used = 0;
 
@@ -263,7 +268,7 @@ int8_t eeprom_init_erase(uint8_t i2cif, uint8_t i2c_addr)
 /*
  * Appends a new shell command at the end of boot script
  */
-int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
+int eeprom_init_add(const char *args[])
 {
 	uint8_t i = 1;
 	uint8_t separator = ' ';
@@ -306,7 +311,7 @@ int8_t eeprom_init_add(uint8_t i2cif, uint8_t i2c_addr, const char *args[])
 	return 0;
 }
 
-int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
+int eeprom_init_show(void)
 {
 	uint16_t used, i;
 	uint8_t byte;
@@ -330,8 +335,7 @@ int32_t eeprom_init_show(uint8_t i2cif, uint8_t i2c_addr)
 	return 0;
 }
 
-int8_t eeprom_init_readcmd(uint8_t i2cif, uint8_t i2c_addr, uint8_t *buf,
-			   uint8_t bufsize, uint8_t next)
+int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 {
 	static uint16_t ptr;
 	static uint16_t used = 0;
