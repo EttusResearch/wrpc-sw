@@ -246,11 +246,10 @@ int ad9516_init(int scb_version)
 
 	if( scb_version >= 34) {	//New SCB v3.4. 10MHz Output.
 
-		ad9516_set_output_divider(2, 4, 0);  	// OUT2. 187.5 MHz.
-		ad9516_set_output_divider(3, 4, 0);  	// OUT3. 187.5 MHz.
+		ad9516_set_output_divider(2, 4, 0);  	// OUT2. 187.5 MHz. - not anymore
+		ad9516_set_output_divider(3, 4, 0);  	// OUT3. 187.5 MHz. - not anymore
 
-		ad9516_set_output_divider(4, 3, 0);  	// OUT4. 250 MHz.
-		ad9516_set_output_divider(5, 3, 0);  	// OUT5. 250 MHz.
+		ad9516_set_output_divider(4, 1, 0);  	// OUT4. 500 MHz.
 
 		/*The following PLL outputs have been configured through the ad9516_base_config_34 register,
 		 * so it doesn't need to replicate the configuration:
@@ -264,13 +263,13 @@ int ad9516_init(int scb_version)
 
 	} else {	//Old one
 
-		ad9516_set_output_divider(9, 4, 0);  /* AUX/SWCore = 187.5 MHz */
-		ad9516_set_output_divider(7, 12, 0); /* REF = 62.5 MHz */
-		ad9516_set_output_divider(4, 12, 0);  /* GTX = 62.5 MHz */
+		ad9516_set_output_divider(9, 4, 0);  /* AUX/SWCore = 187.5 MHz */ //not needed anymore
+		ad9516_set_output_divider(7, 8, 0); /* REF = 62.5 MHz */
+		ad9516_set_output_divider(4, 8, 0);  /* GTX = 62.5 MHz */
 	}
 
 	ad9516_sync_outputs();
-	ad9516_set_vco_divider(2); 
+	ad9516_set_vco_divider(3); 
 	
 	TRACE("AD9516 locked.\n");
 

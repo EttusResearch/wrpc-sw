@@ -53,7 +53,7 @@ void update_rx_queues(void);
 /* refresh period for _gui_ and _stat_ commands */
 extern int wrc_ui_refperiod;
 
-/* Init functions for the wrs build */
+/* Init functions and defaults for the wrs build */
 int ad9516_init(int scb_ver);
 void rts_init(void);
 int rtipc_init(void);
