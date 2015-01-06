@@ -176,14 +176,17 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 
 	/* While looking for the magic number, use sdb-based read function */
 	for (i = 0; i < ARRAY_SIZE(entry_points); i++) {
-		uint32_t magic;
-
 		sdb_i2c_read(&wrc_sdb, entry_points[i], (void *)&magic,
 			    sizeof(magic));
-		if (magic == SDB_MAGIC) {
-			pp_printf("sdbfs: found at %i in I2C\n", entry_points[i]);
+		if (magic == SDB_MAGIC)
 			break;
-		}
+	}
+	if (magic == SDB_MAGIC) {
+		pp_printf("sdbfs: found at %i in I2C\n", entry_points[i]);
+		wrc_sdb.drvdata = &i2c_params;
+		wrc_sdb.read = sdb_i2c_read;
+		wrc_sdb.write = sdb_i2c_write;
+		goto found_exit;
 	}
 	if (i == ARRAY_SIZE(entry_points)) {
 		pp_printf("No SDB filesystem in i2c eeprom\n");
