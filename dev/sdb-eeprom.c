@@ -180,8 +180,10 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 
 		sdb_i2c_read(&wrc_sdb, entry_points[i], (void *)&magic,
 			    sizeof(magic));
-		if (magic == SDB_MAGIC)
+		if (magic == SDB_MAGIC) {
+			pp_printf("sdbfs: found at %i in I2C\n", entry_points[i]);
 			break;
+		}
 	}
 	if (i == ARRAY_SIZE(entry_points)) {
 		pp_printf("No SDB filesystem in i2c eeprom\n");
@@ -191,6 +193,7 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 found_exit:
 	/* found: register the filesystem */
 	has_eeprom = 1;
+	wrc_sdb.entrypoint = entry_points[i];
 	sdbfs_dev_create(&wrc_sdb);
 	eeprom_sdb_list(&wrc_sdb);
 	return;
