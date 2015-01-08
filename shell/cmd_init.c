@@ -10,7 +10,7 @@
 #include <string.h>
 #include <wrc.h>
 #include "shell.h"
-#include "eeprom.h"
+#include "storage.h"
 #include "syscon.h"
 #include "i2c.h"
 
@@ -22,15 +22,15 @@ static int cmd_init(const char *args[])
 	}
 
 	if (args[0] && !strcasecmp(args[0], "erase")) {
-		if (eeprom_init_erase() < 0)
+		if (storage_init_erase() < 0)
 			mprintf("Could not erase init script\n");
 	} else if (args[1] && !strcasecmp(args[0], "add")) {
-		if (eeprom_init_add(args) < 0)
+		if (storage_init_add(args) < 0)
 			mprintf("Could not add the command\n");
 		else
 			mprintf("OK.\n");
 	} else if (args[0] && !strcasecmp(args[0], "show")) {
-		eeprom_init_show();
+		storage_init_show();
 	} else if (args[0] && !strcasecmp(args[0], "boot")) {
 		shell_boot_script();
 	}

@@ -21,7 +21,7 @@
 #include "pps_gen.h"
 #include "ptpd_netif.h"
 #include "i2c.h"
-#include "eeprom.h"
+#include "storage.h"
 #include "softpll_ng.h"
 #include "onewire.h"
 #include "pps_gen.h"
@@ -62,8 +62,8 @@ static void wrc_initialize()
 	flash_init();
 	/*initialize I2C bus*/
 	mi2c_init(WRPC_FMC_I2C);
-	/*check if EEPROM is onboard*/
-	eeprom_init(WRPC_FMC_I2C, FMC_EEPROM_ADR);
+	/*init storage (Flash / W1 EEPROM / I2C EEPROM*/
+	storage_init(WRPC_FMC_I2C, FMC_EEPROM_ADR);
 
 	mac_addr[0] = 0x08;	//
 	mac_addr[1] = 0x00;	// CERN OUI

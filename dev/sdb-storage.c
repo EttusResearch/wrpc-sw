@@ -10,13 +10,10 @@
 //#include <string.h>
 #include <wrc.h>
 #include <w1.h>
-#include <eeprom.h>
+#include <storage.h>
 
 #include "types.h"
 #include "i2c.h"
-//#include "eeprom.h"
-//#include "board.h"
-//#include "syscon.h"
 #include <sdb.h>
 
 #define SDBFS_BIG_ENDIAN
@@ -163,7 +160,7 @@ static int sdb_i2c_erase(struct sdbfs *fs, int offset, int count)
 /*
  * A trivial dumper, just to show what's up in there
  */
-static void eeprom_sdb_list(struct sdbfs *fs)
+static void storage_sdb_list(struct sdbfs *fs)
 {
 	struct sdb_device *d;
 	int new = 1;
@@ -192,7 +189,7 @@ uint8_t has_eeprom = 0; /* modified at init time */
  *
  * This is called by wrc_main, after initializing both w1 and i2c
  */
-void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
+void storage_init(int chosen_i2cif, int chosen_i2c_addr)
 {
 	uint32_t magic = 0;
 	static unsigned entry_points_eeprom[] = {0, 64, 128, 256, 512, 1024};
@@ -283,7 +280,7 @@ found_exit:
 	/* found: register the filesystem */
 	has_eeprom = 1;
 	sdbfs_dev_create(&wrc_sdb);
-	eeprom_sdb_list(&wrc_sdb);
+	storage_sdb_list(&wrc_sdb);
 	return;
 }
 
@@ -366,7 +363,7 @@ int set_persistent_mac(uint8_t portnum, uint8_t * mac)
 
 
 /* Erase SFB database in the memory */
-int32_t eeprom_sfpdb_erase(void)
+int32_t storage_sfpdb_erase(void)
 {
 	int ret;
 
@@ -381,7 +378,7 @@ int32_t eeprom_sfpdb_erase(void)
 
 /* Dummy check if sfp information is correct by verifying it doesn't have
  * 0xff bytes */
-static int eeprom_sfp_valid(struct s_sfpinfo *sfp)
+static int sfp_valid(struct s_sfpinfo *sfp)
 {
 	int i;
 	
@@ -392,7 +389,7 @@ static int eeprom_sfp_valid(struct s_sfpinfo *sfp)
 	return 1;
 }
 
-int eeprom_get_sfp(struct s_sfpinfo * sfp,
+int storage_get_sfp(struct s_sfpinfo * sfp,
 		       uint8_t add, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
@@ -413,7 +410,7 @@ int eeprom_get_sfp(struct s_sfpinfo * sfp,
 		while (sdbfs_fread(&wrc_sdb, sizeof(sfpcount) +
 					sfpcount*sizeof(tempsfp), &tempsfp,
 					sizeof(tempsfp)) == sizeof(tempsfp)) {
-			if(!eeprom_sfp_valid(&tempsfp))
+			if(!sfp_valid(&tempsfp))
 				break;
 
 			sfpcount++;
@@ -463,14 +460,14 @@ out:
 	return 0;
 }
 
-int eeprom_match_sfp(struct s_sfpinfo * sfp)
+int storage_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
 	int8_t i, temp;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = eeprom_get_sfp(&dbsfp, 0, i);
+		temp = storage_get_sfp(&dbsfp, 0, i);
 		if (!i) {
 			// first round: valid sfpcount is returned
 			sfpcount = temp;
@@ -494,7 +491,7 @@ int eeprom_match_sfp(struct s_sfpinfo * sfp)
  * Phase transition ("calibration" file)
  */
 #define VALIDITY_BIT 0x80000000
-int eeprom_phtrans(uint32_t * valp,
+int storage_phtrans(uint32_t * valp,
 		      uint8_t write)
 {
 	int ret = -1;
@@ -534,7 +531,7 @@ out:
  * ------------------------------------------------
  */
 
-int eeprom_init_erase(void)
+int storage_init_erase(void)
 {
 	int ret;
 
@@ -550,7 +547,7 @@ int eeprom_init_erase(void)
 /*
  * Appends a new shell command at the end of boot script
  */
-int eeprom_init_add(const char *args[])
+int storage_init_add(const char *args[])
 {
 	int len, i;
 	uint8_t separator = ' ';
@@ -604,7 +601,7 @@ out:
 	return ret;
 }
 
-int eeprom_init_show(void)
+int storage_init_show(void)
 {
 	int ret = -1;
 	uint16_t used;
@@ -631,7 +628,7 @@ out:
 	return ret;
 }
 
-int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
+int storage_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 {
 	int i = 0, ret = -1;
 	uint16_t used;

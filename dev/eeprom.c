@@ -11,7 +11,7 @@
 
 #include "types.h"
 #include "i2c.h"
-#include "eeprom.h"
+#include "storage.h"
 #include "board.h"
 #include "syscon.h"
 
@@ -60,7 +60,7 @@ uint8_t has_eeprom = 0;
 
 static int i2cif, i2c_addr; /* globals, using the names we always used */
 
-void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
+void storage_init(int chosen_i2cif, int chosen_i2c_addr)
 {
 	/* Save these to globals, they are never passed any more */
 	i2cif = chosen_i2cif;
@@ -134,7 +134,7 @@ static int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
 	return size;
 }
 
-int32_t eeprom_sfpdb_erase(void)
+int32_t storage_sfpdb_erase(void)
 {
 	uint8_t sfpcount = 0;
 
@@ -146,7 +146,7 @@ int32_t eeprom_sfpdb_erase(void)
 		return sfpcount;
 }
 
-int eeprom_get_sfp(struct s_sfpinfo * sfp,
+int storage_get_sfp(struct s_sfpinfo * sfp,
 		       uint8_t add, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
@@ -201,14 +201,14 @@ int eeprom_get_sfp(struct s_sfpinfo * sfp,
 	return sfpcount;
 }
 
-int eeprom_match_sfp(struct s_sfpinfo * sfp)
+int storage_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
 	int8_t i, temp;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = eeprom_get_sfp(&dbsfp, 0, i);
+		temp = storage_get_sfp(&dbsfp, 0, i);
 		if (!i) {
 			sfpcount = temp;	//only in first round valid sfpcount is returned from eeprom_get_sfp
 			if (sfpcount == 0 || sfpcount == 0xFF)
@@ -227,7 +227,7 @@ int eeprom_match_sfp(struct s_sfpinfo * sfp)
 	return 0;
 }
 
-int eeprom_phtrans(uint32_t * val,
+int storage_phtrans(uint32_t * val,
 		      uint8_t write)
 {
 	int8_t ret;
@@ -254,7 +254,7 @@ int eeprom_phtrans(uint32_t * val,
 	}
 }
 
-int eeprom_init_erase(void)
+int storage_init_erase(void)
 {
 	uint16_t used = 0;
 
@@ -268,7 +268,7 @@ int eeprom_init_erase(void)
 /*
  * Appends a new shell command at the end of boot script
  */
-int eeprom_init_add(const char *args[])
+int storage_init_add(const char *args[])
 {
 	uint8_t i = 1;
 	uint8_t separator = ' ';
@@ -311,7 +311,7 @@ int eeprom_init_add(const char *args[])
 	return 0;
 }
 
-int eeprom_init_show(void)
+int storage_init_show(void)
 {
 	uint16_t used, i;
 	uint8_t byte;
@@ -335,7 +335,7 @@ int eeprom_init_show(void)
 	return 0;
 }
 
-int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
+int storage_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 {
 	static uint16_t ptr;
 	static uint16_t used = 0;

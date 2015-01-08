@@ -1,5 +1,5 @@
-#ifndef __EEPROM_H
-#define __EEPROM_H
+#ifndef __STORAGE_H
+#define __STORAGE_H
 
 #define SFP_SECTION_PATTERN 0xdeadbeef
 #define SFPS_MAX 4
@@ -27,19 +27,19 @@ struct s_sfpinfo {
 	uint8_t chksum;
 } __attribute__ ((__packed__));
 
-void eeprom_init(int i2cif, int i2c_addr);
+void storage_init(int i2cif, int i2c_addr);
 
-int eeprom_sfpdb_erase(void);
-int eeprom_match_sfp(struct s_sfpinfo *sfp);
-int eeprom_get_sfp(struct s_sfpinfo * sfp,
+int storage_sfpdb_erase(void);
+int storage_match_sfp(struct s_sfpinfo *sfp);
+int storage_get_sfp(struct s_sfpinfo * sfp,
                        uint8_t add, uint8_t pos);
 
-int eeprom_phtrans(uint32_t * val,
+int storage_phtrans(uint32_t * val,
 		      uint8_t write);
 
-int eeprom_init_erase(void);
-int eeprom_init_add(const char *args[]);
-int eeprom_init_show(void);
-int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next);
+int storage_init_erase(void);
+int storage_init_add(const char *args[]);
+int storage_init_show(void);
+int storage_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next);
 
 #endif

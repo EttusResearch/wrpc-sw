@@ -14,7 +14,7 @@ LGPL 2.1
 #include "board.h"
 #include "syscon.h"
 #include <endpoint.h>
-#include "eeprom.h"
+#include "storage.h"
 
 #include <hw/endpoint_regs.h>
 #include <hw/endpoint_mdio.h>

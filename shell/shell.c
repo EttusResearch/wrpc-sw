@@ -18,7 +18,7 @@
 #include "uart.h"
 #include "syscon.h"
 #include "shell.h"
-#include "eeprom.h"
+#include "storage.h"
 
 #define SH_MAX_LINE_LEN 80
 #define SH_MAX_ARGS 8
@@ -256,7 +256,7 @@ int shell_boot_script(void)
 		return -1;
 
 	while (1) {
-		cmd_len = eeprom_init_readcmd((uint8_t *)cmd_buf,
+		cmd_len = storage_init_readcmd((uint8_t *)cmd_buf,
 					      SH_MAX_LINE_LEN, next);
 		if (cmd_len <= 0) {
 			if (next == 0)

@@ -16,7 +16,7 @@
 #include <string.h>
 #include <wrc.h>
 #include "shell.h"
-#include "eeprom.h"
+#include "storage.h"
 #include "syscon.h"
 #include "rxts_calibrator.h"
 
@@ -27,9 +27,9 @@ static int cmd_calibration(const char *args[])
 	if (args[0] && !strcasecmp(args[0], "force")) {
 		if (measure_t24p(&trans) < 0)
 			return -1;
-		return eeprom_phtrans(&trans, 1);
+		return storage_phtrans(&trans, 1);
 	} else if (!args[0]) {
-		if (eeprom_phtrans(&trans, 0) > 0) {
+		if (storage_phtrans(&trans, 0) > 0) {
 			mprintf("Found phase transition in EEPROM: %dps\n",
 				trans);
 			cal_phase_transition = trans;
@@ -39,7 +39,7 @@ static int cmd_calibration(const char *args[])
 			if (measure_t24p(&trans) < 0)
 				return -1;
 			cal_phase_transition = trans;
-			return eeprom_phtrans(&trans, 1);
+			return storage_phtrans(&trans, 1);
 		}
 	}
 
