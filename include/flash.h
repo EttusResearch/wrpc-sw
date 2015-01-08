@@ -11,10 +11,13 @@
 
 #include "types.h"
 
+#define FLASH_BLOCKSIZE 512
+
 /* Flash interface functions */
 void	flash_init(void);
 int	flash_write(uint32_t addr, uint8_t *buf, int count);
 int	flash_read(uint32_t addr, uint8_t *buf, int count);
+int 	flash_erase(uint32_t addr, int count);
 void	flash_serase(uint32_t addr);
 void	flash_berase(void);
 uint8_t	flash_rsr(void);

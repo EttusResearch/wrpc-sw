@@ -103,6 +103,26 @@ int flash_read(uint32_t addr, uint8_t *buf, int count)
 	return count;
 }
 
+int flash_erase(uint32_t addr, int count)
+{
+	int i;
+	int sectors;
+
+	/*calc number of sectors to be removed*/
+	if(count % FLASH_BLOCKSIZE > 0)
+		sectors = 1;
+	else
+		sectors = 0;
+	sectors += (count / FLASH_BLOCKSIZE);
+
+	for(i=0; i<sectors; ++i) {
+		flash_serase(addr + i*FLASH_BLOCKSIZE);
+		while(flash_rsr() & 0x01);
+	}
+
+	return count;
+}
+
 /*
  * Sector erase
  */
