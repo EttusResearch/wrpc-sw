@@ -287,7 +287,7 @@ found_exit:
 /*
  * Reading/writing the MAC address used to be part of dev/onewire.c,
  * but is not onewire-specific.  What is w1-specific is the default
- * setting if no sdbfs is there, but CONFIG_SDB_EEPROM depends on
+ * setting if no sdbfs is there, but CONFIG_SDB_STORAGE depends on
  * CONFIG_W1 anyways.
  */
 int get_persistent_mac(uint8_t portnum, uint8_t * mac)

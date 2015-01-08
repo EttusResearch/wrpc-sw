@@ -203,16 +203,16 @@ config UART_SW
 	  are routed to the software uart. The interactive wrpc shell
 	  and diagnostics run on the hardware UART if available.
 
-config SDB_EEPROM
+config SDB_STORAGE
 	default y
-	boolean "Use SDB to manage EEPROM (instead of legacy code)"
+	boolean "Use SDB to manage storage (instead of legacy eeprom code)"
 	help
-	  Use SDB to manage eeproms, both W1 and I2C. If not, legacy code
-	  will be selected.
+	  Use SDB to manage flash and eeproms (both W1 and I2C). If not, legacy code
+	  (eeprom only) will be selected.
 
 config LEGACY_EEPROM
 	boolean
-	default !SDB_EEPROM
+	default !SDB_STORAGE
 
 endif
 # CONFIG_WR_NODE
