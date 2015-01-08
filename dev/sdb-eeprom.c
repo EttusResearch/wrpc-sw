@@ -110,6 +110,34 @@ static int sdb_i2c_write(struct sdbfs *fs, int offset, void *buf, int count)
 	return count;
 }
 
+static int sdb_i2c_erase(struct sdbfs *fs, int offset, int count)
+{
+	int i, busy;
+	struct i2c_params *p = fs->drvdata;
+
+	for (i = 0; i < count; i++) {
+		mi2c_start(p->ifnum);
+
+		if (mi2c_put_byte(p->ifnum, p->addr << 1) < 0) {
+			mi2c_stop(p->ifnum);
+			return -1;
+		}
+		mi2c_put_byte(p->ifnum, (offset >> 8) & 0xff);
+		mi2c_put_byte(p->ifnum, offset & 0xff);
+		mi2c_put_byte(p->ifnum, 0xff);
+		offset++;
+		mi2c_stop(p->ifnum);
+
+		do {		/* wait until the chip becomes ready */
+			mi2c_start(p->ifnum);
+			busy = mi2c_put_byte(p->ifnum, p->addr << 1);
+			mi2c_stop(p->ifnum);
+		} while (busy);
+
+	}
+	return count;
+}
+
 /*
  * A trivial dumper, just to show what's up in there
  */
@@ -186,6 +214,7 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 		wrc_sdb.drvdata = &i2c_params;
 		wrc_sdb.read = sdb_i2c_read;
 		wrc_sdb.write = sdb_i2c_write;
+		wrc_sdb.erase = sdb_i2c_erase;
 		goto found_exit;
 	}
 	if (i == ARRAY_SIZE(entry_points)) {
