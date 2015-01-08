@@ -28,6 +28,7 @@
 #include "shell.h"
 #include "lib/ipv4.h"
 #include "rxts_calibrator.h"
+#include "flash.h"
 
 #include "wrc_ptp.h"
 
@@ -57,6 +58,8 @@ static void wrc_initialize()
 	wrpc_w1_bus.detail = ONEWIRE_PORT;
 	w1_scan_bus(&wrpc_w1_bus);
 
+	/*initialize flash*/
+	flash_init();
 	/*initialize I2C bus*/
 	mi2c_init(WRPC_FMC_I2C);
 	/*check if EEPROM is onboard*/
