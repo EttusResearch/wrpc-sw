@@ -194,6 +194,8 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 		pp_printf("sdbfs: found at %i in W1\n", entry_points[i]);
 		/* override default i2c settings with w1 ones */
 		wrc_sdb.drvdata = &wrpc_w1_bus;
+		wrc_sdb.blocksize = 1;
+		wrc_sdb.entrypoint = entry_points[i];
 		wrc_sdb.read = sdb_w1_read;
 		wrc_sdb.write = sdb_w1_write;
 		wrc_sdb.erase = sdb_w1_erase;
@@ -218,6 +220,8 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 	if (magic == SDB_MAGIC) {
 		pp_printf("sdbfs: found at %i in I2C\n", entry_points[i]);
 		wrc_sdb.drvdata = &i2c_params;
+		wrc_sdb.blocksize = 1;
+		wrc_sdb.entrypoint = entry_points[i];
 		wrc_sdb.read = sdb_i2c_read;
 		wrc_sdb.write = sdb_i2c_write;
 		wrc_sdb.erase = sdb_i2c_erase;
@@ -231,7 +235,6 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 found_exit:
 	/* found: register the filesystem */
 	has_eeprom = 1;
-	wrc_sdb.entrypoint = entry_points[i];
 	sdbfs_dev_create(&wrc_sdb);
 	eeprom_sdb_list(&wrc_sdb);
 	return;
@@ -315,23 +318,38 @@ int set_persistent_mac(uint8_t portnum, uint8_t * mac)
  */
 
 
-/* Just a dummy function that writes '0' to sfp count field of the SFP DB */
+/* Erase SFB database in the memory */
 int32_t eeprom_sfpdb_erase(void)
 {
-	uint8_t sfpcount = 0;
 	int ret;
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_SFP) < 0)
 		return -1;
-	ret = sdbfs_fwrite(&wrc_sdb, 0, (char *)&sfpcount, 1);
+	ret = sdbfs_ferase(&wrc_sdb, 0, wrc_sdb.f_len);
+	if(ret == wrc_sdb.f_len)
+		ret = 1;
 	sdbfs_close(&wrc_sdb);
 	return ret == 1 ? 0 : -1;
+}
+
+/* Dummy check if sfp information is correct by verifying it doesn't have
+ * 0xff bytes */
+static int eeprom_sfp_valid(struct s_sfpinfo *sfp)
+{
+	int i;
+	
+	for(i=0; i<SFP_PN_LEN; ++i) {
+		if(sfp->pn[i] == 0xff)
+			return 0;
+	}
+	return 1;
 }
 
 int eeprom_get_sfp(struct s_sfpinfo * sfp,
 		       uint8_t add, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
+	struct s_sfpinfo tempsfp;
 	int ret = -1;
 	uint8_t i, chksum = 0;
 	uint8_t *ptr;
@@ -343,10 +361,17 @@ int eeprom_get_sfp(struct s_sfpinfo * sfp,
 		return -1;
 
 	//read how many SFPs are in the database, but only in the first call
-	if (!pos
-	    && sdbfs_fread(&wrc_sdb, 0, &sfpcount, sizeof(sfpcount))
-	    != sizeof(sfpcount))
-		goto out;
+	if(!pos) {
+		sfpcount = 0;
+		while (sdbfs_fread(&wrc_sdb, sizeof(sfpcount) +
+					sfpcount*sizeof(tempsfp), &tempsfp,
+					sizeof(tempsfp)) == sizeof(tempsfp)) {
+			if(!eeprom_sfp_valid(&tempsfp))
+				break;
+
+			sfpcount++;
+		}
+	}
 
 	if (add && sfpcount == SFPS_MAX)	//no more space to add new SFPs
 		return EE_RET_DBFULL;
@@ -431,6 +456,7 @@ int eeprom_phtrans(uint32_t * valp,
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_CALIB) < 0)
 		return -1;
 	if (write) {
+		sdbfs_ferase(&wrc_sdb, 0, wrc_sdb.f_len);
 		value = *valp | VALIDITY_BIT;
 		if (sdbfs_fwrite(&wrc_sdb, 0, &value, sizeof(value))
 		    != sizeof(value))
@@ -463,14 +489,15 @@ out:
 
 int eeprom_init_erase(void)
 {
-	uint16_t used = 0;
 	int ret;
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_INIT) < 0)
 		return -1;
-	ret = sdbfs_fwrite(&wrc_sdb, 0, &used, sizeof(used));
+	ret = sdbfs_ferase(&wrc_sdb, 0, wrc_sdb.f_len);
+	if(ret == wrc_sdb.f_len)
+		ret = 1;
 	sdbfs_close(&wrc_sdb);
-	return ret == sizeof(used) ? 0 : -1;
+	return ret == 1 ? 0 : -1;
 }
 
 /*
@@ -478,24 +505,37 @@ int eeprom_init_erase(void)
  */
 int eeprom_init_add(const char *args[])
 {
-	int len, i = 1; /* args[0] is "add" */
+	int len, i;
 	uint8_t separator = ' ';
 	uint16_t used, readback;
 	int ret = -1;
+	uint8_t byte;
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_INIT) < 0)
 		return -1;
-	if (sdbfs_fread(&wrc_sdb, 0, &used, sizeof(used)) != sizeof(used))
-		goto out;
+
+	/* check how many bytes we already have there */
+	used = 0;
+	while (sdbfs_fread(&wrc_sdb, sizeof(used)+used, &byte, 1) == 1) {
+		if (byte == 0xff)
+			break;
+		used ++;
+	}
+
 	if (used > 256 /* 0xffff or wrong */)
 		used = 0;
 
+	i = 1; /* args[0] is "add" */
 	while (args[i] != NULL) {
 		len = strlen(args[i]);
 		if (sdbfs_fwrite(&wrc_sdb, sizeof(used) + used,
 				 (void *)args[i], len) != len)
 			goto out;
 		used += len;
+		if(args[i+1] != NULL)	/* next one is another word of the same command */
+			separator = ' ';
+		else			/* no more words, end command with '\n' */
+			separator = '\n';
 		if (sdbfs_fwrite(&wrc_sdb, sizeof(used) + used,
 				&separator, sizeof(separator))
 		    != sizeof(separator))
@@ -503,11 +543,6 @@ int eeprom_init_add(const char *args[])
 		++used;
 		++i;
 	}
-	/*  At end of command, replace last separator with '\n' */
-	separator = '\n';
-	if (sdbfs_fwrite(&wrc_sdb, sizeof(used) + used - 1,
-			&separator, sizeof(separator)) != sizeof(separator))
-		goto out;
 	/* and finally update the size of the script */
 	if (sdbfs_fwrite(&wrc_sdb, 0, &used, sizeof(used)) != sizeof(used))
 		goto out;
@@ -524,28 +559,25 @@ out:
 
 int eeprom_init_show(void)
 {
-	int i, ret = -1;
+	int ret = -1;
 	uint16_t used;
 	uint8_t byte;
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_INIT) < 0)
 		return -1;
-	i = sdbfs_fread(&wrc_sdb, 0, &used, sizeof(used));
-	if (i != sizeof(used))
-		goto out;
-	/* sdbfs configuration sets it to 256: if insanely large refuse it */
-	if (used == 0 || used > 256 /* 0xffff or wrong */) {
-		pp_printf("Empty init script...\n");
-		goto out_ok;
-	}
-
-	/* Just read and print to the screen char after char */
-	for (i = 0; i < used; ++i) {
-		if (sdbfs_fread(&wrc_sdb, -1 /* sequentially */, &byte, 1) != 1)
+	
+	used = 0;
+	do {
+		if (sdbfs_fread(&wrc_sdb, sizeof(used) + used, &byte, 1) != 1)
 			goto out;
-		pp_printf("%c", byte);
-	}
-out_ok:
+		if(byte != 0xff) {
+			pp_printf("%c", byte);
+			used++;
+		}
+	} while(byte != 0xff);
+
+	if(used == 0)
+		pp_printf("Empty init script...\n");
 	ret = 0;
 out:
 	sdbfs_close(&wrc_sdb);
@@ -560,19 +592,17 @@ int eeprom_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_INIT) < 0)
 		return -1;
-	if (sdbfs_fread(&wrc_sdb, 0, &used, sizeof(used)) != sizeof(used))
-		goto out;
 
 	if (next == 0)
 		ptr = sizeof(used);
-	if (ptr - sizeof(used) >= used)
-		return 0;
 	do {
 		if (ptr - sizeof(used) > bufsize)
 			goto out;
 		if (sdbfs_fread(&wrc_sdb, (ptr++),
 				&buf[i], sizeof(char)) != sizeof(char))
 			goto out;
+		if (buf[i] == 0xff)
+			break;
 	} while (buf[i++] != '\n');
 	ret = i;
 out:
