@@ -72,6 +72,7 @@ extern int w1_read_eeprom(struct w1_dev *dev,
 			  int offset, uint8_t *buffer, int blen);
 extern int w1_write_eeprom(struct w1_dev *dev,
 			   int offset, const uint8_t *buffer, int blen);
+extern int w1_erase_eeprom(struct w1_dev *dev, int offset, int blen);
 
 /* These are generic, using the first suitable device in the bus */
 extern int32_t w1_read_temp_bus(struct w1_bus *bus, unsigned long flags);
@@ -79,6 +80,7 @@ extern int w1_read_eeprom_bus(struct w1_bus *bus,
 			    int offset, uint8_t *buffer, int blen);
 extern int w1_write_eeprom_bus(struct w1_bus *bus,
 			     int offset, const uint8_t *buffer, int blen);
+extern int w1_erase_eeprom_bus(struct w1_bus *bus, int offset, int blen);
 
 extern struct w1_ops wrpc_w1_ops;
 extern struct w1_bus wrpc_w1_bus;

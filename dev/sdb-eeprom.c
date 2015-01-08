@@ -43,6 +43,11 @@ static int sdb_w1_write(struct sdbfs *fs, int offset, void *buf, int count)
 	return w1_write_eeprom_bus(fs->drvdata, offset, buf, count);
 }
 
+static int sdb_w1_erase(struct sdbfs *fs, int offset, int count)
+{
+	return w1_erase_eeprom_bus(fs->drvdata, offset, count);
+}
+
 /*
  * I2C code.
  * The functions in ./eeprom.c (legacy) are replicated here with the sdb
@@ -191,6 +196,7 @@ void eeprom_init(int chosen_i2cif, int chosen_i2c_addr)
 		wrc_sdb.drvdata = &wrpc_w1_bus;
 		wrc_sdb.read = sdb_w1_read;
 		wrc_sdb.write = sdb_w1_write;
+		wrc_sdb.erase = sdb_w1_erase;
 		goto found_exit;
 	}
 
