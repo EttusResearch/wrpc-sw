@@ -51,7 +51,7 @@ int sdbfs_fwrite(struct sdbfs *fs, int offset, void *buf, int count)
 		count = fs->f_len - offset;
 	ret = count;
 	if (fs->data)
-		memcpy(buf, fs->data + fs->f_offset + offset, count);
+		memcpy(fs->data + fs->f_offset + offset, buf, count);
 	else
 		ret = fs->write(fs, fs->f_offset + offset, buf, count);
 	if (ret > 0)
