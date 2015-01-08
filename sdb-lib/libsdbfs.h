@@ -70,6 +70,7 @@ struct sdb_device *sdbfs_scan(struct sdbfs *fs, int newscan);
 int sdbfs_fstat(struct sdbfs *fs, struct sdb_device *record_return);
 int sdbfs_fread(struct sdbfs *fs, int offset, void *buf, int count);
 int sdbfs_fwrite(struct sdbfs *fs, int offset, void *buf, int count);
+int sdbfs_ferase(struct sdbfs *fs, int offset, int count);
 
 /* This is needed to convert endianness. Hoping it is not defined elsewhere */
 static inline uint64_t htonll(uint64_t ll)

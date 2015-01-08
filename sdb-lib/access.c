@@ -58,3 +58,23 @@ int sdbfs_fwrite(struct sdbfs *fs, int offset, void *buf, int count)
 		fs->read_offset = offset + ret;
 	return ret;
 }
+
+int sdbfs_ferase(struct sdbfs *fs, int offset, int count)
+{
+	int ret;
+
+	if (!fs->currentp)
+		return -ENOENT;
+	if (offset < 0)
+		offset = fs->read_offset;
+	if (offset + count > fs->f_len)
+		count = fs->f_len - offset;
+	ret = count;
+	if (fs->data)
+		memset(fs->data + fs->f_offset + offset, 0xFF, count);
+	else
+		ret = fs->erase(fs, fs->f_offset + offset, count);
+	if (ret > 0)
+		fs->read_offset = offset + ret;
+	return ret;
+}
