@@ -203,14 +203,6 @@ int ptpd_netif_select(wr_socket_t *);
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
 
 /*
- * Function reads state of the given port (interface in our case), if the port is up, everything is OK, otherwise ERROR
- * return:
- *	PTPD_NETIF_ERROR 	- if the port is down
- *	PTPD_NETIF_OK		- if the port is up
- */
-int ptpd_netif_get_port_state(const char *ifaceName);
-
-/*
  * Function looks for a port (interface) for the port number 'number'
  * it will return in the argument ifname the port name
  * return:

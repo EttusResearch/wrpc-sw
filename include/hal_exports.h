@@ -85,56 +85,6 @@ typedef struct {
 #define HEXP_PORT_TSC_FALLING 2
 */
 
-typedef struct hexp_port_state {
-	/* When non-zero: port state is valid */
-	int valid;
-
-	/* WR-PTP role of the port (Master, Slave, etc.) */
-	int mode;
-
-	/* TX and RX delays (combined, big Deltas from the link model in the spec) */
-	uint32_t delta_tx;
-	uint32_t delta_rx;
-
-	/* DDMTD raw phase value in picoseconds */
-	uint32_t phase_val;
-
-	/* When non-zero: phase_val contains a valid phase readout */
-	int phase_val_valid;
-
-	/* When non-zero: link is up */
-	int up;
-
-	/* When non-zero: TX path is calibrated (delta_tx contains valid value) */
-	int tx_calibrated;
-
-	/* When non-zero: RX path is calibrated (delta_rx contains valid value) */
-	int rx_calibrated;
-	int tx_tstamp_counter;
-	int rx_tstamp_counter;
-	int is_locked;
-	int lock_priority;
-
-	// timestamp linearization paramaters
-
-	uint32_t phase_setpoint;	// DMPLL phase setpoint (picoseconds)
-
-	uint32_t clock_period;	// reference lock period in picoseconds
-	uint32_t t2_phase_transition;	// approximate DMTD phase value (on slave port) at which RX timestamp (T2) counter transistion occurs (picoseconds)
-
-	uint32_t t4_phase_transition;	// approximate phase value (on master port) at which RX timestamp (T4) counter transistion occurs (picoseconds)
-
-	uint8_t hw_addr[6];
-	int hw_index;
-	int32_t fiber_fix_alpha;
-} hexp_port_state_t;
-
-typedef struct hexp_port_list {
-	int num_ports;		/* Number of ports in the list */
-	int num_physical_ports;	/* Number of physical ports compiled into the FPGA bitstream */
-	char port_names[HAL_MAX_PORTS][16];
-} hexp_port_list_t;
-
 typedef struct {
 	int timing_mode;	/* Free-running Master/GM/BC */
 	int locked_port;
@@ -146,7 +96,6 @@ extern int halexp_check_running(void);
 extern int halexp_reset_port(const char *port_name);
 extern int halexp_calibration_cmd(const char *port_name, int command, int on_off);
 extern int halexp_lock_cmd(const char *port_name, int command, int priority);
-extern int halexp_get_port_state(hexp_port_state_t *state, const char *port_name);
 extern int halexp_pps_cmd(int cmd, hexp_pps_params_t *params);
 extern int halexp_get_timing_state(hexp_timing_state_t *state);
 
@@ -201,16 +150,6 @@ struct minipc_pd __rpcdef_query_ports = {
 	.name = "query_ports",
 	.retval = MINIPC_ARG_ENCODE(MINIPC_ATYPE_STRUCT, hexp_port_list_t),
 	.args = {
-		 MINIPC_ARG_END,
-		 },
-};
-
-//int halexp_get_port_state(hexp_port_state_t *state, const char *port_name);
-struct minipc_pd __rpcdef_get_port_state = {
-	.name = "get_port_state",
-	.retval = MINIPC_ARG_ENCODE(MINIPC_ATYPE_STRUCT, hexp_port_state_t),
-	.args = {
-		 MINIPC_ARG_ENCODE(MINIPC_ATYPE_STRING, char *),
 		 MINIPC_ARG_END,
 		 },
 };
