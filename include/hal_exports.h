@@ -85,7 +85,7 @@ typedef struct {
 #define HEXP_PORT_TSC_FALLING 2
 */
 
-typedef struct {
+typedef struct hexp_port_state {
 	/* When non-zero: port state is valid */
 	int valid;
 
@@ -129,7 +129,7 @@ typedef struct {
 	int32_t fiber_fix_alpha;
 } hexp_port_state_t;
 
-typedef struct {
+typedef struct hexp_port_list {
 	int num_ports;		/* Number of ports in the list */
 	int num_physical_ports;	/* Number of physical ports compiled into the FPGA bitstream */
 	char port_names[HAL_MAX_PORTS][16];
@@ -144,14 +144,11 @@ typedef struct {
 /* Prototypes of functions that call on rpc */
 extern int halexp_check_running(void);
 extern int halexp_reset_port(const char *port_name);
-extern int halexp_calibration_cmd(const char *port_name, int command,
-				  int on_off);
+extern int halexp_calibration_cmd(const char *port_name, int command, int on_off);
 extern int halexp_lock_cmd(const char *port_name, int command, int priority);
-extern int halexp_query_ports(hexp_port_list_t * list);
-extern int halexp_get_port_state(hexp_port_state_t * state,
-				 const char *port_name);
-extern int halexp_pps_cmd(int cmd, hexp_pps_params_t * params);
-extern int halexp_get_timing_state(hexp_timing_state_t * state);
+extern int halexp_get_port_state(hexp_port_state_t *state, const char *port_name);
+extern int halexp_pps_cmd(int cmd, hexp_pps_params_t *params);
+extern int halexp_get_timing_state(hexp_timing_state_t *state);
 
 /* Export structures, shared by server and client for argument matching */
 #ifdef HAL_EXPORT_STRUCTURES
