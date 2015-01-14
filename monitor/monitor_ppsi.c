@@ -75,7 +75,7 @@ int wrc_mon_status()
 void wrc_mon_gui(void)
 {
 	static uint32_t last;
-	hexp_port_state_t ps;
+	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
 	uint64_t sec;
@@ -102,16 +102,16 @@ void wrc_mon_gui(void)
 	cprintf(C_WHITE, "%s", format_time(sec));
 
 	/*show_ports */
-	halexp_get_port_state(&ps, NULL);
+	wrpc_get_port_state(&state, NULL);
 	pcprintf(4, 1, C_BLUE, "\n\nLink status:");
 
 	pcprintf(6, 1, C_WHITE, "%s: ", "wru1");
-	if (ps.up)
+	if (state.state)
 		cprintf(C_GREEN, "Link up   ");
 	else
 		cprintf(C_RED, "Link down ");
 
-	if (ps.up) {
+	if (state.state) {
 		minic_get_stats(&tx, &rx);
 		cprintf(C_GREY, "(RX: %d, TX: %d), mode: ", rx, tx);
 
@@ -132,11 +132,11 @@ void wrc_mon_gui(void)
 			cprintf(C_RED, "WR Unknown   ");
 		}
 
-		if (ps.is_locked)
+		if (state.locked)
 			cprintf(C_GREEN, "Locked  ");
 		else
 			cprintf(C_RED, "NoLock  ");
-		if (ps.rx_calibrated && ps.tx_calibrated)
+		if (state.calib.rx_calibrated && state.calib.tx_calibrated)
 			cprintf(C_GREEN, "Calibrated  ");
 		else
 			cprintf(C_RED, "Uncalibrated  ");
@@ -259,7 +259,7 @@ static void wrc_mon_std_servo(void)
 int wrc_log_stats(uint8_t onetime)
 {
 	static uint32_t last;
-	hexp_port_state_t ps;
+	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
 	uint64_t sec;
@@ -273,10 +273,10 @@ int wrc_log_stats(uint8_t onetime)
 	last = timer_get_tics();
 
 	shw_pps_gen_get_time(&sec, &nsec);
-	halexp_get_port_state(&ps, NULL);
+	wrpc_get_port_state(&state, NULL);
 	minic_get_stats(&tx, &rx);
-	pp_printf("lnk:%d rx:%d tx:%d ", ps.up, rx, tx);
-	pp_printf("lock:%d ", ps.is_locked ? 1 : 0);
+	pp_printf("lnk:%d rx:%d tx:%d ", state.state, rx, tx);
+	pp_printf("lock:%d ", state.locked ? 1 : 0);
 	pp_printf("sv:%d ", cur_servo_state.valid ? 1 : 0);
 	pp_printf("ss:'%s' ", cur_servo_state.slave_servo_state);
 	aux_stat = spll_get_aux_status(0);

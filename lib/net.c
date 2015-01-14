@@ -3,6 +3,7 @@
 #include <errno.h>
 
 #include "hal_exports.h"
+#include <wrpc.h>
 #include "ptpd_netif.h"
 
 #include "board.h"
@@ -71,7 +72,7 @@ wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
 				      wr_sockaddr_t * bind_addr)
 {
 	int i;
-	hexp_port_state_t pstate;
+	struct hal_port_state pstate;
 	struct my_socket *sock;
 
 	/* Look for the first available socket. */
@@ -89,7 +90,7 @@ wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
 	if (sock_type != PTPD_SOCK_RAW_ETHERNET)
 		return NULL;
 
-	if (halexp_get_port_state(&pstate, bind_addr->if_name) < 0)
+	if (wrpc_get_port_state(&pstate, bind_addr->if_name) < 0)
 		return NULL;
 
 	memcpy(&sock->bind_addr, bind_addr, sizeof(wr_sockaddr_t));
