@@ -259,7 +259,6 @@ int ad9516_init(int scb_version)
 		 * Output 8	=> 10 MHz
 		 * Output 9	=> 10 MHz
 		 */
-		ad9516_write_reg(0x143, 0x1); //Temporary Powerdown 10MHz output
 
 	} else {	//Old one
 
