@@ -250,10 +250,10 @@ void pfilter_init_default()
 
 	pfilter_logic3(14, 14, AND, 8, AND, 11);	/* r14 = BOOTP/UDP/IP(unicast|broadcast) */
 	pfilter_logic2(15, 14, OR, 15);	/* r15 = BOOTP/UDP/IP(unicast|broadcast) or ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
-	
+
 	#ifdef CONFIG_NIC_PFILTER
-        
-		pfilter_cmp(18,0xebd0,0xffff,MOV,6); /* r6 = 1 when dport = ETHERBONE */ 
+
+		pfilter_cmp(18,0xebd0,0xffff,MOV,6); /* r6 = 1 when dport = ETHERBONE */
 
 		//pfilter_cmp(21,0x4e6f,0xffff,MOV,9); /* r9 = 1 when magic number = ETHERBONE */
 		//pfilter_logic2(6,6,AND,9);
@@ -261,7 +261,7 @@ void pfilter_init_default()
 		pfilter_logic2(R_CLASS(0), 15, MOV, 0); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
 		pfilter_logic2(R_CLASS(5), 6, OR, 0); /* class 5: Etherbone packet => Etherbone Core */
 		pfilter_logic3(R_CLASS(7), 15, OR, 6, NOT, 0); /* class 7: Rest => NIC Core */
-	
+
 	#else
 		pfilter_logic3(20, 11, AND, 8, OR, 15);	/* r16 = Something we accept */
 
@@ -270,9 +270,9 @@ void pfilter_init_default()
 		pfilter_logic2(R_CLASS(7), 11, AND, 8);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
 		pfilter_logic2(R_CLASS(6), 1, AND, 9);	/* class 6: streamer broadcasts => external fabric */
 		pfilter_logic2(R_CLASS(0), 15, MOV, 0);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
-	
+
 	#endif
-	
+
 #else
 	pfilter_logic3(10, 3, OR, 2, AND, 5);	/* r10 = PTP (multicast or unicast) */
 	pfilter_logic2(11, 1, AND, 9);		/* r11 = streamer broadcast */
