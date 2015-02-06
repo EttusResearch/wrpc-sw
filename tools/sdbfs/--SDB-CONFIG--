@@ -3,18 +3,13 @@
 # at offset zero at all, we want to start at zero *wihin* our space.
 # This is actually the default, but stating it is better.
 .
-	position = 1507328
+	position = 0
 
 # Then, we have a number of writable files. By default (i.e. no config)
 # all existing files are created as read-only files with current contents
 # and exact size.
 #
 # Allocation granularity is 64 bytes
-
-bitstream
-  write = 1
-  position = 0
-  maxsize = 1507328
 
 mac-address
 	write = 1
