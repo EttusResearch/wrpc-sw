@@ -1,10 +1,13 @@
 #include <stdint.h>
 #include <libwr/hal_shmem.h>
+#include <libwr/shmem.h>
 #include <wrc_ptp.h>
 #include <syscon.h>
 #include <endpoint.h>
 #include <softpll_ng.h>
 #include <ptpd_netif.h>
+
+struct wrs_shm_head *ppsi_head;
 
 /* Following code from ptp-noposix/libposix/freestanding-wrapper.c */
 
@@ -68,4 +71,10 @@ int ptpd_netif_get_dmtd_phase(wr_socket_t *sock, int32_t *phase)
         if(phase)
                 return spll_read_ptracker(0, phase, NULL);
         return 0;
+}
+
+/* dummy function, no shmem locks (no even shmem) are implemented in wrpc */
+void wrs_shm_write(void *headptr, int flags)
+{
+	return;
 }
