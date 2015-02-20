@@ -83,7 +83,10 @@ void wrc_mon_gui(void)
 #ifdef CONFIG_ETHERBONE
 	uint8_t ip[4];
 #endif
-
+	struct wr_servo_state_t *s =
+			&((struct wr_data_t *)ppi->ext_data)->servo_state;
+	int64_t crtt;
+	int64_t total_asymmetry;
 	if (!last)
 		last = timer_get_tics();
 	if (time_before(timer_get_tics(), last + wrc_ui_refperiod))
@@ -154,8 +157,15 @@ void wrc_mon_gui(void)
 
 		cprintf(C_GREY, "Servo state:               ");
 		cprintf(C_WHITE, "%s\n", cur_servo_state.slave_servo_state);
+		cprintf(C_GREY, "Servo state:               ");
+		cprintf(C_WHITE, "%s\n", s->servo_state_name);
 		cprintf(C_GREY, "Phase tracking:            ");
 		if (cur_servo_state.tracking_enabled)
+			cprintf(C_GREEN, "ON\n");
+		else
+			cprintf(C_RED, "OFF\n");
+		cprintf(C_GREY, "Phase tracking:            ");
+		if (s->tracking_enabled)
 			cprintf(C_GREEN, "ON\n");
 		else
 			cprintf(C_RED, "OFF\n");
@@ -177,40 +187,80 @@ void wrc_mon_gui(void)
 
 		cprintf(C_GREY, "Round-trip time (mu):    ");
 		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.mu));
+		cprintf(C_GREY, "Round-trip time (mu):    ");
+		cprintf(C_WHITE, "%s ps\n", print64(s->picos_mu));
 		cprintf(C_GREY, "Master-slave delay:      ");
 		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.delay_ms));
+		cprintf(C_GREY, "Master-slave delay:      ");
+		cprintf(C_WHITE, "%s ps\n", print64(s->delta_ms));
+
 		cprintf(C_GREY, "Master PHY delays:       ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_m,
 			(int32_t) cur_servo_state.delta_rx_m);
+		cprintf(C_GREY, "Master PHY delays:       ");
+		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
+			(int32_t) s->delta_tx_m,
+			(int32_t) s->delta_rx_m);
+
 		cprintf(C_GREY, "Slave PHY delays:        ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) cur_servo_state.delta_tx_s,
 			(int32_t) cur_servo_state.delta_rx_s);
+		cprintf(C_GREY, "Slave PHY delays:        ");
+		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
+			(int32_t) s->delta_tx_s,
+			(int32_t) s->delta_rx_s);
 		cprintf(C_GREY, "Total link asymmetry:    ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.total_asymmetry));
+		total_asymmetry = s->picos_mu - 2LL * s->delta_ms;
+		cprintf(C_GREY, "Total link asymmetry:    ");
+		cprintf(C_WHITE, "%9d ps\n",
+			(int32_t) (total_asymmetry));
+
 		cprintf(C_GREY, "Cable rtt delay:         ");
 		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.mu -
 					cur_servo_state.delta_tx_m -
 					cur_servo_state.delta_rx_m -
 					cur_servo_state.delta_tx_s -
 					cur_servo_state.delta_rx_s));
+		crtt = s->picos_mu - s->delta_tx_m - s->delta_rx_m
+		       - s->delta_tx_s - s->delta_rx_s;
+		cprintf(C_GREY, "Cable rtt delay:         ");
+		cprintf(C_WHITE, "%s ps\n", print64(crtt));
+
 		cprintf(C_GREY, "Clock offset:            ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_offset));
+		cprintf(C_GREY, "Clock offset:            ");
+		cprintf(C_WHITE, "%9d ps\n",
+			(int32_t) (s->offset));
+
 		cprintf(C_GREY, "Phase setpoint:          ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_setpoint));
+		cprintf(C_GREY, "Phase setpoint:          ");
+		cprintf(C_WHITE, "%9d ps\n",
+			(s->cur_setpoint));
+
 		cprintf(C_GREY, "Skew:                    ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (cur_servo_state.cur_skew));
+		cprintf(C_GREY, "Skew:                    ");
+		cprintf(C_WHITE, "%9d ps\n",
+			(int32_t) (s->skew));
+
 		cprintf(C_GREY, "Manual phase adjustment: ");
 		cprintf(C_WHITE, "%9d ps\n", (int32_t) (wrc_man_phase));
 
 		cprintf(C_GREY, "Update counter:          ");
-		cprintf(C_WHITE, "%9d \n",
+		cprintf(C_WHITE, "%9d\n",
 			(int32_t) (cur_servo_state.update_count));
+		cprintf(C_GREY, "Update counter:          ");
+		cprintf(C_WHITE, "%9d\n",
+			(int32_t) (s->update_count));
+
 
 	}
 
@@ -269,7 +319,8 @@ int wrc_log_stats(uint8_t onetime)
 		last = timer_get_tics();
 	if (!onetime && time_before(timer_get_tics(), wrc_ui_refperiod + last))
 		return 0;
-
+	struct wr_servo_state_t *s =
+			&((struct wr_data_t *)ppi->ext_data)->servo_state;
 	last = timer_get_tics();
 
 	shw_pps_gen_get_time(&sec, &nsec);
@@ -312,6 +363,35 @@ int wrc_log_stats(uint8_t onetime)
 			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
 	}
 
+	pp_printf("\n");
+
+	pp_printf("lnk:%d rx:%d tx:%d ", state.state, rx, tx);
+	pp_printf("lock:%d ", state.locked ? 1 : 0);
+	pp_printf("sv:%d ", s->valid ? 1 : 0);
+	pp_printf("ss:'%s' ", s->servo_state_name);
+	aux_stat = spll_get_aux_status(0);
+	pp_printf("aux:%x ", aux_stat);
+	/* fixme: clock is not always 125 MHz */
+	pp_printf("sec:%d nsec:%d ", (uint32_t) sec, nsec);
+	pp_printf("mu:%s ", print64(s->picos_mu));
+	pp_printf("dms:%s ", print64(s->delta_ms));
+	pp_printf("dtxm:%d drxm:%d ", (int32_t) s->delta_tx_m,
+		(int32_t) s->delta_rx_m);
+	pp_printf("dtxs:%d drxs:%d ", (int32_t) s->delta_tx_s,
+		(int32_t) s->delta_rx_s);
+	int64_t total_asymmetry = s->picos_mu -
+			  2LL * s->delta_ms;
+	pp_printf("asym:%d ", (int32_t) (total_asymmetry));
+	pp_printf("crtt:%s ", print64(s->picos_mu -
+				s->delta_tx_m -
+				s->delta_rx_m -
+				s->delta_tx_s -
+				s->delta_rx_s));
+	pp_printf("cko:%d ", (int32_t) (s->offset));
+	pp_printf("setp:%d ", (int32_t) (s->cur_setpoint));
+	pp_printf("hd:%d md:%d ad:%d ", spll_get_dac(-1), spll_get_dac(0),
+		spll_get_dac(1));
+	pp_printf("ucnt:%d ", (int32_t) s->update_count);
 	pp_printf("\n");
 	return 0;
 }
