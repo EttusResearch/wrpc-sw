@@ -23,8 +23,6 @@
 #include "hal_exports.h"
 #include "lib/ipv4.h"
 
-struct ptpdexp_sync_state_t;
-extern ptpdexp_sync_state_t cur_servo_state;
 extern int wrc_man_phase;
 
 extern struct pp_servo servo;
@@ -51,6 +49,8 @@ char* print64(uint64_t x)
 
 int wrc_mon_status()
 {
+	struct wr_servo_state_t *s =
+			&((struct wr_data_t *)ppi->ext_data)->servo_state;
 	struct pp_state_table_item *ip = NULL;
 	for (ip = pp_state_table; ip->state != PPS_END_OF_TABLE; ip++) {
 		if (ip->state == ppi->state)
@@ -60,7 +60,7 @@ int wrc_mon_status()
 	cprintf(C_BLUE, "\n\nPTP status: ");
 	cprintf(C_WHITE, "%s", ip ? ip->name : "unknown");
 
-	if ((!cur_servo_state.valid) || (ppi->state != PPS_SLAVE)) {
+	if ((!s->valid) || (ppi->state != PPS_SLAVE)) {
 		cprintf(C_RED,
 			"\n\nSync info not valid\n\n");
 		return 0;
@@ -156,22 +156,15 @@ void wrc_mon_gui(void)
 			return;
 
 		cprintf(C_GREY, "Servo state:               ");
-		cprintf(C_WHITE, "%s\n", cur_servo_state.slave_servo_state);
-		cprintf(C_GREY, "Servo state:               ");
 		cprintf(C_WHITE, "%s\n", s->servo_state_name);
-		cprintf(C_GREY, "Phase tracking:            ");
-		if (cur_servo_state.tracking_enabled)
-			cprintf(C_GREEN, "ON\n");
-		else
-			cprintf(C_RED, "OFF\n");
 		cprintf(C_GREY, "Phase tracking:            ");
 		if (s->tracking_enabled)
 			cprintf(C_GREEN, "ON\n");
 		else
 			cprintf(C_RED, "OFF\n");
-		cprintf(C_GREY, "Synchronization source:    ");
-		cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);
-
+		/* sync source not implemented */
+		/*cprintf(C_GREY, "Synchronization source:    ");
+		cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);*/
 		cprintf(C_GREY, "Aux clock status:          ");
 
 		aux_stat = spll_get_aux_status(0);
@@ -186,18 +179,10 @@ void wrc_mon_gui(void)
 		cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
 		cprintf(C_GREY, "Round-trip time (mu):    ");
-		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.mu));
-		cprintf(C_GREY, "Round-trip time (mu):    ");
 		cprintf(C_WHITE, "%s ps\n", print64(s->picos_mu));
-		cprintf(C_GREY, "Master-slave delay:      ");
-		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.delay_ms));
 		cprintf(C_GREY, "Master-slave delay:      ");
 		cprintf(C_WHITE, "%s ps\n", print64(s->delta_ms));
 
-		cprintf(C_GREY, "Master PHY delays:       ");
-		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
-			(int32_t) cur_servo_state.delta_tx_m,
-			(int32_t) cur_servo_state.delta_rx_m);
 		cprintf(C_GREY, "Master PHY delays:       ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) s->delta_tx_m,
@@ -205,26 +190,13 @@ void wrc_mon_gui(void)
 
 		cprintf(C_GREY, "Slave PHY delays:        ");
 		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
-			(int32_t) cur_servo_state.delta_tx_s,
-			(int32_t) cur_servo_state.delta_rx_s);
-		cprintf(C_GREY, "Slave PHY delays:        ");
-		cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
 			(int32_t) s->delta_tx_s,
 			(int32_t) s->delta_rx_s);
-		cprintf(C_GREY, "Total link asymmetry:    ");
-		cprintf(C_WHITE, "%9d ps\n",
-			(int32_t) (cur_servo_state.total_asymmetry));
 		total_asymmetry = s->picos_mu - 2LL * s->delta_ms;
 		cprintf(C_GREY, "Total link asymmetry:    ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (total_asymmetry));
 
-		cprintf(C_GREY, "Cable rtt delay:         ");
-		cprintf(C_WHITE, "%s ps\n", print64(cur_servo_state.mu -
-					cur_servo_state.delta_tx_m -
-					cur_servo_state.delta_rx_m -
-					cur_servo_state.delta_tx_s -
-					cur_servo_state.delta_rx_s));
 		crtt = s->picos_mu - s->delta_tx_m - s->delta_rx_m
 		       - s->delta_tx_s - s->delta_rx_s;
 		cprintf(C_GREY, "Cable rtt delay:         ");
@@ -232,21 +204,12 @@ void wrc_mon_gui(void)
 
 		cprintf(C_GREY, "Clock offset:            ");
 		cprintf(C_WHITE, "%9d ps\n",
-			(int32_t) (cur_servo_state.cur_offset));
-		cprintf(C_GREY, "Clock offset:            ");
-		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (s->offset));
 
 		cprintf(C_GREY, "Phase setpoint:          ");
 		cprintf(C_WHITE, "%9d ps\n",
-			(int32_t) (cur_servo_state.cur_setpoint));
-		cprintf(C_GREY, "Phase setpoint:          ");
-		cprintf(C_WHITE, "%9d ps\n",
 			(s->cur_setpoint));
 
-		cprintf(C_GREY, "Skew:                    ");
-		cprintf(C_WHITE, "%9d ps\n",
-			(int32_t) (cur_servo_state.cur_skew));
 		cprintf(C_GREY, "Skew:                    ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (s->skew));
@@ -254,9 +217,6 @@ void wrc_mon_gui(void)
 		cprintf(C_GREY, "Manual phase adjustment: ");
 		cprintf(C_WHITE, "%9d ps\n", (int32_t) (wrc_man_phase));
 
-		cprintf(C_GREY, "Update counter:          ");
-		cprintf(C_WHITE, "%9d\n",
-			(int32_t) (cur_servo_state.update_count));
 		cprintf(C_GREY, "Update counter:          ");
 		cprintf(C_WHITE, "%9d\n",
 			(int32_t) (s->update_count));
@@ -328,45 +288,6 @@ int wrc_log_stats(uint8_t onetime)
 	minic_get_stats(&tx, &rx);
 	pp_printf("lnk:%d rx:%d tx:%d ", state.state, rx, tx);
 	pp_printf("lock:%d ", state.locked ? 1 : 0);
-	pp_printf("sv:%d ", cur_servo_state.valid ? 1 : 0);
-	pp_printf("ss:'%s' ", cur_servo_state.slave_servo_state);
-	aux_stat = spll_get_aux_status(0);
-	pp_printf("aux:%x ", aux_stat);
-	pp_printf("sec:%d nsec:%d ", (uint32_t) sec, nsec);	/* fixme: clock is not always 125 MHz */
-	pp_printf("mu:%s ", print64(cur_servo_state.mu));
-	pp_printf("dms:%s ", print64(cur_servo_state.delay_ms));
-	pp_printf("dtxm:%d drxm:%d ", (int32_t) cur_servo_state.delta_tx_m,
-		(int32_t) cur_servo_state.delta_rx_m);
-	pp_printf("dtxs:%d drxs:%d ", (int32_t) cur_servo_state.delta_tx_s,
-		(int32_t) cur_servo_state.delta_rx_s);
-	pp_printf("asym:%d ", (int32_t) (cur_servo_state.total_asymmetry));
-	pp_printf("crtt:%s ", print64(cur_servo_state.mu -
-				cur_servo_state.delta_tx_m -
-				cur_servo_state.delta_rx_m -
-				cur_servo_state.delta_tx_s -
-				cur_servo_state.delta_rx_s));
-	pp_printf("cko:%d ", (int32_t) (cur_servo_state.cur_offset));
-	pp_printf("setp:%d ", (int32_t) (cur_servo_state.cur_setpoint));
-	pp_printf("hd:%d md:%d ad:%d ", spll_get_dac(-1), spll_get_dac(0),
-		spll_get_dac(1));
-	pp_printf("ucnt:%d ", (int32_t) cur_servo_state.update_count);
-
-	if (1) {
-		int32_t temp;
-
-		//first read the value from previous measurement,
-		//first one will be random, I know
-		temp = w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_COLLECT);
-		//then initiate new conversion for next loop cycle
-		w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_NOWAIT);
-		pp_printf("temp: %d.%04d C", temp >> 16,
-			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
-	}
-
-	pp_printf("\n");
-
-	pp_printf("lnk:%d rx:%d tx:%d ", state.state, rx, tx);
-	pp_printf("lock:%d ", state.locked ? 1 : 0);
 	pp_printf("sv:%d ", s->valid ? 1 : 0);
 	pp_printf("ss:'%s' ", s->servo_state_name);
 	aux_stat = spll_get_aux_status(0);
@@ -392,6 +313,20 @@ int wrc_log_stats(uint8_t onetime)
 	pp_printf("hd:%d md:%d ad:%d ", spll_get_dac(-1), spll_get_dac(0),
 		spll_get_dac(1));
 	pp_printf("ucnt:%d ", (int32_t) s->update_count);
+
+	if (1) {
+		int32_t temp;
+
+		//first read the value from previous measurement,
+		//first one will be random, I know
+		temp = w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_COLLECT);
+		//then initiate new conversion for next loop cycle
+		w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_NOWAIT);
+		pp_printf("temp: %d.%04d C", temp >> 16,
+			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
+	}
+
 	pp_printf("\n");
+
 	return 0;
 }
