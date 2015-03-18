@@ -302,9 +302,9 @@ void pfilter_init_default()
 		pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_PORT_ETHERBONE, NOT, R_ZERO); /* class 7: Rest => NIC Core */
 
 	#else
-		pfilter_logic3(R_20, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* r16 = Something we accept */
+		pfilter_logic3(R_TMP, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* Something we accept */
 
-		pfilter_logic3(R_DROP, R_20, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
+		pfilter_logic3(R_DROP, R_TMP, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
 
 		pfilter_logic2(R_CLASS(7), FRAME_IP_OK, AND, FRAME_UDP);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
 		pfilter_logic2(R_CLASS(6), FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);	/* class 6: streamer broadcasts => external fabric */
@@ -315,9 +315,9 @@ void pfilter_init_default()
 #else
 	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);	/* r10 = PTP (multicast or unicast) */
 	pfilter_logic2(FRAME_IP_OK, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);		/* r11 = streamer broadcast */
-	pfilter_logic3(R_12, FRAME_IP_UNI, OR, FRAME_IP_OK, NOT, R_ZERO); /* r12 = all non-PTP and non-streamer traffic */
+	pfilter_logic3(R_TMP, FRAME_IP_UNI, OR, FRAME_IP_OK, NOT, R_ZERO); /* all non-PTP and non-streamer traffic */
 
-	pfilter_logic2(R_CLASS(7), R_12, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer
+	pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer
 						   traffic => external fabric */
 	pfilter_logic2(R_CLASS(6), FRAME_IP_OK, MOV, R_ZERO); /* class 6: streamer broadcasts =>
 						   external fabric */
