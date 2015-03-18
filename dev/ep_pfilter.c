@@ -120,6 +120,7 @@ enum pf_symbolic_regs {
 	FRAME_ICMP = R_7,
 	FRAME_UDP = R_8,
 	FRAME_TYPE_STREAMER = R_9, /* An ethtype by Tom, used in gateware */
+	FRAME_PORT_ETHERBONE = R_16,
 
 	/* These are results of logic over the previous bits  */
 	FRAME_IP_UNI = R_10,
@@ -291,14 +292,14 @@ void pfilter_init_default()
 
 	#ifdef CONFIG_NIC_PFILTER
 
-		pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_TYPE_ARP); /* r6 = 1 when dport = ETHERBONE */
+		pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_PORT_ETHERBONE); /* r16 = 1 when dport = ETHERBONE */
 
 		//pfilter_cmp(21,0x4e6f,0xffff,MOV,R_9); /* r9 = 1 when magic number = ETHERBONE */
 		//pfilter_logic2(R_6,R_6,AND,R_9);
 
 		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
-		pfilter_logic2(R_CLASS(5), FRAME_TYPE_ARP, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
-		pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_TYPE_ARP, NOT, R_ZERO); /* class 7: Rest => NIC Core */
+		pfilter_logic2(R_CLASS(5), FRAME_PORT_ETHERBONE, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
+		pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_PORT_ETHERBONE, NOT, R_ZERO); /* class 7: Rest => NIC Core */
 
 	#else
 		pfilter_logic3(R_20, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* r16 = Something we accept */
