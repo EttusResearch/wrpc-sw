@@ -87,7 +87,7 @@
 
 #define PFILTER_MAX_CODE_SIZE      32
 
-#define pfilter_dbg(x, ...) /* nothing */
+#define pfilter_dbg pp_printf
 
 extern volatile struct EP_WB *EP;
 
@@ -193,6 +193,7 @@ static void pfilter_load(void)
 	EP->PFCR0 = 0;		// disable pfilter
 
 	for (i = 0; i < code_pos; i++) {
+		pfilter_dbg("pos %02i: %x.%08x\n", i, (uint32_t)(code_buf[i] >> 32), (uint32_t)(code_buf[i]));
 		uint32_t cr0, cr1;
 		cr1 = EP_PFCR1_MM_DATA_LSB_W(code_buf[i] & 0xfff);
 		cr0 =
