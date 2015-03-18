@@ -107,8 +107,34 @@ enum pf_regs {
 };
 #define R_CLASS(x) (R_C0 + x)
 
+/* Give also "symbolic" names, to the roles of each register. */
+enum pf_symbolic_regs {
+
+	/* The first set is used for straight comparisons */
+	FRAME_BROADCAST = R_1,
+	FRAME_PTP_MCAST = R_2,
+	FRAME_OUR_MAC = R_3,
+	FRAME_TYPE_IPV4 = R_4,
+	FRAME_TYPE_PTP2 = R_5,
+	FRAME_TYPE_ARP = R_6,
+	FRAME_ICMP = R_7,
+	FRAME_UDP = R_8,
+	FRAME_TYPE_STREAMER = R_9, /* An ethtype by Tom, used in gateware */
+
+	/* These are results of logic over the previous bits  */
+	FRAME_IP_UNI = R_10,
+	FRAME_IP_OK = R_11, /* unicast or broadcast */
+
+	/* A temporary register, and the CPU target */
+	R_TMP = R_14,
+	FRAME_FOR_CPU = R_15
+
+};
+
 int v1[R_C7 - (R_ZERO + 31)]; /* fails if we lost  a register */
 int v2[(R_ZERO + 31) - R_C7]; /* fails if we added a register */
+
+
 
 /* begins assembling a new packet filter program */
 static void pfilter_new(void)
@@ -231,70 +257,70 @@ void pfilter_init_default()
 	pfilter_new();
 	pfilter_nop();
 
-	pfilter_cmp(0, 0xffff, 0xffff, MOV, R_1);
-	pfilter_cmp(1, 0xffff, 0xffff, AND, R_1);
-	pfilter_cmp(2, 0xffff, 0xffff, AND, R_1);	/* r1 = 1 when dst mac is broadcast */
-	pfilter_cmp(0, 0x011b, 0xffff, MOV, R_2);
-	pfilter_cmp(1, 0x1900, 0xffff, AND, R_2);
-	pfilter_cmp(2, 0x0000, 0xffff, AND, R_2);	/* r2 = 1 when dst mac is PTP multicast (01:1b:19:00:00:00) */
-	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, R_3);
-	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, R_3);
-	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, R_3);	/* r3 = 1 when the packet is unicast to our own MAC */
-	pfilter_cmp(6, 0x0800, 0xffff, MOV, R_4);	/* r4 = 1 when ethertype = IPv4 */
-	pfilter_cmp(6, 0x88f7, 0xffff, MOV, R_5);	/* r5 = 1 when ethertype = PTPv2 */
-	pfilter_cmp(6, 0x0806, 0xffff, MOV, R_6);	/* r6 = 1 when ethertype = ARP */
-	pfilter_cmp(6, 0xdbff, 0xffff, MOV, R_9);	/* r9 = 1 when ethertype = streamer */
+	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
+	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
+	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);	/* r1 = 1 when dst mac is broadcast */
+	pfilter_cmp(0, 0x011b, 0xffff, MOV, FRAME_PTP_MCAST);
+	pfilter_cmp(1, 0x1900, 0xffff, AND, FRAME_PTP_MCAST);
+	pfilter_cmp(2, 0x0000, 0xffff, AND, FRAME_PTP_MCAST);	/* r2 = 1 when dst mac is PTP multicast (01:1b:19:00:00:00) */
+	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, FRAME_OUR_MAC);
+	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, FRAME_OUR_MAC);	/* r3 = 1 when the packet is unicast to our own MAC */
+	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);	/* r4 = 1 when ethertype = IPv4 */
+	pfilter_cmp(6, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);	/* r5 = 1 when ethertype = PTPv2 */
+	pfilter_cmp(6, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);	/* r6 = 1 when ethertype = ARP */
+	pfilter_cmp(6, 0xdbff, 0xffff, MOV, FRAME_TYPE_STREAMER);	/* r9 = 1 when ethertype = streamer */
 
 	/* Ethernet = 14 bytes, Offset to type in IP: 8 bytes = 22/2 = 11 */
-	pfilter_cmp(11, 0x0001, 0x00ff, MOV, R_7);	/* r7 = 1 when IP type = ICMP */
-	pfilter_cmp(11, 0x0011, 0x00ff, MOV, R_8);	/* r8 = 1 when IP type = UDP */
+	pfilter_cmp(11, 0x0001, 0x00ff, MOV, FRAME_ICMP);	/* r7 = 1 when IP type = ICMP */
+	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);	/* r8 = 1 when IP type = UDP */
 
 #ifdef CONFIG_ETHERBONE
 
-	pfilter_logic3(R_10, R_3, OR, R_ZERO, AND, R_4);	/* r10 = IP(unicast) */
-	pfilter_logic3(R_11, R_1, OR, R_3, AND, R_4);	/* r11 = IP(unicast+broadcast) */
+	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, R_ZERO, AND, FRAME_TYPE_IPV4);	/* r10 = IP(unicast) */
+	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);	/* r11 = IP(unicast+broadcast) */
 
-	pfilter_logic3(R_14, R_1, AND, R_6, OR, R_5);	/* r14 = ARP(broadcast) or PTPv2 */
-	pfilter_logic3(R_15, R_10, AND, R_7, OR, R_14);	/* r15 = ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
+	pfilter_logic3(R_TMP, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);	/* r14 = ARP(broadcast) or PTPv2 */
+	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, R_TMP);	/* r15 = ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
 
 	/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
-	pfilter_cmp(18, 0x0044, 0xffff, MOV, R_14);	/* r14 = 1 when dport = BOOTPC */
+	pfilter_cmp(18, 0x0044, 0xffff, MOV, R_TMP);	/* r14 = 1 when dport = BOOTPC */
 
-	pfilter_logic3(R_14, R_14, AND, R_8, AND, R_11);	/* r14 = BOOTP/UDP/IP(unicast|broadcast) */
-	pfilter_logic2(R_15, R_14, OR, R_15);	/* r15 = BOOTP/UDP/IP(unicast|broadcast) or ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
+	pfilter_logic3(R_TMP, R_TMP, AND, FRAME_UDP, AND, FRAME_IP_OK);	/* r14 = BOOTP/UDP/IP(unicast|broadcast) */
+	pfilter_logic2(FRAME_FOR_CPU, R_TMP, OR, FRAME_FOR_CPU);	/* r15 = BOOTP/UDP/IP(unicast|broadcast) or ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
 
 	#ifdef CONFIG_NIC_PFILTER
 
-		pfilter_cmp(18,0xebd0,0xffff,MOV, R_6); /* r6 = 1 when dport = ETHERBONE */
+		pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_TYPE_ARP); /* r6 = 1 when dport = ETHERBONE */
 
 		//pfilter_cmp(21,0x4e6f,0xffff,MOV,R_9); /* r9 = 1 when magic number = ETHERBONE */
 		//pfilter_logic2(R_6,R_6,AND,R_9);
 
-		pfilter_logic2(R_CLASS(0), R_15, MOV, R_ZERO); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
-		pfilter_logic2(R_CLASS(5), R_6, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
-		pfilter_logic3(R_CLASS(7), R_15, OR, R_6, NOT, R_ZERO); /* class 7: Rest => NIC Core */
+		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
+		pfilter_logic2(R_CLASS(5), FRAME_TYPE_ARP, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
+		pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_TYPE_ARP, NOT, R_ZERO); /* class 7: Rest => NIC Core */
 
 	#else
-		pfilter_logic3(R_20, R_11, AND, R_8, OR, R_15);	/* r16 = Something we accept */
+		pfilter_logic3(R_20, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* r16 = Something we accept */
 
-		pfilter_logic3(R_DROP, R_20, OR, R_9, NOT, R_ZERO);	/* None match? drop */
+		pfilter_logic3(R_DROP, R_20, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
 
-		pfilter_logic2(R_CLASS(7), R_11, AND, R_8);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
-		pfilter_logic2(R_CLASS(6), R_1, AND, R_9);	/* class 6: streamer broadcasts => external fabric */
-		pfilter_logic2(R_CLASS(0), R_15, MOV, R_ZERO);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
+		pfilter_logic2(R_CLASS(7), FRAME_IP_OK, AND, FRAME_UDP);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
+		pfilter_logic2(R_CLASS(6), FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);	/* class 6: streamer broadcasts => external fabric */
+		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
 
 	#endif
 
 #else
-	pfilter_logic3(R_10, R_3, OR, R_2, AND, R_5);	/* r10 = PTP (multicast or unicast) */
-	pfilter_logic2(R_11, R_1, AND, R_9);		/* r11 = streamer broadcast */
-	pfilter_logic3(R_12, R_10, OR, R_11, NOT, R_ZERO); /* r12 = all non-PTP and non-streamer traffic */
+	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);	/* r10 = PTP (multicast or unicast) */
+	pfilter_logic2(FRAME_IP_OK, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);		/* r11 = streamer broadcast */
+	pfilter_logic3(R_12, FRAME_IP_UNI, OR, FRAME_IP_OK, NOT, R_ZERO); /* r12 = all non-PTP and non-streamer traffic */
 
 	pfilter_logic2(R_CLASS(7), R_12, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer
 						   traffic => external fabric */
-	pfilter_logic2(R_CLASS(6), R_11, MOV, R_ZERO); /* class 6: streamer broadcasts =>
+	pfilter_logic2(R_CLASS(6), FRAME_IP_OK, MOV, R_ZERO); /* class 6: streamer broadcasts =>
 						   external fabric */
-	pfilter_logic2(R_CLASS(0), R_10, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
+	pfilter_logic2(R_CLASS(0), FRAME_IP_UNI, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
 
 #endif
 
