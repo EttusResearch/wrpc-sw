@@ -293,6 +293,10 @@ void pfilter_init_default()
 	 * Make three sets of comparisons over the destination address.
 	 * After these 9 instructions, the whole Eth header is available.
 	 */
+	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, FRAME_OUR_MAC);
+	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, FRAME_OUR_MAC);	/* set when our MAC */
+
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
 	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);	/* set when dst mac is broadcast */
@@ -300,10 +304,6 @@ void pfilter_init_default()
 	pfilter_cmp(0, 0x011b, 0xffff, MOV, FRAME_PTP_MCAST);
 	pfilter_cmp(1, 0x1900, 0xffff, AND, FRAME_PTP_MCAST);
 	pfilter_cmp(2, 0x0000, 0xffff, AND, FRAME_PTP_MCAST);	/* set when dst mac is PTP multicast (01:1b:19:00:00:00) */
-
-	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, FRAME_OUR_MAC);
-	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, FRAME_OUR_MAC);
-	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, FRAME_OUR_MAC);	/* set when our MAC */
 
 	/* Identify some Ethertypes used later */
 	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
