@@ -112,30 +112,31 @@ enum pf_symbolic_regs {
 
 	/* The first set is used for straight comparisons */
 	FRAME_BROADCAST = R_1,
-	FRAME_PTP_MCAST = R_2,
-	FRAME_OUR_MAC = R_3,
-	FRAME_TYPE_IPV4 = R_4,
-	FRAME_TYPE_PTP2 = R_5,
-	FRAME_TYPE_ARP = R_6,
-	FRAME_ICMP = R_7,
-	FRAME_UDP = R_8,
-	FRAME_TYPE_STREAMER = R_9, /* An ethtype by Tom, used in gateware */
-	FRAME_PORT_ETHERBONE = R_16,
+	FRAME_PTP_MCAST,
+	FRAME_OUR_MAC,
+	FRAME_TYPE_IPV4,
+	FRAME_TYPE_PTP2,
+	FRAME_TYPE_ARP,
+	FRAME_ICMP,
+	FRAME_UDP,
+	FRAME_TYPE_STREAMER, /* An ethtype by Tom, used in gateware */
+	FRAME_PORT_ETHERBONE,
 
 	/* These are results of logic over the previous bits  */
-	FRAME_IP_UNI = R_10,
-	FRAME_IP_OK = R_11, /* unicast or broadcast */
-	FRAME_PTP_OK = R_12,
-	FRAME_STREAMER_BCAST = R_13,
+	FRAME_IP_UNI,
+	FRAME_IP_OK, /* unicast or broadcast */
+	FRAME_PTP_OK,
+	FRAME_STREAMER_BCAST,
 
 	/* A temporary register, and the CPU target */
-	R_TMP = R_14,
-	FRAME_FOR_CPU = R_15
-
+	R_TMP,
+	FRAME_FOR_CPU, /* must be last */
 };
 
 int v1[R_C7 - (R_ZERO + 31)]; /* fails if we lost  a register */
 int v2[(R_ZERO + 31) - R_C7]; /* fails if we added a register */
+
+int v3[0 - ((int)FRAME_FOR_CPU > R_22)];
 
 
 
