@@ -260,69 +260,76 @@ void pfilter_init_default()
 	pfilter_new();
 	pfilter_nop();
 
+	/*
+	 * Make three sets of comparisons over the destination address.
+	 * After these 9 instructions, the whole Eth header is available.
+	 */
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
-	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);	/* r1 = 1 when dst mac is broadcast */
+	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);	/* set when dst mac is broadcast */
+
 	pfilter_cmp(0, 0x011b, 0xffff, MOV, FRAME_PTP_MCAST);
 	pfilter_cmp(1, 0x1900, 0xffff, AND, FRAME_PTP_MCAST);
-	pfilter_cmp(2, 0x0000, 0xffff, AND, FRAME_PTP_MCAST);	/* r2 = 1 when dst mac is PTP multicast (01:1b:19:00:00:00) */
+	pfilter_cmp(2, 0x0000, 0xffff, AND, FRAME_PTP_MCAST);	/* set when dst mac is PTP multicast (01:1b:19:00:00:00) */
+
 	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, FRAME_OUR_MAC);
 	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, FRAME_OUR_MAC);
-	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, FRAME_OUR_MAC);	/* r3 = 1 when the packet is unicast to our own MAC */
-	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);	/* r4 = 1 when ethertype = IPv4 */
-	pfilter_cmp(6, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);	/* r5 = 1 when ethertype = PTPv2 */
-	pfilter_cmp(6, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);	/* r6 = 1 when ethertype = ARP */
-	pfilter_cmp(6, 0xdbff, 0xffff, MOV, FRAME_TYPE_STREAMER);	/* r9 = 1 when ethertype = streamer */
+	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, FRAME_OUR_MAC);	/* set when our MAC */
+
+	/* Identify some Ethertypes used later */
+	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
+	pfilter_cmp(6, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
+	pfilter_cmp(6, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);
+	pfilter_cmp(6, 0xdbff, 0xffff, MOV, FRAME_TYPE_STREAMER);
 
 	/* Ethernet = 14 bytes, Offset to type in IP: 8 bytes = 22/2 = 11 */
-	pfilter_cmp(11, 0x0001, 0x00ff, MOV, FRAME_ICMP);	/* r7 = 1 when IP type = ICMP */
-	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);	/* r8 = 1 when IP type = UDP */
+	pfilter_cmp(11, 0x0001, 0x00ff, MOV, FRAME_ICMP);
+	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);
 
 #ifdef CONFIG_ETHERBONE
 
-	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, R_ZERO, AND, FRAME_TYPE_IPV4);	/* r10 = IP(unicast) */
-	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);	/* r11 = IP(unicast+broadcast) */
+	/* Mark bits for unicast to us, and for unicast-to-us-or-broadcast */
+	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, R_ZERO, AND, FRAME_TYPE_IPV4);
+	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
 
-	pfilter_logic3(R_TMP, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);	/* r14 = ARP(broadcast) or PTPv2 */
-	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, R_TMP);	/* r15 = ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
+	/* Make a selection for the CPU, that is later still added-to */
+	pfilter_logic3(R_TMP, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
+	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, R_TMP);
 
 	/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
-	pfilter_cmp(18, 0x0044, 0xffff, MOV, R_TMP);	/* r14 = 1 when dport = BOOTPC */
+	pfilter_cmp(18, 0x0044, 0xffff, MOV, R_TMP);	/* R_TMP now means dport = BOOTPC */
 
-	pfilter_logic3(R_TMP, R_TMP, AND, FRAME_UDP, AND, FRAME_IP_OK);	/* r14 = BOOTP/UDP/IP(unicast|broadcast) */
-	pfilter_logic2(FRAME_FOR_CPU, R_TMP, OR, FRAME_FOR_CPU);	/* r15 = BOOTP/UDP/IP(unicast|broadcast) or ICMP/IP(unicast) or ARP(broadcast) or PTPv2 */
+	pfilter_logic3(R_TMP, R_TMP, AND, FRAME_UDP, AND, FRAME_IP_OK);	/* BOOTPC and UDP and IP(unicast|broadcast) */
+	pfilter_logic2(FRAME_FOR_CPU, R_TMP, OR, FRAME_FOR_CPU);
 
 	#ifdef CONFIG_NIC_PFILTER
 
-		pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_PORT_ETHERBONE); /* r16 = 1 when dport = ETHERBONE */
+		pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_PORT_ETHERBONE);
 
-		//pfilter_cmp(21,0x4e6f,0xffff,MOV,R_9); /* r9 = 1 when magic number = ETHERBONE */
-		//pfilter_logic2(R_6,R_6,AND,R_9);
+		/* Here we had a commented-out check for magic (offset 21, value 0x4e6f) */
 
-		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO); /* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
+		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
 		pfilter_logic2(R_CLASS(5), FRAME_PORT_ETHERBONE, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
 		pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_PORT_ETHERBONE, NOT, R_ZERO); /* class 7: Rest => NIC Core */
 
 	#else
-		pfilter_logic3(R_TMP, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* Something we accept */
+		pfilter_logic3(R_TMP, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* Something we accept: cpu+udp or streamer */
 
 		pfilter_logic3(R_DROP, R_TMP, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
 
 		pfilter_logic2(R_CLASS(7), FRAME_IP_OK, AND, FRAME_UDP);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
 		pfilter_logic2(R_CLASS(6), FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);	/* class 6: streamer broadcasts => external fabric */
-		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);	/* class 0: ICMP/IP(unicast) or ARP(broadcast) or PTPv2 => PTP LM32 core */
+		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);	/* class 0: all selected for CPU earlier */
 
 	#endif
 
 #else
-	pfilter_logic3(FRAME_PTP_OK, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);	/* r10 = PTP (multicast or unicast) */
-	pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);		/* r11 = streamer broadcast */
-	pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* all non-PTP and non-streamer traffic */
+	pfilter_logic3(FRAME_PTP_OK, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);
+	pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);
+	pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* R_TMP = everything else */
 
-	pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer
-						   traffic => external fabric */
-	pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts =>
-						   external fabric */
+	pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer traffic => external fabric */
+	pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts => external fabric */
 	pfilter_logic2(R_CLASS(0), FRAME_PTP_OK, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
 
 #endif
