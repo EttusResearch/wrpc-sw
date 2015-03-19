@@ -125,6 +125,8 @@ enum pf_symbolic_regs {
 	/* These are results of logic over the previous bits  */
 	FRAME_IP_UNI = R_10,
 	FRAME_IP_OK = R_11, /* unicast or broadcast */
+	FRAME_PTP_OK = R_12,
+	FRAME_STREAMER_BCAST = R_13,
 
 	/* A temporary register, and the CPU target */
 	R_TMP = R_14,
@@ -313,15 +315,15 @@ void pfilter_init_default()
 	#endif
 
 #else
-	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);	/* r10 = PTP (multicast or unicast) */
-	pfilter_logic2(FRAME_IP_OK, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);		/* r11 = streamer broadcast */
-	pfilter_logic3(R_TMP, FRAME_IP_UNI, OR, FRAME_IP_OK, NOT, R_ZERO); /* all non-PTP and non-streamer traffic */
+	pfilter_logic3(FRAME_PTP_OK, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);	/* r10 = PTP (multicast or unicast) */
+	pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);		/* r11 = streamer broadcast */
+	pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* all non-PTP and non-streamer traffic */
 
 	pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer
 						   traffic => external fabric */
-	pfilter_logic2(R_CLASS(6), FRAME_IP_OK, MOV, R_ZERO); /* class 6: streamer broadcasts =>
+	pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts =>
 						   external fabric */
-	pfilter_logic2(R_CLASS(0), FRAME_IP_UNI, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
+	pfilter_logic2(R_CLASS(0), FRAME_PTP_OK, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
 
 #endif
 
