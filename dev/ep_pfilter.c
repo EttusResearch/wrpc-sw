@@ -18,6 +18,9 @@
      port - for example to Etherbone, host network controller, etc.
    - packets to be dropped (used neither by the WR Core or the user application)
 
+  0. Introduction
+  ------------------------------------------
+
   WR Endpoint (WR MAC) inside the WR Core therefore contains a simple microprogrammable
   packet filter/classifier. The classifier processes the incoming packet, and assigns it
   to one of 8 classes (an 8-bit word, where each bit corresponds to a particular class) or
@@ -26,12 +29,15 @@
   - 0: don't touch (always 0)
   - 1 - 22: general purpose registers
   - 23: drop packet flag: if 1 at the end of the packet processing, the packet will be dropped.
-  - 24..31: packet class (class 0 = reg 24, class 7 = reg 31).
+  - 24..31: packet class (class 0 = reg 24, class 7 = reg 31). -- see 2. below for "routing" rules.
 
   Program memory has 64 36-bit words. Packet filtering program is restarted every time a new packet comes.
-  There are 5 possible instructions:
+  There are 5 possible instructions.
 
-  1. CMP offset, value, mask, oper, Rd:
+  1. Instructions
+  ------------------------------------------
+
+  1.1 CMP offset, value, mask, oper, Rd:
   ------------------------------------------
 
   * Rd = Rd oper ((((uint16_t *)packet) [offset] & mask) == value)
@@ -50,7 +56,7 @@
   set of nibbles within a word to be compared, but not an arbitrary set of bits (e.g. 0xf00f, 0xff00
   and 0xf0f0 masks are ok, but 0x8001 is wrong.
 
-  2. BTST offset, bit_number, oper, Rd
+  1.2. BTST offset, bit_number, oper, Rd
   ------------------------------------------
 
   * Rd = Rd oper (((uint16_t *)packet) [offset] & (1<<bit_number) ? 1 : 0)
@@ -59,14 +65,14 @@
   * BTST 3, 10, MOV, 11
   will write 1 to reg 11 if the 10th bit in the 3rd word of the packet is set (and 0 if it's clear)
 
-  3. Logic opearations:
+  1.3. Logic opearations:
   -----------------------------------------
   * LOGIC2 Rd, Ra, OPER Rb - 2 argument logic (Rd = Ra OPER Rb). If the operation is MOV or NOT, Ra is
   taken as the source register.
 
   * LOGIC3 Rd, Ra, OPER Rb, OPER2, Rc - 3 argument logic Rd = (Ra OPER Rb) OPER2 Rc.
 
-  4. Misc
+  1.4. Misc
   -----------------------------------------
   FIN instruction terminates the program.
   NOP executes a dummy instruction (LOGIC2 0, 0, AND, 0)
@@ -77,6 +83,28 @@
     10th word when  PC = 2. Max comparison offset is always equal to the address of the instruction.
   - Code may contain up to 64 operations, but it must classify shorter packets faster than in
     32 instructions (there's no flow throttling)
+
+
+  2. How the frame is routed after the pfilter
+  -----------------------------------------
+  After the input pipeline is over, the endpoint looks at the DROP and CLASS bits
+  set by the packet filter. There are two possible output ports: one associated with
+  classes 0..3 (to the cpu) and one associated to class 4..7 (external fabric).
+
+  These are the rules, in strict priority order.
+
+  - If "DROP" is set, the frame is dropped irrespective of the rest. Done.
+  - If at least one bit is set in the first set (bits 0..3), the frame goes to CPU. Done.
+  - If at least one bit is set in the second set (bits 4..7) the frame goes to fabric. Done.
+  - No class is set, the frame goes to the fabric.
+
+  If, in the future or other implementations, the same pfilter is used with a differnet
+  set of bits connected to the output ports (e.g. three ports), ports are processed
+  from lowest-number to highest-number, and if no bit is set it goes to the last.
+
+  Please note that the "class" is actually a bitmask; it's ok to set more than one bit
+  in a single nibble, and the downstream user will find both set (for CPU we have the
+  class in the status register).
 */
 
 #include <stdio.h>
