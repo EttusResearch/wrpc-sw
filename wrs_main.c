@@ -1,23 +1,11 @@
 #include <wrc.h>
 #include "uart.h"
-
 #include "softpll_ng.h"
-
 #include "minipc.h"
+#include "revision.h"
 
-const char *build_revision;
-const char *build_date;
 
 int scb_ver = 33;		//SCB version.
-
-/*
- * We export softpll internal status to the ARM cpu, for SNMP. Thus,
- * we place this structure at a known address in the linker script
- */
-struct spll_stats stats __attribute__((section(".stats"))) = {
-	.magic = 0x5b1157a7,
-	.ver = 1,
-};
 
 int main(void)
 {
@@ -27,7 +15,8 @@ int main(void)
 	
 	TRACE("");
 	TRACE("WR Switch Real Time Subsystem (c) CERN 2011 - 2014\n");
-	TRACE("Revision: %s, built %s.\n", build_revision, build_date);
+	TRACE("Revision: %s, built: %s %s.\n",
+	      build_revision, build_date, build_time);
 	TRACE("SCB version: %d. %s\n", scb_ver,(scb_ver>=34)?"10 MHz SMC Output.":"" );
 	TRACE("--");
 

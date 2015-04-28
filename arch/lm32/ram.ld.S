@@ -49,6 +49,7 @@ SECTIONS
 
 	.data : {
 		*(.data .data.*)
+		*(.stats)
 	} > ram
 
 	.bss : {

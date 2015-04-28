@@ -84,7 +84,7 @@ OUTPUT-$(CONFIG_WR_NODE)   = wrc
 OUTPUT-$(CONFIG_WR_SWITCH) = rt_cpu
 OUTPUT := $(OUTPUT-y)
 
-REVISION=$(shell git describe --dirty --always)
+GIT_VER = $(shell git describe --always --dirty | sed  's;^wr-switch-sw-;;')
 
 all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 
@@ -111,7 +111,7 @@ sdb-lib/libsdbfs.a:
 	$(MAKE) -C sdb-lib
 
 $(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
-	$(CC) $(CFLAGS) -DGIT_REVISION=\"$(REVISION)\" -c revision.c
+	$(CC) $(CFLAGS) -D__GIT_VER__="\"$(GIT_VER)\"" -c revision.c
 	${CC} -o $@ revision.o config.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 	$(SIZE) $@
