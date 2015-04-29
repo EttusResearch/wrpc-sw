@@ -68,6 +68,9 @@ endif
 # And always complain if we pick the libgcc division: 64/32 = 32 is enough here.
 obj-y += check-error.o
 
+# add system check functions like stack overflow and check reset
+obj-y += system_checks.o
+
 obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
 cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 

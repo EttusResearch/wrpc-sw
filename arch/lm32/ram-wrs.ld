@@ -79,6 +79,9 @@ SECTIONS
 		*(.mbox)
 	} > mbox
 
+	/* End of RAM for checking stack overflows */
+	PROVIDE(_endram = ORIGIN(stack));
+
 	/* First location in stack is highest address in RAM (stack area) */
 	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
 }
