@@ -41,6 +41,7 @@ static int write_w1(int w1base, int w1len)
 	uint8_t buf[w1len];
 	int i;
 
+	wrpc_w1_init();
 	w1_scan_bus(&wrpc_w1_bus);
 
 	if (verbose) { /* code borrowed from dev/w1.c -- "w1" shell command */
