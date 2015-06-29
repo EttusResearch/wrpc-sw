@@ -49,8 +49,8 @@ char* print64(uint64_t x)
 
 int wrc_mon_status()
 {
-	struct wr_servo_state_t *s =
-			&((struct wr_data_t *)ppi->ext_data)->servo_state;
+	struct wr_servo_state *s =
+			&((struct wr_data *)ppi->ext_data)->servo_state;
 	struct pp_state_table_item *ip = NULL;
 	for (ip = pp_state_table; ip->state != PPS_END_OF_TABLE; ip++) {
 		if (ip->state == ppi->state)
@@ -60,7 +60,7 @@ int wrc_mon_status()
 	cprintf(C_BLUE, "\n\nPTP status: ");
 	cprintf(C_WHITE, "%s", ip ? ip->name : "unknown");
 
-	if ((!s->valid) || (ppi->state != PPS_SLAVE)) {
+	if ((!s->flags & WR_FLAG_VALID) || (ppi->state != PPS_SLAVE)) {
 		cprintf(C_RED,
 			"\n\nSync info not valid\n\n");
 		return 0;
@@ -83,8 +83,8 @@ void wrc_mon_gui(void)
 #ifdef CONFIG_ETHERBONE
 	uint8_t ip[4];
 #endif
-	struct wr_servo_state_t *s =
-			&((struct wr_data_t *)ppi->ext_data)->servo_state;
+	struct wr_servo_state *s =
+			&((struct wr_data *)ppi->ext_data)->servo_state;
 	int64_t crtt;
 	int64_t total_asymmetry;
 	if (!last)
@@ -279,8 +279,8 @@ int wrc_log_stats(uint8_t onetime)
 		last = timer_get_tics();
 	if (!onetime && time_before(timer_get_tics(), wrc_ui_refperiod + last))
 		return 0;
-	struct wr_servo_state_t *s =
-			&((struct wr_data_t *)ppi->ext_data)->servo_state;
+	struct wr_servo_state *s =
+			&((struct wr_data *)ppi->ext_data)->servo_state;
 	last = timer_get_tics();
 
 	shw_pps_gen_get_time(&sec, &nsec);
@@ -288,7 +288,7 @@ int wrc_log_stats(uint8_t onetime)
 	minic_get_stats(&tx, &rx);
 	pp_printf("lnk:%d rx:%d tx:%d ", state.state, rx, tx);
 	pp_printf("lock:%d ", state.locked ? 1 : 0);
-	pp_printf("sv:%d ", s->valid ? 1 : 0);
+	pp_printf("sv:%d ", (s->flags & WR_FLAG_VALID) ? 1 : 0);
 	pp_printf("ss:'%s' ", s->servo_state_name);
 	aux_stat = spll_get_aux_status(0);
 	pp_printf("aux:%x ", aux_stat);
