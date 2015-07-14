@@ -61,7 +61,8 @@ void external_start(struct spll_external_state *s)
 
 int external_locked(volatile struct spll_external_state *s)
 {
-	if (!s->helper->ld.locked || !s->main->ld.locked)
+	if (!s->helper->ld.locked || !s->main->ld.locked ||
+		!(SPLL->ECCR & SPLL_ECCR_EXT_REF_PRESENT))
 		return 0;
 
 	switch(s->align_state) {
