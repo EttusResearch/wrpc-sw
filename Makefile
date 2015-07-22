@@ -14,6 +14,7 @@ SIZE =		$(CROSS_COMPILE)size
 AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 
 PPSI = ppsi
+PPSI_CONFIG = ppsi/include/generated/autoconf.h
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
 obj-y = arch/lm32/crt0.o arch/lm32/irq.o
@@ -153,7 +154,8 @@ clean:
 	$(MAKE) -C tools clean
 
 %.o:		%.c
-	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
+	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) \
+		-include $(PPSI_CONFIG)  -c $*.c -o $@
 
 tools:
 	$(MAKE) -C tools
