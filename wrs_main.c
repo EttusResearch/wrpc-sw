@@ -41,6 +41,7 @@ int main(void)
 	ad9516_init(scb_ver);
 	rts_init();
 	rtipc_init();
+	spll_very_init();
 
 	for(;;)
 	{

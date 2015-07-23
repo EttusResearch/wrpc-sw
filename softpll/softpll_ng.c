@@ -272,6 +272,12 @@ void _irq_entry()
 	clear_irq();
 }
 
+void spll_very_init()
+{
+	PPSG = (volatile struct PPSG_WB *)BASE_PPS_GEN;
+	PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_CNT_RST | PPSG_CR_PWIDTH_W(PPS_WIDTH);
+}
+
 void spll_init(int mode, int slave_ref_channel, int align_pps)
 {
 	static const char *modes[] = { "", "grandmaster", "freemaster", "slave", "disabled" };
@@ -304,7 +310,7 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 	SPLL->DEGLITCH_THR = 1000;
 
 	PPSG->ESCR = 0;
-	PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_CNT_RST | PPSG_CR_PWIDTH_W(PPS_WIDTH);
+	PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(PPS_WIDTH);
 
 	if(mode == SPLL_MODE_DISABLED)
 		s->seq_state = SEQ_DISABLED;

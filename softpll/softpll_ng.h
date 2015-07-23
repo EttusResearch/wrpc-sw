@@ -60,6 +60,7 @@ Initializes the SoftPLL to work in mode (mode). Extra parameters depend on choic
 - for SPLL_MODE_SLAVE: (ref_channel) indicates the reference channel to which we are locking our PLL. 
 */
 void spll_init(int mode, int ref_channel, int align_pps);
+void spll_very_init();
 
 /* Disables the SoftPLL and cleans up stuff */
 void spll_shutdown();

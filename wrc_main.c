@@ -92,6 +92,7 @@ static void wrc_initialize()
 	wrc_ptp_init();
 	//try reading t24 phase transition from EEPROM
 	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
+	spll_very_init();
 
 #ifdef CONFIG_ETHERBONE
 	ipv4_init("wru1");
