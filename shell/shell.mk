@@ -20,3 +20,4 @@ obj-$(CONFIG_ETHERBONE) +=			shell/cmd_ip.o
 obj-$(CONFIG_PPSI) +=				shell/cmd_verbose.o
 obj-$(CONFIG_CMD_CONFIG) +=			shell/cmd_config.o
 obj-$(CONFIG_CMD_SLEEP) +=			shell/cmd_sleep.o
+obj-$(CONFIG_CMD_LL) +=				shell/cmd_ll.o

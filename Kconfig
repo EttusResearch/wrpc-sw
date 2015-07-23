@@ -127,6 +127,16 @@ config PRINT_BUFSIZE
 	  also constraints the maximum lenght of text that can be written
 	  in a single call to printf.
 
+config CMD_LL
+	depends on DEVELOPER && WR_NODE
+	bool "Build low-level commands for development/testing"
+	help
+	  This enables low-level commands: "devmem" to read/write memory
+	  and "delays" to read/write the constant delays in this device.
+	  Please note that the delays have no immediate effect when set
+	  on the master, because they are just sent to the slave
+	  during the initial handshake
+
 # CHECK_RESET for switch and node
 config CHECK_RESET
 	depends on DEVELOPER

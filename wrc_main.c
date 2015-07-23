@@ -40,8 +40,8 @@ int wrc_phase_tracking = 1;
 ///////////////////////////////////
 //Calibration data (from EEPROM if available)
 int32_t sfp_alpha = 73622176;	//default values if could not read EEPROM
-int32_t sfp_deltaTx = 46407;
-int32_t sfp_deltaRx = 167843;
+int32_t sfp_deltaTx = 0;
+int32_t sfp_deltaRx = 0;
 uint32_t cal_phase_transition = 2389;
 
 static void wrc_initialize()
