@@ -225,4 +225,11 @@ config LEGACY_EEPROM
 	boolean
 	default !SDB_STORAGE
 
+# This is needed to size the pp_instance data strucuture. Instead of
+# including the ppsi autoconf.h, with duplicate definitions, define it
+# here, as we know what the value is
+config VLAN_ARRAY_SIZE
+	int
+	default 1
+
 # CONFIG_WR_NODE
