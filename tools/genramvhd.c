@@ -54,7 +54,7 @@ inline int my_isok(char c)
 
 int main(int argc, char **argv)
 {
-	int j, opt, error, i_width;
+	int j, opt, error = 0, i_width;
 	long i, elements, size, columns, entry_width;
 	char *value_end;
 	unsigned char x[16];	/* Up to 128 bit */
@@ -116,6 +116,9 @@ int main(int argc, char **argv)
 			return 1;
 		}
 	}
+
+	if (error)
+		return 1;
 
 	if (optind + 1 != argc) {
 		fprintf(stderr,
