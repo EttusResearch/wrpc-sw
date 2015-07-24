@@ -11,14 +11,6 @@ struct wrs_shm_head *ppsi_head;
 
 /* Following code from ptp-noposix/libposix/freestanding-wrapper.c */
 
-uint64_t ptpd_netif_get_msec_tics(void)
-{
-#if TICS_PER_SECOND != 1000
-#error "This code assumes 1kHz timer"
-#endif
-  return timer_get_tics();
-}
-
 static int read_phase_val(struct hal_port_state *port)
 {
 	int32_t dmtd_phase;
@@ -64,13 +56,6 @@ int wrpc_get_port_state(struct hal_port_state *port, const char *port_name)
 	port->hw_index      = 0;
 
 	return 0;
-}
-
-int ptpd_netif_get_dmtd_phase(wr_socket_t *sock, int32_t *phase)
-{
-        if(phase)
-                return spll_read_ptracker(0, phase, NULL);
-        return 0;
 }
 
 /* dummy function, no shmem locks (no even shmem) are implemented in wrpc */

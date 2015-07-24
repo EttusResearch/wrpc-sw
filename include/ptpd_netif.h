@@ -211,9 +211,6 @@ int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
  */
 int ptpd_netif_get_ifName(char *ifname, int number);
 
-/* Returns the millisecond "tics" counter value */
-uint64_t ptpd_netif_get_msec_tics();
-
 /*
  * Function detects external source lock,
  *
@@ -228,12 +225,14 @@ int ptpd_netif_extsrc_detection();
 int ptpd_netif_adjust_counters(int64_t adjust_sec, int32_t adjust_nsec);
 int ptpd_netif_adjust_phase(int32_t phase_ps);
 int ptpd_netif_adjust_in_progress();
-int ptpd_netif_get_dmtd_phase(wr_socket_t * sock, int32_t * phase);
 void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 				       int cntr_ahead, int transition_point,
 				       int clock_period);
 int ptpd_netif_enable_timing_output(int enable);
 int ptpd_netif_enable_phase_tracking(const char *if_name);
 void ptpd_netif_set_phase_transition(uint32_t phase);
+
+struct hal_port_state;
+int wrpc_get_port_state(struct hal_port_state *port, const char *port_name);
 
 #endif
