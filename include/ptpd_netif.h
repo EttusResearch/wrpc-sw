@@ -55,14 +55,8 @@ typedef struct {
 	mac_addr_t mac;
 // Destination MASC address, filled by recvfrom() function on interfaces bound to multiple addresses
 	mac_addr_t mac_dest;
-// IP address
-	ipv4_addr_t ip;
-// UDP port
-	uint16_t port;
 // RAW ethertype
 	uint16_t ethertype;
-// physical port to bind socket to
-	uint16_t physical_port;
 } wr_sockaddr_t;
 
 PACKED struct _wr_timestamp {
