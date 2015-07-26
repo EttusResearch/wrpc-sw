@@ -82,7 +82,7 @@ void shw_pps_gen_set_time(uint64_t seconds, uint32_t nanoseconds, int counter)
 		ppsg_write(ESCR, (ppsg_read(ESCR) & 0xffffffe7) | PPSG_ESCR_NSEC_SET);
 }
 
-uint64_t pps_get_utc(void)
+static uint64_t pps_get_utc(void)
 {
 	uint64_t out;
 	uint32_t low, high;

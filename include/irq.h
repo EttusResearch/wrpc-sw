@@ -9,5 +9,6 @@ static inline void clear_irq(void)
 
 void disable_irq(void);
 void enable_irq(void);
+void _irq_entry(void);
 
 #endif

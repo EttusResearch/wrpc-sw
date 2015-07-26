@@ -395,11 +395,6 @@ void spll_stop_channel(int channel)
 	mpll_stop(&s->aux[channel - 1].pll.dmtd);
 }
 
-int spll_ext_locked(void)
-{
-	return external_locked( (struct spll_external_state *) &softpll.ext);
-}
-
 int spll_check_lock(int channel)
 {
 	if (!channel)
@@ -531,7 +526,7 @@ static inline void aux_set_channel_status(int channel, int locked)
 		SPLL->OCCR |= (SPLL_OCCR_OUT_LOCK_W((1 << channel)));
 }
 
-int spll_update_aux_clocks(void)
+static int spll_update_aux_clocks(void)
 {
 	int ch;
 

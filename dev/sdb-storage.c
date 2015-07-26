@@ -14,6 +14,7 @@
 
 #include "types.h"
 #include "i2c.h"
+#include "onewire.h"
 #include <sdb.h>
 
 #define SDBFS_BIG_ENDIAN

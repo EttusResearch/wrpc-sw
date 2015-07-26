@@ -10,6 +10,7 @@
 #include "types.h"
 #include "board.h"
 #include "syscon.h"
+#include "i2c.h"
 
 #define I2C_DELAY 300
 

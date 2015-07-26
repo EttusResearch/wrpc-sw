@@ -19,6 +19,7 @@
 #include "wrc_ptp.h"
 #include "storage.h"
 #include "ptpd_netif.h"
+#include "rxts_calibrator.h"
 
 /* New calibrator for the transition phase value. A major pain in the ass for
    the folks who frequently rebuild their gatewares. The idea is described

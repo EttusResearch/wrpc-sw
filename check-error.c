@@ -9,6 +9,9 @@
 extern void __you_should_not_call_printf_from_wrpc_sw(void);
 extern void __you_should_not_divide_ll_in_wrpc_sw(void);
 
+long long __moddi3 (long long A, long long B);
+long long __divdi3 (long long A, long long B);
+
 int printf(const char *fmt, ...)
 {
 	__you_should_not_call_printf_from_wrpc_sw();

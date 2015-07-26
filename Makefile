@@ -77,7 +77,7 @@ obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
 cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 
 CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall -Wstrict-prototypes \
-	-ffunction-sections -fdata-sections -Os \
+	-ffunction-sections -fdata-sections -Os -Wmissing-prototypes \
 	-include include/trace.h -ggdb
 
 LDFLAGS = $(LDFLAGS_PLATFORM) \
