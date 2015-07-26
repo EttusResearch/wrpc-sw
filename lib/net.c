@@ -90,7 +90,7 @@ wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
 	if (sock_type != PTPD_SOCK_RAW_ETHERNET)
 		return NULL;
 
-	if (wrpc_get_port_state(&pstate, bind_addr->if_name) < 0)
+	if (wrpc_get_port_state(&pstate, "wr0" /* unused */) < 0)
 		return NULL;
 
 	memcpy(&sock->bind_addr, bind_addr, sizeof(wr_sockaddr_t));

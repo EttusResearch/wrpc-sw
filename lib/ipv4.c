@@ -37,16 +37,15 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 	return (~sum & 0xffff);
 }
 
-void ipv4_init(const char *if_name)
+void ipv4_init(void)
 {
 	wr_sockaddr_t saddr;
-	
+
 	/* Reset => need a fresh IP */
 	needIP = 1;
 
 	/* Configure socket filter */
 	memset(&saddr, 0, sizeof(saddr));
-	strcpy(saddr.if_name, if_name);
 	get_mac_addr(&saddr.mac[0]);	/* Unicast */
 	saddr.ethertype = htons(0x0800);	/* IPv4 */
 	saddr.family = PTPD_SOCK_RAW_ETHERNET;

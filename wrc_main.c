@@ -95,8 +95,8 @@ static void wrc_initialize(void)
 	spll_very_init();
 
 #ifdef CONFIG_ETHERBONE
-	ipv4_init("wru1");
-	arp_init("wru1");
+	ipv4_init();
+	arp_init();
 #endif
 }
 

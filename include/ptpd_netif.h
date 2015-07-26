@@ -47,8 +47,6 @@ typedef void *wr_socket_t;
 
 // Socket address for ptp_netif_ functions
 typedef struct {
-// Network interface name (eth0, ...)
-	char if_name[IFACE_NAME_LEN];
 // Socket family (RAW ethernet/UDP)
 	int family;
 // MAC address
@@ -123,6 +121,6 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 void ptpd_netif_set_phase_transition(uint32_t phase);
 
 struct hal_port_state;
-int wrpc_get_port_state(struct hal_port_state *port, const char *port_name);
+int wrpc_get_port_state(struct hal_port_state *port, const char *port_name /* unused */);
 
 #endif /* __PTPD_NETIF_H */

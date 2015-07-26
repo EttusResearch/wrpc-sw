@@ -3,13 +3,13 @@
 
 #include <inttypes.h>
 
-void ipv4_init(const char *if_name);
+void ipv4_init(void);
 void ipv4_poll(void);
 
 /* Internal to IP stack: */
 unsigned int ipv4_checksum(unsigned short *buf, int shorts);
 
-void arp_init(const char *if_name);
+void arp_init(void);
 void arp_poll(void);
 
 extern int needIP;

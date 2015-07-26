@@ -29,13 +29,12 @@ static wr_socket_t *arp_socket;
 #define ARP_TPA		(ARP_THA+6)
 #define ARP_END		(ARP_TPA+4)
 
-void arp_init(const char *if_name)
+void arp_init(void)
 {
 	wr_sockaddr_t saddr;
 
 	/* Configure socket filter */
 	memset(&saddr, 0, sizeof(saddr));
-	strcpy(saddr.if_name, if_name);
 	memset(&saddr.mac, 0xFF, 6);	/* Broadcast */
 	saddr.ethertype = htons(0x0806);	/* ARP */
 	saddr.family = PTPD_SOCK_RAW_ETHERNET;
