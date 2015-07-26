@@ -9,9 +9,9 @@
 
 #define WRPC_FID				0
 
-void minic_init();
-void minic_disable();
-int minic_poll_rx();
+void minic_init(void);
+void minic_disable(void);
+int minic_poll_rx(void);
 void minic_get_stats(int *tx_frames, int *rx_frames);
 
 int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,

@@ -13,7 +13,7 @@
 
 #define I2C_DELAY 300
 
-void mi2c_delay()
+void mi2c_delay(void)
 {
 	int i;
 	for (i = 0; i < I2C_DELAY; i++)

@@ -117,7 +117,7 @@ static int cal_cur_phase;
    ptpnetif's check lock function when the PLL has already locked, to avoid
    complicating the API of ptp-noposix/ppsi. */
 
-void rxts_calibration_start()
+void rxts_calibration_start(void)
 {
 	cal_cur_phase = 0;
 	det_rising.prev_val = det_falling.prev_val = -1;

@@ -15,7 +15,7 @@
 #include "i2c.h"
 #include "sfp.h"
 
-int sfp_present()
+int sfp_present(void)
 {
 	return !gpio_in(GPIO_SFP_DET);
 }

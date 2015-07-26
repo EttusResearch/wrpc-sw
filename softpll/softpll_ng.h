@@ -60,10 +60,10 @@ Initializes the SoftPLL to work in mode (mode). Extra parameters depend on choic
 - for SPLL_MODE_SLAVE: (ref_channel) indicates the reference channel to which we are locking our PLL. 
 */
 void spll_init(int mode, int ref_channel, int align_pps);
-void spll_very_init();
+void spll_very_init(void);
 
 /* Disables the SoftPLL and cleans up stuff */
-void spll_shutdown();
+void spll_shutdown(void);
 
 /* Returns number of reference and output channels implemented in HW. */
 void spll_get_num_channels(int *n_ref, int *n_out);
@@ -109,7 +109,7 @@ int spll_read_ptracker(int ref_channel, int32_t *phase_ps, int *enabled);
 /* Calls non-realtime update state machine. Must be called regularly (although
  * it is not time-critical) in the main loop of the program if aux clocks or
  * external reference are used in the design. */
-void spll_update();
+void spll_update(void);
 
 /* Returns the status of given aux clock output (SPLL_AUX_) */
 int spll_get_aux_status(int out_channel);
@@ -118,7 +118,7 @@ const char *spll_get_aux_status_string(int channel);
 /* Debug/testing functions */
 
 /* Returns how many time the PLL has de-locked since last call of spll_init() */
-int spll_get_delock_count();
+int spll_get_delock_count(void);
 
 void spll_show_stats(void);
 
@@ -128,7 +128,7 @@ void spll_set_dac(int out_channel, int value);
 /* Returns current DAC sample value for output (out_channel) */
 int spll_get_dac(int out_channel);
 
-void check_vco_frequencies();
+void check_vco_frequencies(void);
 
 #define SPLL_STATS_VER 2
 

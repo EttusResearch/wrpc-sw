@@ -44,7 +44,7 @@ int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
 uint32_t cal_phase_transition = 2389;
 
-static void wrc_initialize()
+static void wrc_initialize(void)
 {
 	uint8_t mac_addr[6];
 
@@ -105,7 +105,7 @@ static void wrc_initialize()
 #define LINK_UP 3
 #define LINK_DOWN 4
 
-static int wrc_check_link()
+static int wrc_check_link(void)
 {
 	static int prev_link_state = -1;
 	int link_state = ep_link_up(NULL);
@@ -143,7 +143,7 @@ void wrc_debug_printf(int subsys, const char *fmt, ...)
 
 int wrc_man_phase = 0;
 
-static void ui_update()
+static void ui_update(void)
 {
 
 	if (wrc_ui_mode == UI_GUI_MODE) {

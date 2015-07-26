@@ -21,7 +21,7 @@
 
 static struct rts_pll_state pstate;
 
-static void clear_state()
+static void clear_state(void)
 {
 	int i;
 	for(i=0;i<RTS_PLL_CHANNELS;i++)

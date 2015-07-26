@@ -71,7 +71,7 @@ static void esc(char code)
 	mprintf("\033[1%c", code);
 }
 
-static int _shell_exec()
+static int _shell_exec(void)
 {
 	char *tokptr[SH_MAX_ARGS + 1];
 	struct wrc_shell_cmd *p;

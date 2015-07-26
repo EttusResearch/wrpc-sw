@@ -46,12 +46,12 @@ int uart_write_string(const char *s)
 	return s - t;
 }
 
-static int uart_poll()
+static int uart_poll(void)
 {
 	return uart->SR & UART_SR_RX_RDY;
 }
 
-int uart_read_byte()
+int uart_read_byte(void)
 {
 	if (!uart_poll())
 		return -1;

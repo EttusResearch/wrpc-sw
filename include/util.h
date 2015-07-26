@@ -20,6 +20,6 @@ void cprintf(int color, const char *fmt, ...);
 void pcprintf(int row, int col, int color, const char *fmt, ...);
 
 /* Clears the terminal scree. */
-void term_clear();
+void term_clear(void);
 
 #endif

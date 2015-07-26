@@ -94,7 +94,7 @@ typedef struct _wr_timestamp wr_timestamp_t;
 // - opens devices
 // - does necessary ioctls()
 // - initializes connection with the mighty HAL daemon
-int ptpd_netif_init();
+int ptpd_netif_init(void);
 
 // Creates UDP or Ethernet RAW socket (determined by sock_type) bound to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
 // automatically added to multicast group. User can specify physical_port field to bind the socket to specific switch port only.
@@ -219,12 +219,12 @@ int ptpd_netif_get_ifName(char *ifname, int number);
  * HEXP_LOCK_STATUS_BUSY  	1
  * HEXP_EXTSRC_STATUS_NOSRC  	2
  */
-int ptpd_netif_extsrc_detection();
+int ptpd_netif_extsrc_detection(void);
 
 /* Timebase adjustment functions - the servo should not call the HAL directly */
 int ptpd_netif_adjust_counters(int64_t adjust_sec, int32_t adjust_nsec);
 int ptpd_netif_adjust_phase(int32_t phase_ps);
-int ptpd_netif_adjust_in_progress();
+int ptpd_netif_adjust_in_progress(void);
 void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 				       int cntr_ahead, int transition_point,
 				       int clock_period);

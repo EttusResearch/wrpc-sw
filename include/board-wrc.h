@@ -29,8 +29,8 @@
 /* Number of auxillary clock channels - usually equal to the number of FMCs */
 #define NUM_AUX_CLOCKS 1
 
-int board_init();
-int board_update();
+int board_init(void);
+int board_update(void);
 
 /* spll parameter that are board-specific */
 #define BOARD_DIVIDE_DMTD_CLOCKS	1

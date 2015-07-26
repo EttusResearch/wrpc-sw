@@ -16,7 +16,7 @@
 /*
  * Delay function - limit SPI clock speed to 10 MHz
  */
-static void delay()
+static void delay(void)
 {
 	int i;
 	for (i = 0; i < (int)(CPU_CLOCK/10000000); i++)

@@ -47,7 +47,7 @@ char* print64(uint64_t x)
 
 }
 
-int wrc_mon_status()
+int wrc_mon_status(void)
 {
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;

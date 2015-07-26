@@ -27,7 +27,7 @@ void __attribute__((weak)) uart_init_hw(void)
 {}
 
 
-void uart_sw_write_byte(int b)
+static void uart_sw_write_byte(int b)
 {
 	int index;
 
@@ -50,7 +50,7 @@ int uart_sw_write_string(const char *s)
 	return s - t;
 }
 
-int uart_sw_read_byte()
+static int uart_sw_read_byte(void)
 {
 	int index;
 
@@ -68,6 +68,6 @@ void uart_write_byte(int b)
 	__attribute__((alias("uart_sw_write_byte"), weak));
 int uart_write_string(const char *s)
 	__attribute__((alias("uart_sw_write_string"), weak));
-int uart_read_byte()
+int uart_read_byte(void)
 	__attribute__((alias("uart_sw_read_byte"), weak));
 

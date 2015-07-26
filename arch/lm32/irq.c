@@ -8,7 +8,7 @@
  */
 #include "irq.h"
 
-void disable_irq()
+void disable_irq(void)
 {
 	unsigned int ie, im;
 	unsigned int Mask = ~1;
@@ -25,7 +25,7 @@ void disable_irq()
 
 }
 
-void enable_irq()
+void enable_irq(void)
 {
 	unsigned int ie, im;
 	unsigned int Mask = 1;

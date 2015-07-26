@@ -14,6 +14,7 @@
 #include "storage.h"
 #include "board.h"
 #include "syscon.h"
+#include "onewire.h"
 
 /*
  * The SFP section is placed somewhere inside FMC EEPROM and it really does not

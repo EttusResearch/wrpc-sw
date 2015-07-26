@@ -68,7 +68,7 @@ struct ad9516_reg {
 
 static void *oc_spi_base;
 
-int oc_spi_init(void *base_addr)
+static int oc_spi_init(void *base_addr)
 {
 	oc_spi_base = base_addr;
 
@@ -76,7 +76,7 @@ int oc_spi_init(void *base_addr)
 	return 0;
 }
 
-int oc_spi_txrx(int ss, int nbits, uint32_t in, uint32_t *out)
+static int oc_spi_txrx(int ss, int nbits, uint32_t in, uint32_t *out)
 {
 	uint32_t rval;
 
@@ -129,14 +129,14 @@ static void ad9516_load_regset(const struct ad9516_reg *regs, int n_regs, int co
 }
 
 
-static void ad9516_wait_lock()
+static void ad9516_wait_lock(void)
 {
 	while ((ad9516_read_reg(0x1f) & 1) == 0);
 }
 
 #define SECONDARY_DIVIDER 0x100
 
-int ad9516_set_output_divider(int output, int ratio, int phase_offset)
+static int ad9516_set_output_divider(int output, int ratio, int phase_offset)
 {
 	uint8_t lcycles = (ratio/2) - 1;
 	uint8_t hcycles = (ratio - (ratio / 2)) - 1;
@@ -188,7 +188,7 @@ int ad9516_set_output_divider(int output, int ratio, int phase_offset)
 	return 0;
 }
 
-int ad9516_set_vco_divider(int ratio) /* Sets the VCO divider (2..6) or 0 to enable static output */
+static int ad9516_set_vco_divider(int ratio) /* Sets the VCO divider (2..6) or 0 to enable static output */
 {
 	if(ratio == 0)
 		ad9516_write_reg(0x1e0, 0x5); /* static mode */
@@ -198,7 +198,7 @@ int ad9516_set_vco_divider(int ratio) /* Sets the VCO divider (2..6) or 0 to ena
 	return 0;
 }
 
-void ad9516_sync_outputs()
+static void ad9516_sync_outputs(void)
 {
 	/* VCO divider: static mode */
 	ad9516_write_reg(0x1E0, 0x7);

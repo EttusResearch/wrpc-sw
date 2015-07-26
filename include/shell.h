@@ -23,10 +23,10 @@ extern struct wrc_shell_cmd __cmd_begin[], __cmd_end[];
 
 char *env_get(const char *var);
 int env_set(const char *var, const char *value);
-void env_init();
+void env_init(void);
 
 int shell_exec(const char *buf);
-void shell_interactive();
+void shell_interactive(void);
 
 int shell_boot_script(void);
 

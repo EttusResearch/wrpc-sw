@@ -117,7 +117,7 @@ static uint8_t *minic_rx_memset(uint8_t * mem, uint8_t c, uint32_t size)
 	return (uint8_t *) src;
 }
 
-static void minic_new_rx_buffer()
+static void minic_new_rx_buffer(void)
 {
 	minic_writel(MINIC_REG_MCR, 0);
 	minic.rx_base = dma_rx_buf;
@@ -137,7 +137,7 @@ static void minic_rxbuf_free(uint32_t words)
 	minic_writel(MINIC_REG_RX_AVAIL, words);
 }
 
-static void minic_new_tx_buffer()
+static void minic_new_tx_buffer(void)
 {
 	minic.tx_base = dma_tx_buf;
 	minic.tx_size = MINIC_DMA_TX_BUF_SIZE >> 2;

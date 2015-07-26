@@ -99,7 +99,7 @@ void pcprintf(int row, int col, int color, const char *fmt, ...)
 	mprintf("\e[m");
 }
 
-void term_clear()
+void term_clear(void)
 {
 	mprintf("\e[2J\e[1;1H");
 }

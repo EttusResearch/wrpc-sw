@@ -253,7 +253,7 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 	}
 }
 
-void _irq_entry()
+void _irq_entry(void)
 {
 	struct softpll_state *s = (struct softpll_state *)&softpll;
 
@@ -395,7 +395,7 @@ void spll_stop_channel(int channel)
 	mpll_stop(&s->aux[channel - 1].pll.dmtd);
 }
 
-int spll_ext_locked()
+int spll_ext_locked(void)
 {
 	return external_locked( (struct spll_external_state *) &softpll.ext);
 }
@@ -531,7 +531,7 @@ static inline void aux_set_channel_status(int channel, int locked)
 		SPLL->OCCR |= (SPLL_OCCR_OUT_LOCK_W((1 << channel)));
 }
 
-int spll_update_aux_clocks()
+int spll_update_aux_clocks(void)
 {
 	int ch;
 
