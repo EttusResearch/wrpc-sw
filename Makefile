@@ -144,7 +144,8 @@ config.o: .config
 $(AUTOCONF): silentoldconfig
 
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram $(LDS)
+	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram \
+		$(LDS) .depend
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
@@ -178,7 +179,9 @@ defconfig:
 
 .config: silentoldconfig
 
-# This forces more compilations than needed, but it's useful
-# (we depend on .config and not on include/generated/autoconf.h
-# because the latter is touched by silentoldconfig at each build)
-$(obj-y): .config $(wildcard include/*.h)
+# Trivial depend rule. We can't $(obj-y:.o=.c) because some objects come from
+# assembly source.  In glob avoid the toold directory, and ppsi/pp-printf
+.depend: $(wildcard *.c [^pt]/*.c)
+	$(CC) $(CFLAGS) -DSDBFS_BIG_ENDIAN -MM $^ > $@
+
+-include .depend
