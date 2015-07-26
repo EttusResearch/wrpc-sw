@@ -48,10 +48,8 @@ void ipv4_init(void)
 	memset(&saddr, 0, sizeof(saddr));
 	get_mac_addr(&saddr.mac[0]);	/* Unicast */
 	saddr.ethertype = htons(0x0800);	/* IPv4 */
-	saddr.family = PTPD_SOCK_RAW_ETHERNET;
 
-	ipv4_socket = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET,
-					       0, &saddr);
+	ipv4_socket = ptpd_netif_create_socket(0, 0 /* both unused */, &saddr);
 }
 
 static int bootp_retry = 0;

@@ -68,7 +68,7 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 }
 
 
-wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
+wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 				      wr_sockaddr_t * bind_addr)
 {
 	int i;
@@ -86,9 +86,6 @@ wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
 		TRACE_WRAP("No sockets left.\n");
 		return NULL;
 	}
-
-	if (sock_type != PTPD_SOCK_RAW_ETHERNET)
-		return NULL;
 
 	if (wrpc_get_port_state(&pstate, "wr0" /* unused */) < 0)
 		return NULL;

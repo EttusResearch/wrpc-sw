@@ -37,10 +37,8 @@ void arp_init(void)
 	memset(&saddr, 0, sizeof(saddr));
 	memset(&saddr.mac, 0xFF, 6);	/* Broadcast */
 	saddr.ethertype = htons(0x0806);	/* ARP */
-	saddr.family = PTPD_SOCK_RAW_ETHERNET;
 
-	arp_socket = ptpd_netif_create_socket(PTPD_SOCK_RAW_ETHERNET,
-					      0, &saddr);
+	arp_socket = ptpd_netif_create_socket(0, 0 /* both unused */, &saddr);
 }
 
 static int process_arp(uint8_t * buf, int len)

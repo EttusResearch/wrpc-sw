@@ -64,7 +64,7 @@ include softpll/softpll.mk
 # ppsi already has div64 (the same one), so only pick it if not using ppsi.
 ifndef CONFIG_PPSI
   obj-y += pp_printf/div64.o
-  # unfortunately, we need a prototype there
+  # unfortunately, we need a prototype therex
   cflags-y += -include include/wrc.h
 endif
 # And always complain if we pick the libgcc division: 64/32 = 32 is enough here.

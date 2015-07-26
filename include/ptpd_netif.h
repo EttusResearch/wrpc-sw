@@ -7,8 +7,7 @@
 #include <board.h>
 //#include <inttypes.h>
 
-#define PTPD_SOCK_RAW_ETHERNET 	1
-#define PTPD_SOCK_UDP 		2
+#define PTPD_SOCK_RAW_ETHERNET 	1 /* used in ppsi to no aim: remove this */
 
 #define PTPD_FLAGS_MULTICAST		0x1
 
@@ -47,8 +46,6 @@ typedef void *wr_socket_t;
 
 // Socket address for ptp_netif_ functions
 typedef struct {
-// Socket family (RAW ethernet/UDP)
-	int family;
 // MAC address
 	mac_addr_t mac;
 // Destination MASC address, filled by recvfrom() function on interfaces bound to multiple addresses
@@ -90,7 +87,7 @@ int ptpd_netif_init(void);
 
 // Creates UDP or Ethernet RAW socket (determined by sock_type) bound to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
 // automatically added to multicast group. User can specify physical_port field to bind the socket to specific switch port only.
-wr_socket_t *ptpd_netif_create_socket(int sock_type, int flags,
+wr_socket_t *ptpd_netif_create_socket(int unused, int unused2,
 				      wr_sockaddr_t * bind_addr);
 
 // Sends a UDP/RAW packet (data, data_length) to address provided in wr_sockaddr_t.
