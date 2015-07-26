@@ -275,11 +275,6 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 	return min(size - sizeof(struct ethhdr), data_length);
 }
 
-int ptpd_netif_select(wr_socket_t * wrSock)
-{
-	return 0;
-}
-
 int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 		      size_t data_length, wr_timestamp_t * tx_timestamp)
 {

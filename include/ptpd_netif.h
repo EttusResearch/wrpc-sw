@@ -112,121 +112,17 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 // Closes the socket.
 int ptpd_netif_close_socket(wr_socket_t * sock);
 
-int ptpd_netif_poll(wr_socket_t *);
+int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
+
 
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
 
-/*
- * Function start HW locking of freq on WR Slave
- * return:
- * 	PTPD_NETIF_ERROR - locking not started
- * 	PTPD_NETIF_OK	 - locking started
- */
-int ptpd_netif_locking_enable(int txrx, const char *ifaceName, int priority);
-
-/*
- *
- * return:
- *
- * 	PTPD_NETIF_OK	 - locking started
- */
-
-int ptpd_netif_locking_disable(int txrx, const char *ifaceName, int priority);
-
-int ptpd_netif_locking_poll(int txrx, const char *ifaceName, int priority);
-
-/*
- * Function turns on calibration (measurement of delay)
- * Tx or Rx depending on the txrx param
- * return:
- * 	PTPD_NETIF_NOT_READY	- if there is calibratin going on on another port
- * 	PTPD_NETIF_OK	 	- calibration started
- */
-int ptpd_netif_calibrating_enable(int txrx, const char *ifaceName);
-
-/*
- * Function turns off calibration (measurement of delay)
- * Tx or Rx depending on the txrx param
- * return:
- * 	PTPD_NETIF_ERROR	- if there is calibratin going on on another port
- * 	PTPD_NETIF_OK	 	- calibration started
- */
-int ptpd_netif_calibrating_disable(int txrx, const char *ifaceName);
-
-/*
- * Function checks if Rx/Tx (depending on the param) calibration is finished
- * if finished, returns measured delay in delta
- * return:
- *
- * 	PTPD_NETIF_OK	 - locking started
- */
-int ptpd_netif_calibrating_poll(int txrx, const char *ifaceName,
-				uint64_t * delta);
-
-/*
- * Function turns on calibration pattern.
- * return:
- * 	PTPD_NETIF_NOT_READY	- if WRSW is busy with calibration on other switch or error occured
- * 	PTPD_NETIF_OK	 	- calibration started
- */
-int ptpd_netif_calibration_pattern_enable(const char *ifaceName,
-					  unsigned int calibrationPeriod,
-					  unsigned int calibrationPattern,
-					  unsigned int calibrationPatternLen);
-
-/*
- * Function turns off calibration pattern
- * return:
- * 	PTPD_NETIF_ERROR	- turning off not successful
- * 	PTPD_NETIF_OK	 	- turning off  successful
- */
-int ptpd_netif_calibration_pattern_disable(const char *ifaceName);
-
-/*
- * Function reads calibration data if it's available, used at the beginning of PTPWRd to check if
- * HW knows already the interface's deltax, and therefore no need for calibration
- * return:
- *	PTPD_NETIF_NOT_FOUND 	- if deltas are not known
- *	PTPD_NETIF_OK		- if deltas are known, in such case, deltaTx and deltaRx have valid data
- */
-int ptpd_netif_read_calibration_data(const char *ifaceName, uint64_t * deltaTx,
-				     uint64_t * deltaRx, int32_t * fix_alpha,
-				     int32_t * clock_period);
-
-int ptpd_netif_select(wr_socket_t *);
-int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
-
-/*
- * Function looks for a port (interface) for the port number 'number'
- * it will return in the argument ifname the port name
- * return:
- *	PTPD_NETIF_ERROR 	- port not found
- *	PTPD_NETIF_OK		- if the port found
- */
-int ptpd_netif_get_ifName(char *ifname, int number);
-
-/*
- * Function detects external source lock,
- *
- * return:
- * HEXP_EXTSRC_STATUS_LOCKED 	0
- * HEXP_LOCK_STATUS_BUSY  	1
- * HEXP_EXTSRC_STATUS_NOSRC  	2
- */
-int ptpd_netif_extsrc_detection(void);
-
-/* Timebase adjustment functions - the servo should not call the HAL directly */
-int ptpd_netif_adjust_counters(int64_t adjust_sec, int32_t adjust_nsec);
-int ptpd_netif_adjust_phase(int32_t phase_ps);
-int ptpd_netif_adjust_in_progress(void);
 void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 				       int cntr_ahead, int transition_point,
 				       int clock_period);
-int ptpd_netif_enable_timing_output(int enable);
-int ptpd_netif_enable_phase_tracking(const char *if_name);
 void ptpd_netif_set_phase_transition(uint32_t phase);
 
 struct hal_port_state;
 int wrpc_get_port_state(struct hal_port_state *port, const char *port_name);
 
-#endif
+#endif /* __PTPD_NETIF_H */
