@@ -57,7 +57,7 @@ int ptrackers_update(struct spll_ptracker_state *ptrackers, int tag,
 	if(!s->enabled)
 		return 0;
 
-	register int delta = (tag_ref - tag) & ((1 << HPLL_N) - 1);
+	register int delta = (tag - tag_ref) & ((1 << HPLL_N) - 1);
 	register int index = delta >> (HPLL_N - 2);
 
 
