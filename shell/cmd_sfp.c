@@ -22,11 +22,13 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <wrc.h>
 
 #include "shell.h"
 #include "storage.h"
 #include "syscon.h"
+#include "endpoint.h"
 
 #include "sfp.h"
 
@@ -107,6 +109,10 @@ static int cmd_sfp(const char *args[])
 		} else
 			mprintf("Could not match to DB\n");
 		return 0;
+	} else if (args[0] && !strcasecmp(args[0], "ena")) {
+		if(!args[1])
+			return -EINVAL;
+		ep_sfp_enable(atoi(args[1]));
 	}
 
 	return 0;

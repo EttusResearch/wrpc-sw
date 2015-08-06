@@ -28,6 +28,7 @@ int ep_get_psval(int32_t * psval);
 int ep_cal_pattern_enable(void);
 int ep_cal_pattern_disable(void);
 int ep_timestamper_cal_pulse(void);
+int ep_sfp_enable(int ena);
 
 void pfilter_init_default(void);
 
