@@ -49,7 +49,7 @@ int wrpc_get_port_state(struct hal_port_state *port, const char *port_name)
 	port->locked = spll_check_lock(0);
 	/*  port->lock_priority = 0;*/
 	/*spll_get_phase_shift(0, NULL, (int32_t *)&port->phase_setpoint);*/
-	port->clock_period  = 8000;
+	port->clock_period  = REF_CLOCK_PERIOD_PS;
 	port->t2_phase_transition = cal_phase_transition;
 	port->t4_phase_transition = cal_phase_transition;
 	get_mac_addr(port->hw_addr);

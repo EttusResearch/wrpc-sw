@@ -374,7 +374,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		hwts->valid = ts_valid;
 		hwts->sec = sec;
 		hwts->ahead = 0;
-		hwts->nsec = counter_r * 8;
+		hwts->nsec = counter_r * (REF_CLOCK_PERIOD_PS / 1000);
 		
 //        TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
 		minic.tx_count++;
