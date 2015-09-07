@@ -28,6 +28,14 @@ config RAMSIZE
 
 # CONFIG_WR_SWITCH has no further options at all at this point
 
+config WR_NODE_PCS16
+	depends on WR_NODE
+	boolean "Compile for 16-bit PCS"
+	default n
+	help
+		This allows to compile the WR PTP Core software for 16-bit PCS platforms
+		(e.g. Kintex-7).
+
 config STACKSIZE
 	depends on WR_NODE
 	int

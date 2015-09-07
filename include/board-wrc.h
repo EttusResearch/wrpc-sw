@@ -14,8 +14,13 @@
 #define CPU_CLOCK 62500000ULL
 
 /* WR Reference clock period (picoseconds) and frequency (Hz) */
-#define REF_CLOCK_PERIOD_PS 8000
-#define REF_CLOCK_FREQ_HZ 125000000
+#ifdef CONFIG_WR_NODE_PCS16
+#  define REF_CLOCK_PERIOD_PS 16000
+#  define REF_CLOCK_FREQ_HZ 62500000
+#else
+#  define REF_CLOCK_PERIOD_PS 8000
+#  define REF_CLOCK_FREQ_HZ 125000000
+#endif
 
 /* Baud rate of the builtin UART (does not apply to the VUART) */
 #define UART_BAUDRATE 115200ULL
@@ -33,7 +38,11 @@ int board_init(void);
 int board_update(void);
 
 /* spll parameter that are board-specific */
-#define BOARD_DIVIDE_DMTD_CLOCKS	1
+#ifdef CONFIG_WR_NODE_PCS16
+#  define BOARD_DIVIDE_DMTD_CLOCKS	0
+#else
+#  define BOARD_DIVIDE_DMTD_CLOCKS	1
+#endif
 #define BOARD_MAX_CHAN_REF		1
 #define BOARD_MAX_CHAN_AUX		2
 #define BOARD_MAX_PTRACKERS		1
