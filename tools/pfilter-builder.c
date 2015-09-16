@@ -108,14 +108,18 @@
 */
 
 #include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
 
-#include "board.h"
-#include <endpoint.h>
-#include <hw/endpoint_regs.h>
+#include <endpoint.h> /* for operations and type pfilter_op_t */
 
 #define PFILTER_MAX_CODE_SIZE      32
 
-#define pfilter_dbg pp_printf
+#define pfilter_dbg printf
+
+char *prgname;
 
 extern volatile struct EP_WB *EP;
 
@@ -256,35 +260,45 @@ static void pfilter_logic3(int rd, int ra, pfilter_op_t op, int rb,
 	code_buf[code_pos++] = ir;
 }
 
-/* Terminates the microcode, loads it to the endpoint and enables the pfilter */
-static void pfilter_load()
+/* Terminates the microcode, creating the output file */
+static void pfilter_output(char *fname)
 {
+	uint32_t v1, v2;
 	int i;
+	FILE *f;
+
 	code_buf[code_pos++] = (1ULL << 35);	// insert FIN instruction
 
-	EP->PFCR0 = 0;		// disable pfilter
-
-	for (i = 0; i < code_pos; i++) {
-		pfilter_dbg("pos %02i: %x.%08x\n", i, (uint32_t)(code_buf[i] >> 32), (uint32_t)(code_buf[i]));
-		uint32_t cr0, cr1;
-		cr1 = EP_PFCR1_MM_DATA_LSB_W(code_buf[i] & 0xfff);
-		cr0 =
-		    EP_PFCR0_MM_ADDR_W(i) | EP_PFCR0_MM_DATA_MSB_W(code_buf[i]
-								   >> 12) |
-		    EP_PFCR0_MM_WRITE_MASK;
-
-		EP->PFCR1 = cr1;
-		EP->PFCR0 = cr0;
+	f = fopen(fname, "w");
+	if (!f) {
+		fprintf(stderr, "%s: %s: %s\n", prgname, fname, strerror(errno));
+		exit(1);
 	}
 
-	EP->PFCR0 = EP_PFCR0_ENABLE;
+	/* First write a magic word, so the target can check endianness */
+	v1 = 0x11223344;
+	fwrite(&v1, sizeof(v1), 1, f);
+
+	pfilter_dbg("Writing \"%s\"\n", fname);
+	for (i = 0; i < code_pos; i++) {
+		pfilter_dbg("   pos %02i: %x.%08x\n", i,
+			    (uint32_t)(code_buf[i] >> 32),
+			    (uint32_t)(code_buf[i]));
+		/* Explicitly write the LSB first */
+		v1 = code_buf[i];
+		v2 = code_buf[i] >> 32;
+		fwrite(&v1, sizeof(v1), 1, f);
+		fwrite(&v2, sizeof(v2), 1, f);
+	}
+	fclose(f);
 }
 
-/* sample packet filter initialization:
-- redirects broadcasts and PTP packets to the WR Core
-- redirects unicasts addressed to self with ethertype 0xa0a0 to the external fabric */
+/* We generate all supported rule-sets, those that used to be ifdef'd */
+#define MODE_ETHERBONE   1
+#define MODE_NIC_PFILTER 2
 
-void pfilter_init_default()
+
+void pfilter_init(int mode, char *fname)
 {
 	pfilter_new();
 	pfilter_nop();
@@ -293,9 +307,9 @@ void pfilter_init_default()
 	 * Make three sets of comparisons over the destination address.
 	 * After these 9 instructions, the whole Eth header is available.
 	 */
-	pfilter_cmp(0, EP->MACH & 0xffff, 0xffff, MOV, FRAME_OUR_MAC);
-	pfilter_cmp(1, EP->MACL >> 16, 0xffff, AND, FRAME_OUR_MAC);
-	pfilter_cmp(2, EP->MACL & 0xffff, 0xffff, AND, FRAME_OUR_MAC);	/* set when our MAC */
+	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_OUR_MAC);	/* Use fake MAC: 12:34:56:78:9a:bc */
+	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_OUR_MAC);	/* set when our MAC */
 
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
@@ -315,54 +329,64 @@ void pfilter_init_default()
 	pfilter_cmp(11, 0x0001, 0x00ff, MOV, FRAME_ICMP);
 	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);
 
-#ifdef CONFIG_ETHERBONE
+	if (mode & MODE_ETHERBONE) {
 
-	/* Mark bits for unicast to us, and for unicast-to-us-or-broadcast */
-	pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, R_ZERO, AND, FRAME_TYPE_IPV4);
-	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
+		/* Mark bits for unicast to us, and for unicast-to-us-or-broadcast */
+		pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, R_ZERO, AND, FRAME_TYPE_IPV4);
+		pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
 
-	/* Make a selection for the CPU, that is later still added-to */
-	pfilter_logic3(R_TMP, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
-	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, R_TMP);
+		/* Make a selection for the CPU, that is later still added-to */
+		pfilter_logic3(R_TMP, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
+		pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, R_TMP);
 
-	/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
-	pfilter_cmp(18, 0x0044, 0xffff, MOV, R_TMP);	/* R_TMP now means dport = BOOTPC */
+		/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
+		pfilter_cmp(18, 0x0044, 0xffff, MOV, R_TMP);	/* R_TMP now means dport = BOOTPC */
 
-	pfilter_logic3(R_TMP, R_TMP, AND, FRAME_UDP, AND, FRAME_IP_OK);	/* BOOTPC and UDP and IP(unicast|broadcast) */
-	pfilter_logic2(FRAME_FOR_CPU, R_TMP, OR, FRAME_FOR_CPU);
+		pfilter_logic3(R_TMP, R_TMP, AND, FRAME_UDP, AND, FRAME_IP_OK);	/* BOOTPC and UDP and IP(unicast|broadcast) */
+		pfilter_logic2(FRAME_FOR_CPU, R_TMP, OR, FRAME_FOR_CPU);
 
-	#ifdef CONFIG_NIC_PFILTER
+		if (mode & MODE_NIC_PFILTER) {
 
-		pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_PORT_ETHERBONE);
+			pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_PORT_ETHERBONE);
 
-		/* Here we had a commented-out check for magic (offset 21, value 0x4e6f) */
+			/* Here we had a commented-out check for magic (offset 21, value 0x4e6f) */
 
-		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
-		pfilter_logic2(R_CLASS(5), FRAME_PORT_ETHERBONE, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
-		pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_PORT_ETHERBONE, NOT, R_ZERO); /* class 7: Rest => NIC Core */
+			pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
+			pfilter_logic2(R_CLASS(5), FRAME_PORT_ETHERBONE, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
+			pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_PORT_ETHERBONE, NOT, R_ZERO); /* class 7: Rest => NIC Core */
+		} else {
 
-	#else
-		pfilter_logic3(R_TMP, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* Something we accept: cpu+udp or streamer */
+			pfilter_logic3(R_TMP, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* Something we accept: cpu+udp or streamer */
 
-		pfilter_logic3(R_DROP, R_TMP, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
+			pfilter_logic3(R_DROP, R_TMP, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
 
-		pfilter_logic2(R_CLASS(7), FRAME_IP_OK, AND, FRAME_UDP);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
-		pfilter_logic2(R_CLASS(6), FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);	/* class 6: streamer broadcasts => external fabric */
-		pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);	/* class 0: all selected for CPU earlier */
+			pfilter_logic2(R_CLASS(7), FRAME_IP_OK, AND, FRAME_UDP);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
+			pfilter_logic2(R_CLASS(6), FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);	/* class 6: streamer broadcasts => external fabric */
+			pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);	/* class 0: all selected for CPU earlier */
 
-	#endif
+		}
+	} else { /* not etherbone */
 
-#else
-	pfilter_logic3(FRAME_PTP_OK, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);
-	pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);
-	pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* R_TMP = everything else */
+		pfilter_logic3(FRAME_PTP_OK, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);
+		pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);
+		pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* R_TMP = everything else */
 
-	pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer traffic => external fabric */
-	pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts => external fabric */
-	pfilter_logic2(R_CLASS(0), FRAME_PTP_OK, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
+		pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer traffic => external fabric */
+		pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts => external fabric */
+		pfilter_logic2(R_CLASS(0), FRAME_PTP_OK, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
 
-#endif
+	}
 
-	pfilter_load();
+	pfilter_output(fname);
 
+}
+
+int main(int argc, char **argv) /* no arguments used currently */
+{
+	prgname = argv[0];
+
+	pfilter_init(0, "rules-plain.bin");
+	pfilter_init(MODE_ETHERBONE, "rules-ebone.bin");
+	pfilter_init(MODE_ETHERBONE | MODE_NIC_PFILTER, "rules-e+nic.bin");
+	exit(0);
 }
