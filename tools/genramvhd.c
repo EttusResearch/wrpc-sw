@@ -124,8 +124,11 @@ int main(int argc, char **argv)
 		fprintf(stderr,
 			"%s: expecting one non-optional argument: <filename>\n",
 			program);
-		return 1;
+		error = 1;
 	}
+
+	if (error)
+		return 1;
 
 	filename = argv[optind];
 
