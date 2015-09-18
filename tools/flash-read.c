@@ -47,6 +47,7 @@ static struct spec_device devs[MAX_DEVICES];
 
 char *prgname;
 int verbose;
+uint32_t syscon_offset;
 
 extern void *BASE_SYSCON;
 
@@ -67,7 +68,7 @@ static int spec_read_flash(struct spec_device *spec, int addr, int len)
 		return -1;
 	}
 
-	BASE_SYSCON = spec->mapaddr + SPEC_SYSCON_OFFSET;
+	BASE_SYSCON = spec->mapaddr + syscon_offset;
 
 	flash_init();
 
@@ -226,13 +227,18 @@ int main(int argc, char **argv)
 	struct spec_device *spec = NULL;
 	prgname = argv[0];
 
-	while ((c = getopt(argc, argv, "b:v")) != -1) {
+	syscon_offset = SPEC_SYSCON_OFFSET;
+
+	while ((c = getopt(argc, argv, "b:vc:")) != -1) {
 		switch(c) {
 		case 'b':
 			sscanf(optarg, "%i", &bus);
 			break;
 		case 'v':
 			verbose++;
+			break;
+		case 'c':
+			sscanf(optarg, "%i", &syscon_offset);
 			break;
 		default:
 			exit(help());
