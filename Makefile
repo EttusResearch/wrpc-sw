@@ -139,10 +139,10 @@ config.o: .config
 	./tools/genraminit $*.bin 0 > $@
 
 %.vhd: tools %.bin
-	./tools/genramvhd -s `. ./.config; echo $$CONFIG_RAMSIZE` $*.bin > $@
+	./tools/genramvhd -s $(CONFIG_RAMSIZE) $*.bin > $@
 
 %.mif: tools %.bin
-	./tools/genrammif $*.bin `. ./.config; echo $$CONFIG_RAMSIZE` > $@
+	./tools/genrammif $*.bin $(CONFIG_RAMSIZE) > $@
 
 $(AUTOCONF): silentoldconfig
 
