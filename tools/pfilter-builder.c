@@ -117,7 +117,7 @@
 
 #define PFILTER_MAX_CODE_SIZE      32
 
-#define pfilter_dbg printf
+#define pfilter_dbg(x, ...) /* nothing */
 
 char *prgname;
 
@@ -181,16 +181,18 @@ static void pfilter_new()
 static void check_size()
 {
 	if (code_pos == PFILTER_MAX_CODE_SIZE - 1) {
-		pfilter_dbg("microcode: code too big (max size: %d)\n",
-			    PFILTER_MAX_CODE_SIZE);
+		fprintf(stderr, "%s: microcode too big (max size: %d)\n",
+			prgname, PFILTER_MAX_CODE_SIZE);
+		exit(1);
 	}
 }
 
 static void check_reg_range(int val, int minval, int maxval, char *name)
 {
 	if (val < minval || val > maxval) {
-		pfilter_dbg("microcode: %s register out of range (%d to %d)",
-			    name, minval, maxval);
+		fprintf(stderr, "%s: register \"%s\" out of range (%d to %d)",
+			prgname, name, minval, maxval);
+		exit(1);
 	}
 }
 
@@ -201,9 +203,11 @@ static void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op,
 
 	check_size();
 
-	if (offset > code_pos)
-		pfilter_dbg
-		    ("microcode: comparison offset is bigger than current PC. Insert some nops before comparing");
+	if (offset > code_pos) {
+		fprintf(stderr, "%s: comparison offset is bigger than current PC. Insert some nops before comparing",
+			prgname);
+		exit(1);
+	}
 
 	check_reg_range(rd, R_1, R_15, "ra/rd");
 	rd -= R_ZERO;
