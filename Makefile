@@ -56,6 +56,14 @@ CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
 
+# packet-filter rules depend on configuration; default is rules-plain
+pfilter-y                     := rules-plain.bin
+pfilter-$(CONFIG_ETHERBONE)   := rules-ebone.bin
+pfilter-$(CONFIG_NIC_PFILTER) := rules-e+nic.bin
+export pfilter-y
+
+all:
+
 include shell/shell.mk
 include lib/lib.mk
 include pp_printf/printf.mk
@@ -74,6 +82,7 @@ obj-y += check-error.o
 # add system check functions like stack overflow and check reset
 obj-y += system_checks.o
 
+# WR node has SDB support, WR switch does not
 obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
 cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 
@@ -148,7 +157,7 @@ $(AUTOCONF): silentoldconfig
 
 clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram \
-		$(LDS) .depend
+		$(LDS)  rules-*.bin .depend
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
