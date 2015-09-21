@@ -11,7 +11,7 @@
 
 #include "types.h"
 
-#define FLASH_BLOCKSIZE 512
+#define FLASH_BLOCKSIZE 65536
 
 /* Flash interface functions */
 void	flash_init(void);

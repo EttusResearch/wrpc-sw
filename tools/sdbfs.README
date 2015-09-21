@@ -30,6 +30,10 @@ To create the filesystem image: "gensdbfs tools/sdbfs /tmp/sdb-wrpc.bin"
 (please note that empty files have no data to be stored, so no space is
 wasted on disk for them and the output file is short).
 
+To create the flash filesystem image, don't forget about setting the sector
+size. For flash chip on SPEC card, it is 64k:
+gensdbfs -b 65536 tools/sdbfs /tmp/sdb-wrpc.bin
+
 To check: "sdb-read -l /tmp/sdb-wrpc.bin":
 
    46696c6544617461:2e202020 @ 00000000-0000037f .
