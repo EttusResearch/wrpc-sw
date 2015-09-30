@@ -216,10 +216,10 @@ static int calib_t24p_master(uint32_t *value)
 
 	rv = storage_phtrans(value, 0);
 	if(rv < 0) {
-		pp_printf("Error %d while reading EEPROM\n", rv);
+		pp_printf("Error %d while reading t24p from storage\n", rv);
 		return rv;
 	}
-	pp_printf("t24p read from EEPROM: %d ps\n", *value);
+	pp_printf("t24p read from storage: %d ps\n", *value);
 	return rv;
 }
 
