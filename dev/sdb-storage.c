@@ -335,8 +335,10 @@ int set_persistent_mac(uint8_t portnum, uint8_t * mac)
 	int ret;
 
 	ret = sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_MAC);
-	if (ret >= 0)
+	if (ret >= 0) {
+		sdbfs_ferase(&wrc_sdb, 0, wrc_sdb.f_len);
 		ret = sdbfs_fwrite(&wrc_sdb, 0, mac, 6);
+	}
 	sdbfs_close(&wrc_sdb);
 
 	if (ret < 0) {
