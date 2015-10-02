@@ -80,9 +80,9 @@ static void wrc_initialize(void)
 		mac_addr[5] = 0x66;	//
 	}
 
-	TRACE_DEV("Local MAC address: %x:%x:%x:%x:%x:%x\n", mac_addr[0],
-		  mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4],
-		  mac_addr[5]);
+	pp_printf("Local MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
+		mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
+		mac_addr[4], mac_addr[5]);
 
 	ep_init(mac_addr);
 	ep_enable(1, 1);
