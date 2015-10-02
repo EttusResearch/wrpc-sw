@@ -507,7 +507,24 @@ interact with the shell.
 wrc# ptp stop
 @end example
 
-First you should create a calibration database with fixed delays values and
+@sp 1
+First you should make sure your board has a proper @sc{mac} address assigned:
+@example
+wrc# mac get
+@end example
+If the result of above command is @t{MAC-address: 11:22:33:44:55:66}, this means
+@sc{mac} was not yet configured and stored in the Flash/EEPROM. You should get
+the @sc{mac} for your board from its manufacturer. To configure the address and
+store it into the Flash/EEPROM (so that it's automatically loaded every time the
+@sc{wrpc} starts) you should type two commands in the @sc{wrpc} shell:
+@example
+wrc# mac set xx:xx:xx:xx:xx:xx
+wrc# mac setp xx:xx:xx:xx:xx:xx
+@end example
+where @t{xx:xx:xx:xx:xx:xx} is the @sc{mac} address of your board.
+
+@sp 1
+Next you should create a calibration database with fixed delays values and
 alpha parameters. The example below presents the @sc{wrpc} Shell commands that
 clear all previous entries and add two Axcen transceivers with deltaTx, deltaRx
 and alpha parameters associated with them.
@@ -786,9 +803,9 @@ initialization script
 @item @code{init boot} @tab executes the script stored in Flash/EEPROM (the same action is done automatically when @sc{wrpc} starts after resetting @sc{lm32})
 
 @item @code{mac get} @tab prints @sc{wrpc}'s @sc{mac} address
-@item @code{mac getp} @tab re-generates @sc{mac} address from 1-wire digital thermometer or @sc{eeprom}
+@item @code{mac getp} @tab reads the @sc{mac} address stored in Flash/EEPROM
 @item @code{mac set <mac>} @tab sets the @sc{mac} address of @sc{wrpc}
-@item @code{mac setp <mac>} @tab sets @sc{mac} address to the 1-wire @sc{eeprom} (if available)
+@item @code{mac setp <mac>} @tab stores the @sc{mac} address in Flash/EEPROM
 
 @item @code{sdb} @tab prints devices connected to the Wishbone bus inside @sc{wrpc}
 
