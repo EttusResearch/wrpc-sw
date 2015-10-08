@@ -392,6 +392,9 @@ int get_persistent_mac(uint8_t portnum, uint8_t * mac)
 		if (class != 0x28 && class != 0x42)
 			continue;
 		rom = wrpc_w1_bus.devs[i].rom;
+		mac[0] = 0x22;
+		mac[1] = 0x33;
+		mac[2] = rom >> 32;
 		mac[3] = rom >> 24;
 		mac[4] = rom >> 16;
 		mac[5] = rom >> 8;

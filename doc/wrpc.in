@@ -512,8 +512,11 @@ First you should make sure your board has a proper @sc{mac} address assigned:
 @example
 wrc# mac get
 @end example
-If the result of above command is @t{MAC-address: 22:33:44:55:66:77}, this means
-@sc{mac} was not yet configured and stored in the Flash/EEPROM. You should get
+If the result of above command is @t{MAC-address: 22:33:ww:xx:yy:zz}, this means
+@sc{mac} was not yet configured and stored in the Flash/EEPROM. The value is
+based on thermometer serial number as is unique among SPEC devices,
+globally accepted as ``locally assigned'', but you might want to assign your own address. A value @t{22:33:44:55:66:77} is the final fallback if no
+thermometer is found (very unlikely). You should get
 the @sc{mac} for your board from its manufacturer. To configure the address and
 store it into the Flash/EEPROM (so that it's automatically loaded every time the
 @sc{wrpc} starts) you should type two commands in the @sc{wrpc} shell:

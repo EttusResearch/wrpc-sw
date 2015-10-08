@@ -66,10 +66,6 @@ static void wrc_initialize(void)
 	/*init storage (Flash / W1 EEPROM / I2C EEPROM*/
 	storage_init(WRPC_FMC_I2C, FMC_EEPROM_ADR);
 
-	mac_addr[0] = 0x08;	//
-	mac_addr[1] = 0x00;	// CERN OUI
-	mac_addr[2] = 0x30;	//
-
 	if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
 		mprintf("Unable to determine MAC address\n");
 		mac_addr[0] = 0x22;	//
