@@ -228,6 +228,7 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 	uint16_t size;
 	struct ethhdr hdr;
 	struct hw_timestamp hwts;
+	uint8_t spll_busy;
 
 	/*check if there is something to fetch */
 	if (!q->n)
@@ -247,12 +248,13 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 	if (rx_timestamp) {
 		rx_timestamp->raw_nsec = hwts.nsec;
 		rx_timestamp->raw_ahead = hwts.ahead;
+		spll_busy = (uint8_t) spll_shifter_busy(0);
 		spll_read_ptracker(0, &rx_timestamp->raw_phase, NULL);
 
 		rx_timestamp->sec = hwts.sec;
 		rx_timestamp->nsec = hwts.nsec;
 		rx_timestamp->phase = 0;
-		rx_timestamp->correct = hwts.valid;
+		rx_timestamp->correct = hwts.valid & (!spll_busy);
 
 		ptpd_netif_linearize_rx_timestamp(rx_timestamp,
 						  rx_timestamp->raw_phase,
