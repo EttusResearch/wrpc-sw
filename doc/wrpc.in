@@ -512,7 +512,7 @@ First you should make sure your board has a proper @sc{mac} address assigned:
 @example
 wrc# mac get
 @end example
-If the result of above command is @t{MAC-address: 11:22:33:44:55:66}, this means
+If the result of above command is @t{MAC-address: 22:33:44:55:66:77}, this means
 @sc{mac} was not yet configured and stored in the Flash/EEPROM. You should get
 the @sc{mac} for your board from its manufacturer. To configure the address and
 store it into the Flash/EEPROM (so that it's automatically loaded every time the

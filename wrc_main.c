@@ -72,12 +72,12 @@ static void wrc_initialize(void)
 
 	if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
 		mprintf("Unable to determine MAC address\n");
-		mac_addr[0] = 0x11;	//
-		mac_addr[1] = 0x22;	//
-		mac_addr[2] = 0x33;	// fallback MAC if get_persistent_mac fails
-		mac_addr[3] = 0x44;	//
-		mac_addr[4] = 0x55;	//
-		mac_addr[5] = 0x66;	//
+		mac_addr[0] = 0x22;	//
+		mac_addr[1] = 0x33;	//
+		mac_addr[2] = 0x44;	// fallback MAC if get_persistent_mac fails
+		mac_addr[3] = 0x55;	//
+		mac_addr[4] = 0x66;	//
+		mac_addr[5] = 0x77;	//
 	}
 
 	pp_printf("Local MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
