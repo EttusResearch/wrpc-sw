@@ -173,12 +173,12 @@ int v3[0 - ((int)FRAME_FOR_CPU > R_22)];
 
 
 /* begins assembling a new packet filter program */
-static void pfilter_new()
+static void pfilter_new(void)
 {
 	code_pos = 0;
 }
 
-static void check_size()
+static void check_size(void)
 {
 	if (code_pos == PFILTER_MAX_CODE_SIZE - 1) {
 		fprintf(stderr, "%s: microcode too big (max size: %d)\n",
@@ -224,7 +224,7 @@ static void pfilter_cmp(int offset, int value, int mask, pfilter_op_t op,
 	code_buf[code_pos++] = ir;
 }
 
-static void pfilter_nop()
+static void pfilter_nop(void)
 {
 	uint64_t ir;
 	check_size();
