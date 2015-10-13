@@ -42,12 +42,12 @@ void help()
 }
 
 /* We don't want localized versions from ctype.h */
-inline int my_isalpha(char c)
+static int my_isalpha(char c)
 {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-inline int my_isok(char c)
+static int my_isok(char c)
 {
 	return c == '_' || my_isalpha(c) || (c >= '0' && c <= '9');
 }
@@ -124,8 +124,11 @@ int main(int argc, char **argv)
 		fprintf(stderr,
 			"%s: expecting one non-optional argument: <filename>\n",
 			program);
-		return 1;
+		error = 1;
 	}
+
+	if (error)
+		return 1;
 
 	filename = argv[optind];
 

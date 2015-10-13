@@ -5,6 +5,7 @@ CFLAGS = -Wall -ggdb -I../include
 LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 ALL   += wrpc-w1-read wrpc-w1-write
+ALL   += pfilter-builder
 
 ifneq ($(EB),no)
 ALL += eb-w1-write

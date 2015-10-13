@@ -8,3 +8,4 @@ eb-w1-write
 sdb-wrpc.bin
 flash-read
 flash-write
+pfilter-builder

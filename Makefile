@@ -14,6 +14,7 @@ SIZE =		$(CROSS_COMPILE)size
 AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 
 PPSI = ppsi
+PPSI_CONFIG = ppsi/include/generated/autoconf.h
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
 obj-y = arch/lm32/crt0.o arch/lm32/irq.o
@@ -55,6 +56,14 @@ CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
 
+# packet-filter rules depend on configuration; default is rules-plain
+pfilter-y                     := rules-plain.bin
+pfilter-$(CONFIG_ETHERBONE)   := rules-ebone.bin
+pfilter-$(CONFIG_NIC_PFILTER) := rules-e+nic.bin
+export pfilter-y
+
+all:
+
 include shell/shell.mk
 include lib/lib.mk
 include pp_printf/printf.mk
@@ -73,6 +82,7 @@ obj-y += check-error.o
 # add system check functions like stack overflow and check reset
 obj-y += system_checks.o
 
+# WR node has SDB support, WR switch does not
 obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
 cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 
@@ -138,22 +148,23 @@ config.o: .config
 	./tools/genraminit $*.bin 0 > $@
 
 %.vhd: tools %.bin
-	./tools/genramvhd -s `. ./.config; echo $$CONFIG_RAMSIZE` $*.bin > $@
+	./tools/genramvhd -s $(CONFIG_RAMSIZE) $*.bin > $@
 
 %.mif: tools %.bin
-	./tools/genrammif $*.bin `. ./.config; echo $$CONFIG_RAMSIZE` > $@
+	./tools/genrammif $*.bin $(CONFIG_RAMSIZE) > $@
 
 $(AUTOCONF): silentoldconfig
 
 clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram \
-		$(LDS) .depend
+		$(LDS)  rules-*.bin .depend
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
 
 %.o:		%.c
-	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
+	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) \
+		-include $(PPSI_CONFIG)  -c $*.c -o $@
 
 tools:
 	$(MAKE) -C tools
