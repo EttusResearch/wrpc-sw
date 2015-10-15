@@ -266,9 +266,11 @@ static void wrc_mon_std_servo(void)
 }
 
 
+/* internal "last", exported to shell command */
+uint32_t wrc_stats_last;
+
 int wrc_log_stats(void)
 {
-	static uint32_t last = ~0; /* if we are master, update count is 0 */
 	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
@@ -277,9 +279,9 @@ int wrc_log_stats(void)
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 
-	if (last == s->update_count)
+	if (wrc_stats_last == s->update_count)
 		return 0;
-	last = s->update_count;
+	wrc_stats_last = s->update_count;
 
 	shw_pps_gen_get_time(&sec, &nsec);
 	wrpc_get_port_state(&state, NULL);

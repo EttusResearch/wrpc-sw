@@ -5,23 +5,26 @@
 #include <errno.h>
 
 int wrc_stat_running;
+extern uint32_t wrc_stats_last;
 
 static int cmd_stat(const char *args[])
 {
 	/* no arguments: invert */
 	if (!args[0]) {
 		wrc_stat_running = !wrc_stat_running;
+		wrc_stats_last--; /* force a line to be printed */
 		if (!wrc_stat_running)
 			pp_printf("statistics now off\n");
 		return 0;
 	}
 
 	/* arguments: bts, on, off */
-	if (!strcasecmp(args[0], "bts"))
+	if (!strcasecmp(args[0], "bts")) {
 		mprintf("%d ps\n", ep_get_bitslide());
-	else if (!strcasecmp(args[0], "on"))
+	} else if (!strcasecmp(args[0], "on")) {
 		wrc_stat_running = 1;
-	else if (!strcasecmp(args[0], "off")) {
+		wrc_stats_last--; /* force a line to be printed */
+	} else if (!strcasecmp(args[0], "off")) {
 		wrc_stat_running = 0;
 		pp_printf("statistics now off\n");
 	} else
