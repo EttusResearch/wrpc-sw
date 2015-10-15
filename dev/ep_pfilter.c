@@ -23,7 +23,7 @@
 extern uint32_t _binary_rules_pfilter_bin_start[];
 extern uint32_t _binary_rules_pfilter_bin_end[];
 
-#define pfilter_dbg pp_printf
+#define pfilter_dbg /* nothing */
 
 extern volatile struct EP_WB *EP;
 
