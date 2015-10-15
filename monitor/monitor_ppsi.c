@@ -74,7 +74,8 @@ static int wrc_mon_status(void)
 
 void wrc_mon_gui(void)
 {
-	static uint32_t last;
+	static uint32_t last_jiffies;
+	static uint32_t last_servo_count;
 	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
@@ -87,12 +88,14 @@ void wrc_mon_gui(void)
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 	int64_t crtt;
 	int64_t total_asymmetry;
-	if (!last)
-		last = timer_get_tics() - 1 -  wrc_ui_refperiod;
-	if (time_before(timer_get_tics(), last + wrc_ui_refperiod))
-		return;
 
-	last = timer_get_tics();
+	if (!last_jiffies)
+		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
+	if (time_before(timer_get_tics(), last_jiffies + wrc_ui_refperiod)
+		&& last_servo_count == s->update_count)
+		return;
+	last_jiffies = timer_get_tics();
+	last_servo_count = s->update_count;
 
 	term_clear();
 
