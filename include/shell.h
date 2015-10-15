@@ -3,9 +3,9 @@
 
 #define UI_SHELL_MODE 0
 #define UI_GUI_MODE 1
-#define UI_STAT_MODE 2
 
 extern int wrc_ui_mode;
+extern int wrc_stat_running;
 
 const char *fromhex(const char *hex, int *v);
 const char *fromdec(const char *dec, int *v);
