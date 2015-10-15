@@ -266,7 +266,7 @@ static void wrc_mon_std_servo(void)
 }
 
 
-int wrc_log_stats(uint8_t onetime)
+int wrc_log_stats(void)
 {
 	static uint32_t last;
 	struct hal_port_state state;
@@ -277,7 +277,7 @@ int wrc_log_stats(uint8_t onetime)
 
 	if (!last)
 		last = timer_get_tics();
-	if (!onetime && time_before(timer_get_tics(), wrc_ui_refperiod + last))
+	if (time_before(timer_get_tics(), wrc_ui_refperiod + last))
 		return 0;
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;

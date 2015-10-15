@@ -149,7 +149,7 @@ static void ui_update(void)
 			wrc_ui_mode = UI_SHELL_MODE;
 		}
 	} else if (wrc_ui_mode == UI_STAT_MODE) {
-		wrc_log_stats(0);
+		wrc_log_stats();
 		if (uart_read_byte() == 27 || wrc_ui_refperiod == 0) {
 			shell_init();
 			wrc_ui_mode = UI_SHELL_MODE;
