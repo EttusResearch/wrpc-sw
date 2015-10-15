@@ -88,7 +88,7 @@ void wrc_mon_gui(void)
 	int64_t crtt;
 	int64_t total_asymmetry;
 	if (!last)
-		last = timer_get_tics();
+		last = timer_get_tics() - 1 -  wrc_ui_refperiod;
 	if (time_before(timer_get_tics(), last + wrc_ui_refperiod))
 		return;
 
@@ -276,7 +276,7 @@ int wrc_log_stats(void)
 	uint32_t nsec;
 
 	if (!last)
-		last = timer_get_tics();
+		last = timer_get_tics() - 1 - wrc_ui_refperiod;
 	if (time_before(timer_get_tics(), wrc_ui_refperiod + last))
 		return 0;
 	struct wr_servo_state *s =
