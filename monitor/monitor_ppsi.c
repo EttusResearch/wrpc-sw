@@ -74,7 +74,8 @@ static int wrc_mon_status(void)
 
 void wrc_mon_gui(void)
 {
-	static uint32_t last;
+	static uint32_t last_jiffies;
+	static uint32_t last_servo_count;
 	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
@@ -87,12 +88,14 @@ void wrc_mon_gui(void)
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 	int64_t crtt;
 	int64_t total_asymmetry;
-	if (!last)
-		last = timer_get_tics();
-	if (time_before(timer_get_tics(), last + wrc_ui_refperiod))
-		return;
 
-	last = timer_get_tics();
+	if (!last_jiffies)
+		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
+	if (time_before(timer_get_tics(), last_jiffies + wrc_ui_refperiod)
+		&& last_servo_count == s->update_count)
+		return;
+	last_jiffies = timer_get_tics();
+	last_servo_count = s->update_count;
 
 	term_clear();
 
@@ -266,22 +269,22 @@ static void wrc_mon_std_servo(void)
 }
 
 
-int wrc_log_stats(uint8_t onetime)
+/* internal "last", exported to shell command */
+uint32_t wrc_stats_last;
+
+int wrc_log_stats(void)
 {
-	static uint32_t last;
 	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
-
-	if (!last)
-		last = timer_get_tics();
-	if (!onetime && time_before(timer_get_tics(), wrc_ui_refperiod + last))
-		return 0;
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;
-	last = timer_get_tics();
+
+	if (wrc_stats_last == s->update_count)
+		return 0;
+	wrc_stats_last = s->update_count;
 
 	shw_pps_gen_get_time(&sec, &nsec);
 	wrpc_get_port_state(&state, NULL);

@@ -30,7 +30,7 @@
 
 void wrc_mon_gui(void);
 void shell_init(void);
-int wrc_log_stats(uint8_t onetime);
+int wrc_log_stats(void);
 void wrc_debug_printf(int subsys, const char *fmt, ...);
 
 /* This header is included by softpll: manage wrc/wrs difference */
