@@ -268,20 +268,18 @@ static void wrc_mon_std_servo(void)
 
 int wrc_log_stats(void)
 {
-	static uint32_t last;
+	static uint32_t last = ~0; /* if we are master, update count is 0 */
 	struct hal_port_state state;
 	int tx, rx;
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
-
-	if (!last)
-		last = timer_get_tics() - 1 - wrc_ui_refperiod;
-	if (time_before(timer_get_tics(), wrc_ui_refperiod + last))
-		return 0;
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;
-	last = timer_get_tics();
+
+	if (last == s->update_count)
+		return 0;
+	last = s->update_count;
 
 	shw_pps_gen_get_time(&sec, &nsec);
 	wrpc_get_port_state(&state, NULL);
