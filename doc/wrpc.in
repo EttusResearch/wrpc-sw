@@ -639,7 +639,10 @@ The Shell also contains a monitoring function which you can use to check the
 wrc# gui
 @end example
 
-The information is presented in a clear, auto-refreshing screen. To exit from
+The information is presented in a clear, auto-refreshing screen. The
+information is refreshed at every WR iteration or periodically if
+nothing else happens (so you see an up-to-date timestamp). The period
+defaults to 1 second and can be changed using the @i{refresh} command. To exit from
 this console mode press <Esc>. A full description of the information reported
 by gui is provided in @ref{WRPC GUI elements}. 
 
@@ -652,9 +655,9 @@ packet counters, lock and calibration status.
 @center @image{wrpc_mon, 12cm,,wrpc sync monitor}
 @sp 1
 
-If you want to store statistics from the @sc{wrpc} operation, it's probably
+If you want to log statistics from the @sc{wrpc} operation, it's probably
 better to use the @i{stat} shell command. It reports the same information as GUI
-but in a form which is easier to parse and analyze:
+but in a single long line, a form which is easier to parse and analyze:
 
 @example
 wrc# stat
@@ -670,8 +673,15 @@ temp: 45.6875 C
 @end example
 
 @sp 1
-In addition, you can use a @i{refresh} command to change the update rate for
-the @i{gui} and @i{stat} commands.
+Unlike @i{gui}, the @i{stat} command runs asynchronously: you can still
+issue shell commands while stats are running (this is different from
+earlier @t{wrpc-sw} releases).  You can stop statistics by running @i{stat} again.
+As an alternative to the toggling action of @i{stat} alone, you can
+use ``@i{stat 1}'' or ``@i{stat 0}''.
+
+Statistics are printed every time the WR servo runs; thus no statistics
+are reported when the node is running in master mode, nor when your node
+is running as slave and the master disappeared.
 
 @sp 1
 If you have a @sc{dio} mezzanine board plugged to your @sc{spec}, you can verify
@@ -755,8 +765,9 @@ spll_init() function to initialize SoftPll
 
 @item @code{gui} @tab starts GUI @sc{wrpc} monitor
 
-@item @code{stat} @tab prints the log message for each period (Esc to exit back
-to shell)
+@item @code{stat} @tab toggles reporting of loggable statistics. You can pass
+@t{1} or @t{0} as argument as an alternative to toggling
+
 @item @code{stat bts} @tab prints bitslide value for established @sc{wr} Link,
 needed by the calibration procedure
 
