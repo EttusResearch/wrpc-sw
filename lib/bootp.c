@@ -134,7 +134,7 @@ int send_bootp(uint8_t * buf, int retry)
 	buf[IP_CHECKSUM + 0] = sum >> 8;
 	buf[IP_CHECKSUM + 1] = sum & 0xff;
 
-	// mprintf("Sending BOOTP request...\n");
+	// pp_printf("Sending BOOTP request...\n");
 	return BOOTP_END;
 }
 
@@ -160,9 +160,9 @@ int process_bootp(uint8_t * buf, int len)
 		return 0;
 
 	setIP(buf + BOOTP_YIADDR);
-	
+
 	getIP(ip);
-	mprintf("Discovered IP address (%d.%d.%d.%d)!\n",
+	pp_printf("Discovered IP address (%d.%d.%d.%d)!\n",
 	        ip[0], ip[1], ip[2], ip[3]);
 
 	return 1;

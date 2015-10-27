@@ -17,18 +17,18 @@
 static int cmd_init(const char *args[])
 {
 	if (!mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR)) {
-		mprintf("EEPROM not found..\n");
+		pp_printf("EEPROM not found..\n");
 		return -1;
 	}
 
 	if (args[0] && !strcasecmp(args[0], "erase")) {
 		if (storage_init_erase() < 0)
-			mprintf("Could not erase init script\n");
+			pp_printf("Could not erase init script\n");
 	} else if (args[1] && !strcasecmp(args[0], "add")) {
 		if (storage_init_add(args) < 0)
-			mprintf("Could not add the command\n");
+			pp_printf("Could not add the command\n");
 		else
-			mprintf("OK.\n");
+			pp_printf("OK.\n");
 	} else if (args[0] && !strcasecmp(args[0], "show")) {
 		storage_init_show();
 	} else if (args[0] && !strcasecmp(args[0], "boot")) {

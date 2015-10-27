@@ -81,25 +81,25 @@ char *format_time(uint64_t sec)
 void cprintf(int color, const char *fmt, ...)
 {
 	va_list ap;
-	mprintf("\e[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
+	pp_printf("\e[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
-	mprintf("\e[m");
+	pp_printf("\e[m");
 }
 
 void pcprintf(int row, int col, int color, const char *fmt, ...)
 {
 	va_list ap;
-	mprintf("\e[%d;%df", row, col);
-	mprintf("\e[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
+	pp_printf("\e[%d;%df", row, col);
+	pp_printf("\e[0%d;3%dm", color & C_DIM ? 2 : 1, color & 0x7f);
 	va_start(ap, fmt);
 	vprintf(fmt, ap);
 	va_end(ap);
-	mprintf("\e[m");
+	pp_printf("\e[m");
 }
 
 void term_clear(void)
 {
-	mprintf("\e[2J\e[1;1H");
+	pp_printf("\e[2J\e[1;1H");
 }

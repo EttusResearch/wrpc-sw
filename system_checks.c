@@ -16,7 +16,7 @@ void check_stack(void)
 {
 	/* print "Stack overflow!" forever if stack corrupted */
 	while (_endram != ENDRAM_MAGIC) {
-		mprintf("Stack overflow!\n");
+		pp_printf("Stack overflow!\n");
 		timer_delay_ms(1000);
 	}
 }

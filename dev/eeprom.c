@@ -323,14 +323,14 @@ int storage_init_show(void)
 
 	if (used == 0 || used == 0xffff) {
 		used = 0;	//this means the memory is blank
-		mprintf("Empty init script...\n");
+		pp_printf("Empty init script...\n");
 	}
 	//just read and print to the screen char after char
 	for (i = 0; i < used; ++i) {
 		if (eeprom_read(i2cif, i2c_addr, EE_BASE_INIT + sizeof(used)
 				+ i, &byte, sizeof(byte)) != sizeof(byte))
 			return EE_RET_I2CERR;
-		mprintf("%c", byte);
+		pp_printf("%c", byte);
 	}
 
 	return 0;

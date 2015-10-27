@@ -86,5 +86,3 @@ SECTIONS
 	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
 }
 
-/* We need to provide mprintf to ptp-noposix object files, if missing */
-PROVIDE(mprintf = pp_printf);

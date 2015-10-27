@@ -52,7 +52,7 @@ static void wrc_initialize(void)
 	uart_init_sw();
 	uart_init_hw();
 
-	mprintf("WR Core: starting up...\n");
+	pp_printf("WR Core: starting up...\n");
 
 	timer_init(1);
 	wrpc_w1_init();
@@ -67,7 +67,7 @@ static void wrc_initialize(void)
 	storage_init(WRPC_FMC_I2C, FMC_EEPROM_ADR);
 
 	if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
-		mprintf("Unable to determine MAC address\n");
+		pp_printf("Unable to determine MAC address\n");
 		mac_addr[0] = 0x22;	//
 		mac_addr[1] = 0x33;	//
 		mac_addr[2] = 0x44;	// fallback MAC if get_persistent_mac fails

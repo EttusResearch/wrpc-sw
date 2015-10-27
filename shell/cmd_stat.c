@@ -20,7 +20,7 @@ static int cmd_stat(const char *args[])
 
 	/* arguments: bts, on, off */
 	if (!strcasecmp(args[0], "bts")) {
-		mprintf("%d ps\n", ep_get_bitslide());
+		pp_printf("%d ps\n", ep_get_bitslide());
 	} else if (!strcasecmp(args[0], "on")) {
 		wrc_stat_running = 1;
 		wrc_stats_last--; /* force a line to be printed */

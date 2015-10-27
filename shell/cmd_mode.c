@@ -31,7 +31,7 @@ static int cmd_mode(const char *args[])
 	else if (!strcasecmp(args[0], "slave"))
 		mode = WRC_MODE_SLAVE;
 	else {
-		mprintf("%s\n", modes[wrc_ptp_get_mode()]);
+		pp_printf("%s\n", modes[wrc_ptp_get_mode()]);
 		return 0;
 	}
 	return wrc_ptp_set_mode(mode);

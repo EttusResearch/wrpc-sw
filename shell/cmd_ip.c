@@ -42,9 +42,9 @@ static int cmd_ip(const char *args[])
 	}
 
 	if (needIP) {
-		mprintf("IP-address: in training\n");
+		pp_printf("IP-address: in training\n");
 	} else {
-		mprintf("IP-address: %d.%d.%d.%d\n",
+		pp_printf("IP-address: %d.%d.%d.%d\n",
 			ip[0], ip[1], ip[2], ip[3]);
 	}
 	return 0;

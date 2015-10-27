@@ -29,7 +29,7 @@ static int cmd_ptrack(const char *args[])
 		wr_servo_enable_tracking(0);
 		wrc_phase_tracking = 0;
 	}
-	mprintf("phase tracking %s\n", wrc_phase_tracking?"ON":"OFF");
+	pp_printf("phase tracking %s\n", wrc_phase_tracking?"ON":"OFF");
 
 	return 0;
 }

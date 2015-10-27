@@ -211,7 +211,7 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 			minic_new_rx_buffer();
 		} else {
 			//otherwise, weird !!
-			mprintf("invalid descriptor @%x = %x\n",
+			pp_printf("invalid descriptor @%x = %x\n",
 				(uint32_t) minic.rx_head, desc_hdr);
 			minic_new_rx_buffer();
 		}
@@ -328,7 +328,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 	}
 
 	if (i == 1000)
-		mprintf("Warning: tx not terminated infinite mcr=0x%x\n",mcr);
+		pp_printf("Warning: tx not terminated infinite mcr=0x%x\n",mcr);
 
 	if (hwts) {
 		uint32_t raw_ts;
@@ -348,7 +348,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 
 		if (i == 100)
 		{
-			mprintf("Warning: tx timestamp never became available\n");
+			pp_printf("Warning: tx timestamp never became available\n");
 			ts_valid = 0;
 		}
 

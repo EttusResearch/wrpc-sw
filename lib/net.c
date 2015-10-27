@@ -50,7 +50,7 @@ int ptpd_netif_init()
 	return PTPD_NETIF_OK;
 }
 
-//#define TRACE_WRAP mprintf
+//#define TRACE_WRAP pp_printf
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)
 {
 	get_mac_addr((uint8_t *) mac);

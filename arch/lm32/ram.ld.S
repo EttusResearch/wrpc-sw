@@ -65,6 +65,3 @@ SECTIONS
 	/* First location in stack is highest address in STACK */
 	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
 }
-
-/* We need to provide mprintf to developers with old habits, if missing */
-PROVIDE(mprintf = pp_printf);

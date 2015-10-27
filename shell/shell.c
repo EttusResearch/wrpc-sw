@@ -68,7 +68,7 @@ static void delete(int where)
 
 static void esc(char code)
 {
-	mprintf("\033[1%c", code);
+	pp_printf("\033[1%c", code);
 }
 
 static int _shell_exec(void)
@@ -107,12 +107,12 @@ static int _shell_exec(void)
 		if (!strcasecmp(p->name, tokptr[0])) {
 			rv = p->exec((const char **)(tokptr + 1));
 			if (rv < 0)
-				mprintf("Command \"%s\": error %d\n",
+				pp_printf("Command \"%s\": error %d\n",
 					p->name, rv);
 			return rv;
 		}
 
-	mprintf("Unrecognized command \"%s\".\n", tokptr[0]);
+	pp_printf("Unrecognized command \"%s\".\n", tokptr[0]);
 	return -EINVAL;
 }
 
@@ -134,7 +134,7 @@ void shell_interactive()
 	int c;
 	switch (state) {
 	case SH_PROMPT:
-		mprintf("wrc# ");
+		pp_printf("wrc# ");
 		cmd_pos = 0;
 		cmd_len = 0;
 		state = SH_INPUT;
@@ -168,7 +168,7 @@ void shell_interactive()
 				break;
 
 			case KEY_ENTER:
-				mprintf("\n");
+				pp_printf("\n");
 				state = SH_EXEC;
 				break;
 
@@ -195,7 +195,7 @@ void shell_interactive()
 				if (!(current_key & ESCAPE_FLAG)
 				    && insert(current_key)) {
 					esc('@');
-					mprintf("%c", current_key);
+					pp_printf("%c", current_key);
 				}
 				break;
 
@@ -260,12 +260,12 @@ int shell_boot_script(void)
 					      SH_MAX_LINE_LEN, next);
 		if (cmd_len <= 0) {
 			if (next == 0)
-				mprintf("Empty init script...\n");
+				pp_printf("Empty init script...\n");
 			break;
 		}
 		cmd_buf[cmd_len - 1] = 0;
 
-		mprintf("executing: %s\n", cmd_buf);
+		pp_printf("executing: %s\n", cmd_buf);
 		_shell_exec();
 		next = 1;
 	}

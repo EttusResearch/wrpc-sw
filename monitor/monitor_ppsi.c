@@ -177,7 +177,7 @@ void wrc_mon_gui(void)
 
 		if (aux_stat & SPLL_AUX_LOCKED)
 			cprintf(C_GREEN, ", locked");
-		mprintf("\n");
+		pp_printf("\n");
 
 		cprintf(C_BLUE, "\nTiming parameters:\n\n");
 
