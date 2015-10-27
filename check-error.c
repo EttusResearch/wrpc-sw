@@ -8,6 +8,8 @@
 
 extern void __you_should_not_call_printf_from_wrpc_sw(void);
 extern void __you_should_not_divide_ll_in_wrpc_sw(void);
+extern void __please_call_pp_printf_not_mprintf(void);
+int mprintf(const char *fmt, ...);
 
 long long __moddi3 (long long A, long long B);
 long long __divdi3 (long long A, long long B);
@@ -17,6 +19,14 @@ int printf(const char *fmt, ...)
 	__you_should_not_call_printf_from_wrpc_sw();
 	return 0;
 }
+
+
+int mprintf(const char *fmt, ...)
+{
+	__please_call_pp_printf_not_mprintf();
+	return 0;
+}
+
 
 #ifdef CONFIG_PPSI /* with ppsi we can avoid libgcc code for division */
 /* was used twice in picos_to_ts  */
