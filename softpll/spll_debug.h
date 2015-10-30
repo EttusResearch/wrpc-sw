@@ -1,11 +1,10 @@
 /*
-
-White Rabbit Softcore PLL (SoftPLL) - common definitions
-
-Copyright (c) 2010 - 2012 CERN / BE-CO-HT (Tomasz Włostowski)
-Licensed under LGPL 2.1.
-
-spll_debug.h - debugging/diagnostic interface
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2010 - 2013 CERN (www.cern.ch)
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ *
+ * Released according to the GNU LGPL, version 2.1 or any later version.
 
 The so-called debug inteface is a large, interrupt-driven FIFO which
 passes various realtime parameters (e.g. error value, tags, DAC drive)

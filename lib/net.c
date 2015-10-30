@@ -1,3 +1,13 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2010 - 2015 GSI (www.gsi.de), CERN (www.cern.ch)
+ * Author: Wesley W. Terpstra <w.terpstra@gsi.de>
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * Author: Adam Wujek <adam.wujek@cern.ch>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>

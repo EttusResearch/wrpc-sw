@@ -1,3 +1,11 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2013 - 2015 CERN (www.cern.ch)
+ * Author: Alessandro Rubini <rubini@gnudd.com>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 
 /*
  * This file includes stuff we don't want to link, so if it is

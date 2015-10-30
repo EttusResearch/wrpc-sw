@@ -1,3 +1,8 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #ifndef __WRC_H__
 #define __WRC_H__
 

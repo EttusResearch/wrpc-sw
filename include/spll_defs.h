@@ -1,6 +1,10 @@
 /*
+ * This work is part of the White Rabbit project
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 
-White Rabbit Softcore PLL (SoftPLL) - common definitions
+/*
 
 WARNING: These parameters must be in sync with the generics of the HDL instantiation of wr_softpll_ng.
 

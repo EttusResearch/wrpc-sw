@@ -1,4 +1,12 @@
-// Network API for WR-PTPd
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2010 - 2013 CERN (www.cern.ch)
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * Author: Grzegorz Daniluk <grzegorz.daniluk@cern.ch>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 
 #ifndef __PTPD_NETIF_H
 #define __PTPD_NETIF_H

@@ -1,7 +1,16 @@
 /*
- * Trivial pll programmer using an spi controoler.
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2011d CERN (www.cern.ch)
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * Author: Alessandro Rubini <rubini@gnudd.com>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
+
+/*
+ * Trivial pll programmer using an spi controller.
  * PLL is AD9516, SPI is opencores
- * Tomasz Wlostowski, Alessandro Rubini, 2011, for CERN.
  */
 #include <stdio.h>
 #include <stdlib.h>

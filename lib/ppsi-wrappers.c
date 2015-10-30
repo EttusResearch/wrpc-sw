@@ -1,3 +1,12 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2013 - 2015 CERN (www.cern.ch)
+ * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * Author: Adam Wujek <adam.wujek@cern.ch>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #include <stdint.h>
 #include <libwr/hal_shmem.h>
 #include <libwr/shmem.h>

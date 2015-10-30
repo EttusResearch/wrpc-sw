@@ -1,3 +1,11 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2012 - 2015 CERN (www.cern.ch)
+ * Author: Grzegorz Daniluk <grzegorz.daniluk@cern.ch>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #ifndef __STORAGE_H
 #define __STORAGE_H
 

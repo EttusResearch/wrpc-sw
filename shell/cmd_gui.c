@@ -1,8 +1,8 @@
-/* 	Command: gui
-		Arguments: none
-
-		Description: launches the WR Core monitor GUI */
-
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #include "shell.h"
 
 static int cmd_gui(const char *args[])

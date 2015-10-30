@@ -1,3 +1,12 @@
+/*
+ * This work is part of the White Rabbit project
+ *
+ * Copyright (C) 2012 - 2015 CERN (www.cern.ch)
+ * Author: Alessandro Rubini <rubini@gnudd.com>
+ * Author: Adam Wujek <adam.wujek@cern.ch>
+ *
+ * Released according to the GNU GPL, version 2 or any later version.
+ */
 #include "softpll_ng.h"
 #include "revision.h"
 const char *build_revision = stats.commit_id;
