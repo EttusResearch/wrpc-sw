@@ -7,14 +7,6 @@
  * Released according to the GNU LGPL, version 2.1 or any later version.
  */
 
-WR Endpoint (WR-compatible Ethernet MAC driver
-
-Tomasz Wlostowski/CERN 2011
-
-LGPL 2.1
-
-*/
-
 #include <stdio.h>
 #include <wrc.h>
 
