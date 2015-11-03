@@ -77,13 +77,15 @@ void pfilter_init_default(void)
 		}
 		inited++;
 	}
-	/* Patch the local MAC address in place, in the first three instructions */
-	v[0] &= ~(0xffff << 13);
+	/*
+	 * Patch the local MAC address in place,
+	 * in the first three instructions after NOP */
 	v[2] &= ~(0xffff << 13);
 	v[4] &= ~(0xffff << 13);
-	v[0] |= (EP->MACH >>  0) & 0xffff << 13;
-	v[2] |= (EP->MACL >> 16) & 0xffff << 13;
-	v[4] |= (EP->MACL >>  0) & 0xffff << 13;
+	v[6] &= ~(0xffff << 13);
+	v[2] |= ((EP->MACH >>  0) & 0xffff) << 13;
+	v[4] |= ((EP->MACL >> 16) & 0xffff) << 13;
+	v[6] |= ((EP->MACL >>  0) & 0xffff) << 13;
 
 	EP->PFCR0 = 0;		// disable pfilter
 
