@@ -1,7 +1,7 @@
 *.o
 *.a
 *.elf
-*.ram
+*.bram
 *.bin
 *.mif
 *.*~

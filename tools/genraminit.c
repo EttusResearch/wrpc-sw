@@ -1,34 +1,53 @@
 /*
  * This work is part of the White Rabbit project
  *
- * Copyright (C) 2011 CERN (www.cern.ch)
- * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
+ * Copyright (C) 2017 CERN (www.cern.ch)
+ * Author: Grzegorz Daniluk <grzegorz.daniluk@cern.ch>
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+
+const char *byte_to_binary(int x)
+{
+	unsigned int z;
+	static char b[33];
+	b[0] = '\0';
+
+	for (z = 0x80000000; z > 0; z >>= 1)
+	{
+		strcat(b, ((x & z) == z) ? "1" : "0");
+	}
+
+	return b;
+}
+
 
 int main(int argc, char *argv[])
 {
-	if (argc < 3)
-		return -1;
 	FILE *f = fopen(argv[1], "rb");
 	if (!f)
 		return -1;
-	unsigned char x[4];
+	int tmp;
 	int i = 0;
-	int n = atoi(argv[2]);
+	int ram_size = atoi(argv[2]);
 
-	while (!feof(f)) {
-		fread(x, 1, 4, f);
-		printf("write %x %02X%02X%02X%02X\n", i++, x[0], x[1], x[2],
-		       x[3]);
+	ram_size = (ram_size+3)/4;
+
+	fprintf(stderr, "filesize=%d\n", ram_size);
+
+	while (fread(&tmp, 1, 4, f)) {
+		printf("%s\n", byte_to_binary(htonl(tmp)));
+		++i;
+	}
+	//padding
+	for(;i<ram_size; ++i) {
+		printf("00000000000000000000000000000000\n");
 	}
 
-	for (; i < n;) {
-		printf("write %x %02X%02X%02X%02X\n", i++, 0, 0, 0, 0);
-	}
 	fclose(f);
 	return 0;
 }

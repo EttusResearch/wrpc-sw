@@ -63,7 +63,7 @@ obj-$(CONFIG_EMBEDDED_NODE) += \
 cflags-$(CONFIG_LM32) += -mmultiply-enabled -mbarrel-shift-enabled
 ldflags-$(CONFIG_LM32) = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
-arch-files-$(CONFIG_LM32) = $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
+arch-files-$(CONFIG_LM32) = $(OUTPUT).bram $(OUTPUT).vhd $(OUTPUT).mif
 
 
 # packet-filter rules: for CONFIG_VLAN we use both sets
@@ -173,8 +173,8 @@ config.o: .config
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@
 
-%.ram: tools %.bin
-	./tools/genraminit $*.bin 0 > $@
+%.bram: tools %.bin
+	./tools/genraminit $*.bin $(CONFIG_RAMSIZE) > $@
 
 %.vhd: tools %.bin
 	./tools/genramvhd -s $(CONFIG_RAMSIZE) $*.bin > $@
@@ -185,7 +185,7 @@ config.o: .config
 $(AUTOCONF): silentoldconfig
 
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram \
+	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).bram \
 		$(LDS)  rules-*.bin
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
