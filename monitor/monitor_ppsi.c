@@ -48,7 +48,7 @@ static char* print64(uint64_t x)
 
 }
 
-static char* wrc_ptp_state(void)
+static const char* wrc_ptp_state(void)
 {
 	struct pp_state_table_item *ip = NULL;
 	for (ip = pp_state_table; ip->state != PPS_END_OF_TABLE; ip++) {
