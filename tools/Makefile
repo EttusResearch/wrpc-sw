@@ -6,6 +6,7 @@ LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder
+ALL   += wrpc-dump
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
@@ -41,5 +42,11 @@ eb-w1-write: eb-w1-write.c ../dev/w1.c ../dev/w1-eeprom.c eb-w1.c
 sdb-wrpc.bin: sdbfs
 	$(SDBFS)/gensdbfs $< $@
 
+wrpc-dump: wrpc-dump.c
+	$(CC) $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include \
+	-I ../sdb-lib \
+	$^ -o $@
+
 clean:
 	rm -f $(ALL) *.o *~
+

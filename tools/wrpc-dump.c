@@ -1,0 +1,435 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <arpa/inet.h> /* ntohl */
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+
+#include <ppsi/ppsi.h>
+#include "libsdbfs.h" /* ntohll */
+
+
+/*  be safe, in case some other header had them slightly differently */
+#undef container_of
+#undef offsetof
+#undef ARRAY_SIZE
+
+#define container_of(ptr, type, member) ({			\
+	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
+	(type *)( (char *)__mptr - offsetof(type,member) );})
+
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+/*
+ * To ease copying from header files, allow int, char and other known types.
+ * Please add more type as more structures are included here
+ */
+enum dump_type {
+	dump_type_char, /* for zero-terminated strings */
+	dump_type_bina, /* for binary stull in MAC format */
+	/* normal types follow */
+	dump_type_uint32_t,
+	dump_type_uint16_t,
+	dump_type_int,
+	dump_type_unsigned_long,
+	dump_type_unsigned_char,
+	dump_type_unsigned_short,
+	dump_type_double,
+	dump_type_float,
+	dump_type_pointer,
+	/* and strange ones, from IEEE */
+	dump_type_UInteger64,
+	dump_type_Integer64,
+	dump_type_UInteger32,
+	dump_type_Integer32,
+	dump_type_UInteger16,
+	dump_type_Integer16,
+	dump_type_UInteger8,
+	dump_type_Integer8,
+	dump_type_Enumeration8,
+	dump_type_Boolean,
+	dump_type_ClockIdentity,
+	dump_type_PortIdentity,
+	dump_type_ClockQuality,
+	/* and this is ours */
+	dump_type_TimeInternal,
+	dump_type_ip_address,
+	dump_type_sensor_temp,
+};
+
+/*
+ * A structure to dump fields. This is meant to simplify things, see use here
+ */
+struct dump_info {
+	char *name;
+	enum dump_type type;   /* see above */
+	int offset;
+	int size;  /* only for strings or binary strings */
+};
+
+
+
+void dump_one_field(void *addr, struct dump_info *info)
+{
+	void *p = addr + info->offset;
+	struct TimeInternal *ti = p;
+	struct PortIdentity *pi = p;
+	struct ClockQuality *cq = p;
+	char format[16];
+	int i;
+
+	printf("        %-30s ", info->name); /* name includes trailing ':' */
+	switch(info->type) {
+	case dump_type_char:
+		sprintf(format,"\"%%.%is\"\n", info->size);
+		printf(format, (char *)p);
+		break;
+	case dump_type_bina:
+		for (i = 0; i < info->size; i++)
+			printf("%02x%c", ((unsigned char *)p)[i],
+			       i == info->size - 1 ? '\n' : ':');
+		break;
+	case dump_type_UInteger64:
+		printf("%lld\n", (long long)ntohll(*(unsigned long long *)p));
+		break;
+	case dump_type_Integer64:
+		printf("%lld\n", (long long)ntohll(*(long long *)p));
+		break;
+	case dump_type_uint32_t:
+		printf("0x%08lx\n", (long)ntohl(*(uint32_t *)p));
+		break;
+	case dump_type_Integer32:
+	case dump_type_int:
+		printf("%i\n", ntohl(*(int *)p));
+		break;
+	case dump_type_UInteger32:
+	case dump_type_unsigned_long:
+		printf("%li\n", (long)ntohl(*(unsigned long *)p));
+		break;
+	case dump_type_unsigned_char:
+	case dump_type_UInteger8:
+	case dump_type_Integer8:
+	case dump_type_Enumeration8:
+	case dump_type_Boolean:
+		printf("%i\n", *(unsigned char *)p);
+		break;
+	case dump_type_UInteger16:
+	case dump_type_uint16_t:
+	case dump_type_unsigned_short:
+		printf("%i\n", ntohs(*(unsigned short *)p));
+		break;
+	case dump_type_double:
+		printf("%lf\n", *(double *)p);
+		break;
+	case dump_type_float:
+		printf("%f\n", *(float *)p);
+		break;
+	case dump_type_pointer:
+		printf("%p\n", *(void **)p);
+		break;
+	case dump_type_Integer16:
+		printf("%i\n", ntohs(*(short *)p));
+		break;
+	case dump_type_TimeInternal:
+		printf("correct %i: %10i.%09i:%04i\n",
+		       ntohl(ti->correct),
+		       ntohl(ti->seconds),
+		       ntohl(ti->nanoseconds),
+		       ntohl(ti->phase));
+		break;
+
+	case dump_type_ip_address:
+		for (i = 0; i < 4; i++)
+			printf("%02x%c", ((unsigned char *)p)[i],
+			       i == 3 ? '\n' : ':');
+		break;
+
+	case dump_type_ClockIdentity: /* Same as binary */
+		for (i = 0; i < sizeof(ClockIdentity); i++)
+			printf("%02x%c", ((unsigned char *)p)[i],
+			       i == sizeof(ClockIdentity) - 1 ? '\n' : ':');
+		break;
+
+	case dump_type_PortIdentity: /* Same as above plus port */
+		for (i = 0; i < sizeof(ClockIdentity); i++)
+			printf("%02x%c", ((unsigned char *)p)[i],
+			       i == sizeof(ClockIdentity) - 1 ? '.' : ':');
+		printf("%04x (%i)\n", pi->portNumber, pi->portNumber);
+		break;
+
+	case dump_type_ClockQuality:
+		printf("class %i, accuracy %02x (%i), logvariance %i\n",
+		       cq->clockClass, cq->clockAccuracy, cq->clockAccuracy,
+		       cq->offsetScaledLogVariance);
+		break;
+	case dump_type_sensor_temp:
+		printf("%f\n", ((float)(*(int *)p >> 4)) / 16.0);
+		break;
+	}
+}
+void dump_many_fields(void *addr, struct dump_info *info, int ninfo)
+{
+	int i;
+
+	if (!addr) {
+		fprintf(stderr, "dump: pointer not valid\n");
+		return;
+	}
+	for (i = 0; i < ninfo; i++)
+		dump_one_field(addr, info + i);
+}
+
+/* the macro below relies on an externally-defined structure type */
+#define DUMP_FIELD(_type, _fname) { \
+	.name = #_fname ":",  \
+	.type = dump_type_ ## _type, \
+	.offset = offsetof(DUMP_STRUCT, _fname), \
+}
+#define DUMP_FIELD_SIZE(_type, _fname, _size) { \
+	.name = #_fname ":",		\
+	.type = dump_type_ ## _type, \
+	.offset = offsetof(DUMP_STRUCT, _fname), \
+	.size = _size, \
+}
+
+
+/* map for fields of ppsi structures */
+#undef DUMP_STRUCT
+#define DUMP_STRUCT struct pp_globals
+struct dump_info ppg_info [] = {
+	DUMP_FIELD(pointer, pp_instances),	/* FIXME: follow this */
+	DUMP_FIELD(pointer, servo),		/* FIXME: follow this */
+	DUMP_FIELD(pointer, rt_opts),
+	DUMP_FIELD(pointer, defaultDS),
+	DUMP_FIELD(pointer, currentDS),
+	DUMP_FIELD(pointer, parentDS),
+	DUMP_FIELD(pointer, timePropertiesDS),
+	DUMP_FIELD(int, ebest_idx),
+	DUMP_FIELD(int, ebest_updated),
+	DUMP_FIELD(int, nlinks),
+	DUMP_FIELD(int, max_links),
+	//DUMP_FIELD(struct pp_globals_cfg cfg),
+	DUMP_FIELD(int, rxdrop),
+	DUMP_FIELD(int, txdrop),
+	DUMP_FIELD(pointer, arch_data),
+	DUMP_FIELD(pointer, global_ext_data),
+};
+
+#undef DUMP_STRUCT
+#define DUMP_STRUCT DSDefault /* Horrible typedef */
+struct dump_info dsd_info [] = {
+	DUMP_FIELD(Boolean, twoStepFlag),
+	DUMP_FIELD(ClockIdentity, clockIdentity),
+	DUMP_FIELD(UInteger16, numberPorts),
+	DUMP_FIELD(ClockQuality, clockQuality),
+	DUMP_FIELD(UInteger8, priority1),
+	DUMP_FIELD(UInteger8, priority2),
+	DUMP_FIELD(UInteger8, domainNumber),
+	DUMP_FIELD(Boolean, slaveOnly),
+};
+
+#undef DUMP_STRUCT
+#define DUMP_STRUCT DSCurrent /* Horrible typedef */
+struct dump_info dsc_info [] = {
+	DUMP_FIELD(UInteger16, stepsRemoved),
+	DUMP_FIELD(TimeInternal, offsetFromMaster),
+	DUMP_FIELD(TimeInternal, meanPathDelay), /* oneWayDelay */
+	DUMP_FIELD(UInteger16, primarySlavePortNumber),
+};
+
+#undef DUMP_STRUCT
+#define DUMP_STRUCT DSParent /* Horrible typedef */
+struct dump_info dsp_info [] = {
+	DUMP_FIELD(PortIdentity, parentPortIdentity),
+	DUMP_FIELD(UInteger16, observedParentOffsetScaledLogVariance),
+	DUMP_FIELD(Integer32, observedParentClockPhaseChangeRate),
+	DUMP_FIELD(ClockIdentity, grandmasterIdentity),
+	DUMP_FIELD(ClockQuality, grandmasterClockQuality),
+	DUMP_FIELD(UInteger8, grandmasterPriority1),
+	DUMP_FIELD(UInteger8, grandmasterPriority2),
+};
+
+#undef DUMP_STRUCT
+#define DUMP_STRUCT DSTimeProperties /* Horrible typedef */
+struct dump_info dstp_info [] = {
+	DUMP_FIELD(Integer16, currentUtcOffset),
+	DUMP_FIELD(Boolean, currentUtcOffsetValid),
+	DUMP_FIELD(Boolean, leap59),
+	DUMP_FIELD(Boolean, leap61),
+	DUMP_FIELD(Boolean, timeTraceable),
+	DUMP_FIELD(Boolean, frequencyTraceable),
+	DUMP_FIELD(Boolean, ptpTimescale),
+	DUMP_FIELD(Enumeration8, timeSource),
+};
+
+#undef DUMP_STRUCT
+#define DUMP_STRUCT struct wr_servo_state
+struct dump_info servo_state_info [] = {
+	DUMP_FIELD_SIZE(char, if_name, 16),
+	DUMP_FIELD(unsigned_long, flags),
+	DUMP_FIELD(int, state),
+	DUMP_FIELD(Integer32, delta_tx_m),
+	DUMP_FIELD(Integer32, delta_rx_m),
+	DUMP_FIELD(Integer32, delta_tx_s),
+	DUMP_FIELD(Integer32, delta_rx_s),
+	DUMP_FIELD(Integer32, fiber_fix_alpha),
+	DUMP_FIELD(Integer32, clock_period_ps),
+	DUMP_FIELD(TimeInternal, t1),
+	DUMP_FIELD(TimeInternal, t2),
+	DUMP_FIELD(TimeInternal, t3),
+	DUMP_FIELD(TimeInternal, t4),
+	DUMP_FIELD(Integer32, delta_ms_prev),
+	DUMP_FIELD(int, missed_iters),
+	DUMP_FIELD(TimeInternal, mu),		/* half of the RTT */
+	DUMP_FIELD(Integer64, picos_mu),
+	DUMP_FIELD(Integer32, cur_setpoint),
+	DUMP_FIELD(Integer32, delta_ms),
+	DUMP_FIELD(UInteger32, update_count),
+	DUMP_FIELD(int, tracking_enabled),
+	DUMP_FIELD_SIZE(char, servo_state_name, 32),
+	DUMP_FIELD(Integer64, skew),
+	DUMP_FIELD(Integer64, offset),
+	DUMP_FIELD(UInteger32, n_err_state),
+	DUMP_FIELD(UInteger32, n_err_offset),
+	DUMP_FIELD(UInteger32, n_err_delta_rtt),
+};
+
+#undef DUMP_STRUCT
+#define DUMP_STRUCT struct pp_instance
+struct dump_info ppi_info [] = {
+	DUMP_FIELD(int, state),
+	DUMP_FIELD(int, next_state),
+	DUMP_FIELD(int, next_delay),
+	DUMP_FIELD(int, is_new_state),
+	DUMP_FIELD(pointer, arch_data),
+	DUMP_FIELD(pointer, ext_data),
+	DUMP_FIELD(unsigned_long, d_flags),
+	DUMP_FIELD(unsigned_char, flags),
+	DUMP_FIELD(unsigned_char, role),
+	DUMP_FIELD(unsigned_char, proto),
+	DUMP_FIELD(pointer, glbs),
+	DUMP_FIELD(pointer, n_ops),
+	DUMP_FIELD(pointer, t_ops),
+	DUMP_FIELD(pointer, __tx_buffer),
+	DUMP_FIELD(pointer, __rx_buffer),
+	DUMP_FIELD(pointer, tx_frame),
+	DUMP_FIELD(pointer, rx_frame),
+	DUMP_FIELD(pointer, tx_ptp),
+	DUMP_FIELD(pointer, rx_ptp),
+
+	/* This is a sub-structure */
+	DUMP_FIELD(int, ch[0].fd),
+	DUMP_FIELD(pointer, ch[0].custom),
+	DUMP_FIELD(pointer, ch[0].arch_data),
+	DUMP_FIELD_SIZE(bina, ch[0].addr, 6),
+	DUMP_FIELD(int, ch[0].pkt_present),
+	DUMP_FIELD(int, ch[1].fd),
+	DUMP_FIELD(pointer, ch[1].custom),
+	DUMP_FIELD(pointer, ch[1].arch_data),
+	DUMP_FIELD_SIZE(bina, ch[1].addr, 6),
+	DUMP_FIELD(int, ch[1].pkt_present),
+
+	DUMP_FIELD(ip_address, mcast_addr),
+	DUMP_FIELD(int, tx_offset),
+	DUMP_FIELD(int, rx_offset),
+	DUMP_FIELD_SIZE(bina, peer, 6),
+	DUMP_FIELD(uint16_t, peer_vid),
+
+	DUMP_FIELD(TimeInternal, t1),
+	DUMP_FIELD(TimeInternal, t2),
+	DUMP_FIELD(TimeInternal, t3),
+	DUMP_FIELD(TimeInternal, t4),
+	DUMP_FIELD(TimeInternal, cField),
+	DUMP_FIELD(TimeInternal, last_rcv_time),
+	DUMP_FIELD(TimeInternal, last_snt_time),
+	DUMP_FIELD(UInteger16, frgn_rec_num),
+	DUMP_FIELD(Integer16,  frgn_rec_best),
+	//DUMP_FIELD(struct pp_frgn_master frgn_master[PP_NR_FOREIGN_RECORDS]),
+	DUMP_FIELD(pointer, portDS),
+	//DUMP_FIELD(unsigned long timeouts[__PP_TO_ARRAY_SIZE]),
+	DUMP_FIELD(UInteger16, recv_sync_sequence_id),
+	DUMP_FIELD(Integer8, log_min_delay_req_interval),
+	//DUMP_FIELD(UInteger16 sent_seq[__PP_NR_MESSAGES_TYPES]),
+	DUMP_FIELD_SIZE(bina, received_ptp_header, sizeof(MsgHeader)),
+	//DUMP_FIELD(pointer, iface_name),
+	//DUMP_FIELD(pointer, port_name),
+	DUMP_FIELD(int, port_idx),
+	DUMP_FIELD(int, vlans_array_len),
+	/* FIXME: array */
+	DUMP_FIELD(int, nvlans),
+
+	/* sub structure */
+	DUMP_FIELD_SIZE(char, cfg.port_name, 16),
+	DUMP_FIELD_SIZE(char, cfg.iface_name, 16),
+	DUMP_FIELD(int, cfg.ext),
+	DUMP_FIELD(int, cfg.ext),
+
+	DUMP_FIELD(unsigned_long, ptp_tx_count),
+	DUMP_FIELD(unsigned_long, ptp_rx_count),
+};
+
+
+
+/* Use:  wrs_dump_memory <file> <hex-offset> <name> */
+int main(int argc, char **argv)
+{
+	int fd;
+	void *mapaddr;
+	unsigned long offset;
+	struct stat st;
+	char c;
+
+ 	if (argc != 4) {
+		fprintf(stderr, "%s: use \"%s <file> <offset> <name>\n",
+			argv[0], argv[0]);
+		exit(1);
+	}
+
+	fd = open(argv[1], O_RDONLY | O_SYNC);
+	if (fd < 0) {
+		fprintf(stderr, "%s: %s: %s\n",
+			argv[0], argv[1], strerror(errno));
+		exit(1);
+	}
+	if (fstat(fd, &st) < 0) {
+		fprintf(stderr, "%s: stat(%s): %s\n",
+			argv[0], argv[1], strerror(errno));
+		exit(1);
+	}
+	if (!S_ISREG(st.st_mode)) { /* FIXME: support memory */
+		fprintf(stderr, "%s: %s not a regular fule\n",
+			argv[0], argv[1]);
+		exit(1);
+	}
+
+	if (sscanf(argv[2], "%lx%c", &offset, &c) != 1) {
+		fprintf(stderr, "%s: \"%s\" not a hex offset\n", argv[0],
+			argv[2]);
+		exit(1);
+	}
+	mapaddr = mmap(0, st.st_size, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+	if (mapaddr == MAP_FAILED) {
+		fprintf(stderr, "%s: mmap(%s): %s\n",
+			argv[0], argv[1], strerror(errno));
+		exit(1);
+	}
+
+	if (!strcmp(argv[3], "ppi")) {
+		printf("ppi at 0x%lx\n", offset);
+		dump_many_fields(mapaddr + offset,
+				 ppi_info, ARRAY_SIZE(ppi_info));
+	}
+	if (!strcmp(argv[3], "servo_state")) {
+		printf("servo_state at 0x%lx\n", offset);
+		dump_many_fields(mapaddr + offset, servo_state_info,
+				 ARRAY_SIZE(servo_state_info));
+	}
+	exit(0);
+}
