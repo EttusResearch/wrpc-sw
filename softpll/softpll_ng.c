@@ -21,8 +21,6 @@
 
 #include "irq.h"
 
-volatile int irq_count = 0;
-
 volatile struct SPLL_WB *SPLL;
 volatile struct PPSG_WB *PPSG;
 
@@ -241,7 +239,7 @@ void _irq_entry(void)
 		update_loops(s, tag_value, tag_source);
 	}
 
-	irq_count++;
+	s->irq_count++;
 	clear_irq();
 }
 
@@ -445,13 +443,16 @@ void spll_get_num_channels(int *n_ref, int *n_out)
 
 void spll_show_stats()
 {
+	struct softpll_state *s = (struct softpll_state *)&softpll;
+
 	if (softpll.mode > 0)
 		    pp_printf("softpll: irqs %d seq %s mode %d "
 		     "alignment_state %d HL%d ML%d HY=%d MY=%d DelCnt=%d\n",
-		     irq_count, stringlist_lookup(seq_states, softpll.seq_state), softpll.mode,
-		     softpll.ext.align_state, softpll.helper.ld.locked, softpll.mpll.ld.locked,
-		     softpll.helper.pi.y, softpll.mpll.pi.y,
-		     softpll.delock_count);
+		      s->irq_count, stringlist_lookup(seq_states, s->seq_state),
+			      s->mode, s->ext.align_state,
+			      s->helper.ld.locked, s->mpll.ld.locked,
+			      s->helper.pi.y, s->mpll.pi.y,
+			      s->delock_count);
 }
 
 int spll_shifter_busy(int channel)
@@ -621,7 +622,7 @@ void spll_update()
 	if (is_wr_switch) {
 		stats.sequence++;
 		stats.mode  = softpll.mode;
-		stats.irq_cnt = irq_count;
+		stats.irq_cnt = softpll.irq_count;
 		stats.seq_state = softpll.seq_state;
 		stats.align_state = softpll.ext.align_state;
 		stats.H_lock = softpll.helper.ld.locked;

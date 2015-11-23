@@ -426,6 +426,7 @@ static struct dump_info pll_info [] = {
 	DUMP_FIELD(int, dac_timeout),
 	DUMP_FIELD(int, default_dac_main),
 	DUMP_FIELD(int, delock_count),
+	DUMP_FIELD(uint32_t, irq_count),
 	DUMP_FIELD(int, mpll_shift_ps),
 	DUMP_FIELD(int, helper.p_adder),
 	DUMP_FIELD(int, helper.p_setpoint),
