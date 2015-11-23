@@ -13,6 +13,14 @@
 #define __SOFTPLL_NG_H
 
 #include <stdint.h>
+#include "spll_defs.h"
+#include "spll_common.h"
+#include "spll_debug.h"
+#include "spll_helper.h"
+#include "spll_main.h"
+#include "spll_ptracker.h"
+#include "spll_external.h"
+
 
 /* SoftPLL operating modes, for mode parameter of spll_init(). */
 
@@ -154,6 +162,35 @@ struct spll_stats {
 
 /* This only exists in wr-switch, but we should use it always */
 extern struct spll_stats stats;
+
+/*
+ * Aux and main state:
+ * used to be in .c file, but we need it here for memory dumping
+ */
+struct spll_aux_state {
+	int seq_state;
+	int32_t phase_target;
+	union {
+		struct spll_main_state dmtd;
+		/* spll_external_state ch_bb */
+	} pll;
+};
+
+
+struct softpll_state {
+	int mode;
+	int seq_state;
+	int dac_timeout;
+	int default_dac_main;
+	int delock_count;
+	int32_t mpll_shift_ps;
+
+	struct spll_helper_state helper;
+	struct spll_external_state ext;
+	struct spll_main_state mpll;
+	struct spll_aux_state aux[MAX_CHAN_AUX];
+	struct spll_ptracker_state ptrackers[MAX_PTRACKERS];
+};
 
 #endif // __SOFTPLL_NG_H
 

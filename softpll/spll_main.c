@@ -9,8 +9,7 @@
 
 /* spll_main.c - Implementation of the main DDMTD PLL. */
 
-#include "spll_main.h"
-#include "spll_debug.h"
+#include "softpll_ng.h"
 #include <pp-printf.h>
 #include "trace.h"
 

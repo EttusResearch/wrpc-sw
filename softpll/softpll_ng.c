@@ -28,19 +28,7 @@ volatile struct PPSG_WB *PPSG;
 
 int spll_n_chan_ref, spll_n_chan_out;
 
-/*
- * The includes below contain code (not only declarations) to enable
- * the compiler to inline functions where necessary and save some CPU
- * cycles
- */
 
-#include "spll_defs.h"
-#include "spll_common.h"
-#include "spll_debug.h"
-#include "spll_helper.h"
-#include "spll_main.h"
-#include "spll_ptracker.h"
-#include "spll_external.h"
 
 #define MAIN_CHANNEL (spll_n_chan_ref)
 
@@ -59,30 +47,6 @@ int spll_n_chan_ref, spll_n_chan_out;
 #define AUX_LOCK_PLL 2
 #define AUX_ALIGN_PHASE 3
 #define AUX_READY 4
-
-struct spll_aux_state {
-	int seq_state;
-	int32_t phase_target;
-	union {
-		struct spll_main_state dmtd;
-		/* spll_external_state ch_bb */
-	} pll;
-};
-
-struct softpll_state {
-	int mode;
-	int seq_state;
-	int dac_timeout;
-	int default_dac_main;
-	int delock_count;
-	int32_t mpll_shift_ps;
-
-	struct spll_helper_state helper;
-	struct spll_external_state ext;
-	struct spll_main_state mpll;
-	struct spll_aux_state aux[MAX_CHAN_AUX];
-	struct spll_ptracker_state ptrackers[MAX_PTRACKERS];
-};
 
 static const struct stringlist_entry seq_states [] =
 {

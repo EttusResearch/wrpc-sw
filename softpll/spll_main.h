@@ -13,8 +13,6 @@
 #ifndef __SPLL_MAIN_H
 #define __SPLL_MAIN_H
 
-#include "spll_common.h"
-
 /* State of the Main PLL */
 struct spll_main_state {
 	int state;

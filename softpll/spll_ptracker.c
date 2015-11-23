@@ -9,7 +9,7 @@
 
 /* spll_ptracker.c - implementation of phase trackers. */
 
-#include "spll_ptracker.h"
+#include "softpll_ng.h"
 
 static int tag_ref = -1;
 

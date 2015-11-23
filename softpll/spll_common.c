@@ -13,8 +13,7 @@
 #include <string.h>
 #include <pp-printf.h>
 #include "trace.h"
-#include "spll_defs.h"
-#include "spll_common.h"
+#include "softpll_ng.h"
 
 int pi_update(spll_pi_t *pi, int x)
 {
