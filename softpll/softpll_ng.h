@@ -193,5 +193,13 @@ struct softpll_state {
 	struct spll_ptracker_state ptrackers[MAX_PTRACKERS];
 };
 
+struct spll_fifo_log {
+	uint32_t trr;
+	uint16_t irq_count;
+	uint16_t tag_count;
+};
+#define FIFO_LOG_LEN 16
+
+
 #endif // __SOFTPLL_NG_H
 

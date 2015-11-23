@@ -464,6 +464,16 @@ static struct dump_info pll_info [] = {
 	/* FIXME: aux_state and ptracker_state -- variable-len arrays */
 };
 
+#undef DUMP_STRUCT
+#define DUMP_STRUCT struct spll_fifo_log
+static struct dump_info fifo_info [] = {
+	DUMP_FIELD(uint32_t, trr),
+	DUMP_FIELD(uint16_t, irq_count),
+	DUMP_FIELD(uint16_t, tag_count),
+};
+
+
+
 /* Use:  wrs_dump_memory <file> <hex-offset> <name> */
 int main(int argc, char **argv)
 {
@@ -516,6 +526,15 @@ int main(int argc, char **argv)
 		printf("pll at 0x%lx\n", offset);
 		dump_many_fields(mapaddr + offset,
 				 ARRAY_AND_SIZE(pll_info));
+	}
+	if (!strcmp(argv[3], "fifo")) {
+		int i;
+
+		printf("fifo log at 0x%lx\n", offset);
+		for (i = 0; i < FIFO_LOG_LEN; i++)
+			dump_many_fields(mapaddr + offset
+					 + i * sizeof(struct spll_fifo_log),
+					 ARRAY_AND_SIZE(fifo_info));
 	}
 	if (!strcmp(argv[3], "ppg")) {
 		printf("ppg at 0x%lx\n", offset);

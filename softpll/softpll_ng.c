@@ -224,16 +224,30 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 	}
 }
 
+struct spll_fifo_log fifo_log[FIFO_LOG_LEN];
+
 void _irq_entry(void)
 {
 	struct softpll_state *s = (struct softpll_state *)&softpll;
+	uint32_t trr;
+	int i, tag_source, tag_value;
+	static uint16_t tag_count;
+	struct spll_fifo_log *l;
 
-/* check if there are more tags in the FIFO */
+	/* check if there are more tags in the FIFO, and log them */
 	while (!(SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY)) {
-	
-		volatile uint32_t trr = SPLL->TRR_R0;
-		int tag_source = SPLL_TRR_R0_CHAN_ID_R(trr);
-		int tag_value  = SPLL_TRR_R0_VALUE_R(trr);
+		trr = SPLL->TRR_R0;
+
+		/* save this to a circular buffer */
+		i = tag_count % FIFO_LOG_LEN;
+		l = fifo_log + i;
+		l->trr = trr;
+		l->irq_count = s->irq_count & 0xffff;
+		l->tag_count = tag_count++;
+
+		/* And process the values */
+		tag_source = SPLL_TRR_R0_CHAN_ID_R(trr);
+		tag_value  = SPLL_TRR_R0_VALUE_R(trr);
 
 		sequencing_fsm(s, tag_value, tag_source);
 		update_loops(s, tag_value, tag_source);
