@@ -149,7 +149,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			break;
 
 		case ALIGN_STATE_WAIT_CSYNC:
-			if(timer_get_tics() >= s->align_timer) {
+			if(time_after_eq(timer_get_tics(), s->align_timer)) {
 				s->align_state = ALIGN_STATE_START_ALIGNMENT;
 				s->align_shift = 0;
 				TRACE_DEV("EXT: CSync complete.\n");
