@@ -44,7 +44,7 @@ sdb-wrpc.bin: sdbfs
 
 wrpc-dump: wrpc-dump.c
 	$(CC) -m32 $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include \
-	-I ../sdb-lib \
+	-I ../softpll \
 	$^ -o $@
 
 clean:

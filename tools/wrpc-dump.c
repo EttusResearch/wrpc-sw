@@ -12,7 +12,7 @@
 #include <sys/mman.h>
 
 #include <ppsi/ppsi.h>
-#include "libsdbfs.h" /* ntohll */
+#include <softpll_ng.h>
 
 /* We have a problem: ppsi is built for wrpc, so it has ntoh[sl] wrong */
 #undef ntohl
@@ -418,6 +418,50 @@ static struct dump_info ppi_info [] = {
 };
 
 
+#undef DUMP_STRUCT
+#define DUMP_STRUCT struct softpll_state
+static struct dump_info pll_info [] = {
+	DUMP_FIELD(int, mode),
+	DUMP_FIELD(int, seq_state),
+	DUMP_FIELD(int, dac_timeout),
+	DUMP_FIELD(int, default_dac_main),
+	DUMP_FIELD(int, delock_count),
+	DUMP_FIELD(int, mpll_shift_ps),
+	DUMP_FIELD(int, helper.p_adder),
+	DUMP_FIELD(int, helper.p_setpoint),
+	DUMP_FIELD(int, helper.tag_d0),
+	DUMP_FIELD(int, helper.ref_src),
+	DUMP_FIELD(int, helper.sample_n),
+	DUMP_FIELD(int, helper.delock_count),
+	/* FIXME: missing helper.pi etc.. */
+	DUMP_FIELD(int, ext.enabled),
+	DUMP_FIELD(int, ext.align_state),
+	DUMP_FIELD(int, ext.align_timer),
+	DUMP_FIELD(int, ext.align_target),
+	DUMP_FIELD(int, ext.align_step),
+	DUMP_FIELD(int, ext.align_shift),
+	DUMP_FIELD(int, mpll.state),
+	/* FIXME: mpll.pi etc */
+	DUMP_FIELD(int, mpll.adder_ref),
+	DUMP_FIELD(int, mpll.adder_out),
+	DUMP_FIELD(int, mpll.tag_ref),
+	DUMP_FIELD(int, mpll.tag_out),
+	DUMP_FIELD(int, mpll.tag_ref_d),
+	DUMP_FIELD(int, mpll.tag_out_d),
+	DUMP_FIELD(uint32_t, mpll.seq_ref),
+	DUMP_FIELD(int, mpll.seq_out),
+	DUMP_FIELD(int, mpll.match_state),
+	DUMP_FIELD(int, mpll.match_seq),
+	DUMP_FIELD(int, mpll.phase_shift_target),
+	DUMP_FIELD(int, mpll.phase_shift_current),
+	DUMP_FIELD(int, mpll.id_ref),
+	DUMP_FIELD(int, mpll.id_out),
+	DUMP_FIELD(int, mpll.sample_n),
+	DUMP_FIELD(int, mpll.delock_count),
+	DUMP_FIELD(int, mpll.dac_index),
+	DUMP_FIELD(int, mpll.enabled),
+	/* FIXME: aux_state and ptracker_state -- variable-len arrays */
+};
 
 /* Use:  wrs_dump_memory <file> <hex-offset> <name> */
 int main(int argc, char **argv)
@@ -467,6 +511,11 @@ int main(int argc, char **argv)
 	#define ARRAY_AND_SIZE(x) (x), ARRAY_SIZE(x)
 
 	/* Now check the "name" to be dumped  */
+	if (!strcmp(argv[3], "pll")) {
+		printf("pll at 0x%lx\n", offset);
+		dump_many_fields(mapaddr + offset,
+				 ARRAY_AND_SIZE(pll_info));
+	}
 	if (!strcmp(argv[3], "ppg")) {
 		printf("ppg at 0x%lx\n", offset);
 		dump_many_fields(mapaddr + offset,
@@ -483,6 +532,7 @@ int main(int argc, char **argv)
 				 ARRAY_AND_SIZE(servo_state_info));
 	}
 
+	/* This "all" gets the ppg pointer. It's not really all: no pll */
 	if (!strcmp(argv[3], "all")) {
 		unsigned long newoffset;
 		struct pp_globals *ppg;
