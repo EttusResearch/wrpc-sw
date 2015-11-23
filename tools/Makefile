@@ -43,7 +43,7 @@ sdb-wrpc.bin: sdbfs
 	$(SDBFS)/gensdbfs $< $@
 
 wrpc-dump: wrpc-dump.c
-	$(CC) $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include \
+	$(CC) -m32 $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include \
 	-I ../sdb-lib \
 	$^ -o $@
 
