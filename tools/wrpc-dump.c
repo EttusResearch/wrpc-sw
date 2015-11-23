@@ -14,6 +14,13 @@
 #include <ppsi/ppsi.h>
 #include "libsdbfs.h" /* ntohll */
 
+/* We have a problem: ppsi is built for wrpc, so it has ntoh[sl] wrong */
+#undef ntohl
+#undef ntohs
+#undef ntohll
+#define ntohs(x) __do_not_use
+#define ntohl(x) __do_not_use
+#define ntohll(x) __do_not_use
 
 /*  be safe, in case some other header had them slightly differently */
 #undef container_of
@@ -26,6 +33,41 @@
 
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+
+
+/*
+ * This picks items from memory, converting as needed. No ntohl any more.
+ * Next, we'll detect the byte order from the code itself.
+ */
+static long long wrpc_get_64(void *p)
+{
+	uint64_t *p64 = p;
+	uint64_t result;
+
+	result = __bswap_32((uint32_t)(*p64 >> 32));
+	result <<= 32;
+	result |= __bswap_32((uint32_t)*p64);
+	return result;
+}
+
+/* printf complains for i/l mismatch, so get i32 and l32 separately */
+static long wrpc_get_l32(void *p)
+{
+	uint32_t *p32 = p;
+
+	return __bswap_32(*p32);
+}
+static int wrpc_get_i32(void *p)
+{
+	return wrpc_get_l32(p);
+}
+
+static int wrpc_get_16(void *p)
+{
+	uint16_t *p16 = p;
+
+	return __bswap_16(*p16);
+}
 
 /*
  * To ease copying from header files, allow int, char and other known types.
@@ -97,21 +139,21 @@ void dump_one_field(void *addr, struct dump_info *info)
 			       i == info->size - 1 ? '\n' : ':');
 		break;
 	case dump_type_UInteger64:
-		printf("%lld\n", (long long)ntohll(*(unsigned long long *)p));
+		printf("%lld\n", wrpc_get_64(p));
 		break;
 	case dump_type_Integer64:
-		printf("%lld\n", (long long)ntohll(*(long long *)p));
+		printf("%lld\n", wrpc_get_64(p));
 		break;
 	case dump_type_uint32_t:
-		printf("0x%08lx\n", (long)ntohl(*(uint32_t *)p));
+		printf("0x%08lx\n", wrpc_get_l32(p));
 		break;
 	case dump_type_Integer32:
 	case dump_type_int:
-		printf("%i\n", ntohl(*(int *)p));
+		printf("%i\n", wrpc_get_i32(p));
 		break;
 	case dump_type_UInteger32:
 	case dump_type_unsigned_long:
-		printf("%li\n", (long)ntohl(*(unsigned long *)p));
+		printf("%li\n", wrpc_get_l32(p));
 		break;
 	case dump_type_unsigned_char:
 	case dump_type_UInteger8:
@@ -123,7 +165,7 @@ void dump_one_field(void *addr, struct dump_info *info)
 	case dump_type_UInteger16:
 	case dump_type_uint16_t:
 	case dump_type_unsigned_short:
-		printf("%i\n", ntohs(*(unsigned short *)p));
+		printf("%i\n", wrpc_get_16(p));
 		break;
 	case dump_type_double:
 		printf("%lf\n", *(double *)p);
@@ -132,17 +174,17 @@ void dump_one_field(void *addr, struct dump_info *info)
 		printf("%f\n", *(float *)p);
 		break;
 	case dump_type_pointer:
-		printf("%p\n", *(void **)p);
+		printf("%08lx\n", wrpc_get_l32(p));
 		break;
 	case dump_type_Integer16:
-		printf("%i\n", ntohs(*(short *)p));
+		printf("%i\n", wrpc_get_16(p));
 		break;
 	case dump_type_TimeInternal:
 		printf("correct %i: %10i.%09i:%04i\n",
-		       ntohl(ti->correct),
-		       ntohl(ti->seconds),
-		       ntohl(ti->nanoseconds),
-		       ntohl(ti->phase));
+		       wrpc_get_i32(&ti->correct),
+		       wrpc_get_i32(&ti->seconds),
+		       wrpc_get_i32(&ti->nanoseconds),
+		       wrpc_get_i32(&ti->phase));
 		break;
 
 	case dump_type_ip_address:
