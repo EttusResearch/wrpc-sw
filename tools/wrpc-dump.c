@@ -209,10 +209,10 @@ void dump_one_field(void *addr, struct dump_info *info)
 	case dump_type_ClockQuality:
 		printf("class %i, accuracy %02x (%i), logvariance %i\n",
 		       cq->clockClass, cq->clockAccuracy, cq->clockAccuracy,
-		       cq->offsetScaledLogVariance);
+		       wrpc_get_16(&cq->offsetScaledLogVariance));
 		break;
 	case dump_type_sensor_temp:
-		printf("%f\n", ((float)(*(int *)p >> 4)) / 16.0);
+		printf("%f\n", ((float)(wrpc_get_i32(p) >> 4)) / 16.0);
 		break;
 	}
 }
@@ -245,7 +245,7 @@ void dump_many_fields(void *addr, struct dump_info *info, int ninfo)
 /* map for fields of ppsi structures */
 #undef DUMP_STRUCT
 #define DUMP_STRUCT struct pp_globals
-struct dump_info ppg_info [] = {
+static struct dump_info ppg_info [] = {
 	DUMP_FIELD(pointer, pp_instances),	/* FIXME: follow this */
 	DUMP_FIELD(pointer, servo),		/* FIXME: follow this */
 	DUMP_FIELD(pointer, rt_opts),
@@ -266,7 +266,7 @@ struct dump_info ppg_info [] = {
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT DSDefault /* Horrible typedef */
-struct dump_info dsd_info [] = {
+static struct dump_info dsd_info [] = {
 	DUMP_FIELD(Boolean, twoStepFlag),
 	DUMP_FIELD(ClockIdentity, clockIdentity),
 	DUMP_FIELD(UInteger16, numberPorts),
@@ -279,7 +279,7 @@ struct dump_info dsd_info [] = {
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT DSCurrent /* Horrible typedef */
-struct dump_info dsc_info [] = {
+static struct dump_info dsc_info [] = {
 	DUMP_FIELD(UInteger16, stepsRemoved),
 	DUMP_FIELD(TimeInternal, offsetFromMaster),
 	DUMP_FIELD(TimeInternal, meanPathDelay), /* oneWayDelay */
@@ -288,7 +288,7 @@ struct dump_info dsc_info [] = {
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT DSParent /* Horrible typedef */
-struct dump_info dsp_info [] = {
+static struct dump_info dsp_info [] = {
 	DUMP_FIELD(PortIdentity, parentPortIdentity),
 	DUMP_FIELD(UInteger16, observedParentOffsetScaledLogVariance),
 	DUMP_FIELD(Integer32, observedParentClockPhaseChangeRate),
@@ -300,7 +300,7 @@ struct dump_info dsp_info [] = {
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT DSTimeProperties /* Horrible typedef */
-struct dump_info dstp_info [] = {
+static struct dump_info dstp_info [] = {
 	DUMP_FIELD(Integer16, currentUtcOffset),
 	DUMP_FIELD(Boolean, currentUtcOffsetValid),
 	DUMP_FIELD(Boolean, leap59),
@@ -313,7 +313,7 @@ struct dump_info dstp_info [] = {
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT struct wr_servo_state
-struct dump_info servo_state_info [] = {
+static struct dump_info servo_state_info [] = {
 	DUMP_FIELD_SIZE(char, if_name, 16),
 	DUMP_FIELD(unsigned_long, flags),
 	DUMP_FIELD(int, state),
@@ -345,7 +345,7 @@ struct dump_info servo_state_info [] = {
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT struct pp_instance
-struct dump_info ppi_info [] = {
+static struct dump_info ppi_info [] = {
 	DUMP_FIELD(int, state),
 	DUMP_FIELD(int, next_state),
 	DUMP_FIELD(int, next_delay),
@@ -463,15 +463,68 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
+
+	#define ARRAY_AND_SIZE(x) (x), ARRAY_SIZE(x)
+
+	/* Now check the "name" to be dumped  */
+	if (!strcmp(argv[3], "ppg")) {
+		printf("ppg at 0x%lx\n", offset);
+		dump_many_fields(mapaddr + offset,
+				 ARRAY_AND_SIZE(ppg_info));
+	}
 	if (!strcmp(argv[3], "ppi")) {
 		printf("ppi at 0x%lx\n", offset);
 		dump_many_fields(mapaddr + offset,
-				 ppi_info, ARRAY_SIZE(ppi_info));
+				 ARRAY_AND_SIZE(ppi_info));
 	}
 	if (!strcmp(argv[3], "servo_state")) {
 		printf("servo_state at 0x%lx\n", offset);
-		dump_many_fields(mapaddr + offset, servo_state_info,
-				 ARRAY_SIZE(servo_state_info));
+		dump_many_fields(mapaddr + offset,
+				 ARRAY_AND_SIZE(servo_state_info));
 	}
+
+	if (!strcmp(argv[3], "all")) {
+		unsigned long newoffset;
+		struct pp_globals *ppg;
+		struct pp_instance *ppi;
+
+		ppg = mapaddr + offset;
+
+		printf("ppg at 0x%lx\n", offset);
+		dump_many_fields(ppg, ARRAY_AND_SIZE(ppg_info));
+
+		newoffset = wrpc_get_l32(&ppg->pp_instances);
+		printf("ppi at 0x%lx\n", newoffset);
+		ppi = mapaddr + newoffset;
+		dump_many_fields(ppi, ARRAY_AND_SIZE(ppi_info));
+
+		newoffset = wrpc_get_l32(&ppg->defaultDS);
+		printf("defaultDS at 0x%lx\n", newoffset);
+		dump_many_fields(mapaddr + newoffset,
+				 ARRAY_AND_SIZE(dsd_info));
+
+		newoffset = wrpc_get_l32(&ppg->currentDS);
+		printf("currentDS at 0x%lx\n", newoffset);
+		dump_many_fields(mapaddr + newoffset,
+				 ARRAY_AND_SIZE(dsc_info));
+
+		newoffset = wrpc_get_l32(&ppg->parentDS);
+		printf("parentDS at 0x%lx\n", newoffset);
+		dump_many_fields(mapaddr + newoffset,
+				 ARRAY_AND_SIZE(dsp_info));
+
+		newoffset = wrpc_get_l32(&ppg->timePropertiesDS);
+		printf("timePropertiesDS at 0x%lx\n", newoffset);
+		dump_many_fields(mapaddr + newoffset,
+				 ARRAY_AND_SIZE(dstp_info));
+
+		newoffset = wrpc_get_l32(&ppg->global_ext_data);
+		printf("servo_state at 0x%lx\n", newoffset);
+		dump_many_fields(mapaddr + newoffset,
+				 ARRAY_AND_SIZE(servo_state_info));
+
+	}
+
+
 	exit(0);
 }
