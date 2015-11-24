@@ -61,7 +61,7 @@ static const struct stringlist_entry seq_states [] =
 	{ 0, NULL }
 };
 
-static volatile struct softpll_state softpll;
+volatile struct softpll_state softpll;
 
 static volatile int ptracker_mask = 0;
 /* fixme: should be done by spll_init() but spll_init is called to

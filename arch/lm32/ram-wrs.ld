@@ -84,5 +84,8 @@ SECTIONS
 
 	/* First location in stack is highest address in RAM (stack area) */
 	PROVIDE(_fstack = ORIGIN(stack) + LENGTH(stack) - 4);
+
+	/* We have no ppi_static in wrs builds */
+	PROVIDE(ppi_static = 0);
 }
 
