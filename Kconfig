@@ -66,15 +66,6 @@ config ETHERBONE
 	  You need to run a gateware file that includes Etherbone support.
 	  If in doubt, say No.
 
-config WRNIC
-	depends on WR_NODE
-	boolean "Compile White Rabbit NIC support in wrpc-sw"
-	help
-	  This allows to run LM32 code that is aware of Etherbone and
-	  NIC. You need to run a gateware file that includes Etherbone
-	  and NIC support. This option needs ETHERBONE enabled.
-	  If in doubt, say No.
-
 config CMD_CONFIG
 	depends on WR_NODE
 	boolean "Include configuration in the output binary"
@@ -88,7 +79,7 @@ config NIC_PFILTER
 	depends on ETHERBONE
 	bool "Add packet filter rules for wr-nic"
 	help
-	  When using wr-nic, the host must receive frames that are not
+	  When using wr-nic (7S), the host must receive frames that are not
 	  ptp nor etherbone ones.  This adds the needed filter rules
 	  to that effect.  Such rules are not needed when no Etherbone
 	  is there, because in that case all non-ptp frames reach the

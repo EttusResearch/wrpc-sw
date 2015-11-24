@@ -12,9 +12,7 @@ CONFIG_PPSI=y
 CONFIG_UART=y
 CONFIG_W1=y
 CONFIG_ETHERBONE=y
-# CONFIG_WRNIC is not set
 CONFIG_CMD_CONFIG=y
-CONFIG_NIC_PFILTER=y
 
 #
 # wrpc-sw is tainted if you change the following options
