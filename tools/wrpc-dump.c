@@ -472,7 +472,8 @@ static struct dump_info fifo_info [] = {
 	DUMP_FIELD(uint16_t, tag_count),
 };
 
-
+/* all of these are 0 by default */
+unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off;
 
 /* Use:  wrs_dump_memory <file> <hex-offset> <name> */
 int main(int argc, char **argv)
@@ -481,11 +482,16 @@ int main(int argc, char **argv)
 	void *mapaddr;
 	unsigned long offset;
 	struct stat st;
+	char *dumpname = "";
 	char c;
 
- 	if (argc != 4) {
+	if (argc != 4 && argc != 2) {
 		fprintf(stderr, "%s: use \"%s <file> <offset> <name>\n",
 			argv[0], argv[0]);
+		fprintf(stderr,
+			"\"name\" is one of pll, fifo, ppg, ppi, servo_state"
+			" or ds for data-sets. \"ds\" gets a ppg offset\n");
+		fprintf(stderr, "But with a new binary, just pass <file>\n");
 		exit(1);
 	}
 
@@ -508,7 +514,7 @@ int main(int argc, char **argv)
 	if (st.st_size > 128 * 1024) /* support /sys/..../resource0 */
 		st.st_size = 128 * 1024;
 
-	if (sscanf(argv[2], "%lx%c", &offset, &c) != 1) {
+	if (argc == 4 && sscanf(argv[2], "%lx%c", &offset, &c) != 1) {
 		fprintf(stderr, "%s: \"%s\" not a hex offset\n", argv[0],
 			argv[2]);
 		exit(1);
@@ -520,6 +526,11 @@ int main(int argc, char **argv)
 			argv[0], argv[1], strerror(errno));
 		exit(1);
 	}
+
+	/* In case we have a "new" binary file, use such information */
+	if (!strncmp(mapaddr + 0x80, "CPRW", 4))
+		setenv("WRPC_SPEC", "yes", 1);
+
 	/* If the dump file needs "spec" byte order, fix it all */
 	if (getenv("WRPC_SPEC")) {
 		uint32_t *p = mapaddr;
@@ -529,55 +540,77 @@ int main(int argc, char **argv)
 			*p = __bswap_32(*p);
 	}
 
+	if (argc == 4)
+		dumpname = argv[3];
+
+	/* If we have a new binary file, pick the pointers */
+	if (!strncmp(mapaddr + 0x80, "WRPC----", 8)) {
+		struct pp_globals *ppg;
+		struct pp_instance *ppi;
+
+		spll_off = wrpc_get_l32(mapaddr + 0x90);
+		fifo_off = wrpc_get_l32(mapaddr + 0x94);
+		ppi_off = wrpc_get_l32(mapaddr + 0x98);
+		if (ppi_off) { /* This is 0 for wrs */
+			ppi = mapaddr + ppi_off;
+			ppg_off = wrpc_get_l32(&ppi->glbs);
+			ppg = mapaddr + ppg_off;
+			servo_off = wrpc_get_l32(&ppg->global_ext_data);
+			ds_off = ppg_off;
+		}
+	}
 
 	#define ARRAY_AND_SIZE(x) (x), ARRAY_SIZE(x)
 
 	/* Now check the "name" to be dumped  */
-	if (!strcmp(argv[3], "pll")) {
-		printf("pll at 0x%lx\n", offset);
-		dump_many_fields(mapaddr + offset,
+	if (!strcmp(dumpname, "pll"))
+		spll_off = offset;
+	if (spll_off) {
+		printf("pll at 0x%lx\n", spll_off);
+		dump_many_fields(mapaddr + spll_off,
 				 ARRAY_AND_SIZE(pll_info));
 	}
-	if (!strcmp(argv[3], "fifo")) {
+	if (!strcmp(dumpname, "fifo"))
+		fifo_off = offset;
+	if (fifo_off) {
 		int i;
 
-		printf("fifo log at 0x%lx\n", offset);
+		printf("fifo log at 0x%lx\n", fifo_off);
 		for (i = 0; i < FIFO_LOG_LEN; i++)
-			dump_many_fields(mapaddr + offset
+			dump_many_fields(mapaddr + fifo_off
 					 + i * sizeof(struct spll_fifo_log),
 					 ARRAY_AND_SIZE(fifo_info));
 	}
-	if (!strcmp(argv[3], "ppg")) {
-		printf("ppg at 0x%lx\n", offset);
-		dump_many_fields(mapaddr + offset,
+	if (!strcmp(dumpname, "ppg"))
+		ppg_off = offset;
+	if (ppg_off) {
+		printf("ppg at 0x%lx\n", ppg_off);
+		dump_many_fields(mapaddr + ppg_off,
 				 ARRAY_AND_SIZE(ppg_info));
 	}
-	if (!strcmp(argv[3], "ppi")) {
-		printf("ppi at 0x%lx\n", offset);
-		dump_many_fields(mapaddr + offset,
+	if (!strcmp(dumpname, "ppi"))
+		ppi_off = offset;
+	if (ppi_off) {
+		printf("ppi at 0x%lx\n", ppi_off);
+		dump_many_fields(mapaddr + ppi_off,
 				 ARRAY_AND_SIZE(ppi_info));
 	}
-	if (!strcmp(argv[3], "servo_state")) {
-		printf("servo_state at 0x%lx\n", offset);
-		dump_many_fields(mapaddr + offset,
+	if (!strcmp(dumpname, "servo_state"))
+		servo_off = offset;
+	if (servo_off) {
+		printf("servo_state at 0x%lx\n", servo_off);
+		dump_many_fields(mapaddr + servo_off,
 				 ARRAY_AND_SIZE(servo_state_info));
 	}
 
 	/* This "all" gets the ppg pointer. It's not really all: no pll */
-	if (!strcmp(argv[3], "all")) {
+	if (!strcmp(dumpname, "ds"))
+		ds_off = offset;
+	if (ds_off) {
 		unsigned long newoffset;
 		struct pp_globals *ppg;
-		struct pp_instance *ppi;
 
-		ppg = mapaddr + offset;
-
-		printf("ppg at 0x%lx\n", offset);
-		dump_many_fields(ppg, ARRAY_AND_SIZE(ppg_info));
-
-		newoffset = wrpc_get_l32(&ppg->pp_instances);
-		printf("ppi at 0x%lx\n", newoffset);
-		ppi = mapaddr + newoffset;
-		dump_many_fields(ppi, ARRAY_AND_SIZE(ppi_info));
+		ppg = mapaddr + ds_off;
 
 		newoffset = wrpc_get_l32(&ppg->defaultDS);
 		printf("defaultDS at 0x%lx\n", newoffset);
