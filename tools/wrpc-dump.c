@@ -511,11 +511,20 @@ int main(int argc, char **argv)
 			argv[2]);
 		exit(1);
 	}
-	mapaddr = mmap(0, st.st_size, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+	mapaddr = mmap(0, st.st_size, PROT_READ | PROT_WRITE,
+		       MAP_FILE | MAP_PRIVATE, fd, 0);
 	if (mapaddr == MAP_FAILED) {
 		fprintf(stderr, "%s: mmap(%s): %s\n",
 			argv[0], argv[1], strerror(errno));
 		exit(1);
+	}
+	/* If the dump file needs "spec" byte order, fix it all */
+	if (getenv("WRPC_SPEC")) {
+		uint32_t *p = mapaddr;
+		int i;
+
+		for (i = 0; i < st.st_size / 4; i++, p++)
+			*p = __bswap_32(*p);
 	}
 
 
