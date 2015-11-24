@@ -501,10 +501,12 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 	if (!S_ISREG(st.st_mode)) { /* FIXME: support memory */
-		fprintf(stderr, "%s: %s not a regular fule\n",
+		fprintf(stderr, "%s: %s not a regular file\n",
 			argv[0], argv[1]);
 		exit(1);
 	}
+	if (st.st_size > 128 * 1024) /* support /sys/..../resource0 */
+		st.st_size = 128 * 1024;
 
 	if (sscanf(argv[2], "%lx%c", &offset, &c) != 1) {
 		fprintf(stderr, "%s: \"%s\" not a hex offset\n", argv[0],
