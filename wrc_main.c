@@ -90,10 +90,10 @@ static void wrc_initialize(void)
 	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
 	spll_very_init();
 
-#ifdef CONFIG_IP
-	ipv4_init();
-	arp_init();
-#endif
+	if (HAS_IP) {
+		ipv4_init();
+		arp_init();
+	}
 }
 
 #define LINK_WENT_UP 1
@@ -199,18 +199,16 @@ int main(void)
 		}
 
 		switch (l_status) {
-#ifdef CONFIG_IP
 		case LINK_WENT_UP:
 			needIP = 1;
 			break;
-#endif
 
 		case LINK_UP:
 			update_rx_queues();
-#ifdef CONFIG_IP
-			ipv4_poll();
-			arp_poll();
-#endif
+			if (HAS_IP) {
+				ipv4_poll();
+				arp_poll();
+			}
 			break;
 
 		case LINK_WENT_DOWN:
