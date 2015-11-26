@@ -211,24 +211,22 @@ enum pf_symbolic_regs {
 
 	/* The first set is used for straight comparisons */
 	FRAME_BROADCAST = R_1,
-	FRAME_PTP_MCAST,
 	FRAME_OUR_MAC,
+	FRAME_TAGGED,
 	FRAME_TYPE_IPV4,
 	FRAME_TYPE_PTP2,
 	FRAME_TYPE_ARP,
 	FRAME_ICMP,
 	FRAME_UDP,
-	FRAME_TYPE_STREAMER, /* An ethtype by Tom, used in gateware */
-	FRAME_PORT_ETHERBONE,
+	PORT_UDP_HOST,
+	PORT_UDP_ETHERBONE,
+	R_TMP,
 
 	/* These are results of logic over the previous bits  */
 	FRAME_IP_UNI,
 	FRAME_IP_OK, /* unicast or broadcast */
-	FRAME_PTP_OK,
-	FRAME_STREAMER_BCAST,
 
 	/* A temporary register, and the CPU target */
-	R_TMP,
 	FRAME_FOR_CPU, /* must be last */
 };
 
@@ -364,10 +362,6 @@ static void pfilter_output(char *fname)
 	fclose(f);
 }
 
-/* We generate all supported rule-sets, those that used to be ifdef'd */
-#define MODE_ETHERBONE   1
-#define MODE_NIC_PFILTER 2
-
 
 void pfilter_init(int mode, char *fname)
 {
@@ -376,78 +370,66 @@ void pfilter_init(int mode, char *fname)
 
 	/*
 	 * Make three sets of comparisons over the destination address.
-	 * After these 9 instructions, the whole Eth header is available.
+	 * After these instructions, the whole Eth header is there
 	 */
-	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_OUR_MAC);	/* Use fake MAC: 12:34:56:78:9a:bc */
-	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_OUR_MAC);
-	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_OUR_MAC);	/* set when our MAC */
 
+	/* Local frame, using fake MAC: 12:34:56:78:9a:bc */
+	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_OUR_MAC);
+	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_OUR_MAC);
+
+	/* Broadcast frame */
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
-	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);	/* set when dst mac is broadcast */
+	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);
 
-	pfilter_cmp(0, 0x011b, 0xffff, MOV, FRAME_PTP_MCAST);
-	pfilter_cmp(1, 0x1900, 0xffff, AND, FRAME_PTP_MCAST);
-	pfilter_cmp(2, 0x0000, 0xffff, AND, FRAME_PTP_MCAST);	/* set when dst mac is PTP multicast (01:1b:19:00:00:00) */
+	/* Tagged is dropped. We'll invert the check in the vlan rule-set */
+	pfilter_cmp(6, 0x8100, 0xffff, MOV, FRAME_TAGGED);
+	pfilter_logic2(R_DROP, FRAME_TAGGED, MOV, R_ZERO);
 
-	/* Identify some Ethertypes used later */
-	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
+	/* Identify some Ethertypes used later.  */
 	pfilter_cmp(6, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
+	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
 	pfilter_cmp(6, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);
-	pfilter_cmp(6, 0xdbff, 0xffff, MOV, FRAME_TYPE_STREAMER);
+
+	/* Mark bits for ip unicast and ip-valid (unicast or broadcast) */
+	pfilter_logic2(FRAME_IP_UNI, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
+	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
 
 	/* Ethernet = 14 bytes, Offset to type in IP: 8 bytes = 22/2 = 11 */
 	pfilter_cmp(11, 0x0001, 0x00ff, MOV, FRAME_ICMP);
 	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);
+	pfilter_logic2(FRAME_UDP, FRAME_UDP, AND, FRAME_IP_OK);
 
-	if (mode & MODE_ETHERBONE) {
+	/* For CPU: arp broadcast or icmp unicast or ptp */
+	pfilter_logic3(FRAME_FOR_CPU, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
+	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, FRAME_FOR_CPU);
 
-		/* Mark bits for unicast to us, and for unicast-to-us-or-broadcast */
-		pfilter_logic3(FRAME_IP_UNI, FRAME_OUR_MAC, OR, R_ZERO, AND, FRAME_TYPE_IPV4);
-		pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
+	/* Now look in UDP ports: at offset 18 (14 + 20 + 8 = 36) */
+	pfilter_cmp(18, 0x0044, 0xffff, MOV, PORT_UDP_HOST);	/* bootpc */
+	pfilter_cmp(18, 0x013f, 0xffff, OR, PORT_UDP_HOST);	/* ptp event */
+	pfilter_cmp(18, 0x0140, 0xffff, OR, PORT_UDP_HOST);	/* ptp general */
 
-		/* Make a selection for the CPU, that is later still added-to */
-		pfilter_logic3(R_TMP, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
-		pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, R_TMP);
+	/* The CPU gets those ports in a proper UDP frame, plus the previous selections */
+	pfilter_logic3(FRAME_FOR_CPU, FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);
 
-		/* Ethernet = 14 bytes, IPv4 = 20 bytes, offset to dport: 2 = 36/2 = 18 */
-		pfilter_cmp(18, 0x0044, 0xffff, MOV, R_TMP);	/* R_TMP now means dport = BOOTPC */
+	/* Etherbone is UDP at port 0xebd0, let's "or" in the last move */
+	pfilter_cmp(18, 0xebd0, 0xffff, MOV, PORT_UDP_ETHERBONE);
 
-		pfilter_logic3(R_TMP, R_TMP, AND, FRAME_UDP, AND, FRAME_IP_OK);	/* BOOTPC and UDP and IP(unicast|broadcast) */
-		pfilter_logic2(FRAME_FOR_CPU, R_TMP, OR, FRAME_FOR_CPU);
+	/* and now copy out the stuff: one cpu class, two fabric classes: 7 etherbone, 6 for anything else */
+	pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
+	pfilter_logic2(R_CLASS(7), FRAME_UDP, AND, PORT_UDP_ETHERBONE);
+	pfilter_logic2(R_CLASS(6), FRAME_UDP, NAND, PORT_UDP_ETHERBONE);
 
-		if (mode & MODE_NIC_PFILTER) {
+	/*
+	 * Note that earlier we used to be more strict in ptp ethtype (only proper multicast),
+	 * but since we want to accept peer-delay sooner than later, we'd better avoid the checks
+	 */
 
-			pfilter_cmp(18,0xebd0,0xffff,MOV, FRAME_PORT_ETHERBONE);
-
-			/* Here we had a commented-out check for magic (offset 21, value 0x4e6f) */
-
-			pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
-			pfilter_logic2(R_CLASS(5), FRAME_PORT_ETHERBONE, OR, R_ZERO); /* class 5: Etherbone packet => Etherbone Core */
-			pfilter_logic3(R_CLASS(7), FRAME_FOR_CPU, OR, FRAME_PORT_ETHERBONE, NOT, R_ZERO); /* class 7: Rest => NIC Core */
-		} else {
-
-			pfilter_logic3(R_TMP, FRAME_IP_OK, AND, FRAME_UDP, OR, FRAME_FOR_CPU);	/* Something we accept: cpu+udp or streamer */
-
-			pfilter_logic3(R_DROP, R_TMP, OR, FRAME_TYPE_STREAMER, NOT, R_ZERO);	/* None match? drop */
-
-			pfilter_logic2(R_CLASS(7), FRAME_IP_OK, AND, FRAME_UDP);	/* class 7: UDP/IP(unicast|broadcast) => external fabric */
-			pfilter_logic2(R_CLASS(6), FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);	/* class 6: streamer broadcasts => external fabric */
-			pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);	/* class 0: all selected for CPU earlier */
-
-		}
-	} else { /* not etherbone */
-
-		pfilter_logic3(FRAME_PTP_OK, FRAME_OUR_MAC, OR, FRAME_PTP_MCAST, AND, FRAME_TYPE_PTP2);
-		pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);
-		pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* R_TMP = everything else */
-
- * Released according to the GNU GPL
-		pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer traffic => external fabric */
-		pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts => external fabric */
-		pfilter_logic2(R_CLASS(0), FRAME_PTP_OK, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
-
-	}
+	/*
+	 * Also, please note that "streamer" ethtype 0xdbff and "etherbone" udp port 
+	 * 0xebd0 go to the fabric by being part of the "anything else" choice".
+	 */
 
 	pfilter_output(fname);
 
@@ -457,8 +439,6 @@ int main(int argc, char **argv) /* no arguments used currently */
 {
 	prgname = argv[0];
 
-	pfilter_init(0, "rules-plain.bin");
-	pfilter_init(MODE_ETHERBONE, "rules-ebone.bin");
-	pfilter_init(MODE_ETHERBONE | MODE_NIC_PFILTER, "rules-e+nic.bin");
+	pfilter_init(0, "rules-default.bin");
 	exit(0);
 }

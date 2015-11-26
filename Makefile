@@ -60,9 +60,7 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
 
 # packet-filter rules depend on configuration; default is rules-plain
-pfilter-y                     := rules-plain.bin
-pfilter-$(CONFIG_IP)   := rules-ebone.bin
-pfilter-$(CONFIG_NIC_PFILTER) := rules-e+nic.bin
+pfilter-y                     := rules-default.bin
 export pfilter-y
 
 all:
