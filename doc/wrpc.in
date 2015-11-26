@@ -833,7 +833,7 @@ initialization script
 @item @code{sdb} @tab prints devices connected to the Wishbone bus inside @sc{wrpc}
 
 @item @code{ip get}
-@item @code{ip set <ip>} @tab reports or sets the IPv4 address of the @sc{wrpc} (only available if @t{CONFIG_ETHERBONE} is set at build time
+@item @code{ip set <ip>} @tab reports or sets the IPv4 address of the @sc{wrpc} (only available if @t{CONFIG_IP} is set at build time
 
 @item @code{w1w <offset> <byte> [<byte> ...]}
 @item @code{w1r <offset> <len>} @tab If @t{CONFIG_W1} is set and a OneWire @sc{eeprom} exists, write and read data. For writing, @t{byte} values are decimal

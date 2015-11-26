@@ -61,7 +61,7 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 
 # packet-filter rules depend on configuration; default is rules-plain
 pfilter-y                     := rules-plain.bin
-pfilter-$(CONFIG_ETHERBONE)   := rules-ebone.bin
+pfilter-$(CONFIG_IP)   := rules-ebone.bin
 pfilter-$(CONFIG_NIC_PFILTER) := rules-e+nic.bin
 export pfilter-y
 
@@ -112,7 +112,7 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 # we need to remove "ptpdump" support for ppsi if RAM size is small and
 # we include etherbone
 ifneq ($(CONFIG_RAMSIZE),131072)
-  ifdef CONFIG_ETHERBONE
+  ifdef CONFIG_IP
     PPSI_USER_CFLAGS = -DCONFIG_NO_PTPDUMP
   endif
 endif

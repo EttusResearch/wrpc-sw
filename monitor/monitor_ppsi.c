@@ -90,7 +90,7 @@ void wrc_mon_gui(void)
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
-#ifdef CONFIG_ETHERBONE
+#ifdef CONFIG_IP
 	uint8_t ip[4];
 #endif
 	struct wr_servo_state *s =
@@ -155,7 +155,7 @@ void wrc_mon_gui(void)
 			cprintf(C_GREEN, "Calibrated  ");
 		else
 			cprintf(C_RED, "Uncalibrated  ");
-#ifdef CONFIG_ETHERBONE
+#ifdef CONFIG_IP
 		cprintf(C_WHITE, "\nIPv4: ");
 		getIP(ip);
 		if (needIP)

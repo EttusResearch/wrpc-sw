@@ -90,7 +90,7 @@ static void wrc_initialize(void)
 	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
 	spll_very_init();
 
-#ifdef CONFIG_ETHERBONE
+#ifdef CONFIG_IP
 	ipv4_init();
 	arp_init();
 #endif
@@ -199,7 +199,7 @@ int main(void)
 		}
 
 		switch (l_status) {
-#ifdef CONFIG_ETHERBONE
+#ifdef CONFIG_IP
 		case LINK_WENT_UP:
 			needIP = 1;
 			break;
@@ -207,7 +207,7 @@ int main(void)
 
 		case LINK_UP:
 			update_rx_queues();
-#ifdef CONFIG_ETHERBONE
+#ifdef CONFIG_IP
 			ipv4_poll();
 			arp_poll();
 #endif
