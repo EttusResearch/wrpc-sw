@@ -11,100 +11,167 @@
 
 /* Endpoint Packet Filter/Classifier driver
 
-   A little explanation: The WR core needs to classify the incoming packets into
-   two (or more categories):
-   - PTP, ARP, DHCP packets, which should go to the WRCore CPU packet queue (mini-nic)
-   - Other packets matching user's provided pattern, which shall go to the external fabric
-     port - for example to Etherbone, host network controller, etc.
-   - packets to be dropped (used neither by the WR Core or the user application)
+   A little explanation: The WR core needs to classify the incoming
+   packets into two (or more) categories. Current HDL (as of 2015)
+   uses two actual classes even if the filter supports 8. Class bits
+   0-3 go to the CPU (through the mini-nic) and class bits 4-7 go to
+   the internal fabric.  The frame, in the fabric, is prefixed with
+   a status word that includes the class bits. 
+
+   The CPU is expected to receive PTP, ICMP, ARP and DHCP replies (so
+   local "bootpc" port).
+
+   The fabric should receive Etherbone (i.e. UDP port 0xebd0), the
+   "streamer" protocol used by some CERN installation (ethtype 0xdbff)
+   and everything else if the "NIC pfilter" feature by 7Solutions is used.
+
+   The logic cells connected to the fabric do their own check on the
+   frames, so it's not a problem if extra frames reach the fabric. Thus,
+   even if earlier code bases had a build-time choice of filter rulese,
+   we now have a catch-all rule set.   Please note that the CPU is
+   not expected to receive a lot of undesired traffic, because it has
+   very limited processing power.
+
+   One special bit means "drop", and we'll use it when implementing vlans
+   (it currently is not used, because the fabric can receive extra stuff,
+   but it was activated by previous rule-sets.
+
 
   0. Introduction
   ------------------------------------------
 
-  WR Endpoint (WR MAC) inside the WR Core therefore contains a simple microprogrammable
-  packet filter/classifier. The classifier processes the incoming packet, and assigns it
-  to one of 8 classes (an 8-bit word, where each bit corresponds to a particular class) or
-  eventually drops it. Hardware implementation of the unit is a simple VLIW processor with
-  32 single-bit registers (0 - 31). The registers are organized as follows:
-  - 0: don't touch (always 0)
-  - 1 - 22: general purpose registers
-  - 23: drop packet flag: if 1 at the end of the packet processing, the packet will be dropped.
-  - 24..31: packet class (class 0 = reg 24, class 7 = reg 31). -- see 2. below for "routing" rules.
+  WR Endpoint (WR MAC) inside the WR Core therefore contains a simple
+  microprogrammable packet filter/classifier. The classifier processes
+  the incoming packet, and assigns it to one of 8 classes (an 8-bit
+  word, where each bit corresponds to a particular class) or
+  eventually drops it. Hardware implementation of the unit is a simple
+  VLIW processor with 32 single-bit registers (0 - 31). The registers
+  are organized as follows:
 
-  Program memory has 64 36-bit words. Packet filtering program is restarted every time a new packet comes.
-  There are 5 possible instructions.
+  - 0: don't touch (always 0)
+  - 1 - 22: general purpose registers (but comparison can only write to 1-14).
+  - 23: drop packet flag. It takes precedence to class assignment
+  - 24..31: packet class (class 0 = reg 24, class 7 = reg 31). See "2." below.
+
+  Program memory has 64 36-bit words, but you should use only 32,
+  because the pfilter is synchronouse with frame ingress, and frames
+  can be as short as 64 bytes long.
+
+  The packet filtering program is restarted every time a new packet comes.
+
+  The operations, <oper> and <oper2> below, are one of:
+    AND, NAND,     OR, NOR,    XOR, XNOR,     MOV, NOT
+
 
   1. Instructions
   ------------------------------------------
 
-  1.1 CMP offset, value, mask, oper, Rd:
+  There are 5 possible instructions.
+
+  1.1 CMP offset, value, mask, <oper>, Rd:
   ------------------------------------------
 
-  * Rd = Rd oper ((((uint16_t *)packet) [offset] & mask) == value)
+  * Rd = Rd <oper> ((((uint16_t *)packet) [offset] & mask) == value)
 
   Examples:
-  * CMP 3, 0xcafe, 0xffff, MOV, Rd
-  will compare the 3rd word of the packet (bytes 6, 7) against 0xcafe and if the words are equal,
-  1 will be written to Rd register.
 
-  * CMP 4, 0xbabe, 0xffff, AND, Rd
-  will do the same with the 4th word and write to Rd its previous value ANDed with the result
-  of the comparison. Effectively, Rd now will be 1 only if bytes [6..9] of the payload contain word
-  0xcafebabe.
+      * CMP 3, 0xcafe, 0xffff, MOV, Rd
 
-  Note that the mask value is nibble-granular. That means you can choose a particular
-  set of nibbles within a word to be compared, but not an arbitrary set of bits (e.g. 0xf00f, 0xff00
-  and 0xf0f0 masks are ok, but 0x8001 is wrong.
+      will compare the 4th word of the packet (offset 3: bytes 6, 7) against
+      0xcafe and if the words are equal, 1 will be written to Rd register.
 
-  1.2. BTST offset, bit_number, oper, Rd
+      * CMP 4, 0xbabe, 0xffff, AND, Rd
+
+      will do the same with the 4th word and write to Rd its previous
+      value ANDed with the result of the comparison. Effectively, Rd
+      now will be 1 only if bytes [6..9] of the payload contain word
+      0xcafebabe.
+
+  Note that the mask value is nibble-granular. That means you can
+  choose a particular set of nibbles within a word to be compared, but
+  not an arbitrary set of bits (e.g. 0xf00f, 0xff00 and 0xf0f0 masks
+  are ok, but 0x8001 is wrong.
+
+  The target of a comparison can be register 1-15 alone.
+
+  1.2. BTST offset, bit_number, <oper>, Rd
   ------------------------------------------
 
-  * Rd = Rd oper (((uint16_t *)packet) [offset] & (1<<bit_number) ? 1 : 0)
+  * Rd = Rd <oper> (((uint16_t *)packet) [offset] & (1<<bit_number) ? 1 : 0)
 
   Examples:
-  * BTST 3, 10, MOV, 11
-  will write 1 to reg 11 if the 10th bit in the 3rd word of the packet is set (and 0 if it's clear)
+ 
+      * BTST 3, 10, MOV, 11
 
-  1.3. Logic opearations:
+      will write 1 to reg 11 if the 10th bit in the 3rd word of the
+      packet is set (and 0 if it's clear)
+
+  1.3. LOGIC2 Rd, Ra, <oper>, Rb
   -----------------------------------------
-  * LOGIC2 Rd, Ra, OPER Rb - 2 argument logic (Rd = Ra OPER Rb). If the operation is MOV or NOT, Ra is
-  taken as the source register.
 
-  * LOGIC3 Rd, Ra, OPER Rb, OPER2, Rc - 3 argument logic Rd = (Ra OPER Rb) OPER2 Rc.
+  * Rd = Ra <oper> Rb
+
+  If the operation is MOV or NOT, Ra is taken as the source register
+  and Rb is ignored.
+
+
+  1.4. LOGIC3 Rd, Ra, <oper>, Rb, <oper2> Rc
+  -----------------------------------------
+
+  * Rd = (Ra <oper> Rb) <oper2> Rc
 
   1.4. Misc
   -----------------------------------------
+
   FIN instruction terminates the program.
+
   NOP executes a dummy instruction (LOGIC2 0, 0, AND, 0)
 
+
   IMPORTANT:
-  - the program counter is advanved each time a 16-bit words of the packet arrives.
-  - the CPU doesn't have any interlocks to simplify the HW, so you can't compare the
-    10th word when  PC = 2. Max comparison offset is always equal to the address of the instruction.
-  - Code may contain up to 64 operations, but it must classify shorter packets faster than in
-    32 instructions (there's no flow throttling)
+
+  - the program counter is advanved each time a 16-bit words of the
+    packet arrives.
+
+  - the CPU doesn't have any interlocks to simplify the HW, so you
+    can't compare the 10th word when PC = 2. Max comparison offset is
+    always equal to the address of the instruction.
+
+  - Code may contain up to 64 operations, but it must classify shorter
+    packets faster than in 32 instructions (there's no flow
+    throttling)
 
 
   2. How the frame is routed after the pfilter
   -----------------------------------------
-  After the input pipeline is over, the endpoint looks at the DROP and CLASS bits
-  set by the packet filter. There are two possible output ports: one associated with
-  classes 0..3 (to the cpu) and one associated to class 4..7 (external fabric).
+
+  After the input pipeline is over, the endpoint looks at the DROP and
+  CLASS bits set by the packet filter. There are two possible output
+  ports: one associated with classes 0..3 (to the cpu) and one
+  associated to class 4..7 (external fabric).
 
   These are the rules, in strict priority order.
 
-  - If "DROP" is set, the frame is dropped irrespective of the rest. Done.
-  - If at least one bit is set in the first set (bits 0..3), the frame goes to CPU. Done.
-  - If at least one bit is set in the second set (bits 4..7) the frame goes to fabric. Done.
+  - If "DROP" is set, the frame is dropped irrespective of the
+    rest. Done.
+
+  - If at least one bit is set in the first set (bits 0..3), the frame
+    goes to CPU. Done.
+
+  - If at least one bit is set in the second set (bits 4..7) the frame
+    goes to fabric. Done.
+
   - No class is set, the frame goes to the fabric.
 
-  If, in the future or other implementations, the same pfilter is used with a differnet
-  set of bits connected to the output ports (e.g. three ports), ports are processed
-  from lowest-number to highest-number, and if no bit is set it goes to the last.
+  If, in the future or other implementations, the same pfilter is used
+  with a differnet set of bits connected to the output ports
+  (e.g. three ports), ports are processed from lowest-number to
+  highest-number, and if no bit is set it goes to the last.
 
-  Please note that the "class" is actually a bitmask; it's ok to set more than one bit
-  in a single nibble, and the downstream user will find both set (for CPU we have the
-  class in the status register).
+  Please note that the "class" is actually a bitmask; it's ok to set
+  more than one bit in a single nibble, and the downstream user will
+  find both set (for CPU we have the class in the status register).
+
 */
 
 #include <stdio.h>
@@ -375,6 +442,7 @@ void pfilter_init(int mode, char *fname)
 		pfilter_logic2(FRAME_STREAMER_BCAST, FRAME_BROADCAST, AND, FRAME_TYPE_STREAMER);
 		pfilter_logic3(R_TMP, FRAME_PTP_OK, OR, FRAME_STREAMER_BCAST, NOT, R_ZERO); /* R_TMP = everything else */
 
+ * Released according to the GNU GPL
 		pfilter_logic2(R_CLASS(7), R_TMP, MOV, R_ZERO);	/* class 7: all non PTP and non-streamer traffic => external fabric */
 		pfilter_logic2(R_CLASS(6), FRAME_STREAMER_BCAST, MOV, R_ZERO); /* class 6: streamer broadcasts => external fabric */
 		pfilter_logic2(R_CLASS(0), FRAME_PTP_OK, MOV, R_ZERO); /* class 0: PTP frames => LM32 */
