@@ -231,6 +231,8 @@ struct dump_info  dump_info[] = {
 
 	DUMP_HEADER("pll_fifo"),
 	DUMP_FIELD(uint32_t, trr),
+	DUMP_FIELD(uint32_t, tstamp),
+	DUMP_FIELD(uint32_t, duration),
 	DUMP_FIELD(uint16_t, irq_count),
 	DUMP_FIELD(uint16_t, tag_count),
 	/* FIXME: aux_state and ptracker_state -- variable-len arrays */

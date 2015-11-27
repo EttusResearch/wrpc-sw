@@ -317,7 +317,9 @@ int main(int argc, char **argv)
 
 		printf("fifo log at 0x%lx\n", fifo_off);
 		for (i = 0; i < FIFO_LOG_LEN; i++)
-			dump_many_fields(mapaddr + fifo_off + i * 8, "pll_fifo");
+			dump_many_fields(mapaddr + fifo_off
+					 + i * sizeof(struct spll_fifo_log),
+					 "pll_fifo");
 	}
 	if (!strcmp(dumpname, "ppg"))
 		ppg_off = offset;

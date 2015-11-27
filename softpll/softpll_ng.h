@@ -195,6 +195,8 @@ struct softpll_state {
 
 struct spll_fifo_log {
 	uint32_t trr;
+	uint32_t tstamp;
+	uint32_t duration;
 	uint16_t irq_count;
 	uint16_t tag_count;
 };

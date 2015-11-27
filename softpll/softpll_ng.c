@@ -21,6 +21,14 @@
 
 #include "irq.h"
 
+#ifdef CONFIG_SPLL_FIFO_LOG
+  struct spll_fifo_log fifo_log[FIFO_LOG_LEN];
+  #define HAS_FIFO_LOG 1
+#else
+  #define HAS_FIFO_LOG 0
+  extern struct spll_fifo_log *fifo_log;
+#endif
+
 volatile struct SPLL_WB *SPLL;
 volatile struct PPSG_WB *PPSG;
 
@@ -224,26 +232,34 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 	}
 }
 
-struct spll_fifo_log fifo_log[FIFO_LOG_LEN];
-
 void _irq_entry(void)
 {
 	struct softpll_state *s = (struct softpll_state *)&softpll;
 	uint32_t trr;
 	int i, tag_source, tag_value;
 	static uint16_t tag_count;
-	struct spll_fifo_log *l;
+	struct spll_fifo_log *l = NULL;
+	uint32_t enter_stamp;
 
-	/* check if there are more tags in the FIFO, and log them */
+	if (HAS_FIFO_LOG)
+		enter_stamp = (PPSG->CNTR_NSEC & 0xfffffff);
+
+	/* check if there are more tags in the FIFO, and log them if so configured to */
 	while (!(SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY)) {
 		trr = SPLL->TRR_R0;
 
-		/* save this to a circular buffer */
-		i = tag_count % FIFO_LOG_LEN;
-		l = fifo_log + i;
-		l->trr = trr;
-		l->irq_count = s->irq_count & 0xffff;
-		l->tag_count = tag_count++;
+		if (HAS_FIFO_LOG) {
+			/* save this to a circular buffer */
+			i = tag_count % FIFO_LOG_LEN;
+			l = fifo_log + i;
+			l->tstamp = (PPSG->CNTR_NSEC & 0xfffffff);
+			if (!enter_stamp)
+				enter_stamp = l->tstamp;
+			l->duration = 0;
+			l->trr = trr;
+			l->irq_count = s->irq_count & 0xffff;
+			l->tag_count = tag_count++;
+		}
 
 		/* And process the values */
 		tag_source = SPLL_TRR_R0_CHAN_ID_R(trr);
@@ -253,6 +269,8 @@ void _irq_entry(void)
 		update_loops(s, tag_value, tag_source);
 	}
 
+	if (HAS_FIFO_LOG && l)
+		l->duration = (PPSG->CNTR_NSEC & 0xfffffff) - enter_stamp;
 	s->irq_count++;
 	clear_irq();
 }
