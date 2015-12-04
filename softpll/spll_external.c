@@ -26,6 +26,8 @@
 #define ALIGN_STATE_COMPENSATE_DELAY 5
 #define ALIGN_STATE_LOCKED 6
 #define ALIGN_STATE_START_MAIN 8
+#define ALIGN_STATE_WAIT_CLKIN 9
+#define ALIGN_STATE_WAIT_PLOCK 10
 
 #define ALIGN_SAMPLE_PERIOD 100000
 #define ALIGN_TARGET 0
@@ -54,7 +56,7 @@ void external_start(struct spll_external_state *s)
 
 	SPLL->ECCR = SPLL_ECCR_EXT_EN;
 
-	s->align_state = ALIGN_STATE_START;
+	s->align_state = ALIGN_STATE_WAIT_CLKIN;
 	s->enabled = 1;
 	spll_debug (DBG_EVENT | DBG_EXT, DBG_EVT_START, 1);
 }
@@ -62,11 +64,14 @@ void external_start(struct spll_external_state *s)
 int external_locked(volatile struct spll_external_state *s)
 {
 	if (!s->helper->ld.locked || !s->main->ld.locked ||
-		!(SPLL->ECCR & SPLL_ECCR_EXT_REF_PRESENT))
+		!(SPLL->ECCR & SPLL_ECCR_EXT_REF_LOCKED) ||  // ext PLL became unlocked
+		 (SPLL->ECCR & SPLL_ECCR_EXT_REF_STOPPED))   // 10MHz unplugged (only SPEC)
 		return 0;
 
 	switch(s->align_state) {
 		case ALIGN_STATE_EXT_OFF:
+		case ALIGN_STATE_WAIT_CLKIN:
+		case ALIGN_STATE_WAIT_PLOCK:
 		case ALIGN_STATE_START:
 		case ALIGN_STATE_START_MAIN:
 		case ALIGN_STATE_INIT_CSYNC:
@@ -98,6 +103,21 @@ void external_align_fsm(volatile struct spll_external_state *s)
 	switch(s->align_state) {
 
 		case ALIGN_STATE_EXT_OFF:
+			break;
+
+		case ALIGN_STATE_WAIT_CLKIN:
+			if( !(SPLL->ECCR & SPLL_ECCR_EXT_REF_STOPPED) ) {
+				SPLL->ECCR |= SPLL_ECCR_EXT_REF_PLLRST;
+				s->align_state = ALIGN_STATE_WAIT_PLOCK;
+			}
+			break;
+
+		case ALIGN_STATE_WAIT_PLOCK:
+			SPLL->ECCR &= (~SPLL_ECCR_EXT_REF_PLLRST);
+			if( SPLL->ECCR & SPLL_ECCR_EXT_REF_STOPPED )
+				s->align_state = ALIGN_STATE_WAIT_CLKIN;
+			else if( SPLL->ECCR & SPLL_ECCR_EXT_REF_LOCKED )
+				s->align_state = ALIGN_STATE_START;
 			break;
 
 		case ALIGN_STATE_START:
@@ -175,7 +195,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 
 		case ALIGN_STATE_LOCKED:
 			if(!external_locked(s)) {
-				s->align_state = ALIGN_STATE_START;
+				s->align_state = ALIGN_STATE_WAIT_CLKIN;
 			}
 			break;
 
