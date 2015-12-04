@@ -482,7 +482,7 @@ void spll_get_num_channels(int *n_ref, int *n_out)
 void spll_show_stats()
 {
 	if (softpll.mode > 0)
-		    TRACE_DEV("softpll: irqs %d seq %s mode %d "
+		    pp_printf("softpll: irqs %d seq %s mode %d "
 		     "alignment_state %d HL%d ML%d HY=%d MY=%d DelCnt=%d\n",
 		     irq_count, stringlist_lookup(seq_states, softpll.seq_state), softpll.mode,
 		     softpll.ext.align_state, softpll.helper.ld.locked, softpll.mpll.ld.locked,
