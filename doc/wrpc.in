@@ -108,7 +108,7 @@ the following locations:
 
 @table @code
 
-@item http://www.ohwr.org/projects/hdl-make/files
+@item git://ohwr.org/misc/hdl-make.git
 
   @i{hdlmake} is used in the HDL synthesis process to create a Makefile based
 on the set of Manifest files.
@@ -196,24 +196,28 @@ any additional tools, but using @i{hdlmake} is more convenient. It creates a
 synthesis Makefile and ISE project file based on a set of Manifest.py files
 deployed among the directories inside the @i{wr-cores} repository.
 
-First, please download the @i{hdlmake} binary from its location given in
-@ref{Repositories and Releases} and make it executable:
+First, please clone the @i{hdlmake} repository from its location given in
+@ref{Repositories and Releases}:
 @example
 $ wget http://www.ohwr.org/attachments/download/2070/hdlmake-v1.0
-$ chmod a+x hdlmake-v1.0
+$ git clone git://ohwr.org/misc/hdl-make.git <your_location>/hdl-make
+$ cd <your_location>/hdl-make
+$ git checkout 9d303ee
 @end example
 
-It is recommended to add the @i{hdlmake} binary location to your @i{$PATH}
-environment variable to be able to call it from any directory:
+Then, using your favorite editor, you should create an @i{hdlmake} script in
+/usr/bin to be able to call it from any directory. The script should have the
+following content:
+@smallexample
+@noindent
+#!/usr/bin/env bash
+python2.7 /path_to_hdlmake_sources/hdl-make/hdlmake/__main__.py $@@
+@end smallexample
 
+After that, you should make your script executable:
 @example
-$ export PATH=<your_hdlmake_location>:$PATH
+chmod a+x /usr/bin/hdlmake
 @end example
-
-@b{Note:} the @i{hdlmake} usage instructions here are based on version 1.0.
-If you use more recent release or a development version, please be aware that
-its execution parameters may change. In that case please refer to the
-@i{hdlmake} documentation.
 
 @sp 1
 Having Xilinx ISE software and @i{hdlmake} in place, you can clone the main
@@ -261,7 +265,7 @@ First, please call @i{hdlmake} to create synthesis Makefile for Xilinx
 ISE:
 
 @example
-$ hdlmake-v1.0 --make-ise --ise-proj
+$ hdlmake
 @end example
 
 After that, the actual synthesis is just the matter of executing:
