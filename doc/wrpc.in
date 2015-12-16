@@ -38,7 +38,7 @@
 @set update-month October 2015
 @set release __RELEASE_GIT_ID__
 @set version 3.0
-@set tagname wrpc-v2.1
+@set tagname wrpc-v3.0
 @c WARNING: in @example I Can't use @value{tagname}, so please look for this
 @c string when updating the document.
 
@@ -232,7 +232,7 @@ To build the gateware using sources of a stable release @value{tagname}, you
 have to checkout the proper git tag:
 
 @example
-$ git checkout wrpc-v2.1
+$ git checkout wrpc-v3.0
 @end example
 
 If you use @i{wr-cores} within another project (like @i{wr-nic}), you may need
@@ -323,7 +323,7 @@ applies, please refer to a documentation for this project.
 @smallexample
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_location>/wrpc-sw
 $ cd <your_location>/wrpc-sw
-$ git checkout wrpc-v2.1   # or "git checkout master"
+$ git checkout wrpc-v3.0   # or "git checkout master"
 @end smallexample
 
 Before you can compile @i{wrpc-sw} you need to make a few configuration choices.
@@ -538,8 +538,8 @@ and alpha parameters associated with them.
 
 @example
 wrc# sfp erase
-wrc# sfp add AXGE-1254-0531 180707 148323 72169888
-wrc# sfp add AXGE-3454-0531 180707 148323 -73685416
+wrc# sfp add AXGE-1254-0531 180625 148451 72169888
+wrc# sfp add AXGE-3454-0531 180625 148451 -73685416
 @end example
 
 To check the content of the @sc{sfp} database you can execute the @i{sfp show} shell
