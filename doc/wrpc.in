@@ -35,7 +35,7 @@
 
 @setchapternewpage off
 
-@set update-month October 2015
+@set update-month December 2015
 @set release __RELEASE_GIT_ID__
 @set version 3.0
 @set tagname wrpc-v3.0
@@ -443,6 +443,11 @@ $ sudo tools/flash-write -b 0x20 -c 0x0 0 1507712 < \
      <your_location>/sdbfs-flash.bin
 @end example
 
+@b{Note:} Please refer to @ref{Writing @sc{sdbfs} image in standalone configuration}
+for instructions on how to write the @sc{sdbfs} image to a standalone @sc{spec}
+or custom hardware.
+
+@sp 1
 Now, you are ready to load the last driver, which downloads the actual
 @sc{wr ptp core} bitstream to the Spartan 6 FPGA:
 @example
@@ -886,6 +891,45 @@ one-way link delay
 the @sc{wr} servo is updated
 
 @end multitable
+
+@c ##########################################################################
+@page
+@node Writing @sc{sdbfs} image in standalone configuration
+@appendix Writing @sc{sdbfs} image in standalone configuration
+
+If you use @sc{spec} board in a host-less environment, or you use custom
+hardware and @sc{spec} drivers and tools cannot be used, there is still a
+possibility of writing @sc{sdbfs} through Xilinx JTAG.
+
+@sp 1
+In case of @sc{spec} running a reference bitstream provided with a stable
+@sc{wrpc} release, you can simply program your Flash with @i{spec_top.mcs}
+provided with the release binaries using for example Xilinx ISE Impact tool.
+This @i{mcs} file already includes both @sc{sdbfs} image and FPGA bitstream.
+
+In case of a custom gateware or hardware, you can download a standalone
+@sc{sdbfs} image:
+@example
+$ wget http://www.ohwr.org/attachments/download/4144/sdbfs-standalone.bin
+@end example
+and generate a custom @i{*.mcs} file with your own FPGA bitstream. You should
+use the following layout:
+
+@multitable @columnfractions .1 .7
+@item @code{0x000000} @tab your FPGA bitstream
+@item @code{0x170000} @tab @sc{sdbfs} image
+@end multitable 
+
+@sp 1
+For example, to generate the @i{*.mcs} file for M25P32 Flash on @sc{spec}, the
+following @i{promgen} parameters should be used:
+@example
+promgen -w -spi -p mcs -c FF -s 32768 -u 0 <your_bitstream>.bit \
+-bd sdb-standalone.bin start 0x170000 -o output.mcs
+@end example
+
+After that, you can use the Xilinx JTAG cable and Xilinx ISE Impact tool to
+write your @i{output.mcs} file to the Flash memory.
 
 @c ##########################################################################
 @bye
