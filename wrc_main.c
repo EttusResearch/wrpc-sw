@@ -168,6 +168,9 @@ void init_hw_after_reset(void)
 
 int main(void)
 {
+	extern uint32_t uptime_sec;
+	uint32_t j, lastj, fraction = 0;
+
 	check_reset();
 	wrc_ui_mode = UI_SHELL_MODE;
 	_endram = ENDRAM_MAGIC;
@@ -181,9 +184,19 @@ int main(void)
 
 	//try to read and execute init script from EEPROM
 	shell_boot_script();
+	lastj = timer_get_tics();
 
 	for (;;) {
 		int l_status = wrc_check_link();
+
+		/* count uptime, in seconds, for remote polling */
+		j = timer_get_tics();
+		fraction += j -lastj;
+		lastj = j;
+		while (fraction > TICS_PER_SECOND) {
+			fraction -= TICS_PER_SECOND;
+			uptime_sec++;
+		}
 
 		switch (l_status) {
 #ifdef CONFIG_ETHERBONE

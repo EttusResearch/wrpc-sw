@@ -110,6 +110,11 @@ _reset_handler:
 .short	0x89ab, 0xcdef
 /* Pointer to structures, for the dumping tool */
 .word	softpll, fifo_log, ppi_static, 0
+
+.org 0xa0
+.global uptime_sec
+uptime_sec:
+	.word 0
 	
 .extern _irq_entry
 .org 0xc0
