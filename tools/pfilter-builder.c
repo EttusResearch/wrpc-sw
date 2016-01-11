@@ -145,32 +145,32 @@
   2. How the frame is routed after the pfilter
   -----------------------------------------
 
-  After the input pipeline is over, the endpoint looks at the DROP and
-  CLASS bits set by the packet filter. There are two possible output
-  ports: one associated with classes 0..3 (to the cpu) and one
-  associated to class 4..7 (external fabric).
+  After the input pipeline is over, the endpoint looks at the DROP bit.
+  If the frame is not dropped, it is passed over to the MUX (xwrf_mux.vhd),
+  with the CLASS bits attached (well, pre-pended).
 
-  These are the rules, in strict priority order.
+  The MUX is configured with two classes in wr_code.vhd:
+     mux_class(0)  <= x"0f";
+     mux_class(1)  <= x"f0";
 
-  - If "DROP" is set, the frame is dropped irrespective of the
-    rest. Done.
+  This is the behaviour:
 
-  - If at least one bit is set in the first set (bits 0..3), the frame
-    goes to CPU. Done.
+  - If at least one bit is set in the first class (here 0x0f), the frame
+    goes to CPU and processing stops. Processing is in class order,
+    not bit order.
 
-  - If at least one bit is set in the second set (bits 4..7) the frame
-    goes to fabric. Done.
+  - If at least one bit is set in the second class (here 0xf0) the frame
+    goes to fabric and processing stops.
 
-  - No class is set, the frame goes to the fabric.
+  - If no class is set, the frame goes to the last class, the fabric.
 
   If, in the future or other implementations, the same pfilter is used
-  with a differnet set of bits connected to the output ports
-  (e.g. three ports), ports are processed from lowest-number to
-  highest-number, and if no bit is set it goes to the last.
+  with a different MUX configuration, ports are processed from lowest-number
+  to highest-number, and if no bit is set it goes to the last.
 
-  Please note that the "class" is actually a bitmask; it's ok to set
-  more than one bit in a single nibble, and the downstream user will
-  find both set (for CPU we have the class in the status register).
+  In the wr-nic gateware, a second MUX is connected, using two classes
+  and bitmasks 0x20 and 0x80 as I write this note.  Such values must
+  be changed for consistency with the other configurations.
 
 */
 
