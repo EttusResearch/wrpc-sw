@@ -16,6 +16,7 @@
 #include <syscon.h>
 #include <pp-printf.h>
 #include <util.h>
+#include <trace.h>
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
 

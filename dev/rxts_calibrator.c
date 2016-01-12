@@ -12,7 +12,6 @@
 #include <wrc.h>
 
 #include "board.h"
-#include "trace.h"
 #include "syscon.h"
 #include "endpoint.h"
 #include "softpll_ng.h"

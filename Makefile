@@ -76,8 +76,6 @@ include softpll/softpll.mk
 # ppsi already has div64 (the same one), so only pick it if not using ppsi.
 ifndef CONFIG_PPSI
   obj-y += pp_printf/div64.o
-  # unfortunately, we need a prototype therex
-  cflags-y += -include include/wrc.h
 endif
 # And always complain if we pick the libgcc division: 64/32 = 32 is enough here.
 obj-y += check-error.o
@@ -91,7 +89,7 @@ cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 
 CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall -Wstrict-prototypes \
 	-ffunction-sections -fdata-sections -Os -Wmissing-prototypes \
-	-include include/trace.h -ggdb
+	-include include/wrc.h -ggdb
 
 LDFLAGS = $(LDFLAGS_PLATFORM) \
 	-Wl,--gc-sections -Os -lgcc -lc

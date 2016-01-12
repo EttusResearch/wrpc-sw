@@ -15,8 +15,7 @@
  * the actual packet filter rules are created
  */
 
-#include <stdio.h>
-
+#include <wrc.h>
 #include <endpoint.h>
 #include <hw/endpoint_regs.h>
 

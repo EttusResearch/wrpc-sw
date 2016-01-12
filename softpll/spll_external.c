@@ -10,10 +10,8 @@
 /* spll_external.h - implementation of SoftPLL servo for the 
    external (10 MHz - Grandmaster mode) reference channel */
 
+#include <wrc.h>
 #include "softpll_ng.h"
-
-#include <pp-printf.h>
-#include "trace.h"
 #include "irq.h"
 
 #define ALIGN_STATE_EXT_OFF 0

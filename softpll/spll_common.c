@@ -11,8 +11,7 @@
 /* spll_common.c - common data structures and functions used by the SoftPLL */
 
 #include <string.h>
-#include <pp-printf.h>
-#include "trace.h"
+#include <wrc.h>
 #include "softpll_ng.h"
 
 int pi_update(spll_pi_t *pi, int x)

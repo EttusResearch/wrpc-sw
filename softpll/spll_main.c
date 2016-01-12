@@ -9,9 +9,8 @@
 
 /* spll_main.c - Implementation of the main DDMTD PLL. */
 
+#include <wrc.h>
 #include "softpll_ng.h"
-#include <pp-printf.h>
-#include "trace.h"
 
 #define MPLL_TAG_WRAPAROUND 100000000
 
