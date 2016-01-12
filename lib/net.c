@@ -128,9 +128,9 @@ int ptpd_netif_close_socket(wr_socket_t * sock)
 
 /*
  * The new, fully verified linearization algorithm.
- * Merges the phase, measured by the DDMTD with the number of clock ticks,
- * and makes sure there are no jumps resulting from different moments of transitions in the
- * coarse counter and the phase values.
+ * Merges the phase, measured by the DDMTD with the number of clock
+ * ticks, and makes sure there are no jumps resulting from different
+ * moments of transitions in the coarse counter and the phase values.
  * As a result, we get the full, sub-ns RX timestamp.
  *
  * Have a look at the note at http://ohwr.org/documents/xxx for details.
@@ -143,50 +143,55 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 
 	ts->raw_phase =  dmtd_phase;
 
-/* The idea is simple: the asynchronous RX timestamp trigger is tagged by two counters:
-   one counting at the rising clock edge, and the other on the falling. That means, the rising
-   timestamp is 180 degree in advance wrs to the falling one. */
+/* The idea is simple: the asynchronous RX timestamp trigger is tagged
+ * by two counters: one counting at the rising clock edge, and the
+ * other on the falling. That means, the rising timestamp is 180
+ * degree in advance wrs to the falling one.
+ */
 
 /* Calculate the nanoseconds value for both timestamps. The rising edge one
    is just the HW register */
-  nsec_r = ts->nsec;
-/* The falling edge TS is the rising - 1 thick if the "rising counter ahead" bit is set. */
- 	nsec_f = cntr_ahead ? ts->nsec - (clock_period / 1000) : ts->nsec;
-        
+	nsec_r = ts->nsec;
+/* The falling edge TS is the rising - 1 thick
+    if the "rising counter ahead" bit is set. */
+	nsec_f = cntr_ahead ? ts->nsec - (clock_period / 1000) : ts->nsec;
 
-/* Adjust the rising edge timestamp phase so that it "jumps" roughly around the point
-   where the counter value changes */
+/* Adjust the rising edge timestamp phase so that it "jumps" roughly
+   around the point where the counter value changes */
 	int phase_r = ts->raw_phase - transition_point;
 	if(phase_r < 0) /* unwrap negative value */
 		phase_r += clock_period;
 
-/* Do the same with the phase for the falling edge, but additionally shift it by extra 180 degrees
-  (so that it matches the falling edge counter) */ 
+/* Do the same with the phase for the falling edge, but additionally shift
+   it by extra 180 degrees (so that it matches the falling edge counter) */
 	int phase_f = ts->raw_phase - transition_point + (clock_period / 2);
 	if(phase_f < 0)
 		phase_f += clock_period;
 	if(phase_f >= clock_period)
 		phase_f -= clock_period;
 
-/* If we are within +- 25% from the transition in the rising edge counter, pick the falling one */	
-  if( phase_r > 3 * clock_period / 4 || phase_r < clock_period / 4 )
-  {
+/* If we are within +- 25% from the transition in the rising edge counter,
+   pick the falling one */
+	if( phase_r > 3 * clock_period / 4 || phase_r < clock_period / 4 ) {
 		ts->nsec = nsec_f;
 
-		/* The falling edge timestamp is half a cycle later with respect to the rising one. Add
-			 the extra delay, as rising edge is our reference */
+		/* The falling edge timestamp is half a cycle later
+		   with respect to the rising one. Add
+		   the extra delay, as rising edge is our reference */
 		ts->phase = phase_f + clock_period / 2;
 		if(ts->phase >= clock_period) /* Handle overflow */
 		{
 			ts->phase -= clock_period;
 			ts->nsec += (clock_period / 1000);
 		}
-	} else { /* We are closer to the falling edge counter transition? Pick the opposite timestamp */
+	} else { /* We are closer to the falling edge counter transition?
+		    Pick the opposite timestamp */
 		ts->nsec = nsec_r;
 		ts->phase = phase_r;
 	}
 
-	/* In an unlikely case, after all the calculations, the ns counter may be overflown. */
+	/* In an unlikely case, after all the calculations,
+	   the ns counter may be overflown. */
 	if(ts->nsec >= 1000000000)
 	{
 		ts->nsec -= 1000000000;
@@ -277,10 +282,6 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 		   q->tail, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
-/*  TRACE_WRAP("%s: received data from %02x:%02x:%02x:%02x:%02x:%02x to %02x:%02x:%02x:%02x:%02x:%02x\n", __FUNCTION__, from->mac[0],from->mac[1],from->mac[2],from->mac[3],
-                                                                                                                   from->mac[4],from->mac[5],from->mac[6],from->mac[7],
-                                                                                                                   from->mac_dest[0],from->mac_dest[1],from->mac_dest[2],from->mac_dest[3],
-                                                                                                                   from->mac_dest[4],from->mac_dest[5],from->mac_dest[6],from->mac_dest[7]);*/
 	return min(size - sizeof(struct ethhdr), data_length);
 }
 
