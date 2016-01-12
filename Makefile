@@ -168,7 +168,7 @@ clean:
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
-tools:
+tools: .config
 	$(MAKE) -C tools
 
 # if needed, check out the submodules (first time only), so users
