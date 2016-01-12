@@ -21,7 +21,7 @@
 #define sprintf pp_sprintf
 
 #undef offsetof
-#define offsetof(TYPE, MEMBER) ((int) &((TYPE *)0)->MEMBER)
+#define offsetof(TYPE, MEMBER) ((long) &((TYPE *)0)->MEMBER)
 #undef ARRAY_SIZE
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
