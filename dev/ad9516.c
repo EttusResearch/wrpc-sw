@@ -169,7 +169,7 @@ static int ad9516_set_output_divider(int output, int ratio, int phase_offset)
 			
 		uint16_t base = ((output - 6) / 2) * 0x5 + 0x199;
 
-		TRACE("Output [divider %d]: %d ratio: %d base %x lc %d hc %d\n", secondary, output, ratio, base, lcycles ,hcycles);
+		pp_printf("Output [divider %d]: %d ratio: %d base %x lc %d hc %d\n", secondary, output, ratio, base, lcycles ,hcycles);
 
 		if(!secondary)
 		{
@@ -222,7 +222,7 @@ static void ad9516_sync_outputs(void)
 
 int ad9516_init(int scb_version)
 {
-	TRACE("Initializing AD9516 PLL...\n");
+	pp_printf("Initializing AD9516 PLL...\n");
 
 	oc_spi_init((void *)BASE_SPI);
 
@@ -239,7 +239,7 @@ int ad9516_init(int scb_version)
 
 	/* Check the presence of the chip */
 	if (ad9516_read_reg(0x3) != 0xc3) {
-		TRACE("Error: AD9516 PLL not responding.\n");
+		pp_printf("Error: AD9516 PLL not responding.\n");
 		return -1;
 	}
 
@@ -279,7 +279,7 @@ int ad9516_init(int scb_version)
 	ad9516_sync_outputs();
 	ad9516_set_vco_divider(3); 
 	
-	TRACE("AD9516 locked.\n");
+	pp_printf("AD9516 locked.\n");
 
 	gpio_out(GPIO_SYS_CLK_SEL, 1); /* switch the system clock to the PLL reference */
 	gpio_out(GPIO_PERIPH_RESET_N, 0); /* reset all peripherals which use AD9516-provided clocks */

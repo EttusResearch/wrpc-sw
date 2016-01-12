@@ -15,7 +15,6 @@
 #else /* WR_SWITCH */
 
 #include <pp-printf.h>
-#define TRACE(...) pp_printf(__VA_ARGS__)
 #define TRACE_DEV(...) pp_printf(__VA_ARGS__)
 
 #endif /* node/switch */
