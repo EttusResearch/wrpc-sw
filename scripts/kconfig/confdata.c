@@ -406,7 +406,6 @@ int conf_write(const char *name)
 	int type, l;
 	const char *str;
 	time_t now;
-	int use_timestamp = 1;
 	char *env;
 
 	dirname[0] = 0;
@@ -447,8 +446,6 @@ int conf_write(const char *name)
 	sym_calc_value(sym);
 	time(&now);
 	env = getenv("KCONFIG_NOTIMESTAMP");
-	if (env && *env)
-		use_timestamp = 0;
 
 	fprintf(out, _("#\n"
 		       "# Automatically generated make config: don't edit\n"
