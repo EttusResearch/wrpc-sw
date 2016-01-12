@@ -181,16 +181,16 @@ gitmodules:
 # following targets from Makefile.kconfig
 silentoldconfig:
 	@mkdir -p include/config
-	$(MAKE) -f Makefile.kconfig $@
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 scripts_basic config:
-	$(MAKE) -f Makefile.kconfig $@
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 %config:
-	$(MAKE) -f Makefile.kconfig $@
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 defconfig:
-	$(MAKE) -f Makefile.kconfig spec_defconfig
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig spec_defconfig
 
 .config: silentoldconfig
 
