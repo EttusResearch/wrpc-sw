@@ -108,11 +108,11 @@ static int wrc_check_link(void)
 	int rv = 0;
 
 	if (!prev_link_state && link_state) {
-		TRACE_DEV("Link up.\n");
+		wrc_verbose("Link up.\n");
 		gpio_out(GPIO_LED_LINK, 1);
 		rv = LINK_WENT_UP;
 	} else if (prev_link_state && !link_state) {
-		TRACE_DEV("Link down.\n");
+		wrc_verbose("Link down.\n");
 		gpio_out(GPIO_LED_LINK, 0);
 		rv = LINK_WENT_DOWN;
 	} else
@@ -120,21 +120,6 @@ static int wrc_check_link(void)
 	prev_link_state = link_state;
 
 	return rv;
-}
-
-void wrc_debug_printf(int subsys, const char *fmt, ...)
-{
-	va_list ap;
-
-	if (wrc_ui_mode)
-		return;
-
-	va_start(ap, fmt);
-
-	if (subsys & (1 << 5) /* was: TRACE_SERVO -- see commit message */)
-		vprintf(fmt, ap);
-
-	va_end(ap);
 }
 
 int wrc_man_phase = 0;

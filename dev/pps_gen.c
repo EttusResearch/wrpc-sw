@@ -45,7 +45,7 @@ void shw_pps_gen_init()
 /* Adjusts the nanosecond (refclk cycle) counter by atomically adding (how_much) cycles. */
 int shw_pps_gen_adjust(int counter, int64_t how_much)
 {
-	TRACE_DEV("Adjust: counter = %s [%c%d]\n",
+	wrc_verbose("Adjust: counter = %s [%c%d]\n",
 		  counter == PPSG_ADJUST_SEC ? "seconds" : "nanoseconds",
 		  how_much < 0 ? '-' : '+', (int32_t) abs(how_much));
 

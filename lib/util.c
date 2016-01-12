@@ -97,6 +97,15 @@ void pcprintf(int row, int col, int color, const char *fmt, ...)
 	pp_printf("\e[m");
 }
 
+void __debug_printf(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vprintf(fmt, ap);
+	va_end(ap);
+}
+
+
 void term_clear(void)
 {
 	pp_printf("\e[2J\e[1;1H");

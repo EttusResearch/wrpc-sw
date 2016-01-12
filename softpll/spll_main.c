@@ -48,7 +48,7 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 	s->id_out = id_out;
 	s->dac_index = id_out - spll_n_chan_ref;
 
-	TRACE_DEV("ref %d out %d idx %x \n", s->id_ref, s->id_out, s->dac_index);
+	pll_verbose("ref %d out %d idx %x \n", s->id_ref, s->id_out, s->dac_index);
 
 	pi_init((spll_pi_t *)&s->pi);
 	ld_init((spll_lock_det_t *)&s->ld);
@@ -56,7 +56,7 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 
 void mpll_start(struct spll_main_state *s)
 {
-	TRACE_DEV("MPLL_Start [dac %d]\n", s->dac_index);
+	pll_verbose("MPLL_Start [dac %d]\n", s->dac_index);
 
 	s->adder_ref = s->adder_out = 0;
 	s->tag_ref = -1;
