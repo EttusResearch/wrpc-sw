@@ -15,6 +15,7 @@
 #include <inttypes.h>
 #include <syscon.h>
 #include <pp-printf.h>
+#include <util.h>
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
 

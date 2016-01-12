@@ -14,7 +14,6 @@
 #include <errno.h>
 
 #include <wrc.h>
-#include "util.h"
 #include "uart.h"
 #include "syscon.h"
 #include "shell.h"

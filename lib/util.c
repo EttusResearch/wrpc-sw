@@ -12,8 +12,6 @@
 #include <time.h>
 #include <wrc.h>
 
-#include "util.h"
-
 /* cut from libc sources */
 
 #define 	YEAR0   1900
