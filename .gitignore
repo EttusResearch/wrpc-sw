@@ -16,4 +16,3 @@
 .config.old
 include/config
 include/generated
-.depend
