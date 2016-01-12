@@ -25,5 +25,8 @@
 #define wrc_verbose(...) \
 	({if (WRC_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
 
+#define net_verbose(...) \
+	({if (NET_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
+
 
 #endif /*  __FREESTANDING_TRACE_H__ */

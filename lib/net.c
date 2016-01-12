@@ -55,20 +55,6 @@ struct my_socket {
 
 static struct my_socket socks[NET_MAX_SOCKETS];
 
-static int net_verbose(const char *fmt, ...)
-{
-	va_list args;
-	int ret = 0;
-
-	if (NET_IS_VERBOSE) {
-		va_start(args, fmt);
-		ret = pp_vprintf(fmt, args);
-		va_end(args);
-	}
-	return ret;
-}
-
-
 int ptpd_netif_init()
 {
 	memset(socks, 0, sizeof(socks));
