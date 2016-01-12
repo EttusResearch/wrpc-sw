@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include "hal_exports.h"
 #include <wrpc.h>
@@ -54,13 +55,27 @@ struct my_socket {
 
 static struct my_socket socks[NET_MAX_SOCKETS];
 
+static int net_verbose(const char *fmt, ...)
+{
+	va_list args;
+	int ret = 0;
+
+	if (NET_IS_VERBOSE) {
+		va_start(args, fmt);
+		ret = pp_vprintf(fmt, args);
+		va_end(args);
+	}
+	return ret;
+}
+
+
 int ptpd_netif_init()
 {
 	memset(socks, 0, sizeof(socks));
 	return PTPD_NETIF_OK;
 }
 
-//#define TRACE_WRAP pp_printf
+//#define net_verbose pp_printf
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)
 {
 	get_mac_addr((uint8_t *) mac);
@@ -93,7 +108,7 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 		}
 
 	if (!sock) {
-		TRACE_WRAP("No sockets left.\n");
+		net_verbose("No sockets left.\n");
 		return NULL;
 	}
 
@@ -206,7 +221,7 @@ static int wrap_copy_in(void *dst, struct sockq *q, size_t len)
 	char *dptr = dst;
 	int i = len;
 
-	TRACE_WRAP("copy_in: tail %d avail %d len %d\n", q->tail, q->avail,
+	net_verbose("copy_in: tail %d avail %d len %d\n", q->tail, q->avail,
 		   len);
 
 	while (i--) {
@@ -223,7 +238,7 @@ static int wrap_copy_out(struct sockq *q, void *src, size_t len)
 	char *sptr = src;
 	int i = len;
 
-	TRACE_WRAP("copy_out: head %d avail %d len %d\n", q->head, q->avail,
+	net_verbose("copy_out: head %d avail %d len %d\n", q->head, q->avail,
 		   len);
 
 	while (i--) {
@@ -278,7 +293,7 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 						  REF_CLOCK_PERIOD_PS);
 	}
 
-	TRACE_WRAP("RX: Size %d tail %d Smac %x:%x:%x:%x:%x:%x\n", size,
+	net_verbose("RX: Size %d tail %d Smac %x:%x:%x:%x:%x:%x\n", size,
 		   q->tail, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
@@ -338,7 +353,7 @@ void update_rx_queues()
 	}
 
 	if (!s) {
-		TRACE_WRAP("%s: could not find socket for packet\n",
+		net_verbose("%s: could not find socket for packet\n",
 			   __FUNCTION__);
 		return;
 	}
@@ -348,7 +363,7 @@ void update_rx_queues()
 	    sizeof(struct ethhdr) + recvd + sizeof(struct hw_timestamp) + 2;
 
 	if (q->avail < q_required) {
-		TRACE_WRAP
+		net_verbose
 		    ("%s: queue for socket full; [avail %d required %d]\n",
 		     __FUNCTION__, q->avail, q_required);
 		return;
@@ -362,10 +377,10 @@ void update_rx_queues()
 	q->avail -= wrap_copy_out(q, payload, size);
 	q->n++;
 
-	TRACE_WRAP("Q: Size %d head %d Smac %x:%x:%x:%x:%x:%x\n", recvd,
+	net_verbose("Q: Size %d head %d Smac %x:%x:%x:%x:%x:%x\n", recvd,
 		   q->head, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
-	TRACE_WRAP("%s: saved packet to queue [avail %d n %d size %d]\n",
+	net_verbose("%s: saved packet to queue [avail %d n %d size %d]\n",
 		   __FUNCTION__, q->avail, q->n, q_required);
 }

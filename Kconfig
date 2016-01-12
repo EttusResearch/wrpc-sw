@@ -230,6 +230,13 @@ config UART_SW
 	  are routed to the software uart. The interactive wrpc shell
 	  and diagnostics run on the hardware UART if available.
 
+config NET_VERBOSE
+	depends on DEVELOPER && WR_NODE
+	boolean "Extra verbose messages for networking"
+	help
+	  This is mainly a debug tool, to be left off unless you hack
+	  in the network subsystem.
+
 config SDB_STORAGE
 	depends on WR_NODE
 	default y
