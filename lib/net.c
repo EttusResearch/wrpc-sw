@@ -52,8 +52,8 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 
 
 struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
-					     int unused, int unusd2,
-					     struct wr_sockaddr * bind_addr)
+					     struct wr_sockaddr * bind_addr,
+					     int unused, int unusd2)
 {
 	int i;
 	struct hal_port_state pstate;
@@ -82,7 +82,7 @@ struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 
 	/*packet queue */
 	sock->queue.head = sock->queue.tail = 0;
-	sock->queue.avail = NET_SKBUF_SIZE;
+	sock->queue.avail = sock->queue.size;
 	sock->queue.n = 0;
 
 	return sock;
@@ -184,14 +184,15 @@ static int wrap_copy_in(void *dst, struct sockq *q, size_t len, size_t buflen)
 		    q->tail, q->avail, len, buflen);
 	i = min(len, buflen);
 	while (i--) {
-		*dptr++ = q->buf[q->tail];
+		*dptr++ = q->buff[q->tail];
 		q->tail++;
-		if (q->tail == NET_SKBUF_SIZE)
+		if (q->tail == q->size)
 			q->tail = 0;
 	}
 	if (len > buflen) {
 		q->tail += len - buflen;
-		q->tail %= NET_SKBUF_SIZE;
+		while (q->tail > q->size)
+			q->tail -= q->size;
 	}
 	return len;
 }
@@ -205,8 +206,8 @@ static int wrap_copy_out(struct sockq *q, void *src, size_t len)
 		   len);
 
 	while (i--) {
-		q->buf[q->head++] = *sptr++;
-		if (q->head == NET_SKBUF_SIZE)
+		q->buff[q->head++] = *sptr++;
+		if (q->head == q->size)
 			q->head = 0;
 	}
 	return len;
@@ -296,11 +297,11 @@ void update_rx_queues()
 	struct hw_timestamp hwts;
 	static struct ethhdr hdr;
 	int recvd, i, q_required;
-	static uint8_t payload[NET_SKBUF_SIZE - 32];
+	static uint8_t payload[NET_MAX_SKBUF_SIZE - 32];
 	uint16_t size;
 
 	recvd =
-	    minic_rx_frame((uint8_t *) & hdr, payload, NET_SKBUF_SIZE - 32,
+	    minic_rx_frame((uint8_t *) & hdr, payload, sizeof(payload),
 			   &hwts);
 
 	if (recvd <= 0)		/* No data received? */

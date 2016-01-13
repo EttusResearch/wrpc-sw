@@ -38,9 +38,9 @@ struct wr_sockaddr {
 };
 
 struct sockq {
-	uint8_t buf[NET_SKBUF_SIZE];
-	uint16_t head, tail, avail;
+	uint16_t head, tail, avail, size;
 	uint16_t n;
+	uint8_t *buff;
 };
 
 struct wrpc_socket {
@@ -78,8 +78,8 @@ PACKED struct wr_timestamp {
 // automatically added to multicast group. User can specify
 // physical_port field to bind the socket to specific switch port only.
 struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *s,
-					     int unused, int unused2,
-					     struct wr_sockaddr * bind_addr);
+					     struct wr_sockaddr * bind_addr,
+					     int unused, int unused2);
 
 // Sends a UDP/RAW packet (data, data_length) to addr in wr_sockaddr.
 // For raw frames, mac/ethertype needs to be provided, for UDP - ip/port.
