@@ -50,4 +50,15 @@ int process_icmp(uint8_t * buf, int len);
 int process_bootp(uint8_t * buf, int len);	/* non-zero if IP was set */
 int prepare_bootp(struct wr_sockaddr *addr, uint8_t * buf, int retry);
 
+/* The UDP helper needs some information, if not replying to a frame */
+struct wr_udp_addr {
+	uint32_t saddr; /* all fields in network order, for memcpy */
+	uint32_t daddr;
+	uint16_t sport;
+	uint16_t dport;
+};
+
+void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr);
+
+
 #endif

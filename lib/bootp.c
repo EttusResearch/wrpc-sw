@@ -31,7 +31,7 @@
 
 int prepare_bootp(struct wr_sockaddr *addr, uint8_t * buf, int retry)
 {
-	unsigned short sum;
+	struct wr_udp_addr uaddr;
 
 	// ----------- BOOTP ------------
 	buf[BOOTP_OP] = 1;	/* bootrequest */
@@ -62,53 +62,13 @@ int prepare_bootp(struct wr_sockaddr *addr, uint8_t * buf, int retry)
 	memset(buf + BOOTP_FILE, 0, 128);	/* desired BOOTP file */
 	memset(buf + BOOTP_VEND, 0, 64);	/* vendor extensions */
 
-	// ------------ UDP -------------
-	memset(buf + UDP_VIRT_SADDR, 0, 4);
-	memset(buf + UDP_VIRT_DADDR, 0xFF, 4);
-	buf[UDP_VIRT_ZEROS] = 0;
-	buf[UDP_VIRT_PROTO] = 0x11;	/* UDP */
-	buf[UDP_VIRT_LENGTH] = (BOOTP_END - IP_END) >> 8;
-	buf[UDP_VIRT_LENGTH + 1] = (BOOTP_END - IP_END) & 0xff;
+	/* complete with udp helper */
+	memset(&uaddr.saddr, 0, 4);
+	memset(&uaddr.daddr, 0xff, 4);
+	uaddr.sport = ntohs(68);
+	uaddr.dport = ntohs(67);
 
-	buf[UDP_SPORT] = 0;
-	buf[UDP_SPORT + 1] = 68;	/* BOOTP client */
-	buf[UDP_DPORT] = 0;
-	buf[UDP_DPORT + 1] = 67;	/* BOOTP server */
-	buf[UDP_LENGTH] = (BOOTP_END - IP_END) >> 8;
-	buf[UDP_LENGTH + 1] = (BOOTP_END - IP_END) & 0xff;
-	buf[UDP_CHECKSUM] = 0;
-	buf[UDP_CHECKSUM + 1] = 0;
-
-	sum =
-	    ipv4_checksum((unsigned short *)(buf + UDP_VIRT_SADDR),
-			  (BOOTP_END - UDP_VIRT_SADDR) / 2);
-	if (sum == 0)
-		sum = 0xFFFF;
-
-	buf[UDP_CHECKSUM + 0] = (sum >> 8);
-	buf[UDP_CHECKSUM + 1] = sum & 0xff;
-
-	// ------------ IP --------------
-	buf[IP_VERSION] = 0x45;
-	buf[IP_TOS] = 0;
-	buf[IP_LEN + 0] = (BOOTP_END) >> 8;
-	buf[IP_LEN + 1] = (BOOTP_END) & 0xff;
-	buf[IP_ID + 0] = 0;
-	buf[IP_ID + 1] = 0;
-	buf[IP_FLAGS + 0] = 0;
-	buf[IP_FLAGS + 1] = 0;
-	buf[IP_TTL] = 63;
-	buf[IP_PROTOCOL] = 17;	/* UDP */
-	buf[IP_CHECKSUM + 0] = 0;
-	buf[IP_CHECKSUM + 1] = 0;
-	memset(buf + IP_SOURCE, 0, 4);
-	memset(buf + IP_DEST, 0xFF, 4);
-
-	sum =
-	    ipv4_checksum((unsigned short *)(buf + IP_VERSION),
-			  (IP_END - IP_VERSION) / 2);
-	buf[IP_CHECKSUM + 0] = sum >> 8;
-	buf[IP_CHECKSUM + 1] = sum & 0xff;
+	fill_udp(buf, BOOTP_END, &uaddr);
 
 	/* and fix destination before sending it */
 	memset(addr->mac, 0xFF, 6);
