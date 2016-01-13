@@ -31,22 +31,6 @@ struct ethhdr {
 	uint16_t ethtype;
 };
 
-struct sockq {
-	uint8_t buf[NET_SKBUF_SIZE];
-	uint16_t head, tail, avail;
-	uint16_t n;
-};
-
-struct wrpc_socket {
-	int in_use;
-	struct wr_sockaddr bind_addr;
-	mac_addr_t local_mac;
-
-	uint32_t phase_transition;
-	uint32_t dmtd_phase;
-	struct sockq queue;
-};
-
 static struct wrpc_socket socks[NET_MAX_SOCKETS];
 
 //#define net_verbose pp_printf
