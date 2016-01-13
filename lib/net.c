@@ -25,7 +25,6 @@
 
 #define min(x,y) ((x) < (y) ? (x) : (y))
 
-__attribute__ ((packed))
 struct ethhdr {
 	uint8_t dstmac[6];
 	uint8_t srcmac[6];
