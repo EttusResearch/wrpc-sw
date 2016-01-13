@@ -173,19 +173,25 @@ void ptpd_netif_linearize_rx_timestamp(struct wr_timestamp *ts,
 }
 
 /* Slow, but we don't care much... */
-static int wrap_copy_in(void *dst, struct sockq *q, size_t len)
+static int wrap_copy_in(void *dst, struct sockq *q, size_t len, size_t buflen)
 {
 	char *dptr = dst;
-	int i = len;
+	int i;
 
-	net_verbose("copy_in: tail %d avail %d len %d\n", q->tail, q->avail,
-		   len);
-
+	if (!buflen)
+		buflen = len;
+	net_verbose("copy_in: tail %d avail %d len %d (buf %d)\n",
+		    q->tail, q->avail, len, buflen);
+	i = min(len, buflen);
 	while (i--) {
 		*dptr++ = q->buf[q->tail];
 		q->tail++;
 		if (q->tail == NET_SKBUF_SIZE)
 			q->tail = 0;
+	}
+	if (len > buflen) {
+		q->tail += len - buflen;
+		q->tail %= NET_SKBUF_SIZE;
 	}
 	return len;
 }
@@ -222,10 +228,10 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 
 	q->n--;
 
-	q->avail += wrap_copy_in(&size, q, 2);
-	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr));
-	q->avail += wrap_copy_in(&hwts, q, sizeof(struct hw_timestamp));
-	q->avail += wrap_copy_in(data, q, min(size, data_length));
+	q->avail += wrap_copy_in(&size, q, 2, 0);
+	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr), 0);
+	q->avail += wrap_copy_in(&hwts, q, sizeof(struct hw_timestamp), 0);
+	q->avail += wrap_copy_in(data, q, size, data_length);
 
 	from->ethertype = ntohs(hdr.ethtype);
 	memcpy(from->mac, hdr.srcmac, 6);
