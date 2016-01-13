@@ -34,7 +34,7 @@ struct ethhdr {
 static struct wrpc_socket socks[NET_MAX_SOCKETS];
 
 //#define net_verbose pp_printf
-int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)
+int ptpd_netif_get_hw_addr(struct wrpc_socket *sock, mac_addr_t *mac)
 {
 	get_mac_addr((uint8_t *) mac);
 
@@ -51,7 +51,7 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 }
 
 
-wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
+struct wrpc_socket *ptpd_netif_create_socket(int unused, int unusd2,
 				      struct wr_sockaddr * bind_addr)
 {
 	int i;
@@ -87,13 +87,11 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 	sock->queue.n = 0;
 	sock->in_use = 1;
 
-	return (wr_socket_t *) (sock);
+	return sock;
 }
 
-int ptpd_netif_close_socket(wr_socket_t * sock)
+int ptpd_netif_close_socket(struct wrpc_socket *s)
 {
-	struct wrpc_socket *s = (struct wrpc_socket *)sock;
-
 	if (s)
 		s->in_use = 0;
 	return 0;
@@ -208,10 +206,9 @@ static int wrap_copy_out(struct sockq *q, void *src, size_t len)
 	return len;
 }
 
-int ptpd_netif_recvfrom(wr_socket_t *sock, struct wr_sockaddr *from, void *data,
+int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *data,
 			size_t data_length, struct wr_timestamp *rx_timestamp)
 {
-	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct sockq *q = &s->queue;
 
 	uint16_t size;
@@ -259,7 +256,7 @@ int ptpd_netif_recvfrom(wr_socket_t *sock, struct wr_sockaddr *from, void *data,
 	return min(size - sizeof(struct ethhdr), data_length);
 }
 
-int ptpd_netif_sendto(wr_socket_t * sock, struct wr_sockaddr *to, void *data,
+int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *data,
 		      size_t data_length, struct wr_timestamp *tx_timestamp)
 {
 	struct wrpc_socket *s = (struct wrpc_socket *)sock;

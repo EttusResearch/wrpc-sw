@@ -20,7 +20,7 @@
 
 int needIP = 1;
 static uint8_t myIP[4];
-static wr_socket_t *ipv4_socket;
+static struct wrpc_socket *ipv4_socket;
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 {

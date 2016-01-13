@@ -27,9 +27,6 @@
 // Some system-independent definitions
 typedef uint8_t mac_addr_t[6];
 
-// WhiteRabbit socket - it's void pointer as the real socket structure is private and probably platform-specific.
-typedef void *wr_socket_t;
-
 // Socket address for ptp_netif_ functions
 struct wr_sockaddr {
 	// MAC address
@@ -81,7 +78,7 @@ PACKED struct wr_timestamp {
 // to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
 // automatically added to multicast group. User can specify
 // physical_port field to bind the socket to specific switch port only.
-wr_socket_t *ptpd_netif_create_socket(int unused, int unused2,
+struct wrpc_socket *ptpd_netif_create_socket(int unused, int unused2,
 				      struct wr_sockaddr * bind_addr);
 
 // Sends a UDP/RAW packet (data, data_length) to addr in wr_sockaddr.
@@ -89,7 +86,7 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unused2,
 // Every transmitted frame has assigned a tag value, stored at tag parameter.
 // This value is later used for recovering the precise transmit timestamp.
 // If user doesn't need it, tag parameter can be left NULL.
-int ptpd_netif_sendto(wr_socket_t *sock, struct wr_sockaddr *to, void *data,
+int ptpd_netif_sendto(struct wrpc_socket *sock, struct wr_sockaddr *to, void *data,
 		      size_t data_length, struct wr_timestamp *tx_ts);
 
 // Receives an UDP/RAW packet. Data is written to (data) and len is returned.
@@ -97,13 +94,13 @@ int ptpd_netif_sendto(wr_socket_t *sock, struct wr_sockaddr *to, void *data,
 // Sender information is stored in structure specified in 'from'.
 // All RXed packets are timestamped and the timestamp
 // is stored in rx_timestamp (unless it's NULL).
-int ptpd_netif_recvfrom(wr_socket_t *sock, struct wr_sockaddr *from, void *data,
+int ptpd_netif_recvfrom(struct wrpc_socket *sock, struct wr_sockaddr *from, void *data,
 			size_t data_length, struct wr_timestamp *rx_timestamp);
 
 // Closes the socket.
-int ptpd_netif_close_socket(wr_socket_t * sock);
+int ptpd_netif_close_socket(struct wrpc_socket * sock);
 
-int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
+int ptpd_netif_get_hw_addr(struct wrpc_socket * sock, mac_addr_t * mac);
 
 void ptpd_netif_linearize_rx_timestamp(struct wr_timestamp *ts,
 				       int32_t dmtd_phase,

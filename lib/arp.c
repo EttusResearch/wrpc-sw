@@ -16,7 +16,7 @@
 #define htons(x) x
 #endif
 
-static wr_socket_t *arp_socket;
+static struct wrpc_socket *arp_socket;
 
 #define ARP_HTYPE	0
 #define ARP_PTYPE	(ARP_HTYPE+2)
