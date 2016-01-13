@@ -29,7 +29,7 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 
 	sum = 0;
 	for (i = 0; i < shorts; ++i)
-		sum += buf[i];
+		sum += ntohs(buf[i]);
 
 	sum = (sum >> 16) + (sum & 0xffff);
 	sum += (sum >> 16);
