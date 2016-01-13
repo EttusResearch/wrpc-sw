@@ -43,7 +43,7 @@ struct sockq {
 	uint16_t n;
 };
 
-struct my_socket {
+struct wrpc_socket {
 	int in_use;
 	wr_sockaddr_t bind_addr;
 	mac_addr_t local_mac;
@@ -53,7 +53,7 @@ struct my_socket {
 	struct sockq queue;
 };
 
-static struct my_socket socks[NET_MAX_SOCKETS];
+static struct wrpc_socket socks[NET_MAX_SOCKETS];
 
 int ptpd_netif_init()
 {
@@ -84,7 +84,7 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 {
 	int i;
 	struct hal_port_state pstate;
-	struct my_socket *sock;
+	struct wrpc_socket *sock;
 
 	/* Look for the first available socket. */
 	for (sock = NULL, i = 0; i < NET_MAX_SOCKETS; i++)
@@ -120,7 +120,7 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 
 int ptpd_netif_close_socket(wr_socket_t * sock)
 {
-	struct my_socket *s = (struct my_socket *)sock;
+	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 
 	if (s)
 		s->in_use = 0;
@@ -238,7 +238,7 @@ static int wrap_copy_out(struct sockq *q, void *src, size_t len)
 int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 			size_t data_length, wr_timestamp_t * rx_timestamp)
 {
-	struct my_socket *s = (struct my_socket *)sock;
+	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct sockq *q = &s->queue;
 
 	uint16_t size;
@@ -289,7 +289,7 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 		      size_t data_length, wr_timestamp_t * tx_timestamp)
 {
-	struct my_socket *s = (struct my_socket *)sock;
+	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct hw_timestamp hwts;
 	struct ethhdr hdr;
 	int rval;
@@ -315,7 +315,7 @@ int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 
 void update_rx_queues()
 {
-	struct my_socket *s = NULL;
+	struct wrpc_socket *s = NULL;
 	struct sockq *q;
 	struct hw_timestamp hwts;
 	static struct ethhdr hdr;
