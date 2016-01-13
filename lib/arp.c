@@ -16,6 +16,7 @@
 #define htons(x) x
 #endif
 
+static struct wrpc_socket __static_arp_socket;
 static struct wrpc_socket *arp_socket;
 
 #define ARP_HTYPE	0
@@ -38,7 +39,8 @@ void arp_init(void)
 	memset(&saddr.mac, 0xFF, 6);	/* Broadcast */
 	saddr.ethertype = htons(0x0806);	/* ARP */
 
-	arp_socket = ptpd_netif_create_socket(0, 0 /* both unused */, &saddr);
+	arp_socket = ptpd_netif_create_socket(&__static_arp_socket,
+					      0, 0 /* both unused */, &saddr);
 }
 
 static int process_arp(uint8_t * buf, int len)

@@ -31,7 +31,7 @@ struct ethhdr {
 	uint16_t ethtype;
 };
 
-static struct wrpc_socket socks[NET_MAX_SOCKETS];
+static struct wrpc_socket *socks[NET_MAX_SOCKETS];
 
 //#define net_verbose pp_printf
 int ptpd_netif_get_hw_addr(struct wrpc_socket *sock, mac_addr_t *mac)
@@ -45,28 +45,27 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 {
 	int i;
 
-	for (i=0; i< NET_MAX_SOCKETS; ++i) {
-		socks[i].phase_transition = phase;
+	for (i=0; i< ARRAY_SIZE(socks); ++i) {
+		socks[i]->phase_transition = phase;
 	}
 }
 
 
-struct wrpc_socket *ptpd_netif_create_socket(int unused, int unusd2,
-				      struct wr_sockaddr * bind_addr)
+struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
+					     int unused, int unusd2,
+					     struct wr_sockaddr * bind_addr)
 {
 	int i;
 	struct hal_port_state pstate;
-	struct wrpc_socket *sock;
 
 	/* Look for the first available socket. */
-	for (sock = NULL, i = 0; i < NET_MAX_SOCKETS; i++)
-		if (!socks[i].in_use) {
-			sock = &socks[i];
+	for (i = 0; i < ARRAY_SIZE(socks); i++)
+		if (!socks[i]) {
+			socks[i] = sock;
 			break;
 		}
-
-	if (!sock) {
-		net_verbose("No sockets left.\n");
+	if (i == ARRAY_SIZE(socks)) {
+		pp_printf("%s: no socket slots left\n", __func__);
 		return NULL;
 	}
 
@@ -85,15 +84,16 @@ struct wrpc_socket *ptpd_netif_create_socket(int unused, int unusd2,
 	sock->queue.head = sock->queue.tail = 0;
 	sock->queue.avail = NET_SKBUF_SIZE;
 	sock->queue.n = 0;
-	sock->in_use = 1;
 
 	return sock;
 }
 
 int ptpd_netif_close_socket(struct wrpc_socket *s)
 {
-	if (s)
-		s->in_use = 0;
+	int i;
+	for (i = 0; i < ARRAY_SIZE(socks); i++)
+		if (socks[i] == s)
+			socks[i] = NULL;
 	return 0;
 }
 
@@ -300,12 +300,12 @@ void update_rx_queues()
 	if (recvd <= 0)		/* No data received? */
 		return;
 
-	for (i = 0; i < NET_MAX_SOCKETS; i++) {
-		s = &socks[i];
-		if (s->in_use && !memcmp(hdr.dstmac, s->bind_addr.mac, 6)
+	for (i = 0; i < ARRAY_SIZE(socks); i++) {
+		s = socks[i];
+		if (s && !memcmp(hdr.dstmac, s->bind_addr.mac, 6)
 		    && hdr.ethtype == s->bind_addr.ethertype)
 			break;	/*they match */
-		s = NULL;
+		s = NULL; /* may be non-null but not matching */
 	}
 
 	if (!s) {

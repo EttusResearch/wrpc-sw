@@ -20,6 +20,7 @@
 
 int needIP = 1;
 static uint8_t myIP[4];
+static struct wrpc_socket __static_ipv4_socket;
 static struct wrpc_socket *ipv4_socket;
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
@@ -49,7 +50,8 @@ void ipv4_init(void)
 	get_mac_addr(&saddr.mac[0]);	/* Unicast */
 	saddr.ethertype = htons(0x0800);	/* IPv4 */
 
-	ipv4_socket = ptpd_netif_create_socket(0, 0 /* both unused */, &saddr);
+	ipv4_socket = ptpd_netif_create_socket(&__static_ipv4_socket,
+					       0, 0 /* both unused */, &saddr);
 }
 
 static int bootp_retry = 0;

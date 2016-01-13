@@ -44,7 +44,6 @@ struct sockq {
 };
 
 struct wrpc_socket {
-	int in_use;
 	struct wr_sockaddr bind_addr;
 	mac_addr_t local_mac;
 
@@ -78,8 +77,9 @@ PACKED struct wr_timestamp {
 // to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
 // automatically added to multicast group. User can specify
 // physical_port field to bind the socket to specific switch port only.
-struct wrpc_socket *ptpd_netif_create_socket(int unused, int unused2,
-				      struct wr_sockaddr * bind_addr);
+struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *s,
+					     int unused, int unused2,
+					     struct wr_sockaddr * bind_addr);
 
 // Sends a UDP/RAW packet (data, data_length) to addr in wr_sockaddr.
 // For raw frames, mac/ethertype needs to be provided, for UDP - ip/port.
