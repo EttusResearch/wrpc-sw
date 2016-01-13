@@ -39,7 +39,7 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 
 void ipv4_init(void)
 {
-	wr_sockaddr_t saddr;
+	struct wr_sockaddr saddr;
 
 	/* Reset => need a fresh IP */
 	needIP = 1;
@@ -58,7 +58,7 @@ static uint32_t bootp_tics;
 void ipv4_poll(void)
 {
 	uint8_t buf[400];
-	wr_sockaddr_t addr;
+	struct wr_sockaddr addr;
 	int len;
 
 	if (!bootp_tics)

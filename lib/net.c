@@ -39,7 +39,7 @@ struct sockq {
 
 struct wrpc_socket {
 	int in_use;
-	wr_sockaddr_t bind_addr;
+	struct wr_sockaddr bind_addr;
 	mac_addr_t local_mac;
 
 	uint32_t phase_transition;
@@ -68,7 +68,7 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 
 
 wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
-				      wr_sockaddr_t * bind_addr)
+				      struct wr_sockaddr * bind_addr)
 {
 	int i;
 	struct hal_port_state pstate;
@@ -89,7 +89,7 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 	if (wrpc_get_port_state(&pstate, "wr0" /* unused */) < 0)
 		return NULL;
 
-	memcpy(&sock->bind_addr, bind_addr, sizeof(wr_sockaddr_t));
+	memcpy(&sock->bind_addr, bind_addr, sizeof(struct wr_sockaddr));
 
 	/*get mac from endpoint */
 	get_mac_addr(sock->local_mac);
@@ -124,7 +124,8 @@ int ptpd_netif_close_socket(wr_socket_t * sock)
  *
  * Have a look at the note at http://ohwr.org/documents/xxx for details.
  */
-void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
+void ptpd_netif_linearize_rx_timestamp(struct wr_timestamp *ts,
+				       int32_t dmtd_phase,
 				       int cntr_ahead, int transition_point,
 				       int clock_period)
 {
@@ -223,8 +224,8 @@ static int wrap_copy_out(struct sockq *q, void *src, size_t len)
 	return len;
 }
 
-int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
-			size_t data_length, wr_timestamp_t * rx_timestamp)
+int ptpd_netif_recvfrom(wr_socket_t *sock, struct wr_sockaddr *from, void *data,
+			size_t data_length, struct wr_timestamp *rx_timestamp)
 {
 	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct sockq *q = &s->queue;
@@ -274,8 +275,8 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 	return min(size - sizeof(struct ethhdr), data_length);
 }
 
-int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
-		      size_t data_length, wr_timestamp_t * tx_timestamp)
+int ptpd_netif_sendto(wr_socket_t * sock, struct wr_sockaddr *to, void *data,
+		      size_t data_length, struct wr_timestamp *tx_timestamp)
 {
 	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct hw_timestamp hwts;

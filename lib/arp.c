@@ -31,7 +31,7 @@ static wr_socket_t *arp_socket;
 
 void arp_init(void)
 {
-	wr_sockaddr_t saddr;
+	struct wr_sockaddr saddr;
 
 	/* Configure socket filter */
 	memset(&saddr, 0, sizeof(saddr));
@@ -85,7 +85,7 @@ static int process_arp(uint8_t * buf, int len)
 void arp_poll(void)
 {
 	uint8_t buf[ARP_END + 100];
-	wr_sockaddr_t addr;
+	struct wr_sockaddr addr;
 	int len;
 
 	if (needIP)
