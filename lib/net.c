@@ -31,11 +31,6 @@ struct ethhdr {
 	uint16_t ethtype;
 };
 
-struct timeout {
-	uint64_t start_tics;
-	uint64_t timeout;
-};
-
 struct sockq {
 	uint8_t buf[NET_SKBUF_SIZE];
 	uint16_t head, tail, avail;
@@ -53,12 +48,6 @@ struct wrpc_socket {
 };
 
 static struct wrpc_socket socks[NET_MAX_SOCKETS];
-
-int ptpd_netif_init()
-{
-	memset(socks, 0, sizeof(socks));
-	return PTPD_NETIF_OK;
-}
 
 //#define net_verbose pp_printf
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)

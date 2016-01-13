@@ -17,16 +17,6 @@
 
 #define PTPD_SOCK_RAW_ETHERNET 	1 /* used in ppsi to no aim: remove this */
 
-#define PTPD_FLAGS_MULTICAST		0x1
-
-// error codes (to be extended)
-#define PTPD_NETIF_READY		1
-
-#define PTPD_NETIF_OK 			0
-#define PTPD_NETIF_ERROR 		-1
-#define PTPD_NETIF_NOT_READY 		-2
-#define PTPD_NETIF_NOT_FOUND 		-3
-
 // GCC-specific
 #ifndef PACKED
 #  define PACKED __attribute__((packed))
@@ -34,20 +24,8 @@
 
 #define PHYS_PORT_ANY			(0xffff)
 
-#define PTPD_NETIF_TX  1
-#define PTPD_NETIF_RX  2
-
-#define IFACE_NAME_LEN 16
-
-#define SLAVE_PRIORITY_0 0
-#define SLAVE_PRIORITY_1 1
-#define SLAVE_PRIORITY_2 2
-#define SLAVE_PRIORITY_3 3
-#define SLAVE_PRIORITY_4 4
-
 // Some system-independent definitions
 typedef uint8_t mac_addr_t[6];
-typedef uint32_t ipv4_addr_t;
 
 // WhiteRabbit socket - it's void pointer as the real socket structure is private and probably platform-specific.
 typedef void *wr_socket_t;
@@ -87,12 +65,6 @@ typedef struct _wr_timestamp wr_timestamp_t;
 
 /* OK. These functions we'll develop along with network card driver. You can write your own UDP-based stubs for testing purposes. */
 
-// Initialization of network interface:
-// - opens devices
-// - does necessary ioctls()
-// - initializes connection with the mighty HAL daemon
-int ptpd_netif_init(void);
-
 // Creates UDP or Ethernet RAW socket (determined by sock_type) bound to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
 // automatically added to multicast group. User can specify physical_port field to bind the socket to specific switch port only.
 wr_socket_t *ptpd_netif_create_socket(int unused, int unused2,
@@ -114,9 +86,6 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 
 // Closes the socket.
 int ptpd_netif_close_socket(wr_socket_t * sock);
-
-int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
-
 
 int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac);
 
