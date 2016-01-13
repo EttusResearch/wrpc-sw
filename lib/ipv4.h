@@ -8,6 +8,30 @@
 
 #include <inttypes.h>
 
+#define IP_VERSION	0
+#define IP_TOS		(IP_VERSION+1)
+#define IP_LEN		(IP_TOS+1)
+#define IP_ID		(IP_LEN+2)
+#define IP_FLAGS	(IP_ID+2)
+#define IP_TTL		(IP_FLAGS+2)
+#define IP_PROTOCOL	(IP_TTL+1)
+#define IP_CHECKSUM	(IP_PROTOCOL+1)
+#define IP_SOURCE	(IP_CHECKSUM+2)
+#define IP_DEST		(IP_SOURCE+4)
+#define IP_END		(IP_DEST+4)
+
+#define UDP_VIRT_SADDR	(IP_END-12)
+#define UDP_VIRT_DADDR	(UDP_VIRT_SADDR+4)
+#define UDP_VIRT_ZEROS	(UDP_VIRT_DADDR+4)
+#define UDP_VIRT_PROTO	(UDP_VIRT_ZEROS+1)
+#define UDP_VIRT_LENGTH	(UDP_VIRT_PROTO+1)
+
+#define UDP_SPORT	(IP_END)
+#define UDP_DPORT	(UDP_SPORT+2)
+#define UDP_LENGTH	(UDP_DPORT+2)
+#define UDP_CHECKSUM	(UDP_LENGTH+2)
+#define UDP_END		(UDP_CHECKSUM+2)
+
 void ipv4_init(void);
 void ipv4_poll(void);
 
