@@ -229,8 +229,8 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 	q->n--;
 
 	q->avail += wrap_copy_in(&size, q, 2, 0);
-	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr), 0);
 	q->avail += wrap_copy_in(&hwts, q, sizeof(struct hw_timestamp), 0);
+	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr), 0);
 	q->avail += wrap_copy_in(data, q, size, data_length);
 
 	from->ethertype = ntohs(hdr.ethtype);
@@ -334,8 +334,8 @@ void update_rx_queues()
 	size = recvd;
 
 	q->avail -= wrap_copy_out(q, &size, 2);
-	q->avail -= wrap_copy_out(q, &hdr, sizeof(struct ethhdr));
 	q->avail -= wrap_copy_out(q, &hwts, sizeof(struct hw_timestamp));
+	q->avail -= wrap_copy_out(q, &hdr, sizeof(struct ethhdr));
 	q->avail -= wrap_copy_out(q, payload, size);
 	q->n++;
 
