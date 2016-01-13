@@ -53,13 +53,17 @@ void ipv4_init(void)
 }
 
 static int bootp_retry = 0;
-static int bootp_timer = 0;
+static uint32_t bootp_tics;
 
 void ipv4_poll(void)
 {
 	uint8_t buf[400];
 	wr_sockaddr_t addr;
 	int len;
+
+	if (!bootp_tics)
+		bootp_tics = timer_get_tics() - 1;
+
 
 	if ((len = ptpd_netif_recvfrom(ipv4_socket, &addr,
 				       buf, sizeof(buf), 0)) > 0) {
@@ -70,16 +74,15 @@ void ipv4_poll(void)
 			ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
 	}
 
-	if (needIP && bootp_timer == 0) {
+	if (needIP && time_after(timer_get_tics(), bootp_tics)) {
 		len = send_bootp(buf, ++bootp_retry);
 
 		memset(addr.mac, 0xFF, 6);
 		addr.ethertype = htons(0x0800);	/* IPv4 */
 		ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
+		bootp_tics = timer_get_tics() + TICS_PER_SECOND;
 	}
 
-	if (needIP && ++bootp_timer == 100000)
-		bootp_timer = 0;
 }
 
 void getIP(unsigned char *IP)
@@ -100,8 +103,6 @@ void setIP(unsigned char *IP)
 		*eb_ip = ip;
 
 	needIP = (ip == 0);
-	if (!needIP) {
+	if (!needIP)
 		bootp_retry = 0;
-		bootp_timer = 0;
-	}
 }
