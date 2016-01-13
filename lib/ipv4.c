@@ -18,14 +18,25 @@
 #define htons(x) x
 #endif
 
-int needIP = 1;
+int needIP;
 static uint8_t myIP[4];
-static uint8_t __ipv4_queue[512];
-static struct wrpc_socket __static_ipv4_socket = {
-	.queue.buff = __ipv4_queue,
-	.queue.size = sizeof(__ipv4_queue),
+
+/* bootp: bigger buffer, UDP based */
+static uint8_t __bootp_queue[512];
+static struct wrpc_socket __static_bootp_socket = {
+	.queue.buff = __bootp_queue,
+	.queue.size = sizeof(__bootp_queue),
 };
-static struct wrpc_socket *ipv4_socket;
+static struct wrpc_socket *bootp_socket;
+
+/* ICMP: smaller buffer */
+static uint8_t __icmp_queue[128];
+static struct wrpc_socket __static_icmp_socket = {
+	.queue.buff = __icmp_queue,
+	.queue.size = sizeof(__icmp_queue),
+};
+static struct wrpc_socket *icmp_socket;
+
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 {
@@ -49,46 +60,68 @@ void ipv4_init(void)
 	/* Reset => need a fresh IP */
 	needIP = 1;
 
-	/* Configure socket filter */
+	/* Bootp: use UDP engine activated but function arguments  */
 	memset(&saddr, 0, sizeof(saddr));
-	get_mac_addr(&saddr.mac[0]);	/* Unicast */
-	saddr.ethertype = htons(0x0800);	/* IPv4 */
 
-	ipv4_socket = ptpd_netif_create_socket(&__static_ipv4_socket, &saddr,
-					       0, 0 /* both unused */);
+	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, &saddr,
+						PTPD_SOCK_UDP, 68 /* bootpc */);
+
+	/* ICMP: specify raw (not UDP), with IPV4 ethtype */
+	saddr.ethertype = htons(0x0800);
+	icmp_socket = ptpd_netif_create_socket(&__static_icmp_socket, &saddr,
+					       PTPD_SOCK_RAW_ETHERNET, 0);
 }
 
 static int bootp_retry = 0;
 static uint32_t bootp_tics;
 
-void ipv4_poll(void)
+/* receive bootp through the UDP mechanism */
+static void bootp_poll(void)
 {
-	uint8_t buf[400];
 	struct wr_sockaddr addr;
+	uint8_t buf[400];
 	int len;
 
-	if (!bootp_tics)
+	if (!bootp_tics) /* first time ever */
 		bootp_tics = timer_get_tics() - 1;
 
+	len = ptpd_netif_recvfrom(bootp_socket, &addr,
+				  buf, sizeof(buf), NULL);
+	if (len > 0 && needIP)
+		process_bootp(buf, len);
 
-	if ((len = ptpd_netif_recvfrom(ipv4_socket, &addr,
-				       buf, sizeof(buf), 0)) > 0) {
-		if (needIP)
-			process_bootp(buf, len);
+	if (!needIP)
+		return;
+	if (time_before(timer_get_tics(), bootp_tics))
+		return;
 
-		if (!needIP && (len = process_icmp(buf, len)) > 0)
-			ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
-	}
+	len = prepare_bootp(&addr, buf, ++bootp_retry);
+	ptpd_netif_sendto(bootp_socket, &addr, buf, len, 0);
+	bootp_tics = timer_get_tics() + TICS_PER_SECOND;
+}
 
-	if (needIP && time_after(timer_get_tics(), bootp_tics)) {
-		len = send_bootp(buf, ++bootp_retry);
+static void icmp_poll(void)
+{
+	struct wr_sockaddr addr;
+	uint8_t buf[128];
+	int len;
 
-		memset(addr.mac, 0xFF, 6);
-		addr.ethertype = htons(0x0800);	/* IPv4 */
-		ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
-		bootp_tics = timer_get_tics() + TICS_PER_SECOND;
-	}
+	len = ptpd_netif_recvfrom(icmp_socket, &addr,
+				  buf, sizeof(buf), NULL);
+	if (len <= 0)
+		return;
+	if (needIP)
+		return;
 
+	if ((len = process_icmp(buf, len)) > 0)
+		ptpd_netif_sendto(icmp_socket, &addr, buf, len, 0);
+}
+
+void ipv4_poll(void)
+{
+	bootp_poll();
+
+	icmp_poll();
 }
 
 void getIP(unsigned char *IP)

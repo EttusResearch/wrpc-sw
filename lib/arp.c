@@ -44,7 +44,7 @@ void arp_init(void)
 	saddr.ethertype = htons(0x0806);	/* ARP */
 
 	arp_socket = ptpd_netif_create_socket(&__static_arp_socket, &saddr,
-					      0, 0 /* both unused */);
+					      PTPD_SOCK_RAW_ETHERNET, 0);
 }
 
 static int process_arp(uint8_t * buf, int len)

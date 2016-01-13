@@ -7,6 +7,7 @@
 #define IPV4_H
 
 #include <inttypes.h>
+#include "ptpd_netif.h" /* for sockaddr in prototype */
 
 #define IP_VERSION	0
 #define IP_TOS		(IP_VERSION+1)
@@ -47,6 +48,6 @@ void getIP(unsigned char *IP);
 
 int process_icmp(uint8_t * buf, int len);
 int process_bootp(uint8_t * buf, int len);	/* non-zero if IP was set */
-int send_bootp(uint8_t * buf, int retry);
+int prepare_bootp(struct wr_sockaddr *addr, uint8_t * buf, int retry);
 
 #endif

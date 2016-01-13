@@ -15,7 +15,8 @@
 #include <board.h>
 //#include <inttypes.h>
 
-#define PTPD_SOCK_RAW_ETHERNET 	1 /* used in ppsi to no aim: remove this */
+#define PTPD_SOCK_UDP		0 /* wrong name, it should be "WRPC" */
+#define PTPD_SOCK_RAW_ETHERNET 	1 /* but used in ppsi, which I won't change */
 
 // GCC-specific
 #ifndef PACKED
@@ -31,10 +32,11 @@ typedef uint8_t mac_addr_t[6];
 struct wr_sockaddr {
 	// MAC address
 	mac_addr_t mac;
-	// Destination MASC address, filled by recvfrom()
+	// Destination MAC address, filled by recvfrom()
 	mac_addr_t mac_dest;
 	// RAW ethertype
 	uint16_t ethertype;
+	uint16_t udpport;
 };
 
 struct sockq {
@@ -79,7 +81,7 @@ PACKED struct wr_timestamp {
 // physical_port field to bind the socket to specific switch port only.
 struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *s,
 					     struct wr_sockaddr * bind_addr,
-					     int unused, int unused2);
+					     int udp_or_raw, int udpport);
 
 // Sends a UDP/RAW packet (data, data_length) to addr in wr_sockaddr.
 // For raw frames, mac/ethertype needs to be provided, for UDP - ip/port.

@@ -29,7 +29,7 @@
 #define BOOTP_VEND	(BOOTP_FILE+128)
 #define BOOTP_END	(BOOTP_VEND+64)
 
-int send_bootp(uint8_t * buf, int retry)
+int prepare_bootp(struct wr_sockaddr *addr, uint8_t * buf, int retry)
 {
 	unsigned short sum;
 
@@ -110,6 +110,8 @@ int send_bootp(uint8_t * buf, int retry)
 	buf[IP_CHECKSUM + 0] = sum >> 8;
 	buf[IP_CHECKSUM + 1] = sum & 0xff;
 
+	/* and fix destination before sending it */
+	memset(addr->mac, 0xFF, 6);
 	// pp_printf("Sending BOOTP request...\n");
 	return BOOTP_END;
 }
@@ -124,12 +126,7 @@ int process_bootp(uint8_t * buf, int len)
 	if (len != BOOTP_END)
 		return 0;
 
-	if (buf[IP_VERSION] != 0x45)
-		return 0;
-
-	if (buf[IP_PROTOCOL] != 17 ||
-	    buf[UDP_DPORT] != 0 || buf[UDP_DPORT + 1] != 68 ||
-	    buf[UDP_SPORT] != 0 || buf[UDP_SPORT + 1] != 67)
+	if (buf[UDP_SPORT] != 0 || buf[UDP_SPORT + 1] != 67)
 		return 0;
 
 	if (memcmp(buf + BOOTP_CHADDR, mac, 6))

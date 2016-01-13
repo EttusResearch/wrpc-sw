@@ -22,6 +22,7 @@
 #include "minic.h"
 #include "endpoint.h"
 #include "softpll_ng.h"
+#include "ipv4.h"
 
 #define min(x,y) ((x) < (y) ? (x) : (y))
 
@@ -53,10 +54,11 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 
 struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 					     struct wr_sockaddr * bind_addr,
-					     int unused, int unusd2)
+					     int udp_or_raw, int udpport)
 {
 	int i;
 	struct hal_port_state pstate;
+	static mac_addr_t zero_mac;
 
 	/* Look for the first available socket. */
 	for (i = 0; i < ARRAY_SIZE(socks); i++)
@@ -72,7 +74,15 @@ struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 	if (wrpc_get_port_state(&pstate, "wr0" /* unused */) < 0)
 		return NULL;
 
+	/* copy and complete the bind information. If MAC is 0 use unicast */
 	memcpy(&sock->bind_addr, bind_addr, sizeof(struct wr_sockaddr));
+	if (!memcmp(sock->bind_addr.mac, zero_mac, ETH_ALEN))
+		get_mac_addr(sock->bind_addr.mac);
+	sock->bind_addr.udpport = 0;
+	if (udp_or_raw == PTPD_SOCK_UDP) {
+		sock->bind_addr.ethertype = htons(0x0800); /* IPv4 */
+		sock->bind_addr.udpport = udpport;
+	}
 
 	/*get mac from endpoint */
 	get_mac_addr(sock->local_mac);
@@ -273,7 +283,7 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 
 	memcpy(hdr.dstmac, to->mac, 6);
 	memcpy(hdr.srcmac, s->local_mac, 6);
-	hdr.ethtype = to->ethertype;
+	hdr.ethtype = sock->bind_addr.ethertype;
 
 	rval =
 	    minic_tx_frame((uint8_t *) & hdr, (uint8_t *) data,
@@ -298,7 +308,7 @@ void update_rx_queues()
 	static struct ethhdr hdr;
 	int recvd, i, q_required;
 	static uint8_t payload[NET_MAX_SKBUF_SIZE - 32];
-	uint16_t size;
+	uint16_t size, port;
 
 	recvd =
 	    minic_rx_frame((uint8_t *) & hdr, payload, sizeof(payload),
@@ -309,13 +319,29 @@ void update_rx_queues()
 
 	for (i = 0; i < ARRAY_SIZE(socks); i++) {
 		s = socks[i];
-		if (s && !memcmp(hdr.dstmac, s->bind_addr.mac, 6)
-		    && hdr.ethtype == s->bind_addr.ethertype)
-			break;	/*they match */
-		s = NULL; /* may be non-null but not matching */
+		if (!s)
+			continue;
+		if (memcmp(hdr.dstmac, s->bind_addr.mac, 6))
+			continue;
+		if (hdr.ethtype != s->bind_addr.ethertype)
+			continue;
+
+		if (s->bind_addr.udpport == 0)
+			break; /* raw socket: match */
+
+		/* Now make IP/UDP checks */
+		if (payload[IP_VERSION] != 0x45)
+			continue;
+		if (payload[IP_PROTOCOL] != 17)
+			continue;
+		port = payload[UDP_DPORT] << 8 | payload[UDP_DPORT + 1];
+		if (port != s->bind_addr.udpport)
+			continue;
+
+		break; /* udp match */
 	}
 
-	if (!s) {
+	if (i == ARRAY_SIZE(socks)) {
 		net_verbose("%s: could not find socket for packet\n",
 			   __FUNCTION__);
 		return;
