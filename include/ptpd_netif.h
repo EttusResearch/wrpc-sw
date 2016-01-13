@@ -32,11 +32,11 @@ typedef void *wr_socket_t;
 
 // Socket address for ptp_netif_ functions
 typedef struct {
-// MAC address
+	// MAC address
 	mac_addr_t mac;
-// Destination MASC address, filled by recvfrom() function on interfaces bound to multiple addresses
+	// Destination MASC address, filled by recvfrom()
 	mac_addr_t mac_dest;
-// RAW ethertype
+	// RAW ethertype
 	uint16_t ethertype;
 } wr_sockaddr_t;
 
@@ -48,7 +48,7 @@ PACKED struct _wr_timestamp {
 	// Nanoseconds
 	int32_t nsec;
 
-	// Phase (in picoseconds), linearized for receive timestamps, zero for send timestamps
+	// Phase (in picoseconds), linearized for rx, zero for send timestamps
 	int32_t phase;		// phase(picoseconds)
 
 	/* Raw time (non-linearized) for debugging purposes */
@@ -56,30 +56,31 @@ PACKED struct _wr_timestamp {
 	int32_t raw_nsec;
 	int32_t raw_ahead;
 
-	// correctness flag: when 0, the timestamp MAY be incorrect (e.g. generated during timebase adjustment)
+	// when 0, tstamp MAY be incorrect (e.g. during timebase adjustment)
 	int correct;
-	//int cntr_ahead;
 };
 
 typedef struct _wr_timestamp wr_timestamp_t;
 
-/* OK. These functions we'll develop along with network card driver. You can write your own UDP-based stubs for testing purposes. */
-
-// Creates UDP or Ethernet RAW socket (determined by sock_type) bound to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
-// automatically added to multicast group. User can specify physical_port field to bind the socket to specific switch port only.
+// Creates UDP or Ethernet RAW socket (determined by sock_type) bound
+// to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
+// automatically added to multicast group. User can specify
+// physical_port field to bind the socket to specific switch port only.
 wr_socket_t *ptpd_netif_create_socket(int unused, int unused2,
 				      wr_sockaddr_t * bind_addr);
 
-// Sends a UDP/RAW packet (data, data_length) to address provided in wr_sockaddr_t.
+// Sends a UDP/RAW packet (data, data_length) to addr in wr_sockaddr_t.
 // For raw frames, mac/ethertype needs to be provided, for UDP - ip/port.
-// Every transmitted frame has assigned a tag value, stored at tag parameter. This value is later used
-// for recovering the precise transmit timestamp. If user doesn't need it, tag parameter can be left NULL.
-
+// Every transmitted frame has assigned a tag value, stored at tag parameter.
+// This value is later used for recovering the precise transmit timestamp.
+// If user doesn't need it, tag parameter can be left NULL.
 int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 		      size_t data_length, wr_timestamp_t * tx_ts);
 
-// Receives an UDP/RAW packet. Data is written to (data) and length is returned. Maximum buffer length can be specified
-// by data_length parameter. Sender information is stored in structure specified in 'from'. All RXed packets are timestamped and the timestamp
+// Receives an UDP/RAW packet. Data is written to (data) and len is returned.
+// Maximum buffer length can be specified by data_length parameter.
+// Sender information is stored in structure specified in 'from'.
+// All RXed packets are timestamped and the timestamp
 // is stored in rx_timestamp (unless it's NULL).
 int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 			size_t data_length, wr_timestamp_t * rx_timestamp);
@@ -95,6 +96,7 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 void ptpd_netif_set_phase_transition(uint32_t phase);
 
 struct hal_port_state;
-int wrpc_get_port_state(struct hal_port_state *port, const char *port_name /* unused */);
+int wrpc_get_port_state(struct hal_port_state *port,
+			const char *port_name /* unused */);
 
 #endif /* __PTPD_NETIF_H */
