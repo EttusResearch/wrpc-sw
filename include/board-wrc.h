@@ -31,7 +31,7 @@
 #define UART_BAUDRATE 115200ULL
 
 /* Maximum number of simultaneously created sockets */
-#define NET_MAX_SOCKETS 4
+#define NET_MAX_SOCKETS 8
 
 /* Socket buffer size, determines the max. RX packet size */
 #define NET_MAX_SKBUF_SIZE 512
