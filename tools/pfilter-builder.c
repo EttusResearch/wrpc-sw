@@ -409,6 +409,7 @@ void pfilter_init(int mode, char *fname)
 	pfilter_cmp(18, 0x0044, 0xffff, MOV, PORT_UDP_HOST);	/* bootpc */
 	pfilter_cmp(18, 0x013f, 0xffff, OR, PORT_UDP_HOST);	/* ptp event */
 	pfilter_cmp(18, 0x0140, 0xffff, OR, PORT_UDP_HOST);	/* ptp general */
+	pfilter_cmp(18, 0x0025, 0xffff, OR, PORT_UDP_HOST);	/* rdate */
 
 	/* The CPU gets those ports in a proper UDP frame, plus the previous selections */
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);

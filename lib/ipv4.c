@@ -7,10 +7,12 @@
  * Released according to the GNU GPL, version 2 or any later version.
  */
 #include <string.h>
+#include <wrpc.h>
 
 #include "endpoint.h"
 #include "ipv4.h"
 #include "ptpd_netif.h"
+#include "pps_gen.h"
 #include "hw/memlayout.h"
 #include "hw/etherbone-config.h"
 
@@ -36,6 +38,14 @@ static struct wrpc_socket __static_icmp_socket = {
 	.queue.size = sizeof(__icmp_queue),
 };
 static struct wrpc_socket *icmp_socket;
+
+/* RDATE: even smaller buffer -- but we require 86. 96 is "even". */
+static uint8_t __rdate_queue[96];
+static struct wrpc_socket __static_rdate_socket = {
+	.queue.buff = __rdate_queue,
+	.queue.size = sizeof(__rdate_queue),
+};
+static struct wrpc_socket *rdate_socket;
 
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
@@ -65,6 +75,10 @@ void ipv4_init(void)
 
 	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, &saddr,
 						PTPD_SOCK_UDP, 68 /* bootpc */);
+
+	/* time (rdate): UDP */
+	rdate_socket = ptpd_netif_create_socket(&__static_rdate_socket, &saddr,
+					       PTPD_SOCK_UDP, 37 /* time */);
 
 	/* ICMP: specify raw (not UDP), with IPV4 ethtype */
 	saddr.ethertype = htons(0x0800);
@@ -117,11 +131,38 @@ static void icmp_poll(void)
 		ptpd_netif_sendto(icmp_socket, &addr, buf, len, 0);
 }
 
+static void rdate_poll(void)
+{
+	struct wr_sockaddr addr;
+	uint64_t secs;
+	uint32_t result;
+	uint8_t buf[32];
+	int len;
+
+	len = ptpd_netif_recvfrom(rdate_socket, &addr,
+				  buf, sizeof(buf), NULL);
+	if (len <= 0)
+		return;
+
+	shw_pps_gen_get_time(&secs, NULL);
+	result = htonl((uint32_t)(secs + 2208988800LL));
+	/* Magic above: $(date +%s --date="Jan 1 1900 00:00:00 UTC)" */
+
+	len = UDP_END + sizeof(result);
+	memcpy(buf + UDP_END, &result, sizeof(result));
+
+	fill_udp(buf, len, NULL);
+	ptpd_netif_sendto(rdate_socket, &addr, buf, len, 0);
+
+}
+
 void ipv4_poll(void)
 {
 	bootp_poll();
 
 	icmp_poll();
+
+	rdate_poll();
 }
 
 void getIP(unsigned char *IP)
