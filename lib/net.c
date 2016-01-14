@@ -270,7 +270,7 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 
 	rval =
 	    minic_tx_frame((uint8_t *) & hdr, (uint8_t *) data,
-			   data_length + ETH_HEADER_SIZE, &hwts);
+			   data_length, &hwts);
 
 
 	if (tx_timestamp) {

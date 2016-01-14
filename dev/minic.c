@@ -299,9 +299,9 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 	memset((void *)minic.tx_head, 0x0, size + 16);
 	memset((void *)minic.tx_head + 4, 0, size < 60 ? 60 : size);
 	memcpy((void *)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
-	memcpy((void *)minic.tx_head + 4 + ETH_HEADER_SIZE, payload,
-	       size - ETH_HEADER_SIZE);
+	memcpy((void *)minic.tx_head + 4 + ETH_HEADER_SIZE, payload, size);
 
+	size += ETH_HEADER_SIZE;
 	if (size < 60)
 		size = 60;
 
