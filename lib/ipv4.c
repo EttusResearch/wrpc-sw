@@ -47,6 +47,12 @@ static struct wrpc_socket __static_rdate_socket = {
 };
 static struct wrpc_socket *rdate_socket;
 
+/* syslog is selected by Kconfig, so we have weak aliases here */
+void __attribute__((weak)) syslog_init(void)
+{ }
+
+void __attribute__((weak)) syslog_poll(void)
+{ }
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 {
@@ -83,6 +89,8 @@ void ipv4_init(void)
 	saddr.ethertype = htons(0x0800);
 	icmp_socket = ptpd_netif_create_socket(&__static_icmp_socket, &saddr,
 					       PTPD_SOCK_RAW_ETHERNET, 0);
+
+	syslog_init();
 }
 
 static int bootp_retry = 0;
@@ -162,6 +170,8 @@ void ipv4_poll(void)
 	icmp_poll();
 
 	rdate_poll();
+
+	syslog_poll();
 }
 
 void getIP(unsigned char *IP)
