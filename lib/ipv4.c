@@ -71,16 +71,15 @@ void ipv4_init(void)
 	needIP = 1;
 
 	/* Bootp: use UDP engine activated but function arguments  */
-	memset(&saddr, 0, sizeof(saddr));
-
-	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, &saddr,
+	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, NULL,
 						PTPD_SOCK_UDP, 68 /* bootpc */);
 
 	/* time (rdate): UDP */
-	rdate_socket = ptpd_netif_create_socket(&__static_rdate_socket, &saddr,
+	rdate_socket = ptpd_netif_create_socket(&__static_rdate_socket, NULL,
 					       PTPD_SOCK_UDP, 37 /* time */);
 
 	/* ICMP: specify raw (not UDP), with IPV4 ethtype */
+	memset(&saddr, 0, sizeof(saddr));
 	saddr.ethertype = htons(0x0800);
 	icmp_socket = ptpd_netif_create_socket(&__static_icmp_socket, &saddr,
 					       PTPD_SOCK_RAW_ETHERNET, 0);

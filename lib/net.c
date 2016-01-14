@@ -75,7 +75,9 @@ struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 		return NULL;
 
 	/* copy and complete the bind information. If MAC is 0 use unicast */
-	memcpy(&sock->bind_addr, bind_addr, sizeof(struct wr_sockaddr));
+	memset(&sock->bind_addr, 0, sizeof(struct wr_sockaddr));
+	if (bind_addr)
+		memcpy(&sock->bind_addr, bind_addr, sizeof(struct wr_sockaddr));
 	if (!memcmp(sock->bind_addr.mac, zero_mac, ETH_ALEN))
 		get_mac_addr(sock->bind_addr.mac);
 	sock->bind_addr.udpport = 0;
