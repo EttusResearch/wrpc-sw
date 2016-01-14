@@ -286,6 +286,10 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 	memcpy(hdr.dstmac, to->mac, 6);
 	memcpy(hdr.srcmac, s->local_mac, 6);
 	hdr.ethtype = sock->bind_addr.ethertype;
+	net_verbose("TX: socket %04x:%04x, len %i\n",
+		    ntohs(s->bind_addr.ethertype),
+		    s->bind_addr.udpport,
+		    data_length);
 
 	rval =
 	    minic_tx_frame((uint8_t *) & hdr, (uint8_t *) data,
@@ -372,6 +376,9 @@ void update_rx_queues()
 		   q->head, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
-	net_verbose("%s: saved packet to queue [avail %d n %d size %d]\n",
-		   __FUNCTION__, q->avail, q->n, q_required);
+	net_verbose("%s: saved packet to socket %04x:%04x "
+		    "[avail %d n %d size %d]\n", __FUNCTION__,
+		    ntohs(s->bind_addr.ethertype),
+		    s->bind_addr.udpport,
+		    q->avail, q->n, q_required);
 }
