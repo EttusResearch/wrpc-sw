@@ -51,7 +51,7 @@ static struct wrpc_socket *rdate_socket;
 void __attribute__((weak)) syslog_init(void)
 { }
 
-void __attribute__((weak)) syslog_poll(void)
+void __attribute__((weak)) syslog_poll(int l_status)
 { }
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
@@ -160,15 +160,17 @@ static void rdate_poll(void)
 
 }
 
-void ipv4_poll(void)
+void ipv4_poll(int l_status)
 {
+	if (l_status == LINK_WENT_UP)
+		needIP = 1;
 	bootp_poll();
 
 	icmp_poll();
 
 	rdate_poll();
 
-	syslog_poll();
+	syslog_poll(l_status);
 }
 
 void getIP(unsigned char *IP)

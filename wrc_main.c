@@ -96,11 +96,6 @@ static void wrc_initialize(void)
 	}
 }
 
-#define LINK_WENT_UP 1
-#define LINK_WENT_DOWN 2
-#define LINK_UP 3
-#define LINK_DOWN 4
-
 static int wrc_check_link(void)
 {
 	static int prev_link_state = -1;
@@ -185,13 +180,10 @@ int main(void)
 
 		switch (l_status) {
 		case LINK_WENT_UP:
-			needIP = 1;
-			break;
-
 		case LINK_UP:
 			update_rx_queues();
 			if (HAS_IP) {
-				ipv4_poll();
+				ipv4_poll(l_status);
 				arp_poll();
 			}
 			break;

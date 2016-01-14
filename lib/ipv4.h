@@ -34,7 +34,7 @@
 #define UDP_END		(UDP_CHECKSUM+2)
 
 void ipv4_init(void);
-void ipv4_poll(void);
+void ipv4_poll(int l_status);
 
 /* Internal to IP stack: */
 unsigned int ipv4_checksum(unsigned short *buf, int shorts);
@@ -61,6 +61,6 @@ struct wr_udp_addr {
 void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr);
 
 void syslog_init(void);
-void syslog_poll(void);
+void syslog_poll(int l_status);
 
 #endif

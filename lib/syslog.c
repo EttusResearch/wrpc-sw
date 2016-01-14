@@ -54,7 +54,7 @@ DEFINE_WRC_COMMAND(mac) = {
 };
 
 
-void syslog_poll(void)
+void syslog_poll(int l_satus)
 {
 	struct wr_sockaddr addr;
 	char buf[128];
