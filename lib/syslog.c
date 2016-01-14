@@ -55,7 +55,7 @@ DEFINE_WRC_COMMAND(mac) = {
 };
 
 
-void syslog_poll(int l_satus)
+void syslog_poll(int l_status)
 {
 	struct wr_sockaddr addr;
 	char buf[256];
@@ -63,6 +63,7 @@ void syslog_poll(int l_satus)
 	unsigned char mac[6];
 	unsigned char ip[4];
 	uint64_t secs;
+	static uint32_t down_tics;
 	int len = 0;
 
 	if (needIP)
@@ -84,6 +85,22 @@ void syslog_poll(int l_satus)
 				 (tics - tics_zero) / 1000);
 		goto send;
 	}
+
+	if (l_status == LINK_WENT_DOWN)
+		down_tics = timer_get_tics();
+	if (l_status == LINK_UP && down_tics) {
+		down_tics = timer_get_tics() - down_tics;
+		shw_pps_gen_get_time(&secs, NULL);
+		getIP(ip);
+		len = pp_sprintf(buf + UDP_END, /* 8 == user + 6 == info */
+				 "<14> %s %s Link up after %i.%03i s\n",
+				 format_time(secs, TIME_FORMAT_SYSLOG),
+				 format_ip(b1, ip),
+				 down_tics / 1000, down_tics % 1000);
+		down_tics = 0;
+		goto send;
+	}
+
 	return;
 
 send:
