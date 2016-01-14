@@ -20,7 +20,7 @@
 #define htons(x) x
 #endif
 
-int needIP;
+int needIP = 1;
 static uint8_t myIP[4];
 
 /* bootp: bigger buffer, UDP based */
@@ -72,9 +72,6 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 void ipv4_init(void)
 {
 	struct wr_sockaddr saddr;
-
-	/* Reset => need a fresh IP */
-	needIP = 1;
 
 	/* Bootp: use UDP engine activated but function arguments  */
 	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, NULL,
