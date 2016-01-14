@@ -15,7 +15,7 @@
 #include "shell.h"
 #include "../lib/ipv4.h"
 
-static void decode_ip(const char *str, unsigned char *ip)
+void decode_ip(const char *str, unsigned char *ip)
 {
 	int i, x;
 
@@ -26,6 +26,12 @@ static void decode_ip(const char *str, unsigned char *ip)
 		if (*str == '.')
 			++str;
 	}
+}
+
+void print_ip(char *head, unsigned char *ip, char *tail)
+{
+	pp_printf("%s%d.%d.%d.%d%s",
+		  head, ip[0], ip[1], ip[2], ip[3], tail);
 }
 
 static int cmd_ip(const char *args[])
@@ -44,8 +50,7 @@ static int cmd_ip(const char *args[])
 	if (needIP) {
 		pp_printf("IP-address: in training\n");
 	} else {
-		pp_printf("IP-address: %d.%d.%d.%d\n",
-			ip[0], ip[1], ip[2], ip[3]);
+		print_ip("IP-address: ", ip, "\n");
 	}
 	return 0;
 }

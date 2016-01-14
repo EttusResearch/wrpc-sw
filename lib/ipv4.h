@@ -60,5 +60,7 @@ struct wr_udp_addr {
 
 void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr);
 
+void syslog_init(void);
+void syslog_poll(void);
 
 #endif

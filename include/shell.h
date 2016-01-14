@@ -14,6 +14,10 @@ extern int wrc_stat_running;
 
 const char *fromhex(const char *hex, int *v);
 const char *fromdec(const char *dec, int *v);
+void decode_mac(const char *str, unsigned char *mac);
+void print_mac(char *head, unsigned char *mac, char *tail);
+void decode_ip(const char *str, unsigned char *ip);
+void print_ip(char *head, unsigned char *ip, char *tail);
 
 struct wrc_shell_cmd {
 	char *name;
