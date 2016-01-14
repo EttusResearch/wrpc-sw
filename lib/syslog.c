@@ -29,6 +29,8 @@ static uint32_t tics;
 
 static int cmd_syslog(const char *args[])
 {
+	char b1[32], b2[32];
+
 	if (args[0] && !strcmp(args[0], "off")) {
 		syslog_addr.daddr = 0;
 		return 0;
@@ -39,8 +41,9 @@ static int cmd_syslog(const char *args[])
 	}
 	decode_ip(args[0], (void *)&syslog_addr.daddr);
 	decode_mac(args[1], syslog_mac);
-	print_ip("Syslog parameters: ", (void *)&syslog_addr.daddr, ", ");
-	print_mac("", syslog_mac, "\n");
+	pp_printf("Syslog parameters: %s, %s\n",
+		  format_ip(b1, (void *)&syslog_addr.daddr),
+		  format_mac(b2, syslog_mac));
 	tics = 0; /* send the first frame immediately to the new host */
 	return 0;
 }

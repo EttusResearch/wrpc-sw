@@ -268,6 +268,8 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 						  REF_CLOCK_PERIOD_PS);
 	}
 
+	net_verbose("%s: called from %p\n",
+		    __func__, __builtin_return_address(0));
 	net_verbose("RX: Size %d tail %d Smac %x:%x:%x:%x:%x:%x\n", size,
 		   q->tail, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);

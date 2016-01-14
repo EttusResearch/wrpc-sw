@@ -28,15 +28,17 @@ void decode_ip(const char *str, unsigned char *ip)
 	}
 }
 
-void print_ip(char *head, unsigned char *ip, char *tail)
+char *format_ip(char *s, const unsigned char *ip)
 {
-	pp_printf("%s%d.%d.%d.%d%s",
-		  head, ip[0], ip[1], ip[2], ip[3], tail);
+	pp_sprintf(s, "%d.%d.%d.%d",
+		   ip[0], ip[1], ip[2], ip[3]);
+	return s;
 }
 
 static int cmd_ip(const char *args[])
 {
 	unsigned char ip[4];
+	char buf[20];
 
 	if (!args[0] || !strcasecmp(args[0], "get")) {
 		getIP(ip);
@@ -50,7 +52,7 @@ static int cmd_ip(const char *args[])
 	if (needIP) {
 		pp_printf("IP-address: in training\n");
 	} else {
-		print_ip("IP-address: ", ip, "\n");
+		pp_printf("IP-address: %s\n", format_ip(buf, ip));
 	}
 	return 0;
 }
