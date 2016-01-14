@@ -18,14 +18,15 @@ static struct wrpc_socket *syslog_socket;
 static struct wr_udp_addr syslog_addr;
 unsigned char syslog_mac[6];
 
+static uint32_t tics, tics_zero;
+
 void syslog_init(void)
 {
 	syslog_socket = ptpd_netif_create_socket(&__static_syslog_socket, NULL,
 					       PTPD_SOCK_UDP, 514 /* time */);
 	syslog_addr.sport = syslog_addr.dport = htons(514);
+	tics_zero = timer_get_tics();
 }
-
-static uint32_t tics;
 
 static int cmd_syslog(const char *args[])
 {
@@ -57,34 +58,39 @@ DEFINE_WRC_COMMAND(mac) = {
 void syslog_poll(int l_satus)
 {
 	struct wr_sockaddr addr;
-	char buf[128];
+	char buf[256];
+	char b1[32], b2[32];
+	unsigned char mac[6];
+	unsigned char ip[4];
 	uint64_t secs;
-	int len;
+	int len = 0;
 
 	if (needIP)
 		return;
 	if (!syslog_addr.daddr)
 		return;
 
-	if (!tics) /* first time ever */
+	if (!tics) {
+		/* first time ever, or new syslog server */
 		tics = timer_get_tics() - 1;
+		shw_pps_gen_get_time(&secs, NULL);
+		get_mac_addr(mac);
+		getIP(ip);
+		len = pp_sprintf(buf + UDP_END, /* 8 == user + 6 == info */
+				 "<14> %s %s (%s) Node up "
+				 "since %i seconds\n",
+				 format_time(secs, TIME_FORMAT_SYSLOG),
+				 format_ip(b1, ip), format_mac(b2, mac),
+				 (tics - tics_zero) / 1000);
+		goto send;
+	}
+	return;
 
-	if (time_before(timer_get_tics(), tics))
-		return;
-
-	getIP((void *)&syslog_addr.saddr);
-
-	shw_pps_gen_get_time(&secs, NULL);
-	len = pp_sprintf(buf + UDP_END, /* 8 == user + 6 == info */
-			 "<14> %s wr-node: Alive and Well",
-			 format_time(secs, TIME_FORMAT_SYSLOG));
+send:
 	len += UDP_END;
 	memcpy(&syslog_addr.saddr, ip, 4);
 	fill_udp((void *)buf, len, &syslog_addr);
 	memcpy(&addr.mac, syslog_mac, 6);
 	ptpd_netif_sendto(syslog_socket, &addr, buf, len, 0);
-
-	tics += 10 * TICS_PER_SECOND;
-
 }
 
