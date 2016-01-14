@@ -16,7 +16,10 @@
 #define C_BLUE 4
 
 /* Return TAI date/time in human-readable form. Non-reentrant. */
-char *format_time(uint64_t sec);
+char *format_time(uint64_t sec, int format);
+#define TIME_FORMAT_LEGACY 0
+#define TIME_FORMAT_SYSLOG 1
+#define TIME_FORMAT_SORTED 2
 
 /* Color printf() variant. */
 void cprintf(int color, const char *fmt, ...);

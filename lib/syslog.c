@@ -73,7 +73,8 @@ void syslog_poll(void)
 
 	shw_pps_gen_get_time(&secs, NULL);
 	len = pp_sprintf(buf + UDP_END, /* 8 == user + 6 == info */
-			 "<14> %s wr-node: Alive and Well", format_time(secs));
+			 "<14> %s wr-node: Alive and Well",
+			 format_time(secs, TIME_FORMAT_SYSLOG));
 	len += UDP_END;
 	memcpy(&syslog_addr.saddr, ip, 4);
 	fill_udp((void *)buf, len, &syslog_addr);

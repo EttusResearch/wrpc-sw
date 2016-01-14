@@ -53,7 +53,9 @@ static int cmd_time(const char *args[])
 		return 0;
 	}
 
-	pp_printf("%s +%d nanoseconds.\n", format_time(sec), nsec);	/* fixme: clock freq is not always 125 MHz */
+	pp_printf("%s +%d nanoseconds.\n",
+		  format_time(sec,  TIME_FORMAT_LEGACY), nsec);
+	/* fixme: clock freq is not always 125 MHz */
 
 	return 0;
 }
