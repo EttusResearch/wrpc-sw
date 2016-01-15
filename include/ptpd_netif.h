@@ -43,6 +43,7 @@ struct wr_sockaddr {
 	// RAW ethertype
 	uint16_t ethertype;
 	uint16_t udpport;
+	uint16_t vlan;
 };
 
 struct sockq {

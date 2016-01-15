@@ -212,7 +212,7 @@ enum pf_symbolic_regs {
 	/* The first set is used for straight comparisons */
 	FRAME_BROADCAST = R_1,
 	FRAME_OUR_MAC,
-	FRAME_TAGGED,
+	FRAME_OUR_VLAN,
 	FRAME_TYPE_IPV4,
 	FRAME_TYPE_PTP2,
 	FRAME_TYPE_ARP,
@@ -363,7 +363,7 @@ static void pfilter_output(char *fname)
 }
 
 
-void pfilter_init(int mode, char *fname)
+void pfilter_init_novlan(char *fname)
 {
 	pfilter_new();
 	pfilter_nop();
@@ -384,8 +384,8 @@ void pfilter_init(int mode, char *fname)
 	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);
 
 	/* Tagged is dropped. We'll invert the check in the vlan rule-set */
-	pfilter_cmp(6, 0x8100, 0xffff, MOV, FRAME_TAGGED);
-	pfilter_logic2(R_DROP, FRAME_TAGGED, MOV, R_ZERO);
+	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
+	pfilter_logic2(R_DROP, R_TMP, MOV, R_ZERO);
 
 	/* Identify some Ethertypes used later.  */
 	pfilter_cmp(6, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
@@ -436,10 +436,54 @@ void pfilter_init(int mode, char *fname)
 
 }
 
+void pfilter_init_vlan(char *fname)
+{
+	pfilter_new();
+	pfilter_nop();
+
+	/*
+	 * This is a simplified set, for development,
+	 * to allow me write vlan support in software.
+	 * Mostly a subset of above set
+	 */
+
+	/* Local frame, using fake MAC: 12:34:56:78:9a:bc */
+	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_OUR_MAC);
+	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_OUR_MAC);
+
+	/* Broadcast frame */
+	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
+	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
+	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);
+
+	/* Untagged is dropped. */
+	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
+	pfilter_logic2(R_DROP, R_TMP, NOT, R_ZERO);
+
+	/* Compare with our vlan */
+	pfilter_cmp(7, CONFIG_VLAN_NR, 0x0fff, MOV, FRAME_OUR_VLAN);
+
+	/* Identify some Ethertypes used later.  */
+	pfilter_cmp(8, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
+	pfilter_cmp(8, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
+	pfilter_cmp(8, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);
+
+	/* Loose match: keep all bcast, all our mac and all ptp ... */
+	pfilter_logic3(FRAME_FOR_CPU,
+		FRAME_OUR_MAC, OR, FRAME_BROADCAST, OR, FRAME_TYPE_PTP2);
+
+	/* .... but only for our current VLAN */
+	pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, AND, FRAME_OUR_VLAN);
+
+	pfilter_output(fname);
+}
+
 int main(int argc, char **argv) /* no arguments used currently */
 {
 	prgname = argv[0];
 
-	pfilter_init(0, "rules-default.bin");
+	pfilter_init_novlan("rules-novlan.bin");
+	pfilter_init_vlan("rules-vlan.bin");
 	exit(0);
 }

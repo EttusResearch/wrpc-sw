@@ -1,7 +1,8 @@
 EB    ?= no
 SDBFS ?= no
 
-CFLAGS = -Wall -ggdb -I../include
+CFLAGS = -Wall -ggdb -I../include \
+	-include ../include/generated/autoconf.h
 LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 ALL   += wrpc-w1-read wrpc-w1-write

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <wrc.h>
+#include <wrpc.h>
 
 #include "types.h"
 #include "board.h"
@@ -288,20 +289,25 @@ int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 	return n_recvd;
 }
 
-int minic_tx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t size,
+int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t *payload, uint32_t size,
 		   struct hw_timestamp *hwts)
 {
 	uint32_t d_hdr, mcr, nwords;
 	uint8_t ts_valid;
-	int i;
+	int i, hsize;
+
 	minic_new_tx_buffer();
 
-	memset((void *)minic.tx_head, 0x0, size + 16);
-	memset((void *)minic.tx_head + 4, 0, size < 60 ? 60 : size);
-	memcpy((void *)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
-	memcpy((void *)minic.tx_head + 4 + ETH_HEADER_SIZE, payload, size);
+	if (hdr->ethtype == htons(0x8100))
+		hsize = sizeof(struct wr_ethhdr_vlan);
+	else
+		hsize = sizeof(struct wr_ethhdr);
 
-	size += ETH_HEADER_SIZE;
+	memset((void *)minic.tx_head, 0x0, size + hsize + 4);
+	memcpy((void *)minic.tx_head + 4, hdr, hsize);
+	memcpy((void *)minic.tx_head + 4 + hsize, payload, size);
+	size += hsize;
+
 	if (size < 60)
 		size = 60;
 
