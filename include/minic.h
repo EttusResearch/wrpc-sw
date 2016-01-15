@@ -19,9 +19,15 @@ void minic_disable(void);
 int minic_poll_rx(void);
 void minic_get_stats(int *tx_frames, int *rx_frames);
 
-int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
+struct wr_ethhdr {
+	uint8_t dstmac[6];
+	uint8_t srcmac[6];
+	uint16_t ethtype;
+};
+
+int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 		   struct hw_timestamp *hwts);
-int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
+int minic_tx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t size,
 		   struct hw_timestamp *hwts);
 
 #endif

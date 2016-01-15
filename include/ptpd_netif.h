@@ -80,7 +80,6 @@ PACKED struct wr_timestamp {
 	int correct;
 };
 
-
 // Creates UDP or Ethernet RAW socket (determined by sock_type) bound
 // to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
 // automatically added to multicast group. User can specify

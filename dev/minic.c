@@ -191,7 +191,7 @@ int minic_poll_rx()
 	return (isr & MINIC_EIC_ISR_RX) ? 1 : 0;
 }
 
-int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
+int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 		   struct hw_timestamp *hwts)
 {
 	uint32_t frame_size, payload_size, num_words;
@@ -262,7 +262,7 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 		n_recvd = (buf_size < payload_size ? buf_size : payload_size);
 		minic.rx_count++;
 
-		minic_rx_memcpy(hdr, (void *)minic.rx_head + 4,
+		minic_rx_memcpy((void *)hdr, (void *)minic.rx_head + 4,
 				ETH_HEADER_SIZE);
 		minic_rx_memcpy(payload, (void *)minic.rx_head + 4
 				+ ETH_HEADER_SIZE, n_recvd);
@@ -288,7 +288,7 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 	return n_recvd;
 }
 
-int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
+int minic_tx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t size,
 		   struct hw_timestamp *hwts)
 {
 	uint32_t d_hdr, mcr, nwords;
