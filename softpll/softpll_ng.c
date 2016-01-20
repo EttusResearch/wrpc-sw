@@ -13,7 +13,6 @@
 
 #include <wrc.h>
 #include "board.h"
-#include "trace.h"
 #include "hw/softpll_regs.h"
 #include "hw/pps_gen_regs.h"
 
@@ -347,12 +346,12 @@ void spll_init(int mode, int slave_ref_channel, int align_pps)
 			s->ext.main = &s->mpll;
 			external_init(&s->ext, spll_n_chan_ref + spll_n_chan_out, align_pps);
 		} else {
-			TRACE_DEV("softpll: attempting to enable GM mode on non-GM hardware.\n");
+			pll_verbose("softpll: attempting to enable GM mode on non-GM hardware.\n");
 			return;
 		}
 	}
 
-	TRACE_DEV
+	pll_verbose
 	    ("softpll: mode %s, %d ref channels, %d out channels\n",
 	     modes[mode], spll_n_chan_ref, spll_n_chan_out);
 
@@ -381,7 +380,7 @@ void spll_start_channel(int channel)
 	struct softpll_state *s = (struct softpll_state *) &softpll;
 
 	if (s->seq_state != SEQ_READY || !channel) {
-		TRACE_DEV("Can't start channel %d, the PLL is not ready\n",
+		pll_verbose("Can't start channel %d, the PLL is not ready\n",
 			  channel);
 		return;
 	}
@@ -502,13 +501,13 @@ void spll_enable_ptracker(int ref_channel, int enable)
 		ptracker_start((struct spll_ptracker_state *)&softpll.
 			       ptrackers[ref_channel]);
 		ptracker_mask |= (1 << ref_channel);
-		TRACE_DEV("Enabling ptracker channel: %d\n", ref_channel);
+		pll_verbose("Enabling ptracker channel: %d\n", ref_channel);
 
 	} else {
 		ptracker_mask &= ~(1 << ref_channel);
 		if (ref_channel != softpll.mpll.id_ref)
 			spll_enable_tagger(ref_channel, 0);
-		TRACE_DEV("Disabling ptracker tagger: %d\n", ref_channel);
+		pll_verbose("Disabling ptracker tagger: %d\n", ref_channel);
 	}
 }
 
@@ -542,7 +541,7 @@ static int spll_update_aux_clocks(void)
 
 		if(s->seq_state != AUX_DISABLED && !aux_locking_enabled(ch))
 		{
-			TRACE_DEV("softpll: disabled aux channel %d\n", ch);
+			pll_verbose("softpll: disabled aux channel %d\n", ch);
 			spll_stop_channel(ch);
 			aux_set_channel_status(ch, 0);
 			s->seq_state = AUX_DISABLED;
@@ -551,7 +550,7 @@ static int spll_update_aux_clocks(void)
 		switch (s->seq_state) {
 			case AUX_DISABLED:
 				if (softpll.mpll.ld.locked && aux_locking_enabled(ch)) {
-					TRACE_DEV("softpll: enabled aux channel %d\n", ch);
+					pll_verbose("softpll: enabled aux channel %d\n", ch);
 					spll_start_channel(ch);
 					s->seq_state = AUX_LOCK_PLL;
 				}
@@ -559,7 +558,7 @@ static int spll_update_aux_clocks(void)
 
 			case AUX_LOCK_PLL:
 				if (s->pll.dmtd.ld.locked) {
-					TRACE_DEV ("softpll: channel %d locked [aligning @ %d ps]\n", ch, softpll.mpll_shift_ps);
+					pll_verbose ("softpll: channel %d locked [aligning @ %d ps]\n", ch, softpll.mpll_shift_ps);
 					set_phase_shift(ch, softpll.mpll_shift_ps);
 					s->seq_state = AUX_ALIGN_PHASE;
 				}
@@ -568,7 +567,7 @@ static int spll_update_aux_clocks(void)
 
 			case AUX_ALIGN_PHASE:
 				if (!mpll_shifter_busy(&s->pll.dmtd)) {
-					TRACE_DEV("softpll: channel %d phase aligned\n", ch);
+					pll_verbose("softpll: channel %d phase aligned\n", ch);
 					aux_set_channel_status(ch, 1);
 					s->seq_state = AUX_READY;
 				}
@@ -576,7 +575,7 @@ static int spll_update_aux_clocks(void)
 
 			case AUX_READY:
 				if (!softpll.mpll.ld.locked || !s->pll.dmtd.ld.locked) {
-					TRACE_DEV("softpll: aux channel %d or mpll lost lock\n", ch);
+					pll_verbose("softpll: aux channel %d or mpll lost lock\n", ch);
 					aux_set_channel_status(ch, 0); 
 					s->seq_state = AUX_DISABLED;
 				}
@@ -704,20 +703,20 @@ void check_vco_frequencies()
 	disable_irq();
 
 	int f_min, f_max;
-	TRACE_DEV("SoftPLL VCO Frequency/APR test:\n");
+	pll_verbose("SoftPLL VCO Frequency/APR test:\n");
 
 	spll_set_dac(-1, 0);
 	f_min = spll_measure_frequency(SPLL_OSC_DMTD);
 	spll_set_dac(-1, 65535);
 	f_max = spll_measure_frequency(SPLL_OSC_DMTD);
-	TRACE_DEV("DMTD VCO:  Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, 62500000));
+	pll_verbose("DMTD VCO:  Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, 62500000));
 
 	spll_set_dac(0, 0);
 	f_min = spll_measure_frequency(SPLL_OSC_REF);
 	spll_set_dac(0, 65535);
 	f_max = spll_measure_frequency(SPLL_OSC_REF);
-	TRACE_DEV("REF VCO:   Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, REF_CLOCK_FREQ_HZ));
+	pll_verbose("REF VCO:   Low=%d Hz Hi=%d Hz, APR = %d ppm.\n", f_min, f_max, calc_apr(f_min, f_max, REF_CLOCK_FREQ_HZ));
 
 	f_min = spll_measure_frequency(SPLL_OSC_EXT);
-	TRACE_DEV("EXT clock: Freq=%d Hz\n", f_min);
+	pll_verbose("EXT clock: Freq=%d Hz\n", f_min);
 }

@@ -10,10 +10,8 @@
 /* spll_external.h - implementation of SoftPLL servo for the 
    external (10 MHz - Grandmaster mode) reference channel */
 
+#include <wrc.h>
 #include "softpll_ng.h"
-
-#include <pp-printf.h>
-#include "trace.h"
 #include "irq.h"
 
 #define ALIGN_STATE_EXT_OFF 0
@@ -135,7 +133,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			PPSG->ADJ_NSEC = 3;
 			PPSG->ESCR = PPSG_ESCR_SYNC;
 			s->align_state = ALIGN_STATE_INIT_CSYNC;
-			TRACE_DEV("EXT: DMTD locked.\n");
+			pll_verbose("EXT: DMTD locked.\n");
 			}
 			break;
 
@@ -151,7 +149,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			if(time_after_eq(timer_get_tics(), s->align_timer)) {
 				s->align_state = ALIGN_STATE_START_ALIGNMENT;
 				s->align_shift = 0;
-				TRACE_DEV("EXT: CSync complete.\n");
+				pll_verbose("EXT: CSync complete.\n");
 			}
 			break;
 
@@ -166,7 +164,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 					s->align_step = 100;
 				}
 
-				TRACE_DEV("EXT: Align target %d, step %d.\n", s->align_target, s->align_step);
+				pll_verbose("EXT: Align target %d, step %d.\n", s->align_target, s->align_step);
 				s->align_state = ALIGN_STATE_WAIT_SAMPLE;
 			}
 			break;
@@ -187,7 +185,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 
 		case ALIGN_STATE_COMPENSATE_DELAY:
 			if(!mpll_shifter_busy(s->main)) {
-				TRACE_DEV("EXT: Align done.\n");
+				pll_verbose("EXT: Align done.\n");
 				s->align_state = ALIGN_STATE_LOCKED;
 			}
 			break;

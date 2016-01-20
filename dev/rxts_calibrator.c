@@ -12,7 +12,6 @@
 #include <wrc.h>
 
 #include "board.h"
-#include "trace.h"
 #include "syscon.h"
 #include "endpoint.h"
 #include "softpll_ng.h"
@@ -150,7 +149,7 @@ int rxts_calibration_update(uint32_t *t24p_value)
 	if (cal_cur_phase >= CAL_SCAN_RANGE) {
 		if (det_rising.state != TD_DONE || det_falling.state != TD_DONE) 
 		{
-			TRACE_DEV("RXTS calibration error.\n");
+			wrc_verbose("RXTS calibration error.\n");
 			return -1;
 		}
 
@@ -173,7 +172,7 @@ int rxts_calibration_update(uint32_t *t24p_value)
 		if(ttrans >= REF_CLOCK_PERIOD_PS) ttrans -= REF_CLOCK_PERIOD_PS;
 
 
-		TRACE_DEV("RXTS calibration: R@%dps, F@%dps, transition@%dps\n",
+		wrc_verbose("RXTS calibration: R@%dps, F@%dps, transition@%dps\n",
 			  det_rising.trans_phase, det_falling.trans_phase,
 			  ttrans);
 

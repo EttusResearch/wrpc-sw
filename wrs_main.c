@@ -34,16 +34,16 @@ int main(void)
 	stats.start_cnt++;
 	_endram = ENDRAM_MAGIC;
 	uart_init_hw();
-	TRACE("\n");
-	TRACE("WR Switch Real Time Subsystem (c) CERN 2011 - 2014\n");
-	TRACE("Revision: %s, built: %s %s.\n",
+	pp_printf("\n");
+	pp_printf("WR Switch Real Time Subsystem (c) CERN 2011 - 2014\n");
+	pp_printf("Revision: %s, built: %s %s.\n",
 	      build_revision, build_date, build_time);
-	TRACE("SCB version: %d. %s\n", scb_ver,(scb_ver>=34)?"10 MHz SMC Output.":"" );
-	TRACE("Start counter %d\n", stats.start_cnt);
-	TRACE("--\n");
+	pp_printf("SCB version: %d. %s\n", scb_ver,(scb_ver>=34)?"10 MHz SMC Output.":"" );
+	pp_printf("Start counter %d\n", stats.start_cnt);
+	pp_printf("--\n");
 
 	if (stats.start_cnt > 1) {
-		TRACE("!!spll does not work after restart!!\n");
+		pp_printf("!!spll does not work after restart!!\n");
 		/* for sure problem is in calling second time ad9516_init,
 		 * but not only */
 	}

@@ -26,6 +26,15 @@ config RAMSIZE
 	default 65536 if WR_SWITCH
 	default 131072
 
+config PLL_VERBOSE
+	boolean
+	default y if WR_SWITCH
+
+config WRC_VERBOSE
+	boolean
+	default y if WR_SWITCH
+
+
 # CONFIG_WR_SWITCH has no further options at all at this point
 
 config WR_NODE_PCS16
@@ -229,6 +238,29 @@ config UART_SW
 	  an addition. If the option is turned on, ppsi log messages
 	  are routed to the software uart. The interactive wrpc shell
 	  and diagnostics run on the hardware UART if available.
+
+config NET_VERBOSE
+	depends on DEVELOPER && WR_NODE
+	boolean "Extra verbose messages for networking"
+	help
+	  This is mainly a debug tool, to be left off unless you hack
+	  in the network subsystem.
+
+config PLL_VERBOSE
+	depends on DEVELOPER
+	boolean "Verbose messages in softpll"
+	help
+	  The softpll is usually silent in WR node and verbose in WR
+	  switch. You can enable pll messages in WR node for debugging.
+
+config WRC_VERBOSE
+	depends on DEVELOPER
+	boolean "More verbose messages in wr core"
+	default y if WR_SWITCH
+	help
+	  This enables some more diagnostic messages. Normally off.
+
+
 
 config SDB_STORAGE
 	depends on WR_NODE

@@ -361,7 +361,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		fid = MINIC_TSR0_FID_R(minic_readl(MINIC_REG_TSR0));
 
 		if (fid != WRPC_FID) {
-			TRACE_DEV("minic_tx_frame: unmatched fid %d vs %d\n",
+			wrc_verbose("minic_tx_frame: unmatched fid %d vs %d\n",
 				  fid, WRPC_FID);
 		}
 
@@ -376,7 +376,7 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 		hwts->ahead = 0;
 		hwts->nsec = counter_r * (REF_CLOCK_PERIOD_PS / 1000);
 		
-//        TRACE_DEV("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
+//        wrc_verbose("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
 		minic.tx_count++;
         }
         

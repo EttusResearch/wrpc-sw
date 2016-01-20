@@ -15,6 +15,8 @@
 #include <inttypes.h>
 #include <syscon.h>
 #include <pp-printf.h>
+#include <util.h>
+#include <trace.h>
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
 
@@ -35,7 +37,6 @@
 void wrc_mon_gui(void);
 void shell_init(void);
 int wrc_log_stats(void);
-void wrc_debug_printf(int subsys, const char *fmt, ...);
 
 /* This header is included by softpll: manage wrc/wrs difference */
 #ifdef CONFIG_WR_NODE

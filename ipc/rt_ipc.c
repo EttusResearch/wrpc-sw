@@ -40,7 +40,7 @@ static void clear_state(void)
 /* Sets the phase setpoint on a given channel */
 int rts_adjust_phase(int channel, int32_t phase_setpoint)
 {
-//    TRACE("Adjusting phase: ref channel %d, setpoint=%d ps.\n", channel, phase_setpoint);
+//    pp_printf("Adjusting phase: ref channel %d, setpoint=%d ps.\n", channel, phase_setpoint);
     spll_set_phase_shift(0, phase_setpoint);
     pstate.channels[channel].phase_setpoint = phase_setpoint;
     return 0;
@@ -69,7 +69,7 @@ int rts_set_mode(int mode)
 	for(i=0;options[i].desc != NULL;i++)
 		if(mode == options[i].mode_rt)
 		{
-			TRACE("RT: Setting mode to %s.\n", options[i].desc);
+			pp_printf("RT: Setting mode to %s.\n", options[i].desc);
 			if(options[i].do_init)
 				spll_init(options[i].mode_spll, 0, 1);
 			else
@@ -84,12 +84,12 @@ int rts_lock_channel(int channel, int priority)
 {
 	if(pstate.mode != RTS_MODE_BC)
 	{
-        TRACE("trying to lock while not in slave mode,..\n");
+        pp_printf("trying to lock while not in slave mode,..\n");
 		return -1;
     }
 
 
-	TRACE("RT [slave]: Locking to: %d (prio %d)\n", channel, priority);
+	pp_printf("RT [slave]: Locking to: %d (prio %d)\n", channel, priority);
 	spll_init(SPLL_MODE_SLAVE, channel, 0);
     pstate.current_ref = channel;
 

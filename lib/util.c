@@ -12,8 +12,6 @@
 #include <time.h>
 #include <wrc.h>
 
-#include "util.h"
-
 /* cut from libc sources */
 
 #define 	YEAR0   1900
@@ -98,6 +96,15 @@ void pcprintf(int row, int col, int color, const char *fmt, ...)
 	va_end(ap);
 	pp_printf("\e[m");
 }
+
+void __debug_printf(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vprintf(fmt, ap);
+	va_end(ap);
+}
+
 
 void term_clear(void)
 {

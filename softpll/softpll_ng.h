@@ -13,6 +13,7 @@
 #define __SOFTPLL_NG_H
 
 #include <stdint.h>
+#include "util.h"
 #include "spll_defs.h"
 #include "spll_common.h"
 #include "spll_debug.h"

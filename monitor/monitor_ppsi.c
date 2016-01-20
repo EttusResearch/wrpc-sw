@@ -18,7 +18,6 @@
 #include <syscon.h>
 #include <pps_gen.h>
 #include <onewire.h>
-#include <util.h>
 #include "wrc_ptp.h"
 #include "hal_exports.h"
 #include "lib/ipv4.h"
