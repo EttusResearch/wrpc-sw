@@ -4,7 +4,7 @@
 
 T=$(mktemp /tmp/wrpc-config.XXXXXX)
 
-configs=$(ls configs)
+configs=$(cd configs; echo *_defconfig)
 if [ $# -ne 0 ]; then
     configs="$*"
 fi

@@ -10,9 +10,6 @@
 
 static int cmd_verbose(const char *args[])
 {
-	int v;
-	v = args[0][0] - '0';
-
 	if (args[0])
 		pp_global_d_flags = pp_diag_parse((char *)args[0]);
 	pp_printf("PPSI verbosity: %08lx\n", pp_global_d_flags);
