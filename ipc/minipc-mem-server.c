@@ -188,8 +188,9 @@ int minipc_server_action(struct minipc_ch *ch, int timeoutms)
 		if (!(strcmp(p_in->name, flist->pd->name)))
 			break;
 	if (!flist) {
+		int i = EOPNOTSUPP;
 		p_out->type = MINIPC_ARG_ENCODE(MINIPC_ATYPE_ERROR, int);
-		*(int *)(&p_out->val) = EOPNOTSUPP;
+		memcpy(&p_out->val, &i, sizeof(i));
 		goto send_reply;
 	}
 	pd = flist->pd;
@@ -198,7 +199,7 @@ int minipc_server_action(struct minipc_ch *ch, int timeoutms)
 	i = pd->f(pd, p_in->args, p_out->val);
 	if (i < 0) {
 		p_out->type = MINIPC_ARG_ENCODE(MINIPC_ATYPE_ERROR, int);
-		*(int *)(&p_out->val) = errno;
+		memcpy(&p_out->val, &errno, sizeof(errno));
 	} else {
 		/* Use retval, but fix the length for strings */
 		if (MINIPC_GET_ATYPE(pd->retval) == MINIPC_ATYPE_STRING) {

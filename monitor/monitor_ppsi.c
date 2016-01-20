@@ -90,9 +90,6 @@ void wrc_mon_gui(void)
 	int aux_stat;
 	uint64_t sec;
 	uint32_t nsec;
-#ifdef CONFIG_ETHERBONE
-	uint8_t ip[4];
-#endif
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 	int64_t crtt;
@@ -155,14 +152,17 @@ void wrc_mon_gui(void)
 			cprintf(C_GREEN, "Calibrated  ");
 		else
 			cprintf(C_RED, "Uncalibrated  ");
-#ifdef CONFIG_ETHERBONE
-		cprintf(C_WHITE, "\nIPv4: ");
-		getIP(ip);
-		if (needIP)
-			cprintf(C_RED, "BOOTP running");
-		else
-			cprintf(C_GREEN, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-#endif
+
+		if (HAS_IP) {
+			uint8_t ip[4];
+
+			cprintf(C_WHITE, "\nIPv4: ");
+			getIP(ip);
+			if (needIP)
+				cprintf(C_RED, "BOOTP running");
+			else
+				cprintf(C_GREEN, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+		}
 
 		if (wrc_mon_status() == 0)
 			return;

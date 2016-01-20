@@ -61,7 +61,7 @@ LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 
 # packet-filter rules depend on configuration; default is rules-plain
 pfilter-y                     := rules-plain.bin
-pfilter-$(CONFIG_ETHERBONE)   := rules-ebone.bin
+pfilter-$(CONFIG_IP)   := rules-ebone.bin
 pfilter-$(CONFIG_NIC_PFILTER) := rules-e+nic.bin
 export pfilter-y
 
@@ -112,7 +112,7 @@ all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
 # we need to remove "ptpdump" support for ppsi if RAM size is small and
 # we include etherbone
 ifneq ($(CONFIG_RAMSIZE),131072)
-  ifdef CONFIG_ETHERBONE
+  ifdef CONFIG_IP
     PPSI_USER_CFLAGS = -DCONFIG_NO_PTPDUMP
   endif
 endif
@@ -160,7 +160,7 @@ $(AUTOCONF): silentoldconfig
 
 clean:
 	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).ram \
-		$(LDS)  rules-*.bin .depend
+		$(LDS)  rules-*.bin
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
@@ -168,7 +168,7 @@ clean:
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
-tools:
+tools: .config
 	$(MAKE) -C tools
 
 # if needed, check out the submodules (first time only), so users
@@ -181,22 +181,20 @@ gitmodules:
 # following targets from Makefile.kconfig
 silentoldconfig:
 	@mkdir -p include/config
-	$(MAKE) -f Makefile.kconfig $@
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 scripts_basic config:
-	$(MAKE) -f Makefile.kconfig $@
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 %config:
-	$(MAKE) -f Makefile.kconfig $@
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 defconfig:
-	$(MAKE) -f Makefile.kconfig spec_defconfig
+	$(MAKE) quiet=quiet_ -f Makefile.kconfig spec_defconfig
 
 .config: silentoldconfig
 
-# Trivial depend rule. We can't $(obj-y:.o=.c) because some objects come from
-# assembly source.  In glob avoid the toold directory, and ppsi/pp-printf
-.depend: $(wildcard *.c [^pt]/*.c)
-	$(CC) $(CFLAGS) -DSDBFS_BIG_ENDIAN -MM $^ > $@
-
--include .depend
+# This forces more compilations than needed, but it's useful
+# (we depend on .config and not on include/generated/autoconf.h
+# because the latter is touched by silentoldconfig at each build)
+$(obj-y): .config $(wildcard include/*.h)
