@@ -24,6 +24,7 @@ obj-$(CONFIG_WR_NODE)   += wrc_main.o
 obj-$(CONFIG_WR_SWITCH) += wrs_main.o
 obj-$(CONFIG_WR_SWITCH) += ipc/minipc-mem-server.o ipc/rt_ipc.o
 
+obj-y += dump-info.o
 # our linker script is preprocessed, so have a rule here
 %.ld: %.ld.S $(AUTOCONF) .config
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
@@ -37,11 +38,14 @@ cflags-$(CONFIG_PPSI) += \
 	-ffreestanding \
 	-include include/ppsi-wrappers.h \
 	-Iinclude \
-	-I$(PPSI)/include \
 	-I$(PPSI)/arch-wrpc \
-	-I$(PPSI)/arch-wrpc/include \
 	-I$(PPSI)/proto-ext-whiterabbit \
 	-Iboards/spec
+
+# in order to build tools/wrpc-dump, we need these flags, even for wrs builds
+cflags-y += \
+	-I$(PPSI)/arch-wrpc/include \
+	-I$(PPSI)/include
 
 obj-ppsi = \
 	$(PPSI)/ppsi.o

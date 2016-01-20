@@ -146,6 +146,15 @@ config CHECK_RESET
 	  detects that it is re-executed and dumps a stack trace; it
 	  then clears the stack (for next time) and restarts again.
 
+config SPLL_FIFO_LOG
+	depends on DEVELOPER
+	bool "Add a circular buffer for spll logging, used by tools/wrpc-dump"
+	help
+	  This option addrs 256 bytes to the wrpc bynary, to log
+	  the DDMTD tags read from the fifos, the interrupts and the
+	  related timing.  The information is shown by tools/wrpc-dump
+	  if present, no change/rebuild of the tool is needed.
+
 choice
 	prompt "Implementation of pp_printf"
 	depends on DEVELOPER && WR_NODE

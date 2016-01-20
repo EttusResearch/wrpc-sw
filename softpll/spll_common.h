@@ -12,14 +12,10 @@
 #ifndef __SPLL_COMMON_H
 #define __SPLL_COMMON_H
 
-#include <stdint.h>
-#include <stdlib.h>
 #include <syscon.h>
 
 #include <hw/softpll_regs.h>
 #include <hw/pps_gen_regs.h>
-
-#include "spll_defs.h"
 
 #define SPLL_LOCKED 	1
 #define SPLL_LOCKING 	0

@@ -932,6 +932,92 @@ After that, you can use the Xilinx JTAG cable and Xilinx ISE Impact tool to
 write your @i{output.mcs} file to the Flash memory.
 
 @c ##########################################################################
+@page
+@node wrpc-dump
+@appendix wrpc-dump
+
+In December 2015, we added @t{tools/wrpc-dump}. The program accesses
+a wrpc memory image (the 128k binary dump) and prints the internal
+status of the program.
+
+@c ==========================================================================
+@node wrpc-dump with Current Code
+@section wrpc-dump with Current Code
+
+
+@t{wrpc-dump} uses some information that we included at offset 0x80
+in the binary, to detect endianness conversions and to find the actual data.
+Thus, it only needs to receive the name of the file, either an on-disk file
+or the live PCI memory if available (for @i{spec} devices, it's resource 0 of
+the PCI space).
+
+@example
+   tools/wrpc-dump /tmp/logs/vetar-dump-42
+   tools/wrpc-dump /sys/bus/pci/devices/0000:02:00.0/resource0
+@end example
+
+If you built @i{wrpc-sw} with @t{CONFIG_SPLL_FIFO_LOG} (a
+``developer'' configuration option), the dump includes the last 16
+tags being accessed by @i{softpll}, in relation with interrupts and
+timing.  Please see @i{sofpll/softpll_ng::_irq_enter} for details.
+
+@c ==========================================================================
+@node wrpc-dump with Older WRPC Binaries
+@section wrpc-dump with Older WRPC Binaries
+
+The tool has another working mode, that you can use with older
+@i{wrpc} builds, where the special table is missing (but please be
+aware that the data structures may have changed slightly).  In this
+mode, you provide the address of the data structure and its name. It
+supports the names @i{pll}, @i{fifo} (the circular log described
+above), @i{ppg}, @i{ppi}, @i{servo_state}, and @i{ds}. The last name
+refers to the PTP data sets, and for this the pointer needed is
+@t{ppg} (ppsi global data).
+
+This is an example:
+
+@smallexample
+   $ ./tools/wrpc-dump dump-file 00015798 servo_state
+
+   servo_state at 0x15798
+           if_name:                   ""
+           flags:                     1
+           state:                     4
+           delta_tx_m:                10
+           delta_rx_m:                174410
+           delta_tx_s:                0
+           delta_rx_s:                3200
+           fiber_fix_alpha:           73622176
+           clock_period_ps:           8000
+           t1:                        correct 1: 1448628309.390213200:0000
+           t2:                        correct 1: 1448628309.390213520:2921
+           t3:                        correct 1: 1448628310.419072616:0000
+           t4:                        correct 1: 1448628310.419073104:6041
+   [...]
+@end smallexample
+
+The address is specified as a hex number, and can be retrieved running
+``@t{lm32-elf-nm  wrc.elf}''.
+
+Please note that the @i{spec} device has a strange memory mapping, and
+it needs a special endian conversion. With current @i{wrpc} it is
+autodetected, but if you dump an older binary you'll need to set the
+@t{WRPC_SPEC} environment variable (to any value you like) to properly
+access the PCI memory or a dump taken from PCI:
+
+@smallexample
+   $ export WRPC_SPEC=y
+@end smallexample
+
+or
+
+@smallexample
+   $ WRPC_SPEC=y ./tools/wrpc-dump dump-file 00015798 servo_state
+@end smallexample
+
+This is not needed if the dump is retrieved using Etherbone.
+
+@c ##########################################################################
 @bye
 
 @c  LocalWords:  gnudd titlepage iftex texinfo CERN documentlanguage settitle

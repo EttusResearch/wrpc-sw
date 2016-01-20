@@ -21,26 +21,20 @@
 
 #include "irq.h"
 
-volatile int irq_count = 0;
+#ifdef CONFIG_SPLL_FIFO_LOG
+  struct spll_fifo_log fifo_log[FIFO_LOG_LEN];
+  #define HAS_FIFO_LOG 1
+#else
+  #define HAS_FIFO_LOG 0
+  extern struct spll_fifo_log *fifo_log;
+#endif
 
 volatile struct SPLL_WB *SPLL;
 volatile struct PPSG_WB *PPSG;
 
 int spll_n_chan_ref, spll_n_chan_out;
 
-/*
- * The includes below contain code (not only declarations) to enable
- * the compiler to inline functions where necessary and save some CPU
- * cycles
- */
 
-#include "spll_defs.h"
-#include "spll_common.h"
-#include "spll_debug.h"
-#include "spll_helper.h"
-#include "spll_main.h"
-#include "spll_ptracker.h"
-#include "spll_external.h"
 
 #define MAIN_CHANNEL (spll_n_chan_ref)
 
@@ -60,30 +54,6 @@ int spll_n_chan_ref, spll_n_chan_out;
 #define AUX_ALIGN_PHASE 3
 #define AUX_READY 4
 
-struct spll_aux_state {
-	int seq_state;
-	int32_t phase_target;
-	union {
-		struct spll_main_state dmtd;
-		/* spll_external_state ch_bb */
-	} pll;
-};
-
-struct softpll_state {
-	int mode;
-	int seq_state;
-	int dac_timeout;
-	int default_dac_main;
-	int delock_count;
-	int32_t mpll_shift_ps;
-
-	struct spll_helper_state helper;
-	struct spll_external_state ext;
-	struct spll_main_state mpll;
-	struct spll_aux_state aux[MAX_CHAN_AUX];
-	struct spll_ptracker_state ptrackers[MAX_PTRACKERS];
-};
-
 static const struct stringlist_entry seq_states [] =
 {
 	{ SEQ_START_EXT, "start-ext" },
@@ -99,7 +69,7 @@ static const struct stringlist_entry seq_states [] =
 	{ 0, NULL }
 };
 
-static volatile struct softpll_state softpll;
+volatile struct softpll_state softpll;
 
 static volatile int ptracker_mask = 0;
 /* fixme: should be done by spll_init() but spll_init is called to
@@ -265,19 +235,43 @@ static inline void update_loops(struct softpll_state *s, int tag_value, int tag_
 void _irq_entry(void)
 {
 	struct softpll_state *s = (struct softpll_state *)&softpll;
+	uint32_t trr;
+	int i, tag_source, tag_value;
+	static uint16_t tag_count;
+	struct spll_fifo_log *l = NULL;
+	uint32_t enter_stamp;
 
-/* check if there are more tags in the FIFO */
+	if (HAS_FIFO_LOG)
+		enter_stamp = (PPSG->CNTR_NSEC & 0xfffffff);
+
+	/* check if there are more tags in the FIFO, and log them if so configured to */
 	while (!(SPLL->TRR_CSR & SPLL_TRR_CSR_EMPTY)) {
-	
-		volatile uint32_t trr = SPLL->TRR_R0;
-		int tag_source = SPLL_TRR_R0_CHAN_ID_R(trr);
-		int tag_value  = SPLL_TRR_R0_VALUE_R(trr);
+		trr = SPLL->TRR_R0;
+
+		if (HAS_FIFO_LOG) {
+			/* save this to a circular buffer */
+			i = tag_count % FIFO_LOG_LEN;
+			l = fifo_log + i;
+			l->tstamp = (PPSG->CNTR_NSEC & 0xfffffff);
+			if (!enter_stamp)
+				enter_stamp = l->tstamp;
+			l->duration = 0;
+			l->trr = trr;
+			l->irq_count = s->irq_count & 0xffff;
+			l->tag_count = tag_count++;
+		}
+
+		/* And process the values */
+		tag_source = SPLL_TRR_R0_CHAN_ID_R(trr);
+		tag_value  = SPLL_TRR_R0_VALUE_R(trr);
 
 		sequencing_fsm(s, tag_value, tag_source);
 		update_loops(s, tag_value, tag_source);
 	}
 
-	irq_count++;
+	if (HAS_FIFO_LOG && l)
+		l->duration = (PPSG->CNTR_NSEC & 0xfffffff) - enter_stamp;
+	s->irq_count++;
 	clear_irq();
 }
 
@@ -481,13 +475,16 @@ void spll_get_num_channels(int *n_ref, int *n_out)
 
 void spll_show_stats()
 {
+	struct softpll_state *s = (struct softpll_state *)&softpll;
+
 	if (softpll.mode > 0)
 		    pp_printf("softpll: irqs %d seq %s mode %d "
 		     "alignment_state %d HL%d ML%d HY=%d MY=%d DelCnt=%d\n",
-		     irq_count, stringlist_lookup(seq_states, softpll.seq_state), softpll.mode,
-		     softpll.ext.align_state, softpll.helper.ld.locked, softpll.mpll.ld.locked,
-		     softpll.helper.pi.y, softpll.mpll.pi.y,
-		     softpll.delock_count);
+		      s->irq_count, stringlist_lookup(seq_states, s->seq_state),
+			      s->mode, s->ext.align_state,
+			      s->helper.ld.locked, s->mpll.ld.locked,
+			      s->helper.pi.y, s->mpll.pi.y,
+			      s->delock_count);
 }
 
 int spll_shifter_busy(int channel)
@@ -657,7 +654,7 @@ void spll_update()
 	if (is_wr_switch) {
 		stats.sequence++;
 		stats.mode  = softpll.mode;
-		stats.irq_cnt = irq_count;
+		stats.irq_cnt = softpll.irq_count;
 		stats.seq_state = softpll.seq_state;
 		stats.align_state = softpll.ext.align_state;
 		stats.H_lock = softpll.helper.ld.locked;

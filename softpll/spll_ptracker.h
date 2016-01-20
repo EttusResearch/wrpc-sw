@@ -12,8 +12,6 @@
 #ifndef __SPLL_PTRACKER_H
 #define __SPLL_PTRACKER_H
 
-#include "spll_common.h"
-
 struct spll_ptracker_state {
 	int enabled, id;
 	int n_avg, acc, avg_count, preserve_sign;

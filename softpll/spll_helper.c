@@ -9,8 +9,7 @@
 
 /* spll_helper.c - implmentation of the Helper PLL servo algorithm. */
 
-#include "spll_helper.h"
-#include "spll_debug.h"
+#include "softpll_ng.h"
 
 const int helper_precomp_coefs [] = 
 { /*b0*/ 60648,
