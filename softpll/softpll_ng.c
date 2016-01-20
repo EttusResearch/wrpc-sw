@@ -426,7 +426,7 @@ void spll_set_phase_shift(int channel, int32_t value_picoseconds)
 {
 	int i;
 	if (channel == SPLL_ALL_CHANNELS) {
-		spll_set_phase_shift(0, value_picoseconds);
+		set_phase_shift(0, value_picoseconds);
 		for (i = 0; i < spll_n_chan_out - 1; i++)
 			if (softpll.aux[i].seq_state == AUX_READY)
 				set_phase_shift(i + 1, value_picoseconds);
@@ -597,21 +597,6 @@ int spll_get_aux_status(int channel)
 		rval |= SPLL_AUX_LOCKED;
 
 	return rval;
-}
-
-const char *spll_get_aux_status_string(int channel)
-{
-	const char *aux_stat[] = {"disabled", "locking", "aligning", "locked"};
-	struct spll_aux_state *s = (struct spll_aux_state* )&softpll.aux[channel];
-
-	switch(s->seq_state)
-	{
-		case AUX_DISABLED: return aux_stat[0];
-		case AUX_LOCK_PLL: return aux_stat[1];
-		case AUX_ALIGN_PHASE: return aux_stat[2];
-		case AUX_READY: return aux_stat[3];
-	}
-	return "";
 }
 
 int spll_get_dac(int index)
