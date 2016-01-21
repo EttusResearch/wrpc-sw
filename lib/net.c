@@ -253,7 +253,7 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 		   q->tail, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
-	return min(size - sizeof(struct ethhdr), data_length);
+	return min(size, data_length);
 }
 
 int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *data,
