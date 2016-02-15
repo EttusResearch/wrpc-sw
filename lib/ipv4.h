@@ -42,7 +42,12 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts);
 void arp_init(void);
 void arp_poll(void);
 
-extern int needIP;
+enum ip_status {
+	IP_TRAINING,
+	IP_OK_BOOTP,
+	IP_OK_STATIC,
+};
+extern enum ip_status ip_status;
 void setIP(unsigned char *IP);
 void getIP(unsigned char *IP);
 

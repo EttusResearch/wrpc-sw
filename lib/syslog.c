@@ -66,7 +66,7 @@ void syslog_poll(int l_status)
 	static uint32_t down_tics;
 	int len = 0;
 
-	if (needIP)
+	if (ip_status == IP_TRAINING)
 		return;
 	if (!syslog_addr.daddr)
 		return;

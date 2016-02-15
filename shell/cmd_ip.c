@@ -43,16 +43,24 @@ static int cmd_ip(const char *args[])
 	if (!args[0] || !strcasecmp(args[0], "get")) {
 		getIP(ip);
 	} else if (!strcasecmp(args[0], "set") && args[1]) {
+		ip_status = IP_OK_STATIC;
 		decode_ip(args[1], ip);
 		setIP(ip);
 	} else {
 		return -EINVAL;
 	}
 
-	if (needIP) {
+	format_ip(buf, ip);
+	switch (ip_status) {
+	case IP_TRAINING:
 		pp_printf("IP-address: in training\n");
-	} else {
-		pp_printf("IP-address: %s\n", format_ip(buf, ip));
+		break;
+	case IP_OK_BOOTP:
+		pp_printf("IP-address: %s (from bootp)\n", buf);
+		break;
+	case IP_OK_STATIC:
+		pp_printf("IP-address: %s (static assignment)\n", buf);
+		break;
 	}
 	return 0;
 }

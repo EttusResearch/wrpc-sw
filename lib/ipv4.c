@@ -20,7 +20,7 @@
 #define htons(x) x
 #endif
 
-int needIP = 1;
+enum ip_status ip_status = IP_TRAINING;
 static uint8_t myIP[4];
 
 /* bootp: bigger buffer, UDP based */
@@ -105,11 +105,13 @@ static void bootp_poll(void)
 
 	len = ptpd_netif_recvfrom(bootp_socket, &addr,
 				  buf, sizeof(buf), NULL);
-	if (len > 0 && needIP)
+
+	if (ip_status != IP_TRAINING)
+		return;
+
+	if (len > 0)
 		process_bootp(buf, len);
 
-	if (!needIP)
-		return;
 	if (time_before(timer_get_tics(), bootp_tics))
 		return;
 
@@ -128,7 +130,7 @@ static void icmp_poll(void)
 				  buf, sizeof(buf), NULL);
 	if (len <= 0)
 		return;
-	if (needIP)
+	if (ip_status == IP_TRAINING)
 		return;
 
 	if ((len = process_icmp(buf, len)) > 0)
@@ -162,8 +164,8 @@ static void rdate_poll(void)
 
 void ipv4_poll(int l_status)
 {
-	if (l_status == LINK_WENT_UP)
-		needIP = 1;
+	if (l_status == LINK_WENT_UP && ip_status == IP_OK_BOOTP)
+		ip_status = IP_TRAINING;
 	bootp_poll();
 
 	icmp_poll();
@@ -190,7 +192,7 @@ void setIP(unsigned char *IP)
 	while (*eb_ip != ip)
 		*eb_ip = ip;
 
-	needIP = (ip == 0);
-	if (!needIP)
-		bootp_retry = 0;
+	if (ip == 0)
+		ip_status = IP_TRAINING;
+	bootp_retry = 0;
 }

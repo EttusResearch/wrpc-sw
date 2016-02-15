@@ -21,6 +21,7 @@
 #include "wrc_ptp.h"
 #include "hal_exports.h"
 #include "lib/ipv4.h"
+#include "shell.h"
 
 extern int wrc_man_phase;
 
@@ -93,6 +94,7 @@ void wrc_mon_gui(void)
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 	int64_t crtt;
 	int64_t total_asymmetry;
+	char buf[20];
 
 	if (!last_jiffies)
 		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
@@ -157,10 +159,18 @@ void wrc_mon_gui(void)
 
 			cprintf(C_WHITE, "\nIPv4: ");
 			getIP(ip);
-			if (needIP)
+			format_ip(buf, ip);
+			switch (ip_status) {
+			case IP_TRAINING:
 				cprintf(C_RED, "BOOTP running");
-			else
-				cprintf(C_GREEN, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+				break;
+			case IP_OK_BOOTP:
+				cprintf(C_GREEN, "%s (from bootp)", buf);
+				break;
+			case IP_OK_STATIC:
+				cprintf(C_GREEN, "%s (static assignment)", buf);
+				break;
+			}
 		}
 
 		if (wrc_mon_status() == 0)
