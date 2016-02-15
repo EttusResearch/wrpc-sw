@@ -89,6 +89,14 @@ static void wrc_initialize(void)
 	//try reading t24 phase transition from EEPROM
 	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
 	spll_very_init();
+	usleep_init();
+	shell_init();
+
+	wrc_ui_mode = UI_SHELL_MODE;
+	_endram = ENDRAM_MAGIC;
+
+	wrc_ptp_set_mode(WRC_MODE_SLAVE);
+	wrc_ptp_start();
 }
 
 static int wrc_check_link(void)
@@ -145,6 +153,7 @@ int link_status;
 struct wrc_task wrc_tasks[] = {
 	{
 		.name = "idle",
+		.init = wrc_initialize,
 	}, {
 		.name = "net-bh",
 		.enable = &link_status,
@@ -195,21 +204,11 @@ int main(void)
 	int i;
 
 	check_reset();
-	wrc_ui_mode = UI_SHELL_MODE;
-	_endram = ENDRAM_MAGIC;
-
-	wrc_initialize();
-	usleep_init();
-	shell_init();
-
-	wrc_ptp_set_mode(WRC_MODE_SLAVE);
-	wrc_ptp_start();
 
 	/* initialization of individual tasks */
 	for (i = 0; i < wrc_n_tasks; i++)
 		if (wrc_tasks[i].init)
 			wrc_tasks[i].init();
-
 
 	lastj = timer_get_tics();
 	for (;;) {
