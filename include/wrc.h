@@ -34,7 +34,7 @@
 #  define is_wr_node 1
 #endif
 
-void wrc_mon_gui(void);
+int wrc_mon_gui(void);
 void shell_init(void);
 int wrc_log_stats(void);
 

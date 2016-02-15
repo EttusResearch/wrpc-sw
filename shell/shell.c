@@ -128,7 +128,7 @@ void shell_init()
 	state = SH_PROMPT;
 }
 
-void shell_interactive()
+int shell_interactive()
 {
 	int c;
 	switch (state) {
@@ -137,13 +137,13 @@ void shell_interactive()
 		cmd_pos = 0;
 		cmd_len = 0;
 		state = SH_INPUT;
-		break;
+		return 1;
 
 	case SH_INPUT:
 		c = uart_read_byte();
 
 		if (c < 0)
-			return;
+			return 0;
 
 		if (c == 27 || ((current_key & ESCAPE_FLAG) && c == 91))
 			current_key = ESCAPE_FLAG;
@@ -201,14 +201,15 @@ void shell_interactive()
 			}
 			current_key = 0;
 		}
-		break;
+		return 1;
 
 	case SH_EXEC:
 		cmd_buf[cmd_len] = 0;
 		_shell_exec();
 		state = SH_PROMPT;
-		break;
+		return 1;
 	}
+	return 0;
 }
 
 const char *fromhex(const char *hex, int *v)

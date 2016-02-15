@@ -119,21 +119,20 @@ static int wrc_check_link(void)
 
 int wrc_man_phase = 0;
 
-static void ui_update(void)
+static int ui_update(void)
 {
+	int ret;
 
 	if (wrc_ui_mode == UI_GUI_MODE) {
-		wrc_mon_gui();
+		ret = wrc_mon_gui();
 		if (uart_read_byte() == 27 || wrc_ui_refperiod == 0) {
 			shell_init();
 			wrc_ui_mode = UI_SHELL_MODE;
 		}
 	} else {
-		shell_interactive();
+		ret = shell_interactive();
 	}
-	/* Stats is asynchronous now. It's not a different mode, but a flag */
-	if (wrc_stat_running)
-		wrc_log_stats();
+	return ret;
 }
 
 /* initialize functions to be called after reset in check_reset function */
@@ -196,6 +195,7 @@ int main(void)
 		}
 
 		ui_update();
+		wrc_log_stats();
 		wrc_ptp_update();
 		spll_update();
 		check_stack();
