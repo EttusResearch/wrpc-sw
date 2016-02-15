@@ -308,7 +308,7 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 }
 
 
-void update_rx_queues()
+int update_rx_queues()
 {
 	struct wrpc_socket *s = NULL;
 	struct sockq *q;
@@ -323,7 +323,7 @@ void update_rx_queues()
 			   &hwts);
 
 	if (recvd <= 0)		/* No data received? */
-		return;
+		return 0;
 
 	for (i = 0; i < ARRAY_SIZE(socks); i++) {
 		s = socks[i];
@@ -352,7 +352,7 @@ void update_rx_queues()
 	if (i == ARRAY_SIZE(socks)) {
 		net_verbose("%s: could not find socket for packet\n",
 			   __FUNCTION__);
-		return;
+		return 1;
 	}
 
 	q = &s->queue;
@@ -363,7 +363,7 @@ void update_rx_queues()
 		net_verbose
 		    ("%s: queue for socket full; [avail %d required %d]\n",
 		     __FUNCTION__, q->avail, q_required);
-		return;
+		return 1;
 	}
 
 	size = recvd;
@@ -383,4 +383,5 @@ void update_rx_queues()
 		    ntohs(s->bind_addr.ethertype),
 		    s->bind_addr.udpport,
 		    q->avail, q->n, q_required);
+	return 1;
 }
