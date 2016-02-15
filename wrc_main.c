@@ -44,6 +44,8 @@ int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
 uint32_t cal_phase_transition = 2389;
 
+static uint32_t prev_nanos_for_profile;
+
 static void wrc_initialize(void)
 {
 	uint8_t mac_addr[6];
@@ -97,6 +99,7 @@ static void wrc_initialize(void)
 
 	wrc_ptp_set_mode(WRC_MODE_SLAVE);
 	wrc_ptp_start();
+	shw_pps_gen_get_time(NULL, &prev_nanos_for_profile);
 }
 
 int link_status;
@@ -224,13 +227,40 @@ struct wrc_task wrc_tasks[] = {
 
 int wrc_n_tasks = ARRAY_SIZE(wrc_tasks);
 
+/* Account the time to either this task or task 0 */
+static void account_task(struct wrc_task *t, int done_sth)
+{
+	uint32_t nanos;
+	signed int delta;
+
+	if (!done_sth)
+		t = wrc_tasks;
+	shw_pps_gen_get_time(NULL, &nanos);
+	delta = nanos - prev_nanos_for_profile;
+	if (delta < 0)
+		delta += 1000 * 1000 * 1000;
+
+	t->nanos += delta;
+	if (t-> nanos > 1000 * 1000 * 1000) {
+		t->nanos -= 1000 * 1000 * 1000;
+		t->seconds++;
+	}
+	prev_nanos_for_profile = nanos;
+}
+
+/* Run a task with profiling */
 static void wrc_run_task(struct wrc_task *t)
 {
-	if (t->enable && !*t->enable)
-		return;
-	if (t->job)
-	    t->nrun += t->job();
-	else t->nrun++;
+	int done_sth = 0;
+
+	if (!t->job) /* idle task, just count iterations */
+		t->nrun++;
+	else if (!t->enable || *t->enable) {
+		/* either enabled or without a check variable */
+		done_sth = t->job();
+		t->nrun += done_sth;
+	}
+	account_task(t, done_sth);
 }
 
 int main(void)

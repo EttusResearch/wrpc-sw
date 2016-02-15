@@ -18,7 +18,9 @@ struct wrc_task {
 	void (*init)(void);
 	int (*job)(void);
 	/* And we keep statistics about cpu usage */
-	unsigned long  nrun;
+	unsigned long nrun;
+	unsigned long seconds;
+	unsigned long nanos;
 };
 
 

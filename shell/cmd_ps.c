@@ -15,20 +15,21 @@ extern int wrc_n_tasks;
 
 static int cmd_ps(const char *args[])
 {
-	int i, ena;
+	int i;
+	struct wrc_task *t;
 
 	if (args[0] && !strcasecmp(args[0], "reset")) {
 		for (i = 0; i < wrc_n_tasks; i++) {
-			wrc_tasks[i].nrun = 0;
+			t = wrc_tasks + i;
+			t->nrun = t->seconds = t->nanos = 0;
 		}
 		return 0;
 	}
-	pp_printf("iterations   ena  name\n");
+	pp_printf(" iterations     seconds.micros    name\n");
 	for (i = 0; i < wrc_n_tasks; i++) {
-		ena = 1;
-		if (wrc_tasks[i].enable) ena = (*wrc_tasks[i].enable != 0);
-		pp_printf("   %8i   %i   %s\n",
-			  wrc_tasks[i].nrun, ena, wrc_tasks[i].name);
+		t = wrc_tasks + i;
+		pp_printf("  %9li   %9li.%06li  %s\n", t->nrun,
+			  t->seconds, t->nanos/1000, t->name);
 	}
 	return 0;
 }
