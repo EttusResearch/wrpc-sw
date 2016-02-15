@@ -94,11 +94,11 @@ static int align_sample(int channel, int *v)
 	return 0; // sample not valid
 }
 
-void external_align_fsm(volatile struct spll_external_state *s)
+int external_align_fsm(volatile struct spll_external_state *s)
 {
-	int v;
-	switch(s->align_state) {
+	int v, done_sth = 0;
 
+	switch(s->align_state) {
 		case ALIGN_STATE_EXT_OFF:
 			break;
 
@@ -106,6 +106,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			if( !(SPLL->ECCR & SPLL_ECCR_EXT_REF_STOPPED) ) {
 				SPLL->ECCR |= SPLL_ECCR_EXT_REF_PLLRST;
 				s->align_state = ALIGN_STATE_WAIT_PLOCK;
+				done_sth++;
 			}
 			break;
 
@@ -115,6 +116,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 				s->align_state = ALIGN_STATE_WAIT_CLKIN;
 			else if( SPLL->ECCR & SPLL_ECCR_EXT_REF_LOCKED )
 				s->align_state = ALIGN_STATE_START;
+			done_sth++;
 			break;
 
 		case ALIGN_STATE_START:
@@ -123,6 +125,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 				mpll_start(s->main);
 				enable_irq();
 				s->align_state = ALIGN_STATE_START_MAIN;
+				done_sth++;
 			}
 			break;
 
@@ -130,10 +133,11 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			SPLL->AL_CR = 2;
 			if(s->helper->ld.locked && s->main->ld.locked) {
 				PPSG->CR = PPSG_CR_CNT_EN | PPSG_CR_PWIDTH_W(10);
-			PPSG->ADJ_NSEC = 3;
-			PPSG->ESCR = PPSG_ESCR_SYNC;
-			s->align_state = ALIGN_STATE_INIT_CSYNC;
-			pll_verbose("EXT: DMTD locked.\n");
+				PPSG->ADJ_NSEC = 3;
+				PPSG->ESCR = PPSG_ESCR_SYNC;
+				s->align_state = ALIGN_STATE_INIT_CSYNC;
+				pll_verbose("EXT: DMTD locked.\n");
+				done_sth++;
 			}
 			break;
 
@@ -142,6 +146,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			    PPSG->ESCR = PPSG_ESCR_PPS_VALID; // enable PPS output (even though it's not aligned yet)
 				s->align_timer = timer_get_tics() + 2 * TICS_PER_SECOND;
 				s->align_state = ALIGN_STATE_WAIT_CSYNC;
+				done_sth++;
 			}
 			break;
 
@@ -150,6 +155,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 				s->align_state = ALIGN_STATE_START_ALIGNMENT;
 				s->align_shift = 0;
 				pll_verbose("EXT: CSync complete.\n");
+				done_sth++;
 			}
 			break;
 
@@ -166,6 +172,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 
 				pll_verbose("EXT: Align target %d, step %d.\n", s->align_target, s->align_step);
 				s->align_state = ALIGN_STATE_WAIT_SAMPLE;
+				done_sth++;
 			}
 			break;
 
@@ -180,6 +187,7 @@ void external_align_fsm(volatile struct spll_external_state *s)
 				mpll_set_phase_shift(s->main, s->align_shift);
 					s->align_state = ALIGN_STATE_COMPENSATE_DELAY;
 				}
+				done_sth++;
 			}
 			break;
 
@@ -187,16 +195,19 @@ void external_align_fsm(volatile struct spll_external_state *s)
 			if(!mpll_shifter_busy(s->main)) {
 				pll_verbose("EXT: Align done.\n");
 				s->align_state = ALIGN_STATE_LOCKED;
+				done_sth++;
 			}
 			break;
 
 		case ALIGN_STATE_LOCKED:
 			if(!external_locked(s)) {
 				s->align_state = ALIGN_STATE_WAIT_CLKIN;
+				done_sth++;
 			}
 			break;
 
 		default:
 			break;
 	}
+	return done_sth != 0;
 }

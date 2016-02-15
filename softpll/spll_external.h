@@ -35,6 +35,6 @@ void external_start(struct spll_external_state *s);
 
 int external_locked(volatile struct spll_external_state *s);
 
-void external_align_fsm(volatile struct spll_external_state *s);
+int external_align_fsm(volatile struct spll_external_state *s);
 
 #endif // __SPLL_EXTERNAL_H
