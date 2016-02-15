@@ -110,7 +110,7 @@ void wrc_mon_gui(void)
 	shw_pps_gen_get_time(&sec, &nsec);
 
 	cprintf(C_BLUE, "\n\nTAI Time:                  ");
-	cprintf(C_WHITE, "%s", format_time(sec));
+	cprintf(C_WHITE, "%s", format_time(sec, TIME_FORMAT_LEGACY));
 
 	/*show_ports */
 	wrpc_get_port_state(&state, NULL);

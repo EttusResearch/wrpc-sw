@@ -13,8 +13,9 @@ CONFIG_STACKSIZE=2048
 CONFIG_PPSI=y
 CONFIG_UART=y
 CONFIG_W1=y
-# CONFIG_IP is not set
-# CONFIG_CMD_CONFIG is not set
+CONFIG_IP=y
+CONFIG_CMD_CONFIG=y
+CONFIG_SYSLOG=y
 
 #
 # wrpc-sw is tainted if you change the following options

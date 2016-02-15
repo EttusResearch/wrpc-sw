@@ -83,6 +83,14 @@ config CMD_CONFIG
 	  reports the current configuration.  This adds half a kilobyte
 	  to the binary size (100b for the code plus the .config file).
 
+config SYSLOG
+	depends on IP
+	boolean "Include syslog client support"
+	help
+	  This enable a UDP syslog client, configured by a shell command.
+	  The user (or init script) must use "syslog <ipaddr> <macaddr>"
+	  to enable it.  The special "off" ipaddr disables syslog.
+
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.

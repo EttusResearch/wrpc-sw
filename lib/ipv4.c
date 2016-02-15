@@ -7,10 +7,12 @@
  * Released according to the GNU GPL, version 2 or any later version.
  */
 #include <string.h>
+#include <wrpc.h>
 
 #include "endpoint.h"
 #include "ipv4.h"
 #include "ptpd_netif.h"
+#include "pps_gen.h"
 #include "hw/memlayout.h"
 #include "hw/etherbone-config.h"
 
@@ -20,7 +22,37 @@
 
 int needIP = 1;
 static uint8_t myIP[4];
-static wr_socket_t *ipv4_socket;
+
+/* bootp: bigger buffer, UDP based */
+static uint8_t __bootp_queue[512];
+static struct wrpc_socket __static_bootp_socket = {
+	.queue.buff = __bootp_queue,
+	.queue.size = sizeof(__bootp_queue),
+};
+static struct wrpc_socket *bootp_socket;
+
+/* ICMP: smaller buffer */
+static uint8_t __icmp_queue[128];
+static struct wrpc_socket __static_icmp_socket = {
+	.queue.buff = __icmp_queue,
+	.queue.size = sizeof(__icmp_queue),
+};
+static struct wrpc_socket *icmp_socket;
+
+/* RDATE: even smaller buffer -- but we require 86. 96 is "even". */
+static uint8_t __rdate_queue[96];
+static struct wrpc_socket __static_rdate_socket = {
+	.queue.buff = __rdate_queue,
+	.queue.size = sizeof(__rdate_queue),
+};
+static struct wrpc_socket *rdate_socket;
+
+/* syslog is selected by Kconfig, so we have weak aliases here */
+void __attribute__((weak)) syslog_init(void)
+{ }
+
+void __attribute__((weak)) syslog_poll(int l_status)
+{ }
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 {
@@ -29,7 +61,7 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 
 	sum = 0;
 	for (i = 0; i < shorts; ++i)
-		sum += buf[i];
+		sum += ntohs(buf[i]);
 
 	sum = (sum >> 16) + (sum & 0xffff);
 	sum += (sum >> 16);
@@ -39,47 +71,106 @@ unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 
 void ipv4_init(void)
 {
-	wr_sockaddr_t saddr;
+	struct wr_sockaddr saddr;
 
-	/* Reset => need a fresh IP */
-	needIP = 1;
+	/* Bootp: use UDP engine activated but function arguments  */
+	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, NULL,
+						PTPD_SOCK_UDP, 68 /* bootpc */);
 
-	/* Configure socket filter */
+	/* time (rdate): UDP */
+	rdate_socket = ptpd_netif_create_socket(&__static_rdate_socket, NULL,
+					       PTPD_SOCK_UDP, 37 /* time */);
+
+	/* ICMP: specify raw (not UDP), with IPV4 ethtype */
 	memset(&saddr, 0, sizeof(saddr));
-	get_mac_addr(&saddr.mac[0]);	/* Unicast */
-	saddr.ethertype = htons(0x0800);	/* IPv4 */
+	saddr.ethertype = htons(0x0800);
+	icmp_socket = ptpd_netif_create_socket(&__static_icmp_socket, &saddr,
+					       PTPD_SOCK_RAW_ETHERNET, 0);
 
-	ipv4_socket = ptpd_netif_create_socket(0, 0 /* both unused */, &saddr);
+	syslog_init();
 }
 
 static int bootp_retry = 0;
-static int bootp_timer = 0;
+static uint32_t bootp_tics;
 
-void ipv4_poll(void)
+/* receive bootp through the UDP mechanism */
+static void bootp_poll(void)
 {
+	struct wr_sockaddr addr;
 	uint8_t buf[400];
-	wr_sockaddr_t addr;
 	int len;
 
-	if ((len = ptpd_netif_recvfrom(ipv4_socket, &addr,
-				       buf, sizeof(buf), 0)) > 0) {
-		if (needIP)
-			process_bootp(buf, len);
+	if (!bootp_tics) /* first time ever */
+		bootp_tics = timer_get_tics() - 1;
 
-		if (!needIP && (len = process_icmp(buf, len)) > 0)
-			ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
-	}
+	len = ptpd_netif_recvfrom(bootp_socket, &addr,
+				  buf, sizeof(buf), NULL);
+	if (len > 0 && needIP)
+		process_bootp(buf, len);
 
-	if (needIP && bootp_timer == 0) {
-		len = send_bootp(buf, ++bootp_retry);
+	if (!needIP)
+		return;
+	if (time_before(timer_get_tics(), bootp_tics))
+		return;
 
-		memset(addr.mac, 0xFF, 6);
-		addr.ethertype = htons(0x0800);	/* IPv4 */
-		ptpd_netif_sendto(ipv4_socket, &addr, buf, len, 0);
-	}
+	len = prepare_bootp(&addr, buf, ++bootp_retry);
+	ptpd_netif_sendto(bootp_socket, &addr, buf, len, 0);
+	bootp_tics = timer_get_tics() + TICS_PER_SECOND;
+}
 
-	if (needIP && ++bootp_timer == 100000)
-		bootp_timer = 0;
+static void icmp_poll(void)
+{
+	struct wr_sockaddr addr;
+	uint8_t buf[128];
+	int len;
+
+	len = ptpd_netif_recvfrom(icmp_socket, &addr,
+				  buf, sizeof(buf), NULL);
+	if (len <= 0)
+		return;
+	if (needIP)
+		return;
+
+	if ((len = process_icmp(buf, len)) > 0)
+		ptpd_netif_sendto(icmp_socket, &addr, buf, len, 0);
+}
+
+static void rdate_poll(void)
+{
+	struct wr_sockaddr addr;
+	uint64_t secs;
+	uint32_t result;
+	uint8_t buf[32];
+	int len;
+
+	len = ptpd_netif_recvfrom(rdate_socket, &addr,
+				  buf, sizeof(buf), NULL);
+	if (len <= 0)
+		return;
+
+	shw_pps_gen_get_time(&secs, NULL);
+	result = htonl((uint32_t)(secs + 2208988800LL));
+	/* Magic above: $(date +%s --date="Jan 1 1900 00:00:00 UTC)" */
+
+	len = UDP_END + sizeof(result);
+	memcpy(buf + UDP_END, &result, sizeof(result));
+
+	fill_udp(buf, len, NULL);
+	ptpd_netif_sendto(rdate_socket, &addr, buf, len, 0);
+
+}
+
+void ipv4_poll(int l_status)
+{
+	if (l_status == LINK_WENT_UP)
+		needIP = 1;
+	bootp_poll();
+
+	icmp_poll();
+
+	rdate_poll();
+
+	syslog_poll(l_status);
 }
 
 void getIP(unsigned char *IP)
@@ -100,8 +191,6 @@ void setIP(unsigned char *IP)
 		*eb_ip = ip;
 
 	needIP = (ip == 0);
-	if (!needIP) {
+	if (!needIP)
 		bootp_retry = 0;
-		bootp_timer = 0;
-	}
 }

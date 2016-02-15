@@ -16,7 +16,12 @@
 #define htons(x) x
 #endif
 
-static wr_socket_t *arp_socket;
+static uint8_t __arp_queue[128];
+static struct wrpc_socket __static_arp_socket = {
+	.queue.buff = __arp_queue,
+	.queue.size = sizeof(__arp_queue),
+};
+static struct wrpc_socket *arp_socket;
 
 #define ARP_HTYPE	0
 #define ARP_PTYPE	(ARP_HTYPE+2)
@@ -31,14 +36,15 @@ static wr_socket_t *arp_socket;
 
 void arp_init(void)
 {
-	wr_sockaddr_t saddr;
+	struct wr_sockaddr saddr;
 
 	/* Configure socket filter */
 	memset(&saddr, 0, sizeof(saddr));
 	memset(&saddr.mac, 0xFF, 6);	/* Broadcast */
 	saddr.ethertype = htons(0x0806);	/* ARP */
 
-	arp_socket = ptpd_netif_create_socket(0, 0 /* both unused */, &saddr);
+	arp_socket = ptpd_netif_create_socket(&__static_arp_socket, &saddr,
+					      PTPD_SOCK_RAW_ETHERNET, 0);
 }
 
 static int process_arp(uint8_t * buf, int len)
@@ -85,7 +91,7 @@ static int process_arp(uint8_t * buf, int len)
 void arp_poll(void)
 {
 	uint8_t buf[ARP_END + 100];
-	wr_sockaddr_t addr;
+	struct wr_sockaddr addr;
 	int len;
 
 	if (needIP)

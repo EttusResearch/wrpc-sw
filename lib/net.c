@@ -22,47 +22,20 @@
 #include "minic.h"
 #include "endpoint.h"
 #include "softpll_ng.h"
+#include "ipv4.h"
 
 #define min(x,y) ((x) < (y) ? (x) : (y))
 
-__attribute__ ((packed))
 struct ethhdr {
 	uint8_t dstmac[6];
 	uint8_t srcmac[6];
 	uint16_t ethtype;
 };
 
-struct timeout {
-	uint64_t start_tics;
-	uint64_t timeout;
-};
-
-struct sockq {
-	uint8_t buf[NET_SKBUF_SIZE];
-	uint16_t head, tail, avail;
-	uint16_t n;
-};
-
-struct my_socket {
-	int in_use;
-	wr_sockaddr_t bind_addr;
-	mac_addr_t local_mac;
-
-	uint32_t phase_transition;
-	uint32_t dmtd_phase;
-	struct sockq queue;
-};
-
-static struct my_socket socks[NET_MAX_SOCKETS];
-
-int ptpd_netif_init()
-{
-	memset(socks, 0, sizeof(socks));
-	return PTPD_NETIF_OK;
-}
+static struct wrpc_socket *socks[NET_MAX_SOCKETS];
 
 //#define net_verbose pp_printf
-int ptpd_netif_get_hw_addr(wr_socket_t * sock, mac_addr_t * mac)
+int ptpd_netif_get_hw_addr(struct wrpc_socket *sock, mac_addr_t *mac)
 {
 	get_mac_addr((uint8_t *) mac);
 
@@ -73,35 +46,45 @@ void ptpd_netif_set_phase_transition(uint32_t phase)
 {
 	int i;
 
-	for (i=0; i< NET_MAX_SOCKETS; ++i) {
-		socks[i].phase_transition = phase;
+	for (i=0; i< ARRAY_SIZE(socks); ++i) {
+		socks[i]->phase_transition = phase;
 	}
 }
 
 
-wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
-				      wr_sockaddr_t * bind_addr)
+struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
+					     struct wr_sockaddr * bind_addr,
+					     int udp_or_raw, int udpport)
 {
 	int i;
 	struct hal_port_state pstate;
-	struct my_socket *sock;
+	static mac_addr_t zero_mac;
 
 	/* Look for the first available socket. */
-	for (sock = NULL, i = 0; i < NET_MAX_SOCKETS; i++)
-		if (!socks[i].in_use) {
-			sock = &socks[i];
+	for (i = 0; i < ARRAY_SIZE(socks); i++)
+		if (!socks[i]) {
+			socks[i] = sock;
 			break;
 		}
-
-	if (!sock) {
-		net_verbose("No sockets left.\n");
+	if (i == ARRAY_SIZE(socks)) {
+		pp_printf("%s: no socket slots left\n", __func__);
 		return NULL;
 	}
 
 	if (wrpc_get_port_state(&pstate, "wr0" /* unused */) < 0)
 		return NULL;
 
-	memcpy(&sock->bind_addr, bind_addr, sizeof(wr_sockaddr_t));
+	/* copy and complete the bind information. If MAC is 0 use unicast */
+	memset(&sock->bind_addr, 0, sizeof(struct wr_sockaddr));
+	if (bind_addr)
+		memcpy(&sock->bind_addr, bind_addr, sizeof(struct wr_sockaddr));
+	if (!memcmp(sock->bind_addr.mac, zero_mac, ETH_ALEN))
+		get_mac_addr(sock->bind_addr.mac);
+	sock->bind_addr.udpport = 0;
+	if (udp_or_raw == PTPD_SOCK_UDP) {
+		sock->bind_addr.ethertype = htons(0x0800); /* IPv4 */
+		sock->bind_addr.udpport = udpport;
+	}
 
 	/*get mac from endpoint */
 	get_mac_addr(sock->local_mac);
@@ -111,19 +94,18 @@ wr_socket_t *ptpd_netif_create_socket(int unused, int unusd2,
 
 	/*packet queue */
 	sock->queue.head = sock->queue.tail = 0;
-	sock->queue.avail = NET_SKBUF_SIZE;
+	sock->queue.avail = sock->queue.size;
 	sock->queue.n = 0;
-	sock->in_use = 1;
 
-	return (wr_socket_t *) (sock);
+	return sock;
 }
 
-int ptpd_netif_close_socket(wr_socket_t * sock)
+int ptpd_netif_close_socket(struct wrpc_socket *s)
 {
-	struct my_socket *s = (struct my_socket *)sock;
-
-	if (s)
-		s->in_use = 0;
+	int i;
+	for (i = 0; i < ARRAY_SIZE(socks); i++)
+		if (socks[i] == s)
+			socks[i] = NULL;
 	return 0;
 }
 
@@ -136,7 +118,8 @@ int ptpd_netif_close_socket(wr_socket_t * sock)
  *
  * Have a look at the note at http://ohwr.org/documents/xxx for details.
  */
-void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
+void ptpd_netif_linearize_rx_timestamp(struct wr_timestamp *ts,
+				       int32_t dmtd_phase,
 				       int cntr_ahead, int transition_point,
 				       int clock_period)
 {
@@ -202,19 +185,26 @@ void ptpd_netif_linearize_rx_timestamp(wr_timestamp_t * ts, int32_t dmtd_phase,
 }
 
 /* Slow, but we don't care much... */
-static int wrap_copy_in(void *dst, struct sockq *q, size_t len)
+static int wrap_copy_in(void *dst, struct sockq *q, size_t len, size_t buflen)
 {
 	char *dptr = dst;
-	int i = len;
+	int i;
 
-	net_verbose("copy_in: tail %d avail %d len %d\n", q->tail, q->avail,
-		   len);
-
+	if (!buflen)
+		buflen = len;
+	net_verbose("copy_in: tail %d avail %d len %d (buf %d)\n",
+		    q->tail, q->avail, len, buflen);
+	i = min(len, buflen);
 	while (i--) {
-		*dptr++ = q->buf[q->tail];
+		*dptr++ = q->buff[q->tail];
 		q->tail++;
-		if (q->tail == NET_SKBUF_SIZE)
+		if (q->tail == q->size)
 			q->tail = 0;
+	}
+	if (len > buflen) {
+		q->tail += len - buflen;
+		while (q->tail > q->size)
+			q->tail -= q->size;
 	}
 	return len;
 }
@@ -228,17 +218,16 @@ static int wrap_copy_out(struct sockq *q, void *src, size_t len)
 		   len);
 
 	while (i--) {
-		q->buf[q->head++] = *sptr++;
-		if (q->head == NET_SKBUF_SIZE)
+		q->buff[q->head++] = *sptr++;
+		if (q->head == q->size)
 			q->head = 0;
 	}
 	return len;
 }
 
-int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
-			size_t data_length, wr_timestamp_t * rx_timestamp)
+int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *data,
+			size_t data_length, struct wr_timestamp *rx_timestamp)
 {
-	struct my_socket *s = (struct my_socket *)sock;
 	struct sockq *q = &s->queue;
 
 	uint16_t size;
@@ -252,10 +241,10 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 
 	q->n--;
 
-	q->avail += wrap_copy_in(&size, q, 2);
-	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr));
-	q->avail += wrap_copy_in(&hwts, q, sizeof(struct hw_timestamp));
-	q->avail += wrap_copy_in(data, q, min(size, data_length));
+	q->avail += wrap_copy_in(&size, q, 2, 0);
+	q->avail += wrap_copy_in(&hwts, q, sizeof(struct hw_timestamp), 0);
+	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr), 0);
+	q->avail += wrap_copy_in(data, q, size, data_length);
 
 	from->ethertype = ntohs(hdr.ethtype);
 	memcpy(from->mac, hdr.srcmac, 6);
@@ -279,28 +268,34 @@ int ptpd_netif_recvfrom(wr_socket_t * sock, wr_sockaddr_t * from, void *data,
 						  REF_CLOCK_PERIOD_PS);
 	}
 
+	net_verbose("%s: called from %p\n",
+		    __func__, __builtin_return_address(0));
 	net_verbose("RX: Size %d tail %d Smac %x:%x:%x:%x:%x:%x\n", size,
 		   q->tail, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
-	return min(size - sizeof(struct ethhdr), data_length);
+	return min(size, data_length);
 }
 
-int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
-		      size_t data_length, wr_timestamp_t * tx_timestamp)
+int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *data,
+		      size_t data_length, struct wr_timestamp *tx_timestamp)
 {
-	struct my_socket *s = (struct my_socket *)sock;
+	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct hw_timestamp hwts;
 	struct ethhdr hdr;
 	int rval;
 
 	memcpy(hdr.dstmac, to->mac, 6);
 	memcpy(hdr.srcmac, s->local_mac, 6);
-	hdr.ethtype = to->ethertype;
+	hdr.ethtype = sock->bind_addr.ethertype;
+	net_verbose("TX: socket %04x:%04x, len %i\n",
+		    ntohs(s->bind_addr.ethertype),
+		    s->bind_addr.udpport,
+		    data_length);
 
 	rval =
 	    minic_tx_frame((uint8_t *) & hdr, (uint8_t *) data,
-			   data_length + ETH_HEADER_SIZE, &hwts);
+			   data_length, &hwts);
 
 
 	if (tx_timestamp) {
@@ -315,30 +310,46 @@ int ptpd_netif_sendto(wr_socket_t * sock, wr_sockaddr_t * to, void *data,
 
 void update_rx_queues()
 {
-	struct my_socket *s = NULL;
+	struct wrpc_socket *s = NULL;
 	struct sockq *q;
 	struct hw_timestamp hwts;
 	static struct ethhdr hdr;
 	int recvd, i, q_required;
-	static uint8_t payload[NET_SKBUF_SIZE - 32];
-	uint16_t size;
+	static uint8_t payload[NET_MAX_SKBUF_SIZE - 32];
+	uint16_t size, port;
 
 	recvd =
-	    minic_rx_frame((uint8_t *) & hdr, payload, NET_SKBUF_SIZE - 32,
+	    minic_rx_frame((uint8_t *) & hdr, payload, sizeof(payload),
 			   &hwts);
 
 	if (recvd <= 0)		/* No data received? */
 		return;
 
-	for (i = 0; i < NET_MAX_SOCKETS; i++) {
-		s = &socks[i];
-		if (s->in_use && !memcmp(hdr.dstmac, s->bind_addr.mac, 6)
-		    && hdr.ethtype == s->bind_addr.ethertype)
-			break;	/*they match */
-		s = NULL;
+	for (i = 0; i < ARRAY_SIZE(socks); i++) {
+		s = socks[i];
+		if (!s)
+			continue;
+		if (memcmp(hdr.dstmac, s->bind_addr.mac, 6))
+			continue;
+		if (hdr.ethtype != s->bind_addr.ethertype)
+			continue;
+
+		if (s->bind_addr.udpport == 0)
+			break; /* raw socket: match */
+
+		/* Now make IP/UDP checks */
+		if (payload[IP_VERSION] != 0x45)
+			continue;
+		if (payload[IP_PROTOCOL] != 17)
+			continue;
+		port = payload[UDP_DPORT] << 8 | payload[UDP_DPORT + 1];
+		if (port != s->bind_addr.udpport)
+			continue;
+
+		break; /* udp match */
 	}
 
-	if (!s) {
+	if (i == ARRAY_SIZE(socks)) {
 		net_verbose("%s: could not find socket for packet\n",
 			   __FUNCTION__);
 		return;
@@ -358,8 +369,8 @@ void update_rx_queues()
 	size = recvd;
 
 	q->avail -= wrap_copy_out(q, &size, 2);
-	q->avail -= wrap_copy_out(q, &hdr, sizeof(struct ethhdr));
 	q->avail -= wrap_copy_out(q, &hwts, sizeof(struct hw_timestamp));
+	q->avail -= wrap_copy_out(q, &hdr, sizeof(struct ethhdr));
 	q->avail -= wrap_copy_out(q, payload, size);
 	q->n++;
 
@@ -367,6 +378,9 @@ void update_rx_queues()
 		   q->head, hdr.srcmac[0], hdr.srcmac[1], hdr.srcmac[2],
 		   hdr.srcmac[3], hdr.srcmac[4], hdr.srcmac[5]);
 
-	net_verbose("%s: saved packet to queue [avail %d n %d size %d]\n",
-		   __FUNCTION__, q->avail, q->n, q_required);
+	net_verbose("%s: saved packet to socket %04x:%04x "
+		    "[avail %d n %d size %d]\n", __FUNCTION__,
+		    ntohs(s->bind_addr.ethertype),
+		    s->bind_addr.udpport,
+		    q->avail, q->n, q_required);
 }

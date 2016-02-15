@@ -31,10 +31,10 @@
 #define UART_BAUDRATE 115200ULL
 
 /* Maximum number of simultaneously created sockets */
-#define NET_MAX_SOCKETS 4
+#define NET_MAX_SOCKETS 8
 
 /* Socket buffer size, determines the max. RX packet size */
-#define NET_SKBUF_SIZE 512
+#define NET_MAX_SKBUF_SIZE 512
 
 /* Number of auxillary clock channels - usually equal to the number of FMCs */
 #define NUM_AUX_CLOCKS 1

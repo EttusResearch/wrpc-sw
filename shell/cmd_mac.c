@@ -17,7 +17,7 @@
 #include "endpoint.h"
 #include "../lib/ipv4.h"
 
-static void decode_mac(const char *str, unsigned char *mac)
+void decode_mac(const char *str, unsigned char *mac)
 {
 	int i, x;
 
@@ -30,9 +30,18 @@ static void decode_mac(const char *str, unsigned char *mac)
 	}
 }
 
+char *format_mac(char *s, const unsigned char *mac)
+{
+	pp_sprintf(s, "%02x:%02x:%02x:%02x:%02x:%02x",
+		   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	return s;
+}
+
+
 static int cmd_mac(const char *args[])
 {
 	unsigned char mac[6];
+	char buf[32];
 
 	if (!args[0] || !strcasecmp(args[0], "get")) {
 		/* get current MAC */
@@ -52,8 +61,7 @@ static int cmd_mac(const char *args[])
 		return -EINVAL;
 	}
 
-	pp_printf("MAC-address: %02x:%02x:%02x:%02x:%02x:%02x\n",
-		mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	pp_printf("MAC-address: %s\n", format_mac(buf, mac));
 	return 0;
 }
 

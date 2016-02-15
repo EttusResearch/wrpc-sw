@@ -194,7 +194,7 @@ int minic_poll_rx()
 int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 		   struct hw_timestamp *hwts)
 {
-	uint32_t payload_size, num_words;
+	uint32_t frame_size, payload_size, num_words;
 	uint32_t desc_hdr;
 	uint32_t raw_ts;
 	uint32_t cur_avail;
@@ -217,8 +217,8 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 		}
 		return 0;
 	}
-	payload_size = RX_DESC_SIZE(desc_hdr);
-	num_words = ((payload_size + 3) >> 2) + 1;
+	frame_size = RX_DESC_SIZE(desc_hdr);
+	num_words = ((frame_size + 3) >> 2) + 1;
 
 	/* valid packet */
 	if (!RX_DESC_ERROR(desc_hdr)) {
@@ -229,15 +229,15 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 			int cntr_diff;
 			uint16_t dhdr;
 
-			payload_size -= RX_OOB_SIZE;
+			frame_size -= RX_OOB_SIZE;
 
 			/* fixme: ugly way of doing unaligned read */
 			minic_rx_memcpy((uint8_t *) & raw_ts,
 					(uint8_t *) minic.rx_head
-					+ payload_size + 6, 4);
+					+ frame_size + 6, 4);
 			minic_rx_memcpy((uint8_t *) & dhdr,
 					(uint8_t *) minic.rx_head +
-					payload_size + 4, 2);
+					frame_size + 4, 2);
 			EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
 
 			shw_pps_gen_get_time(&sec, &counter_ppsg);
@@ -258,14 +258,14 @@ int minic_rx_frame(uint8_t * hdr, uint8_t * payload, uint32_t buf_size,
 			hwts->nsec = counter_r * (REF_CLOCK_PERIOD_PS / 1000);
 			hwts->valid = (dhdr & RXOOB_TS_INCORRECT) ? 0 : 1;
 		}
-
+		payload_size = frame_size - ETH_HEADER_SIZE;
 		n_recvd = (buf_size < payload_size ? buf_size : payload_size);
 		minic.rx_count++;
 
 		minic_rx_memcpy(hdr, (void *)minic.rx_head + 4,
 				ETH_HEADER_SIZE);
 		minic_rx_memcpy(payload, (void *)minic.rx_head + 4
-				+ ETH_HEADER_SIZE, n_recvd - ETH_HEADER_SIZE);
+				+ ETH_HEADER_SIZE, n_recvd);
 	} else {
 		n_recvd = -1;
 	}
@@ -299,9 +299,9 @@ int minic_tx_frame(uint8_t * hdr, uint8_t * payload, uint32_t size,
 	memset((void *)minic.tx_head, 0x0, size + 16);
 	memset((void *)minic.tx_head + 4, 0, size < 60 ? 60 : size);
 	memcpy((void *)minic.tx_head + 4, hdr, ETH_HEADER_SIZE);
-	memcpy((void *)minic.tx_head + 4 + ETH_HEADER_SIZE, payload,
-	       size - ETH_HEADER_SIZE);
+	memcpy((void *)minic.tx_head + 4 + ETH_HEADER_SIZE, payload, size);
 
+	size += ETH_HEADER_SIZE;
 	if (size < 60)
 		size = 60;
 

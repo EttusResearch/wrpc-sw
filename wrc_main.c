@@ -96,11 +96,6 @@ static void wrc_initialize(void)
 	}
 }
 
-#define LINK_WENT_UP 1
-#define LINK_WENT_DOWN 2
-#define LINK_UP 3
-#define LINK_DOWN 4
-
 static int wrc_check_link(void)
 {
 	static int prev_link_state = -1;
@@ -184,22 +179,18 @@ int main(void)
 		}
 
 		switch (l_status) {
-		case LINK_WENT_UP:
-			needIP = 1;
-			break;
-
-		case LINK_UP:
-			update_rx_queues();
-			if (HAS_IP) {
-				ipv4_poll();
-				arp_poll();
-			}
-			break;
-
 		case LINK_WENT_DOWN:
 			if (wrc_ptp_get_mode() == WRC_MODE_SLAVE) {
 				spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
 				shw_pps_gen_enable_output(0);
+			}
+			/* fall through */
+		case LINK_WENT_UP:
+		case LINK_UP:
+			update_rx_queues();
+			if (HAS_IP) {
+				ipv4_poll(l_status);
+				arp_poll();
 			}
 			break;
 		}
