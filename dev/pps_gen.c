@@ -110,9 +110,7 @@ void shw_pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds)
 	if (seconds)
 		*seconds = sec2;
 	if (nanoseconds)
-		*nanoseconds =
-		    (uint32_t) ((int64_t) ns_cnt *
-				(int64_t) REF_CLOCK_PERIOD_PS / 1000LL);
+		*nanoseconds = ns_cnt * NS_PER_CLOCK;
 }
 
 /* Returns 1 when the adjustment operation is not yet finished */
