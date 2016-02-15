@@ -51,7 +51,7 @@ static struct wrpc_socket *rdate_socket;
 void __attribute__((weak)) syslog_init(void)
 { }
 
-int __attribute__((weak)) syslog_poll(int l_status)
+int __attribute__((weak)) syslog_poll(void)
 { return 0; }
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
@@ -164,11 +164,11 @@ static int rdate_poll(void)
 	return 1;
 }
 
-int ipv4_poll(int l_status)
+int ipv4_poll(void)
 {
 	int ret = 0;
 
-	if (l_status == LINK_WENT_UP && ip_status == IP_OK_BOOTP)
+	if (link_status == LINK_WENT_UP && ip_status == IP_OK_BOOTP)
 		ip_status = IP_TRAINING;
 	ret = bootp_poll();
 
@@ -176,7 +176,7 @@ int ipv4_poll(int l_status)
 
 	ret += rdate_poll();
 
-	ret += syslog_poll(l_status);
+	ret += syslog_poll();
 
 	return ret != 0;
 }

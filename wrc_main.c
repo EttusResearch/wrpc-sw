@@ -145,6 +145,8 @@ void init_hw_after_reset(void)
 	timer_init(1);
 }
 
+int link_status;
+
 int main(void)
 {
 	extern uint32_t uptime_sec;
@@ -166,8 +168,6 @@ int main(void)
 	lastj = timer_get_tics();
 
 	for (;;) {
-		int l_status = wrc_check_link();
-
 		/* count uptime, in seconds, for remote polling */
 		j = timer_get_tics();
 		fraction += j -lastj;
@@ -177,7 +177,9 @@ int main(void)
 			uptime_sec++;
 		}
 
-		switch (l_status) {
+		link_status = wrc_check_link();
+
+		switch (link_status) {
 		case LINK_WENT_DOWN:
 			if (wrc_ptp_get_mode() == WRC_MODE_SLAVE) {
 				spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
@@ -188,7 +190,7 @@ int main(void)
 		case LINK_UP:
 			update_rx_queues();
 			if (HAS_IP) {
-				ipv4_poll(l_status);
+				ipv4_poll();
 				arp_poll();
 			}
 			break;

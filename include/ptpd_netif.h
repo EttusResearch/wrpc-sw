@@ -18,10 +18,11 @@
 #define PTPD_SOCK_UDP		0 /* wrong name, it should be "WRPC" */
 #define PTPD_SOCK_RAW_ETHERNET 	1 /* but used in ppsi, which I won't change */
 
+extern int link_status;
+#define LINK_DOWN 0
 #define LINK_WENT_UP 1
 #define LINK_WENT_DOWN 2
 #define LINK_UP 3
-#define LINK_DOWN 4
 
 // GCC-specific
 #ifndef PACKED

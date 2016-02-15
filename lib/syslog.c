@@ -55,7 +55,7 @@ DEFINE_WRC_COMMAND(mac) = {
 };
 
 
-int syslog_poll(int l_status)
+int syslog_poll(void)
 {
 	struct wr_sockaddr addr;
 	char buf[256];
@@ -86,9 +86,9 @@ int syslog_poll(int l_status)
 		goto send;
 	}
 
-	if (l_status == LINK_WENT_DOWN)
+	if (link_status == LINK_WENT_DOWN)
 		down_tics = timer_get_tics();
-	if (l_status == LINK_UP && down_tics) {
+	if (link_status == LINK_UP && down_tics) {
 		down_tics = timer_get_tics() - down_tics;
 		shw_pps_gen_get_time(&secs, NULL);
 		getIP(ip);
