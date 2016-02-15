@@ -99,23 +99,31 @@ static void wrc_initialize(void)
 	wrc_ptp_start();
 }
 
+int link_status;
+
 static int wrc_check_link(void)
 {
-	static int prev_link_state = -1;
-	int link_state = ep_link_up(NULL);
+	static int prev_state = -1;
+	int state = ep_link_up(NULL);
 	int rv = 0;
 
-	if (!prev_link_state && link_state) {
+	if (!prev_state && state) {
 		wrc_verbose("Link up.\n");
 		gpio_out(GPIO_LED_LINK, 1);
-		rv = LINK_WENT_UP;
-	} else if (prev_link_state && !link_state) {
+		link_status = LINK_WENT_UP;
+		rv = 1;
+	} else if (prev_state && !state) {
 		wrc_verbose("Link down.\n");
 		gpio_out(GPIO_LED_LINK, 0);
-		rv = LINK_WENT_DOWN;
+		link_status = LINK_WENT_DOWN;
+		rv = 1;
+		/* special case */
+		spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+		shw_pps_gen_enable_output(0);
+
 	} else
-		rv = (link_state ? LINK_UP : LINK_DOWN);
-	prev_link_state = link_state;
+		link_status = (state ? LINK_UP : LINK_DOWN);
+	prev_state = state;
 
 	return rv;
 }
@@ -148,12 +156,13 @@ void init_hw_after_reset(void)
 	timer_init(1);
 }
 
-int link_status;
-
 struct wrc_task wrc_tasks[] = {
 	{
 		.name = "idle",
 		.init = wrc_initialize,
+	}, {
+		.name = "check-link",
+		.job = wrc_check_link,
 	}, {
 		.name = "net-bh",
 		.enable = &link_status,
@@ -219,13 +228,6 @@ int main(void)
 		while (fraction > TICS_PER_SECOND) {
 			fraction -= TICS_PER_SECOND;
 			uptime_sec++;
-		}
-
-		/* update link_status and do special-case processing */
-		link_status = wrc_check_link();
-		if (link_status == LINK_WENT_DOWN) {
-			spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-			shw_pps_gen_enable_output(0);
 		}
 
 		/* run your tasks */
