@@ -156,10 +156,37 @@ void init_hw_after_reset(void)
 	timer_init(1);
 }
 
+/* count uptime, in seconds, for remote polling */
+static uint32_t uptime_lastj;
+static void init_uptime(void)
+{
+	uptime_lastj = timer_get_tics();
+}
+static int update_uptime(void)
+{
+	extern uint32_t uptime_sec;
+	uint32_t j;
+	static uint32_t fraction = 0;
+
+	j = timer_get_tics();
+	fraction += j - uptime_lastj;
+	uptime_lastj = j;
+	if (fraction > TICS_PER_SECOND) {
+		fraction -= TICS_PER_SECOND;
+		uptime_sec++;
+		return 1;
+	}
+	return 0;
+}
+
 struct wrc_task wrc_tasks[] = {
 	{
 		.name = "idle",
 		.init = wrc_initialize,
+	}, {
+		.name = "uptime",
+		.init = init_uptime,
+		.job = update_uptime,
 	}, {
 		.name = "check-link",
 		.job = wrc_check_link,
@@ -208,8 +235,6 @@ static void wrc_run_task(struct wrc_task *t)
 
 int main(void)
 {
-	extern uint32_t uptime_sec;
-	uint32_t j, lastj, fraction = 0;
 	int i;
 
 	check_reset();
@@ -219,17 +244,7 @@ int main(void)
 		if (wrc_tasks[i].init)
 			wrc_tasks[i].init();
 
-	lastj = timer_get_tics();
 	for (;;) {
-		/* count uptime, in seconds, for remote polling */
-		j = timer_get_tics();
-		fraction += j -lastj;
-		lastj = j;
-		while (fraction > TICS_PER_SECOND) {
-			fraction -= TICS_PER_SECOND;
-			uptime_sec++;
-		}
-
 		/* run your tasks */
 		for (i = 0; i < wrc_n_tasks; i++)
 			wrc_run_task(wrc_tasks + i);
