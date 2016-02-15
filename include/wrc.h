@@ -17,6 +17,7 @@
 #include <pp-printf.h>
 #include <util.h>
 #include <trace.h>
+#include <wrc-task.h>
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
 

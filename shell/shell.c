@@ -248,12 +248,12 @@ const char *fromdec(const char *dec, int *v)
 	return dec;
 }
 
-int shell_boot_script(void)
+void shell_boot_script(void)
 {
 	uint8_t next = 0;
 
 	if (!has_eeprom)
-		return -1;
+		return;
 
 	while (1) {
 		cmd_len = storage_init_readcmd((uint8_t *)cmd_buf,
@@ -270,5 +270,5 @@ int shell_boot_script(void)
 		next = 1;
 	}
 
-	return 0;
+	return;
 }

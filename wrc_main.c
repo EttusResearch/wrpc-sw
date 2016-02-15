@@ -89,11 +89,6 @@ static void wrc_initialize(void)
 	//try reading t24 phase transition from EEPROM
 	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
 	spll_very_init();
-
-	if (HAS_IP) {
-		ipv4_init();
-		arp_init();
-	}
 }
 
 static int wrc_check_link(void)
@@ -147,10 +142,57 @@ void init_hw_after_reset(void)
 
 int link_status;
 
+struct wrc_task wrc_tasks[] = {
+	{
+		.name = "idle",
+	}, {
+		.name = "net-bh",
+		.enable = &link_status,
+		.job = update_rx_queues,
+	}, {
+		.name = "ptp",
+		.job = wrc_ptp_update,
+	}, {
+		.name = "shell+gui",
+		.init = shell_boot_script,
+		.job = ui_update,
+	}, {
+		.name = "stats",
+		.job = wrc_log_stats,
+	}, {
+		.name = "spll-bh",
+		.job = spll_update,
+#ifdef CONFIG_IP
+	}, {
+		.name = "ipv4",
+		.enable = &link_status,
+		.init = ipv4_init,
+		.job = ipv4_poll,
+	}, {
+		.name = "arp",
+		.enable = &link_status,
+		.init = arp_init,
+		.job = arp_poll,
+#endif
+	}
+};
+
+int wrc_n_tasks = ARRAY_SIZE(wrc_tasks);
+
+static void wrc_run_task(struct wrc_task *t)
+{
+	if (t->enable && !*t->enable)
+		return;
+	if (t->job)
+	    t->nrun += t->job();
+	else t->nrun++;
+}
+
 int main(void)
 {
 	extern uint32_t uptime_sec;
 	uint32_t j, lastj, fraction = 0;
+	int i;
 
 	check_reset();
 	wrc_ui_mode = UI_SHELL_MODE;
@@ -163,10 +205,13 @@ int main(void)
 	wrc_ptp_set_mode(WRC_MODE_SLAVE);
 	wrc_ptp_start();
 
-	//try to read and execute init script from EEPROM
-	shell_boot_script();
-	lastj = timer_get_tics();
+	/* initialization of individual tasks */
+	for (i = 0; i < wrc_n_tasks; i++)
+		if (wrc_tasks[i].init)
+			wrc_tasks[i].init();
 
+
+	lastj = timer_get_tics();
 	for (;;) {
 		/* count uptime, in seconds, for remote polling */
 		j = timer_get_tics();
@@ -177,29 +222,18 @@ int main(void)
 			uptime_sec++;
 		}
 
+		/* update link_status and do special-case processing */
 		link_status = wrc_check_link();
-
-		switch (link_status) {
-		case LINK_WENT_DOWN:
-			if (wrc_ptp_get_mode() == WRC_MODE_SLAVE) {
-				spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
-				shw_pps_gen_enable_output(0);
-			}
-			/* fall through */
-		case LINK_WENT_UP:
-		case LINK_UP:
-			update_rx_queues();
-			if (HAS_IP) {
-				ipv4_poll();
-				arp_poll();
-			}
-			break;
+		if (link_status == LINK_WENT_DOWN) {
+			spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
+			shw_pps_gen_enable_output(0);
 		}
 
-		ui_update();
-		wrc_log_stats();
-		wrc_ptp_update();
-		spll_update();
+		/* run your tasks */
+		for (i = 0; i < wrc_n_tasks; i++)
+			wrc_run_task(wrc_tasks + i);
+
+		/* better safe than sorry */
 		check_stack();
 	}
 }
