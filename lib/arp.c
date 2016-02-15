@@ -88,17 +88,20 @@ static int process_arp(uint8_t * buf, int len)
 	return ARP_END;
 }
 
-void arp_poll(void)
+int arp_poll(void)
 {
 	uint8_t buf[ARP_END + 100];
 	struct wr_sockaddr addr;
 	int len;
 
 	if (ip_status == IP_TRAINING)
-		return;		/* can't do ARP w/o an address... */
+		return 0;		/* can't do ARP w/o an address... */
 
 	if ((len = ptpd_netif_recvfrom(arp_socket,
-				       &addr, buf, sizeof(buf), 0)) > 0)
+				       &addr, buf, sizeof(buf), 0)) > 0) {
 		if ((len = process_arp(buf, len)) > 0)
 			ptpd_netif_sendto(arp_socket, &addr, buf, len, 0);
+		return 1;
+	}
+	return 0;
 }

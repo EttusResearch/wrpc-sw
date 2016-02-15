@@ -55,7 +55,7 @@ DEFINE_WRC_COMMAND(mac) = {
 };
 
 
-void syslog_poll(int l_status)
+int syslog_poll(int l_status)
 {
 	struct wr_sockaddr addr;
 	char buf[256];
@@ -67,9 +67,9 @@ void syslog_poll(int l_status)
 	int len = 0;
 
 	if (ip_status == IP_TRAINING)
-		return;
+		return 0;
 	if (!syslog_addr.daddr)
-		return;
+		return 0;
 
 	if (!tics) {
 		/* first time ever, or new syslog server */
@@ -101,7 +101,7 @@ void syslog_poll(int l_status)
 		goto send;
 	}
 
-	return;
+	return 0;
 
 send:
 	len += UDP_END;
@@ -109,5 +109,6 @@ send:
 	fill_udp((void *)buf, len, &syslog_addr);
 	memcpy(&addr.mac, syslog_mac, 6);
 	ptpd_netif_sendto(syslog_socket, &addr, buf, len, 0);
+	return 1;
 }
 
