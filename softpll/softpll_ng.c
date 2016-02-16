@@ -534,6 +534,7 @@ static inline void aux_set_channel_status(int channel, int locked)
 static int spll_update_aux_clocks(void)
 {
 	int ch;
+	int done_sth = 0;
 
 	for (ch = 1; ch < spll_n_chan_out; ch++) 
 	{
@@ -545,6 +546,7 @@ static int spll_update_aux_clocks(void)
 			spll_stop_channel(ch);
 			aux_set_channel_status(ch, 0);
 			s->seq_state = AUX_DISABLED;
+			done_sth++;
 		}
 
 		switch (s->seq_state) {
@@ -553,6 +555,7 @@ static int spll_update_aux_clocks(void)
 					pll_verbose("softpll: enabled aux channel %d\n", ch);
 					spll_start_channel(ch);
 					s->seq_state = AUX_LOCK_PLL;
+					done_sth++;
 				}
 				break;
 
@@ -561,8 +564,8 @@ static int spll_update_aux_clocks(void)
 					pll_verbose ("softpll: channel %d locked [aligning @ %d ps]\n", ch, softpll.mpll_shift_ps);
 					set_phase_shift(ch, softpll.mpll_shift_ps);
 					s->seq_state = AUX_ALIGN_PHASE;
+					done_sth++;
 				}
-
 				break;
 
 			case AUX_ALIGN_PHASE:
@@ -570,6 +573,7 @@ static int spll_update_aux_clocks(void)
 					pll_verbose("softpll: channel %d phase aligned\n", ch);
 					aux_set_channel_status(ch, 1);
 					s->seq_state = AUX_READY;
+					done_sth++;
 				}
 				break;
 
@@ -578,11 +582,12 @@ static int spll_update_aux_clocks(void)
 					pll_verbose("softpll: aux channel %d or mpll lost lock\n", ch);
 					aux_set_channel_status(ch, 0); 
 					s->seq_state = AUX_DISABLED;
+					done_sth++;
 				}
 				break;
 			}
 	}
-	return 0;
+	return done_sth != 0;
 }
 
 int spll_get_aux_status(int channel)
@@ -625,14 +630,16 @@ void spll_set_dac(int index, int value)
 	}
 }
 
-void spll_update()
+int spll_update()
 {
+	int ret = 0;
+
 	switch(softpll.mode) {
 		case SPLL_MODE_GRAND_MASTER:
-			external_align_fsm(&softpll.ext);
+			ret = external_align_fsm(&softpll.ext);
 			break;
 	}
-	spll_update_aux_clocks();
+	ret += spll_update_aux_clocks();
 
 	/* currently we have statistics only in the switch */
 	if (is_wr_switch) {
@@ -648,6 +655,7 @@ void spll_update()
 		stats.del_cnt = softpll.delock_count;
 		stats.sequence++;
 	}
+	return ret != 0;
 }
 
 static int spll_measure_frequency(int osc)

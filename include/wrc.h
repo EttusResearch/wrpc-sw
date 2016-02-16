@@ -17,6 +17,7 @@
 #include <pp-printf.h>
 #include <util.h>
 #include <trace.h>
+#include <wrc-task.h>
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
 
@@ -34,7 +35,7 @@
 #  define is_wr_node 1
 #endif
 
-void wrc_mon_gui(void);
+int wrc_mon_gui(void);
 void shell_init(void);
 int wrc_log_stats(void);
 
@@ -53,7 +54,7 @@ extern int abs(int val);
 
 /* The following from ptp-noposix */
 extern void wr_servo_reset(void);
-void update_rx_queues(void);
+int update_rx_queues(void);
 
 /* refresh period for _gui_ and _stat_ commands */
 extern int wrc_ui_refperiod;

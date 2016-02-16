@@ -34,13 +34,13 @@
 #define UDP_END		(UDP_CHECKSUM+2)
 
 void ipv4_init(void);
-void ipv4_poll(int l_status);
+int ipv4_poll(void);
 
 /* Internal to IP stack: */
 unsigned int ipv4_checksum(unsigned short *buf, int shorts);
 
 void arp_init(void);
-void arp_poll(void);
+int arp_poll(void);
 
 enum ip_status {
 	IP_TRAINING,
@@ -66,6 +66,6 @@ struct wr_udp_addr {
 void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr);
 
 void syslog_init(void);
-void syslog_poll(int l_status);
+int syslog_poll(void);
 
 #endif

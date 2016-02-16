@@ -14,6 +14,7 @@ obj-$(CONFIG_WR_NODE) += \
 	shell/cmd_init.o \
 	shell/cmd_ptrack.o \
 	shell/cmd_help.o \
+	shell/cmd_ps.o \
 	shell/cmd_refresh.o
 
 obj-$(CONFIG_IP) +=				shell/cmd_ip.o

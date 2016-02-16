@@ -105,7 +105,7 @@ int spll_read_ptracker(int ref_channel, int32_t *phase_ps, int *enabled);
 /* Calls non-realtime update state machine. Must be called regularly (although
  * it is not time-critical) in the main loop of the program if aux clocks or
  * external reference are used in the design. */
-void spll_update(void);
+int spll_update(void);
 
 /* Returns the status of given aux clock output (SPLL_AUX_) */
 int spll_get_aux_status(int out_channel);

@@ -51,8 +51,8 @@ static struct wrpc_socket *rdate_socket;
 void __attribute__((weak)) syslog_init(void)
 { }
 
-void __attribute__((weak)) syslog_poll(int l_status)
-{ }
+int __attribute__((weak)) syslog_poll(void)
+{ return 0; }
 
 unsigned int ipv4_checksum(unsigned short *buf, int shorts)
 {
@@ -94,11 +94,11 @@ static int bootp_retry = 0;
 static uint32_t bootp_tics;
 
 /* receive bootp through the UDP mechanism */
-static void bootp_poll(void)
+static int bootp_poll(void)
 {
 	struct wr_sockaddr addr;
 	uint8_t buf[400];
-	int len;
+	int len, ret = 0;
 
 	if (!bootp_tics) /* first time ever */
 		bootp_tics = timer_get_tics() - 1;
@@ -107,20 +107,21 @@ static void bootp_poll(void)
 				  buf, sizeof(buf), NULL);
 
 	if (ip_status != IP_TRAINING)
-		return;
+		return 0;
 
 	if (len > 0)
-		process_bootp(buf, len);
+		ret = process_bootp(buf, len);
 
 	if (time_before(timer_get_tics(), bootp_tics))
-		return;
+		return ret;
 
 	len = prepare_bootp(&addr, buf, ++bootp_retry);
 	ptpd_netif_sendto(bootp_socket, &addr, buf, len, 0);
 	bootp_tics = timer_get_tics() + TICS_PER_SECOND;
+	return 1;
 }
 
-static void icmp_poll(void)
+static int icmp_poll(void)
 {
 	struct wr_sockaddr addr;
 	uint8_t buf[128];
@@ -129,15 +130,16 @@ static void icmp_poll(void)
 	len = ptpd_netif_recvfrom(icmp_socket, &addr,
 				  buf, sizeof(buf), NULL);
 	if (len <= 0)
-		return;
+		return 0;
 	if (ip_status == IP_TRAINING)
-		return;
+		return 0;
 
 	if ((len = process_icmp(buf, len)) > 0)
 		ptpd_netif_sendto(icmp_socket, &addr, buf, len, 0);
+	return 1;
 }
 
-static void rdate_poll(void)
+static int rdate_poll(void)
 {
 	struct wr_sockaddr addr;
 	uint64_t secs;
@@ -148,7 +150,7 @@ static void rdate_poll(void)
 	len = ptpd_netif_recvfrom(rdate_socket, &addr,
 				  buf, sizeof(buf), NULL);
 	if (len <= 0)
-		return;
+		return 0;
 
 	shw_pps_gen_get_time(&secs, NULL);
 	result = htonl((uint32_t)(secs + 2208988800LL));
@@ -159,20 +161,24 @@ static void rdate_poll(void)
 
 	fill_udp(buf, len, NULL);
 	ptpd_netif_sendto(rdate_socket, &addr, buf, len, 0);
-
+	return 1;
 }
 
-void ipv4_poll(int l_status)
+int ipv4_poll(void)
 {
-	if (l_status == LINK_WENT_UP && ip_status == IP_OK_BOOTP)
+	int ret = 0;
+
+	if (link_status == LINK_WENT_UP && ip_status == IP_OK_BOOTP)
 		ip_status = IP_TRAINING;
-	bootp_poll();
+	ret = bootp_poll();
 
-	icmp_poll();
+	ret += icmp_poll();
 
-	rdate_poll();
+	ret += rdate_poll();
 
-	syslog_poll(l_status);
+	ret += syslog_poll();
+
+	return ret != 0;
 }
 
 void getIP(unsigned char *IP)

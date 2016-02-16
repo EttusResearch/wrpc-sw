@@ -81,7 +81,7 @@ static int wrc_mon_status(void)
 	return 1;
 }
 
-void wrc_mon_gui(void)
+int wrc_mon_gui(void)
 {
 	static uint32_t last_jiffies;
 	static uint32_t last_servo_count;
@@ -100,7 +100,7 @@ void wrc_mon_gui(void)
 		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
 	if (time_before(timer_get_tics(), last_jiffies + wrc_ui_refperiod)
 		&& last_servo_count == s->update_count)
-		return;
+		return 0;
 	last_jiffies = timer_get_tics();
 	last_servo_count = s->update_count;
 
@@ -130,7 +130,7 @@ void wrc_mon_gui(void)
 
 		if (!WR_DSPOR(ppi)->wrModeOn) {
 			wrc_mon_std_servo();
-			return;
+			return 1;
 		}
 
 		switch (ptp_mode) {
@@ -174,7 +174,7 @@ void wrc_mon_gui(void)
 		}
 
 		if (wrc_mon_status() == 0)
-			return;
+			return 1;
 
 		cprintf(C_GREY, "Servo state:               ");
 		cprintf(C_WHITE, "%s\n", s->servo_state_name);
@@ -247,7 +247,7 @@ void wrc_mon_gui(void)
 
 	pp_printf("--");
 
-	return;
+	return 1;
 }
 
 static inline void cprintf_ti(int color, struct TimeInternal *ti)
@@ -300,6 +300,9 @@ int wrc_log_stats(void)
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 	static uint32_t last_jiffies;
+
+	if (!wrc_stat_running)
+		return 0;
 
 	if (!last_jiffies)
 		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
@@ -363,5 +366,5 @@ int wrc_log_stats(void)
 
 	pp_printf("\n");
 
-	return 0;
+	return 1;
 }

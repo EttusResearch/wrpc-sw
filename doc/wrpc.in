@@ -758,6 +758,12 @@ of the tools used to build and run it, you can write to our mailing list
 @sc{wrpc}. It is an optional command, enabled at build time by
 @t{CONFIG_CMD_CONFIG}
 
+@item @code{ps} @tab prints the list of running tasks (processes) in the CPU.
+For each task you get the number of iterations and the CPU time consumed
+since boot or last reset of values
+@item @code{ps reset} @tab zeroes the profiling information reported by
+the @code{ps} command
+
 @item @code{verbose <digits>} @tab sets PPSi verbosity. See the PPSi manual
 about the meaning of the digits (hint: @t{verbose 1111} is a good first bet to
 see how the @sc{ptp} system is working)
