@@ -461,8 +461,8 @@ void pfilter_init_vlan(char *fname)
 	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
 	pfilter_logic2(R_DROP, R_TMP, NOT, R_ZERO);
 
-	/* Compare with our vlan */
-	pfilter_cmp(7, CONFIG_VLAN_NR, 0x0fff, MOV, FRAME_OUR_VLAN);
+	/* Compare with our vlan (fake number 0xaaa) */
+	pfilter_cmp(7, 0x0aaa, 0x0fff, MOV, FRAME_OUR_VLAN);
 
 	/* Identify some Ethertypes used later.  */
 	pfilter_cmp(8, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
