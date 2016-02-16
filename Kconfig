@@ -91,6 +91,36 @@ config SYSLOG
 	  The user (or init script) must use "syslog <ipaddr> <macaddr>"
 	  to enable it.  The special "off" ipaddr disables syslog.
 
+config BUILD_INIT
+	depends on WR_NODE
+	default n
+	boolean "Include an init command in the binary (build-time)"
+
+config INIT_COMMAND
+	depends on BUILD_INIT
+	string "Enter the init command, use ';' as command separator"
+	default ""
+
+config INIT_COMMAND
+	string
+	default ""
+
+# The following two integer values are derived, and used in if() (shell.c)
+config HAS_BUILD_INIT
+	int
+	default 1 if BUILD_INIT
+	default 0
+
+config HAS_FLASH_INIT
+	int
+	default 1 if FLASH_INIT
+	default 0
+
+config FLASH_INIT
+  boolean
+  default y if EMBEDDED_NODE
+  default n
+
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.
@@ -141,6 +171,11 @@ config CMD_LL
 	  Please note that the delays have no immediate effect when set
 	  on the master, because they are just sent to the slave
 	  during the initial handshake
+
+config FLASH_INIT
+	depends on WR_NODE && DEVELOPER
+	default y
+	boolean "Read init commands from flash storage"
 
 # CHECK_RESET for switch and node
 config CHECK_RESET

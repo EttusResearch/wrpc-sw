@@ -11,7 +11,6 @@ obj-$(CONFIG_WR_NODE) += \
 	shell/cmd_gui.o \
 	shell/cmd_sdb.o \
 	shell/cmd_mac.o \
-	shell/cmd_init.o \
 	shell/cmd_ptrack.o \
 	shell/cmd_help.o \
 	shell/cmd_ps.o \
@@ -22,3 +21,4 @@ obj-$(CONFIG_PPSI) +=				shell/cmd_verbose.o
 obj-$(CONFIG_CMD_CONFIG) +=			shell/cmd_config.o
 obj-$(CONFIG_CMD_SLEEP) +=			shell/cmd_sleep.o
 obj-$(CONFIG_CMD_LL) +=				shell/cmd_ll.o
+obj-$(CONFIG_FLASH_INIT) +=			shell/cmd_init.o

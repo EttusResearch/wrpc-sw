@@ -248,6 +248,23 @@ const char *fromdec(const char *dec, int *v)
 	return dec;
 }
 
+static char shell_init_cmd[] = CONFIG_INIT_COMMAND;
+
+static int build_init_readcmd(uint8_t *cmd, int maxlen)
+{
+	static char *p = shell_init_cmd;
+	int i;
+
+	/* use semicolon as separator */
+	for (i = 0; i < maxlen && p[i] && p[i] != ';'; i++)
+		cmd[i] = p[i];
+	cmd[i] = '\0';
+	p += i;
+	if (*p == ';')
+		p++;
+	return i;
+}
+
 void shell_boot_script(void)
 {
 	uint8_t next = 0;
@@ -255,7 +272,16 @@ void shell_boot_script(void)
 	if (!has_eeprom)
 		return;
 
-	while (1) {
+	while (CONFIG_HAS_BUILD_INIT) {
+		cmd_len = build_init_readcmd((uint8_t *)cmd_buf,
+					SH_MAX_LINE_LEN);
+		if (!cmd_len)
+			break;
+		pp_printf("executing: %s\n", cmd_buf);
+		_shell_exec();
+	}
+
+	while (CONFIG_HAS_FLASH_INIT) {
 		cmd_len = storage_init_readcmd((uint8_t *)cmd_buf,
 					      SH_MAX_LINE_LEN, next);
 		if (cmd_len <= 0) {
