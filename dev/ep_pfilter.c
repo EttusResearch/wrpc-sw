@@ -20,8 +20,24 @@
 #include <endpoint.h>
 #include <hw/endpoint_regs.h>
 
-extern uint32_t _binary_rules_pfilter_bin_start[];
-extern uint32_t _binary_rules_pfilter_bin_end[];
+extern uint32_t _binary_rules_novlan_bin_start[];
+extern uint32_t _binary_rules_novlan_bin_end[];
+extern uint32_t _binary_rules_vlan_bin_start[];
+extern uint32_t _binary_rules_vlan_bin_end[];
+
+struct rule_set {
+	uint32_t *ini;
+	uint32_t *end;
+} rule_sets[2] = {
+	{
+		_binary_rules_novlan_bin_start,
+		_binary_rules_novlan_bin_end,
+	}, {
+		_binary_rules_vlan_bin_start,
+		_binary_rules_vlan_bin_end,
+	}
+};
+
 
 extern volatile struct EP_WB *EP;
 
@@ -38,15 +54,22 @@ static uint32_t swap32(uint32_t v)
 
 void pfilter_init_default(void)
 {
-	/* Use shorter names to avoid getting mad */
-	uint32_t *vini = _binary_rules_pfilter_bin_start;
-	uint32_t *vend = _binary_rules_pfilter_bin_end;
+	struct rule_set *s;
 	uint8_t mac[6];
 	char buf[20];
-	uint32_t m, *v, *v_vlan = NULL;
+	uint32_t m, *vini, *vend, *v, *v_vlan = NULL;
 	uint64_t cmd_word;
 	int i;
 	static int inited;
+
+	/* If vlan, use rule-set 1, else rule-set 0 */
+	s = rule_sets + (wrc_vlan_number != 0);
+	if (!s->ini) {
+		pp_printf("no pfilter rule-set!\n");
+		return;
+	}
+	vini = s->ini;
+	vend = s->end;
 
 	/*
 	 * The array of words starts with 0x11223344 so we

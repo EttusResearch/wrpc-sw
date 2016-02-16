@@ -26,6 +26,10 @@ static int cmd_vlan(const char *args[])
 		}
 		wrc_vlan_number = i;
 		pfilter_init_default();
+	} else if (!strcasecmp(args[0], "off")) {
+		wrc_vlan_number = 0;
+		pfilter_init_default();
+
 	} else {
 		return -EINVAL;
 	}

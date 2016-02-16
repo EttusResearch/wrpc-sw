@@ -67,4 +67,8 @@ SECTIONS
 
 	/* This may be missing, according to .config */
 	PROVIDE(fifo_log = 0);
+
+	/* A vlan rule-set may be missing (if no CONFIG_VLAN) */
+	PROVIDE(_binary_rules_vlan_bin_start = 0);
+	PROVIDE(_binary_rules_vlan_bin_end = 0);
 }
