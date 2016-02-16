@@ -16,13 +16,12 @@
  */
 
 #include <wrc.h>
+#include <shell.h>
 #include <endpoint.h>
 #include <hw/endpoint_regs.h>
 
 extern uint32_t _binary_rules_pfilter_bin_start[];
 extern uint32_t _binary_rules_pfilter_bin_end[];
-
-#define pfilter_dbg(fmt, ...) /* nothing */
 
 extern volatile struct EP_WB *EP;
 
@@ -42,6 +41,8 @@ void pfilter_init_default(void)
 	/* Use shorter names to avoid getting mad */
 	uint32_t *vini = _binary_rules_pfilter_bin_start;
 	uint32_t *vend = _binary_rules_pfilter_bin_end;
+	uint8_t mac[6];
+	char buf[20];
 	uint32_t m, *v;
 	uint64_t cmd_word;
 	int i;
@@ -78,13 +79,17 @@ void pfilter_init_default(void)
 	}
 	/*
 	 * Patch the local MAC address in place,
-	 * in the first three instructions after NOP */
+	 * in the first three instructions after NOP
+	 */
+	get_mac_addr(mac);
 	v[2] &= ~(0xffff << 13);
 	v[4] &= ~(0xffff << 13);
 	v[6] &= ~(0xffff << 13);
-	v[2] |= ((EP->MACH >>  0) & 0xffff) << 13;
-	v[4] |= ((EP->MACL >> 16) & 0xffff) << 13;
-	v[6] |= ((EP->MACL >>  0) & 0xffff) << 13;
+	v[2] |= ((mac[0] << 8) | mac[1]) << 13;
+	v[4] |= ((mac[2] << 8) | mac[3]) << 13;
+	v[6] |= ((mac[4] << 8) | mac[5]) << 13;
+	pfilter_verbose("fixing MAC adress in rule: use %s\n",
+			format_mac(buf, mac));
 
 	EP->PFCR0 = 0;		// disable pfilter
 
@@ -92,7 +97,9 @@ void pfilter_init_default(void)
 		uint32_t cr0, cr1;
 
 		cmd_word = v[0] | ((uint64_t)v[1] << 32);
-		pfilter_dbg("pos %02i: %x.%08x\n", i, (uint32_t)(cmd_word >> 32), (uint32_t)(cmd_word));
+		pfilter_verbose("pfilter rule %02i: %x.%08x\n", i,
+				(uint32_t)(cmd_word >> 32),
+				(uint32_t)(cmd_word));
 
 		cr1 = EP_PFCR1_MM_DATA_LSB_W(cmd_word & 0xfff);
 		cr0 = EP_PFCR0_MM_ADDR_W(i) | EP_PFCR0_MM_DATA_MSB_W(cmd_word >> 12) |

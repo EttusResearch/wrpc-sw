@@ -30,6 +30,9 @@ config PLL_VERBOSE
 	boolean
 	default y if WR_SWITCH
 
+config PFILTER_VERBOSE
+	boolean
+
 config WRC_VERBOSE
 	boolean
 	default y if WR_SWITCH
@@ -284,6 +287,12 @@ config PLL_VERBOSE
 	help
 	  The softpll is usually silent in WR node and verbose in WR
 	  switch. You can enable pll messages in WR node for debugging.
+
+config PFILTER_VERBOSE
+	depends on DEVELOPER
+	boolean "Verbose messages in packet filter setup"
+	help
+	  A debug tool for people changing the packet filter rules
 
 config WRC_VERBOSE
 	depends on DEVELOPER

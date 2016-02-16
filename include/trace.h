@@ -13,6 +13,12 @@
 #define PLL_IS_VERBOSE 0
 #endif
 
+#ifdef CONFIG_PFILTER_VERBOSE
+#define PFILTER_IS_VERBOSE 1
+#else
+#define PFILTER_IS_VERBOSE 0
+#endif
+
 #ifdef CONFIG_WRC_VERBOSE
 #define WRC_IS_VERBOSE 1
 #else
@@ -21,6 +27,9 @@
 
 #define pll_verbose(...) \
 	({if (PLL_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
+
+#define pfilter_verbose(...) \
+	({if (PFILTER_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
 
 #define wrc_verbose(...) \
 	({if (WRC_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
