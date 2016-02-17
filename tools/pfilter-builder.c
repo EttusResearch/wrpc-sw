@@ -476,6 +476,22 @@ void pfilter_init_vlan(char *fname)
 	/* .... but only for our current VLAN */
 	pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, AND, FRAME_OUR_VLAN);
 
+	/*
+	 * And route these build-time selected vlans to fabric 7 and 6.
+	 * Class 7 is etherbone and class 6 is streamer or nic (or whatever).
+	 * We get all broadcast and all frames for our mac.
+	 *
+	 * We reuse FRAME_OUR_VLAN, even if it's not OUR as in "this CPU"
+	 */
+	pfilter_logic2(R_TMP, FRAME_OUR_MAC, OR, FRAME_BROADCAST);
+
+	pfilter_cmp(7, CONFIG_VLAN_1_FOR_CLASS7, 0x0fff, MOV, FRAME_OUR_VLAN);
+	pfilter_cmp(7, CONFIG_VLAN_2_FOR_CLASS7, 0x0fff, OR, FRAME_OUR_VLAN);
+	pfilter_logic2(R_CLASS(7), R_TMP, AND, FRAME_OUR_VLAN);
+
+	pfilter_cmp(7, CONFIG_VLAN_FOR_CLASS6, 0x0fff, MOV, FRAME_OUR_VLAN);
+	pfilter_logic2(R_CLASS(6), R_TMP, AND, FRAME_OUR_VLAN);
+
 	pfilter_output(fname);
 }
 
