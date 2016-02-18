@@ -66,6 +66,15 @@ int syslog_poll(void)
 	static uint32_t down_tics;
 	int len = 0;
 
+	/* for servo-state (accesses ppsi  internal variables */
+	extern struct pp_instance *ppi;
+	struct wr_servo_state *s =
+		&((struct wr_data *)ppi->ext_data)->servo_state;
+	static uint32_t prev_tics;
+	static int track_ok_count, prev_servo_state = -1;
+
+
+
 	if (ip_status == IP_TRAINING)
 		return 0;
 	if (!syslog_addr.daddr)
@@ -98,6 +107,48 @@ int syslog_poll(void)
 				 format_ip(b1, ip),
 				 down_tics / 1000, down_tics % 1000);
 		down_tics = 0;
+		goto send;
+	}
+
+
+	if (!prev_tics)
+		prev_tics = timer_get_tics();
+
+	if (s->state == WR_TRACK_PHASE &&
+	    prev_servo_state != WR_TRACK_PHASE) {
+		/* we reached sync: log it */
+		track_ok_count++;
+
+		prev_servo_state = s->state;
+		getIP(ip);
+		shw_pps_gen_get_time(&secs, NULL);
+		prev_tics = timer_get_tics() - prev_tics;
+		if (track_ok_count == 1) {
+			len = pp_sprintf(buf + UDP_END,
+				   "<14> %s %s Tracking after %i.%03i s\n",
+				   format_time(secs, TIME_FORMAT_SYSLOG),
+				   format_ip(b1, ip),
+				   prev_tics / 1000, prev_tics % 1000);
+			goto send;
+		}
+		len = pp_sprintf(buf + UDP_END,
+			   "<14> %s %s %i-th re-rtrack after %i.%03i s\n",
+			   format_time(secs, TIME_FORMAT_SYSLOG),
+			   format_ip(b1, ip), track_ok_count,
+			   prev_tics / 1000, prev_tics % 1000);
+			goto send;
+	}
+	if (s->state != WR_TRACK_PHASE &&
+	    prev_servo_state == WR_TRACK_PHASE) {
+
+		prev_servo_state = s->state;
+		getIP(ip);
+		shw_pps_gen_get_time(&secs, NULL);
+		prev_tics = timer_get_tics();
+		len = pp_sprintf(buf + UDP_END,
+			   "<14> %s %s Lost track\n",
+			   format_time(secs, TIME_FORMAT_SYSLOG),
+			   format_ip(b1, ip));
 		goto send;
 	}
 
