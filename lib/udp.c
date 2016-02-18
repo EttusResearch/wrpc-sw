@@ -40,9 +40,9 @@ void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr)
 	buf[UDP_CHECKSUM] = 0;
 	buf[UDP_CHECKSUM + 1] = 0;
 
-	sum =
-	    ipv4_checksum((unsigned short *)(buf + UDP_VIRT_SADDR),
-			  (len - UDP_VIRT_SADDR) / 2);
+	buf[len] = '\0'; /* pad, in case the payload is odd */
+	sum = ipv4_checksum((unsigned short *)(buf + UDP_VIRT_SADDR),
+			    (len + 1 - UDP_VIRT_SADDR) / 2);
 	if (sum == 0)
 		sum = 0xFFFF;
 
