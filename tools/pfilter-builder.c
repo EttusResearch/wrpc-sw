@@ -387,9 +387,12 @@ void pfilter_init_novlan(char *fname)
 	/* PTP UDP (end to end: 01:00:5e:00:01:81    224.0.1.129) */
 	pfilter_cmp(0, 0x0100, 0xffff, MOV, FRAME_MAC_PTP);
 	pfilter_cmp(1, 0x5e00, 0xffff, AND, FRAME_MAC_PTP);
-	pfilter_cmp(2, 0x0181, 0xffff, AND, FRAME_MAC_PTP);
+	pfilter_cmp(2, 0x0181, 0xffff, MOV, R_TMP);
 
-	pfilter_logic2(FRAME_MAC_OK, FRAME_MAC_OK, OR, FRAME_MAC_PTP);
+	/* PTP UDP (peer-to-p:  01:00:5e:00:00:6b    224.0.0.197) */
+	pfilter_cmp(2, 0x006b, 0xffff, OR, R_TMP);
+
+	pfilter_logic3(FRAME_MAC_OK, FRAME_MAC_PTP, AND, R_TMP, OR, FRAME_MAC_OK);
 
 	/* Tagged is dropped. We'll invert the check in the vlan rule-set */
 	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
