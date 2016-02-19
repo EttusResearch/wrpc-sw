@@ -22,6 +22,8 @@ obj-$(CONFIG_W1) +=		dev/temp-w1.o
 obj-$(CONFIG_UART) +=		dev/uart.o
 obj-$(CONFIG_UART_SW) +=	dev/uart-sw.o
 
+obj-$(CONFIG_FAKE_TEMPERATURES) += dev/fake-temp.o
+
 # Filter rules are selected according to configuration, but we may
 # have more than one. Note: the filename is reflected in symbol names,
 # so they are hardwired in ../Makefile (and ../tools/pfilter-builder too)
