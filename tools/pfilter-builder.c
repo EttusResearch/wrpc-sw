@@ -212,6 +212,7 @@ enum pf_symbolic_regs {
 	/* The first set is used for straight comparisons */
 	FRAME_BROADCAST = R_1,
 	FRAME_MAC_OK,
+	FRAME_MAC_PTP,
 	FRAME_OUR_VLAN,
 	FRAME_TYPE_IPV4,
 	FRAME_TYPE_PTP2,
@@ -382,6 +383,13 @@ void pfilter_init_novlan(char *fname)
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
 	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);
+
+	/* PTP UDP (end to end: 01:00:5e:00:01:81    224.0.1.129) */
+	pfilter_cmp(0, 0x0100, 0xffff, MOV, FRAME_MAC_PTP);
+	pfilter_cmp(1, 0x5e00, 0xffff, AND, FRAME_MAC_PTP);
+	pfilter_cmp(2, 0x0181, 0xffff, AND, FRAME_MAC_PTP);
+
+	pfilter_logic2(FRAME_MAC_OK, FRAME_MAC_OK, OR, FRAME_MAC_PTP);
 
 	/* Tagged is dropped. We'll invert the check in the vlan rule-set */
 	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
