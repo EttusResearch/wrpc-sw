@@ -410,13 +410,12 @@ void pfilter_init_novlan(char *fname)
 	pfilter_cmp(18, 0x0100, 0xff00, OR, PORT_UDP_HOST);	/* ports 256-511 */
 
 	/* The CPU gets those ports in a proper UDP frame, plus the previous selections */
-	pfilter_logic3(FRAME_FOR_CPU, FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);
+	pfilter_logic3(R_CLASS(0), FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);
 
 	/* Etherbone is UDP at port 0xebd0, let's "or" in the last move */
 	pfilter_cmp(18, 0xebd0, 0xffff, MOV, PORT_UDP_ETHERBONE);
 
-	/* and now copy out the stuff: one cpu class, two fabric classes: 7 etherbone, 6 for anything else */
-	pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
+	/* and now copy out fabric selections: 7 etherbone, 6 for anything else */
 	pfilter_logic2(R_CLASS(7), FRAME_UDP, AND, PORT_UDP_ETHERBONE);
 	pfilter_logic2(R_CLASS(6), FRAME_UDP, NAND, PORT_UDP_ETHERBONE);
 
