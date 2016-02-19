@@ -53,7 +53,7 @@ static int temp_w1_refresh(struct wrc_temp *t)
 }
 
 /* not static at this point, because it's the only one */
-struct wrc_temp temp_w1 = {
+DEFINE_TEMPERATURE(w1) = {
 	.read = temp_w1_refresh,
 	.t = temp_w1_data,
 };

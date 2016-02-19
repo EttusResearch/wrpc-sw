@@ -10,4 +10,9 @@ SECTIONS
 		KEEP(*(.cmd))
 		__cmd_end = .;
 	}
+	.temp : {
+		__temp_begin = .;
+		KEEP(*(.temp))
+		__temp_end = .;
+	}
 }

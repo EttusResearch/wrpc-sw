@@ -12,16 +12,18 @@
 #include <temperature.h>
 #include <shell.h>
 
-extern struct wrc_temp temp_w1; /* The only one by now */
+extern struct wrc_temp __temp_begin[], __temp_end[];
 
 /*
  * Library functions
  */
 uint32_t wrc_temp_get(char *name)
 {
-	struct wrc_onetemp *wt = temp_w1.t;
+	struct wrc_temp *ta;
+	struct wrc_onetemp *wt;
 
-	for (; wt->name; wt++) {
+	for (ta = __temp_begin; ta < __temp_end; ta++)
+		for (wt = ta->t; wt->name; wt++) {
 		if (!strcmp(wt->name, name))
 			return wt->t;
 	}
@@ -30,11 +32,26 @@ uint32_t wrc_temp_get(char *name)
 
 struct wrc_onetemp *wrc_temp_getnext(struct wrc_onetemp *pt)
 {
-	if (!pt) /* first one */
-		return temp_w1.t;
+	struct wrc_temp *ta;
+	struct wrc_onetemp *wt;
+
+	if (!pt) { /* first one */
+		if (__temp_begin != __temp_end)
+			return __temp_begin->t;
+	}
 	if (pt[1].name)
 		return pt + 1;
-	/* get next array, if any -- none by now */
+	/* get next array, if any */
+	for (ta = __temp_begin; ta < __temp_end; ta++) {
+		for (wt = ta->t; wt->name; wt++) {
+			if (wt == pt) {
+				ta++;
+				if (ta >= __temp_end)
+					return NULL;
+				return ta->t;
+			}
+		}
+	}
 	return NULL;
 }
 
@@ -70,13 +87,21 @@ extern int wrc_temp_format(char *buffer, int len)
  */
 void wrc_temp_init(void)
 {
+	struct wrc_temp *ta;
+
 	/* Call all actors, so they can init themselves (using ->data) */
-	temp_w1.read(&temp_w1);
+	for (ta = __temp_begin; ta < __temp_end; ta++)
+		ta->read(ta);
 }
 
 int wrc_temp_refresh(void)
 {
-	return temp_w1.read(&temp_w1);
+	struct wrc_temp *ta;
+	int ret = 0;
+
+	for (ta = __temp_begin; ta < __temp_end; ta++)
+		ret += ta->read(ta);
+	return (ret > 0);
 }
 
 /*

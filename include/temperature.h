@@ -21,6 +21,11 @@ struct wrc_temp {
 	struct wrc_onetemp *t; /* zero-terminated */
 };
 
+#define DEFINE_TEMPERATURE(_name) \
+        static struct wrc_temp __wrc_temp_ ## _name \
+        __attribute__((section(".temp"), __used__))
+
+
 /* the task */
 extern void wrc_temp_init(void);
 extern int wrc_temp_refresh(void);
