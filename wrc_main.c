@@ -14,6 +14,7 @@
 
 #include <wrc.h>
 #include <w1.h>
+#include <temperature.h>
 #include "syscon.h"
 #include "uart.h"
 #include "endpoint.h"
@@ -210,6 +211,10 @@ struct wrc_task wrc_tasks[] = {
 	}, {
 		.name = "spll-bh",
 		.job = spll_update,
+	}, {
+		.name = "temperature",
+		.init = wrc_temp_init,
+		.job = wrc_temp_refresh,
 #ifdef CONFIG_IP
 	}, {
 		.name = "ipv4",

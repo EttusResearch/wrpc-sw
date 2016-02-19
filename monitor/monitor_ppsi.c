@@ -18,6 +18,7 @@
 #include <syscon.h>
 #include <pps_gen.h>
 #include <onewire.h>
+#include <temperature.h>
 #include "wrc_ptp.h"
 #include "hal_exports.h"
 #include "lib/ipv4.h"
@@ -350,11 +351,7 @@ int wrc_log_stats(void)
 	if (1) {
 		int32_t temp;
 
-		//first read the value from previous measurement,
-		//first one will be random, I know
-		temp = w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_COLLECT);
-		//then initiate new conversion for next loop cycle
-		w1_read_temp_bus(&wrpc_w1_bus, W1_FLAG_NOWAIT);
+		temp = wrc_temp_get("pcb");
 		pp_printf("temp: %d.%04d C", temp >> 16,
 			  (int)((temp & 0xffff) * 10 * 1000 >> 16));
 	}

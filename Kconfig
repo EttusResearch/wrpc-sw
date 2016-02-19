@@ -26,6 +26,10 @@ config RAMSIZE
 	default 65536 if WR_SWITCH
 	default 131072
 
+config TEMP_POLL_INTERVAL
+	int
+	default 15
+
 config PLL_VERBOSE
 	boolean
 	default y if WR_SWITCH
@@ -187,6 +191,10 @@ config PRINT_BUFSIZE
 	  This buffer is constant storage (i.e. wasted space), but it
 	  also constraints the maximum lenght of text that can be written
 	  in a single call to printf.
+
+config TEMP_POLL_INTERVAL
+	depends on DEVELOPER && WR_NODE
+	int "Poll interval, in seconds, for temperature sensors"
 
 config CMD_LL
 	depends on DEVELOPER && WR_NODE
