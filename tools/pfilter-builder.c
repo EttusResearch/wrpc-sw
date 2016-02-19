@@ -406,10 +406,8 @@ void pfilter_init_novlan(char *fname)
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, FRAME_FOR_CPU);
 
 	/* Now look in UDP ports: at offset 18 (14 + 20 + 8 = 36) */
-	pfilter_cmp(18, 0x0044, 0xffff, MOV, PORT_UDP_HOST);	/* bootpc */
-	pfilter_cmp(18, 0x013f, 0xffff, OR, PORT_UDP_HOST);	/* ptp event */
-	pfilter_cmp(18, 0x0140, 0xffff, OR, PORT_UDP_HOST);	/* ptp general */
-	pfilter_cmp(18, 0x0025, 0xffff, OR, PORT_UDP_HOST);	/* rdate */
+	pfilter_cmp(18, 0x0000, 0xff00, MOV, PORT_UDP_HOST);	/* ports 0-255 */
+	pfilter_cmp(18, 0x0100, 0xff00, OR, PORT_UDP_HOST);	/* ports 256-511 */
 
 	/* The CPU gets those ports in a proper UDP frame, plus the previous selections */
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);
