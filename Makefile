@@ -1,11 +1,9 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 -include $(CURDIR)/.config
 
+# Until we move CONFIG_LM32 to Kconfig, force it here
+CONFIG_LM32 = y
 CROSS_COMPILE ?= lm32-elf-
-
-ifdef CONFIG_HOST_PROCESS
-  CROSS_COMPILE =
-endif
 
 export CROSS_COMPILE
 
@@ -21,7 +19,7 @@ AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 PPSI = ppsi
 
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
-obj-y = arch/lm32/crt0.o arch/lm32/irq.o
+obj-$(CONFIG_LM32) = arch/lm32/crt0.o arch/lm32/irq.o
 LDS-$(CONFIG_WR_NODE)   = arch/lm32/ram.ld
 LDS-$(CONFIG_WR_SWITCH) = arch/lm32/ram-wrs.ld
 
@@ -35,14 +33,13 @@ obj-y += dump-info.o
 	$(CC) -include $(AUTOCONF) -E -P $*.ld.S -o $@
 
 
-cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude/std -Iinclude \
+cflags-y =	-ffreestanding -include $(AUTOCONF) -Iinclude \
 			-I. -Isoftpll -Iipc
 cflags-y +=	-I$(CURDIR)/pp_printf
+cflags-$(CONFIG_LM32) +=  -Iinclude/std
 
 cflags-$(CONFIG_PPSI) += \
-	-ffreestanding \
 	-include include/ppsi-wrappers.h \
-	-Iinclude \
 	-I$(PPSI)/arch-wrpc \
 	-I$(PPSI)/proto-ext-whiterabbit \
 	-Iboards/spec
@@ -60,8 +57,8 @@ obj-$(CONFIG_PPSI) += \
 	lib/ppsi-wrappers.o \
 	$(obj-ppsi)
 
-CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
-LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
+cflags-$(CONFIG_LM32) += -mmultiply-enabled -mbarrel-shift-enabled
+ldflags-$(CONFIG_LM32) = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
 
 # packet-filter rules: for CONFIG_VLAN we use both sets
@@ -82,7 +79,7 @@ ifndef CONFIG_PPSI
   obj-y += pp_printf/div64.o
 endif
 # And always complain if we pick the libgcc division: 64/32 = 32 is enough here.
-obj-y += check-error.o
+obj-$(CONFIG_LM32) += check-error.o
 
 # add system check functions like stack overflow and check reset
 obj-y += system_checks.o
@@ -91,12 +88,14 @@ obj-y += system_checks.o
 obj-$(CONFIG_WR_NODE) += sdb-lib/libsdbfs.a
 cflags-$(CONFIG_WR_NODE) += -Isdb-lib
 
-CFLAGS = $(CFLAGS_PLATFORM) $(cflags-y) -Wall -Wstrict-prototypes \
+CFLAGS = $(cflags-y) -Wall -Wstrict-prototypes \
 	-ffunction-sections -fdata-sections -Os -Wmissing-prototypes \
 	-include include/wrc.h -ggdb
 
-LDFLAGS = $(LDFLAGS_PLATFORM) \
+LDFLAGS = $(ldflags-y) \
 	-Wl,--gc-sections -Os -lgcc -lc
+
+WRC-O-FLAGS-$(CONFIG_LM32) = --gc-sections -e _start
 
 OBJS = $(obj-y)
 
@@ -121,10 +120,13 @@ endif
 
 PPSI_USER_CFLAGS += -DDIAG_PUTS=uart_sw_write_string
 
+PPSI-CFG-y = wrpc_defconfig
+PPSI-FLAGS-$(CONFIG_LM32) = CONFIG_NO_PRINTF=y
+
 $(obj-ppsi):
-	test -f $(PPSI)/.config || $(MAKE) -C $(PPSI) wrpc_defconfig
-	$(MAKE) -C $(PPSI) WRPCSW_ROOT=.. \
-		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y \
+	test -f $(PPSI)/.config || $(MAKE) -C $(PPSI) $(PPSI-CFG-y)
+	$(MAKE) -C $(PPSI) ppsi.o WRPCSW_ROOT=.. \
+		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y
 		USER_CFLAGS="$(PPSI_USER_CFLAGS)"
 
 sdb-lib/libsdbfs.a:
@@ -137,12 +139,14 @@ $(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
 	$(SIZE) $@
 
 $(OUTPUT).o: $(OBJS)
-	$(LD) --gc-sections -e _start -r $(OBJS) -T bigobj.lds -o $@
+	$(LD) $(WRC-O-FLAGS-y) -r $(OBJS) -T bigobj.lds -o $@
+
+OBJCOPY-TARGET-$(CONFIG_LM32) = -O elf32-lm32 -B lm32
 
 config.o: .config
 	sed '1,3d' .config > .config.bin
 	dd bs=1 count=1 if=/dev/zero 2> /dev/null >> .config.bin
-	$(OBJCOPY) -I binary -O elf32-lm32 -B lm32 \
+	$(OBJCOPY) -I binary $(OBJCOPY-TARGET-y) \
 		--rename-section .data=.data.config  .config.bin $@
 	rm -f .config.bin
 
