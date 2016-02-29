@@ -1,9 +1,11 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 -include $(CURDIR)/.config
 
-# Until we move CONFIG_LM32 to Kconfig, force it here
-CONFIG_LM32 = y
 CROSS_COMPILE ?= lm32-elf-
+
+ifdef CONFIG_HOST_PROCESS
+  CROSS_COMPILE =
+endif
 
 export CROSS_COMPILE
 
@@ -22,6 +24,7 @@ PPSI = ppsi
 obj-$(CONFIG_LM32) = arch/lm32/crt0.o arch/lm32/irq.o
 LDS-$(CONFIG_WR_NODE)   = arch/lm32/ram.ld
 LDS-$(CONFIG_WR_SWITCH) = arch/lm32/ram-wrs.ld
+LDS-$(CONFIG_HOST_PROCESS) =
 
 obj-$(CONFIG_WR_NODE)   += wrc_main.o
 obj-$(CONFIG_WR_SWITCH) += wrs_main.o
@@ -49,13 +52,13 @@ cflags-y += \
 	-I$(PPSI)/arch-wrpc/include \
 	-I$(PPSI)/include
 
-obj-ppsi = \
-	$(PPSI)/ppsi.o
+obj-ppsi = $(PPSI)/ppsi.o
+obj-$(CONFIG_PPSI) += $(obj-ppsi)
 
-obj-$(CONFIG_PPSI) += \
+# Below, CONFIG_PPSI is wrong, as we can't build these for the host
+obj-$(CONFIG_EMBEDDED_NODE) += \
 	monitor/monitor_ppsi.o \
-	lib/ppsi-wrappers.o \
-	$(obj-ppsi)
+	lib/ppsi-wrappers.o
 
 cflags-$(CONFIG_LM32) += -mmultiply-enabled -mbarrel-shift-enabled
 ldflags-$(CONFIG_LM32) = -mmultiply-enabled -mbarrel-shift-enabled \
@@ -73,6 +76,7 @@ include lib/lib.mk
 include pp_printf/printf.mk
 include dev/dev.mk
 include softpll/softpll.mk
+include host/host.mk
 
 # ppsi already has div64 (the same one), so only pick it if not using ppsi.
 ifndef CONFIG_PPSI
@@ -121,6 +125,7 @@ endif
 PPSI_USER_CFLAGS += -DDIAG_PUTS=uart_sw_write_string
 
 PPSI-CFG-y = wrpc_defconfig
+PPSI-CFG-$(CONFIG_HOST_PROCESS) = unix_defconfig
 PPSI-FLAGS-$(CONFIG_LM32) = CONFIG_NO_PRINTF=y
 
 $(obj-ppsi):
@@ -142,6 +147,7 @@ $(OUTPUT).o: $(OBJS)
 	$(LD) $(WRC-O-FLAGS-y) -r $(OBJS) -T bigobj.lds -o $@
 
 OBJCOPY-TARGET-$(CONFIG_LM32) = -O elf32-lm32 -B lm32
+OBJCOPY-TARGET-$(CONFIG_HOST_PROCESS) = -O elf64-x86-64 -B i386
 
 config.o: .config
 	sed '1,3d' .config > .config.bin

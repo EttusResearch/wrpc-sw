@@ -1,15 +1,20 @@
-obj-$(CONFIG_WR_NODE) += \
+
+# Those hardware-specific files should not be built for the host, even if
+# most of them give no error no warning. The host has different implementations
+obj-$(CONFIG_EMBEDDED_NODE) += \
 	dev/endpoint.o \
 	dev/ep_pfilter.o \
 	dev/i2c.o \
 	dev/temperature.o \
 	dev/minic.o \
-	dev/pps_gen.o \
 	dev/syscon.o \
 	dev/sfp.o \
 	dev/devicelist.o \
 	dev/rxts_calibrator.o \
 	dev/flash.o
+
+obj-$(CONFIG_WR_NODE) += \
+	dev/pps_gen.o
 
 obj-$(CONFIG_WR_SWITCH) += dev/timer-wrs.o dev/ad9516.o
 
