@@ -9,6 +9,9 @@
 #include <inttypes.h>
 #include "ptpd_netif.h" /* for sockaddr in prototype */
 
+#undef IP_TOS /* These two are defined by arpa/inet.h, and will conflict */
+#undef IP_TTL /* when we build for the host */
+
 #define IP_VERSION	0
 #define IP_TOS		(IP_VERSION+1)
 #define IP_LEN		(IP_TOS+1)

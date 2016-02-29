@@ -1,6 +1,12 @@
 # Tomasz Wlostowski for CERN, 2011,2012
+-include $(CURDIR)/.config
 
 CROSS_COMPILE ?= lm32-elf-
+
+ifdef CONFIG_HOST_PROCESS
+  CROSS_COMPILE =
+endif
+
 export CROSS_COMPILE
 
 CC =		$(CROSS_COMPILE)gcc
@@ -9,7 +15,6 @@ OBJDUMP =	$(CROSS_COMPILE)objdump
 OBJCOPY =	$(CROSS_COMPILE)objcopy
 SIZE =		$(CROSS_COMPILE)size
 
--include $(CURDIR)/.config
 
 AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 

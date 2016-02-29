@@ -34,7 +34,9 @@ static inline void timer_delay_ms(int ms)
 
 /* usleep.c */
 extern void usleep_init(void);
+#ifndef unix
 extern int usleep(useconds_t usec);
+#endif
 
 
 #ifdef CONFIG_WR_NODE

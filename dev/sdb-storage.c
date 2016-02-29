@@ -15,6 +15,7 @@
 #include "types.h"
 #include "i2c.h"
 #include "onewire.h"
+#include "endpoint.h"
 #include <sdb.h>
 
 #define SDBFS_BIG_ENDIAN
@@ -296,6 +297,12 @@ int get_persistent_mac(uint8_t portnum, uint8_t * mac)
 	int ret;
 	int i, class;
 	uint64_t rom;
+
+	if (IS_HOST_PROCESS) {
+		/* we don't have sdb working, so get the real eth address */
+		get_mac_addr(mac);
+		return 0;
+	}
 
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_MAC) < 0)
 		return -1;
