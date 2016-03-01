@@ -68,10 +68,14 @@ int syslog_poll(void)
 
 	/* for servo-state (accesses ppsi  internal variables */
 	extern struct pp_instance *ppi;
-	struct wr_servo_state *s =
-		&((struct wr_data *)ppi->ext_data)->servo_state;
+	struct wr_servo_state *s;
 	static uint32_t prev_tics;
 	static int track_ok_count, prev_servo_state = -1;
+
+	if (IS_HOST_PROCESS)
+		s = NULL;
+	else
+		s = &((struct wr_data *)ppi->ext_data)->servo_state;
 
 
 
@@ -114,7 +118,7 @@ int syslog_poll(void)
 	if (!prev_tics)
 		prev_tics = timer_get_tics();
 
-	if (s->state == WR_TRACK_PHASE &&
+	if (s && s->state == WR_TRACK_PHASE &&
 	    prev_servo_state != WR_TRACK_PHASE) {
 		/* we reached sync: log it */
 		track_ok_count++;
@@ -138,7 +142,7 @@ int syslog_poll(void)
 			   prev_tics / 1000, prev_tics % 1000);
 			goto send;
 	}
-	if (s->state != WR_TRACK_PHASE &&
+	if (s && s->state != WR_TRACK_PHASE &&
 	    prev_servo_state == WR_TRACK_PHASE) {
 
 		prev_servo_state = s->state;
