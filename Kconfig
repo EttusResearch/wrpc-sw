@@ -97,9 +97,9 @@ config PPSI
 	default y
 
 config UART
-	depends on EMBEDDED_NODE
 	boolean
-	default y
+	default y if EMBEDDED_NODE
+	default n
 
 config W1
 	depends on EMBEDDED_NODE
@@ -302,8 +302,7 @@ config DETERMINISTIC_BINARY
 
 config UART
 	boolean "Use hardware uart (and/or vuart if available)"
-	depends on DEVELOPER && WR_NODE
-	default y
+	depends on DEVELOPER && EMBEDDED_NODE
 	help
 	  This option selects the serial driver, connected to either
 	  the USB socket, or "vuart" (software fifo) or both, according
