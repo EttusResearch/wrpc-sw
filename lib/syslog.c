@@ -1,6 +1,7 @@
 #include <string.h>
 #include <wrc.h>
 #include <wrpc.h>
+#include <temperature.h>
 #include "endpoint.h"
 #include "minic.h"
 #include "shell.h"
@@ -78,6 +79,10 @@ int syslog_poll(void)
 	unsigned char ip[4];
 	static uint32_t down_tics;
 	int len = 0;
+	uint32_t now;
+
+	/* for temperature state */
+	static uint32_t next_temp_report, next_temp_check;
 
 	/* for servo-state (accesses ppsi  internal variables */
 	extern struct pp_instance *ppi;
@@ -153,6 +158,36 @@ int syslog_poll(void)
 		goto send;
 	}
 
+
+	if (!next_temp_check) {
+		next_temp_check = now + 1000;
+		next_temp_report = 0;
+	}
+
+	if (time_after_eq(now, next_temp_check)) {
+		struct wrc_onetemp *t = NULL;
+		int over_t = 0;
+
+		next_temp_check += 1000;
+		while ( (t = wrc_temp_getnext(t)) )
+			over_t += (t->t > (CONFIG_TEMP_HIGH_THRESHOLD << 16));
+		/* report if over temp, and first report or rappel time */
+		if (over_t && (!next_temp_report
+			       || time_after_eq(now, next_temp_report))) {
+			next_temp_report = now + 1000 * CONFIG_TEMP_HIGH_RAPPEL;
+			len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+			len += pp_sprintf(buf + len, "Temperature high: ");
+			len += wrc_temp_format(buf + len, sizeof(buf) - len);
+			goto send;
+		}
+		if (!over_t && next_temp_report) {
+			next_temp_report = 0;
+			len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+			len += pp_sprintf(buf + len, "Temperature ok: ");
+			len += wrc_temp_format(buf + len, sizeof(buf) - len);
+			goto send;
+		}
+	}
 	return 0;
 
 send:

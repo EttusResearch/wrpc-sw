@@ -211,6 +211,16 @@ config TEMP_POLL_INTERVAL
 	depends on DEVELOPER && WR_NODE
 	int "Poll interval, in seconds, for temperature sensors"
 
+config TEMP_HIGH_THRESHOLD
+	depends on DEVELOPER && WR_NODE && SYSLOG
+	default 70
+	int "Threshold for temperature: tell syslog if higher"
+
+config TEMP_HIGH_RAPPEL
+	depends on DEVELOPER && WR_NODE && SYSLOG
+	default 60
+	int "Remember over-temperature every that many seconds"
+
 config CMD_LL
 	depends on DEVELOPER && EMBEDDED_NODE
 	bool "Build low-level commands for development/testing"
