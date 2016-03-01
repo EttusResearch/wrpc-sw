@@ -5,7 +5,6 @@ obj-$(CONFIG_EMBEDDED_NODE) += \
 	dev/endpoint.o \
 	dev/ep_pfilter.o \
 	dev/i2c.o \
-	dev/temperature.o \
 	dev/minic.o \
 	dev/syscon.o \
 	dev/sfp.o \
@@ -14,6 +13,7 @@ obj-$(CONFIG_EMBEDDED_NODE) += \
 	dev/flash.o
 
 obj-$(CONFIG_WR_NODE) += \
+	dev/temperature.o \
 	dev/pps_gen.o
 
 obj-$(CONFIG_WR_SWITCH) += dev/timer-wrs.o dev/ad9516.o
