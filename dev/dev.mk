@@ -35,7 +35,7 @@ obj-$(CONFIG_FAKE_TEMPERATURES) += dev/fake-temp.o
 obj-y += $(pfilter-y:.bin=.o)
 
 rules-%.o: rules-%.bin
-	$(OBJCOPY) -I binary -O elf32-lm32 -B lm32 $< $@
+	$(OBJCOPY) -I binary  $(OBJCOPY-TARGET-y) $< $@
 
 $(pfilter-y): tools/pfilter-builder
 	$^
