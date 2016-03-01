@@ -12,6 +12,8 @@
 #include "pps_gen.h"
 #include "rxts_calibrator.h"
 
+#include "host.h"
+
 uint32_t _endram;
 
 int wrc_stat_running;
@@ -74,6 +76,13 @@ void uart_init_hw(void)
 void uart_init_sw(void)
 { printf("%s\n", __func__); }
 
+
+void uart_exit(int i)
+{
+	system("stty sane");
+	exit(i);
+}
+
 int uart_read_byte(void)
 {
 	fd_set set;
@@ -86,8 +95,7 @@ int uart_read_byte(void)
 		ret = getchar();
 	/* Use ctrl-C and ctrl-D specially (hack!) */
 	if (ret == 3 || ret == 4) {
-		system("stty sane");
-		exit(0);
+		uart_exit(0);
 	}
 	return ret;
 }
