@@ -54,15 +54,28 @@ DEFINE_WRC_COMMAND(mac) = {
 	.exec = cmd_syslog,
 };
 
+#define SYSLOG_DEFAULT_LEVEL 14 /* 8 == user + 6 ==info */
+static int syslog_header(char *buf, int level, unsigned char ip[4])
+{
+	uint64_t secs;
+	char b[32];
+	int len;
+
+	shw_pps_gen_get_time(&secs, NULL);
+	getIP(ip);
+	len = pp_sprintf(buf + UDP_END, "<%i> %s %s ", level,
+			 format_time(secs, TIME_FORMAT_SYSLOG),
+			 format_ip(b, ip));
+	return len + UDP_END;
+}
 
 int syslog_poll(void)
 {
 	struct wr_sockaddr addr;
 	char buf[256];
-	char b1[32], b2[32];
+	char b[32];
 	unsigned char mac[6];
 	unsigned char ip[4];
-	uint64_t secs;
 	static uint32_t down_tics;
 	int len = 0;
 
@@ -77,8 +90,6 @@ int syslog_poll(void)
 	else
 		s = &((struct wr_data *)ppi->ext_data)->servo_state;
 
-
-
 	if (ip_status == IP_TRAINING)
 		return 0;
 	if (!syslog_addr.daddr)
@@ -87,14 +98,10 @@ int syslog_poll(void)
 	if (!tics) {
 		/* first time ever, or new syslog server */
 		tics = timer_get_tics() - 1;
-		shw_pps_gen_get_time(&secs, NULL);
 		get_mac_addr(mac);
-		getIP(ip);
-		len = pp_sprintf(buf + UDP_END, /* 8 == user + 6 == info */
-				 "<14> %s %s (%s) Node up "
-				 "since %i seconds\n",
-				 format_time(secs, TIME_FORMAT_SYSLOG),
-				 format_ip(b1, ip), format_mac(b2, mac),
+		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+		len += pp_sprintf(buf + len, "(%s) Node up "
+				 "since %i seconds\n", format_mac(b, mac),
 				 (tics - tics_zero) / 1000);
 		goto send;
 	}
@@ -103,12 +110,8 @@ int syslog_poll(void)
 		down_tics = timer_get_tics();
 	if (link_status == LINK_UP && down_tics) {
 		down_tics = timer_get_tics() - down_tics;
-		shw_pps_gen_get_time(&secs, NULL);
-		getIP(ip);
-		len = pp_sprintf(buf + UDP_END, /* 8 == user + 6 == info */
-				 "<14> %s %s Link up after %i.%03i s\n",
-				 format_time(secs, TIME_FORMAT_SYSLOG),
-				 format_ip(b1, ip),
+		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+		len += pp_sprintf(buf + len, "Link up after %i.%03i s\n",
 				 down_tics / 1000, down_tics % 1000);
 		down_tics = 0;
 		goto send;
@@ -124,42 +127,33 @@ int syslog_poll(void)
 		track_ok_count++;
 
 		prev_servo_state = s->state;
-		getIP(ip);
-		shw_pps_gen_get_time(&secs, NULL);
 		prev_tics = timer_get_tics() - prev_tics;
 		if (track_ok_count == 1) {
-			len = pp_sprintf(buf + UDP_END,
-				   "<14> %s %s Tracking after %i.%03i s\n",
-				   format_time(secs, TIME_FORMAT_SYSLOG),
-				   format_ip(b1, ip),
+			len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+			len += pp_sprintf(buf + len,
+				   "Tracking after %i.%03i s\n",
 				   prev_tics / 1000, prev_tics % 1000);
 			goto send;
 		}
-		len = pp_sprintf(buf + UDP_END,
-			   "<14> %s %s %i-th re-rtrack after %i.%03i s\n",
-			   format_time(secs, TIME_FORMAT_SYSLOG),
-			   format_ip(b1, ip), track_ok_count,
-			   prev_tics / 1000, prev_tics % 1000);
-			goto send;
+		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+		len += pp_sprintf(buf + len,
+				  "%i-th re-rtrack after %i.%03i s\n",
+				  track_ok_count,
+				  prev_tics / 1000, prev_tics % 1000);
+		goto send;
 	}
 	if (s && s->state != WR_TRACK_PHASE &&
 	    prev_servo_state == WR_TRACK_PHASE) {
-
 		prev_servo_state = s->state;
-		getIP(ip);
-		shw_pps_gen_get_time(&secs, NULL);
 		prev_tics = timer_get_tics();
-		len = pp_sprintf(buf + UDP_END,
-			   "<14> %s %s Lost track\n",
-			   format_time(secs, TIME_FORMAT_SYSLOG),
-			   format_ip(b1, ip));
+		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
+		len += pp_sprintf(buf + len, "Lost track\n");
 		goto send;
 	}
 
 	return 0;
 
 send:
-	len += UDP_END;
 	memcpy(&syslog_addr.saddr, ip, 4);
 	fill_udp((void *)buf, len, &syslog_addr);
 	memcpy(&addr.mac, syslog_mac, 6);
