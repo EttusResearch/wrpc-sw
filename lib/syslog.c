@@ -95,9 +95,11 @@ int syslog_poll(void)
 	if (!syslog_addr.daddr)
 		return 0;
 
+	now = timer_get_tics();
+
 	if (!tics) {
 		/* first time ever, or new syslog server */
-		tics = timer_get_tics() - 1;
+		tics = now - 1;
 		get_mac_addr(mac);
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 		len += pp_sprintf(buf + len, "(%s) Node up "
@@ -107,9 +109,9 @@ int syslog_poll(void)
 	}
 
 	if (link_status == LINK_WENT_DOWN)
-		down_tics = timer_get_tics();
+		down_tics = now;
 	if (link_status == LINK_UP && down_tics) {
-		down_tics = timer_get_tics() - down_tics;
+		down_tics = now - down_tics;
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 		len += pp_sprintf(buf + len, "Link up after %i.%03i s\n",
 				 down_tics / 1000, down_tics % 1000);
@@ -119,7 +121,7 @@ int syslog_poll(void)
 
 
 	if (!prev_tics)
-		prev_tics = timer_get_tics();
+		prev_tics = now;
 
 	if (s && s->state == WR_TRACK_PHASE &&
 	    prev_servo_state != WR_TRACK_PHASE) {
@@ -127,7 +129,7 @@ int syslog_poll(void)
 		track_ok_count++;
 
 		prev_servo_state = s->state;
-		prev_tics = timer_get_tics() - prev_tics;
+		prev_tics = now - prev_tics;
 		if (track_ok_count == 1) {
 			len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 			len += pp_sprintf(buf + len,
@@ -145,7 +147,7 @@ int syslog_poll(void)
 	if (s && s->state != WR_TRACK_PHASE &&
 	    prev_servo_state == WR_TRACK_PHASE) {
 		prev_servo_state = s->state;
-		prev_tics = timer_get_tics();
+		prev_tics = now;
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 		len += pp_sprintf(buf + len, "Lost track\n");
 		goto send;
