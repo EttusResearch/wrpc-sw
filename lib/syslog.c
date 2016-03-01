@@ -103,7 +103,7 @@ int syslog_poll(void)
 		get_mac_addr(mac);
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 		len += pp_sprintf(buf + len, "(%s) Node up "
-				 "since %i seconds\n", format_mac(b, mac),
+				 "since %i seconds", format_mac(b, mac),
 				 (tics - tics_zero) / 1000);
 		goto send;
 	}
@@ -113,7 +113,7 @@ int syslog_poll(void)
 	if (link_status == LINK_UP && down_tics) {
 		down_tics = now - down_tics;
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
-		len += pp_sprintf(buf + len, "Link up after %i.%03i s\n",
+		len += pp_sprintf(buf + len, "Link up after %i.%03i s",
 				 down_tics / 1000, down_tics % 1000);
 		down_tics = 0;
 		goto send;
@@ -133,13 +133,13 @@ int syslog_poll(void)
 		if (track_ok_count == 1) {
 			len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 			len += pp_sprintf(buf + len,
-				   "Tracking after %i.%03i s\n",
+				   "Tracking after %i.%03i s",
 				   prev_tics / 1000, prev_tics % 1000);
 			goto send;
 		}
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
 		len += pp_sprintf(buf + len,
-				  "%i-th re-rtrack after %i.%03i s\n",
+				  "%i-th re-rtrack after %i.%03i s",
 				  track_ok_count,
 				  prev_tics / 1000, prev_tics % 1000);
 		goto send;
@@ -149,7 +149,7 @@ int syslog_poll(void)
 		prev_servo_state = s->state;
 		prev_tics = now;
 		len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
-		len += pp_sprintf(buf + len, "Lost track\n");
+		len += pp_sprintf(buf + len, "Lost track");
 		goto send;
 	}
 
