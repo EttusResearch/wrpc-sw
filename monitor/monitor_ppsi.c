@@ -23,8 +23,6 @@
 #include "lib/ipv4.h"
 #include "shell.h"
 
-extern int wrc_man_phase;
-
 extern struct pp_servo servo;
 extern struct pp_instance ppi_static;
 struct pp_instance *ppi = &ppi_static;
@@ -234,9 +232,6 @@ int wrc_mon_gui(void)
 		cprintf(C_GREY, "Skew:                    ");
 		cprintf(C_WHITE, "%9d ps\n",
 			(int32_t) (s->skew));
-
-		cprintf(C_GREY, "Manual phase adjustment: ");
-		cprintf(C_WHITE, "%9d ps\n", (int32_t) (wrc_man_phase));
 
 		cprintf(C_GREY, "Update counter:          ");
 		cprintf(C_WHITE, "%9d\n",

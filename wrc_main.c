@@ -131,8 +131,6 @@ static int wrc_check_link(void)
 	return rv;
 }
 
-int wrc_man_phase = 0;
-
 static int ui_update(void)
 {
 	int ret;
