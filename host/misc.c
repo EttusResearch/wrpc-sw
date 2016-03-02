@@ -128,3 +128,13 @@ void ep_init(uint8_t mac_addr[])
 
 void pfilter_init_default(void)
 {}
+
+static int task_relax(void)
+{
+	usleep(1000);
+	return 1; /* we did something */
+}
+DEFINE_WRC_TASK(relax) = {
+	.name = "relax",
+	.job = task_relax,
+};
