@@ -311,7 +311,7 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 
 int update_rx_queues()
 {
-	struct wrpc_socket *s = NULL;
+	struct wrpc_socket *s = NULL, *raws = NULL, *udps = NULL;
 	struct sockq *q;
 	struct hw_timestamp hwts;
 	static struct wr_ethhdr hdr;
@@ -344,6 +344,12 @@ int update_rx_queues()
 			return 0;
 	}
 
+	/* Prepare for IP/UDP checks */
+	if (payload[IP_VERSION] == 0x45 && payload[IP_PROTOCOL] == 17)
+		port = payload[UDP_DPORT] << 8 | payload[UDP_DPORT + 1];
+	else
+		port = 0;
+
 	for (i = 0; i < ARRAY_SIZE(socks); i++) {
 		s = socks[i];
 		if (!s)
@@ -352,23 +358,15 @@ int update_rx_queues()
 			continue;
 		if (hdr.ethtype != s->bind_addr.ethertype)
 			continue;
-
-		if (s->bind_addr.udpport == 0)
-			break; /* raw socket: match */
-
-		/* Now make IP/UDP checks */
-		if (payload[IP_VERSION] != 0x45)
-			continue;
-		if (payload[IP_PROTOCOL] != 17)
-			continue;
-		port = payload[UDP_DPORT] << 8 | payload[UDP_DPORT + 1];
-		if (port != s->bind_addr.udpport)
-			continue;
-
-		break; /* udp match */
+		if (!port && !s->bind_addr.udpport)
+			raws = s; /* match with raw socket */
+		if (port && s->bind_addr.udpport == port)
+			udps = s; /*  match with udp socket */
 	}
-
-	if (i == ARRAY_SIZE(socks)) {
+	s = udps;
+	if (!s)
+		s = raws;
+	if (!s) {
 		net_verbose("%s: could not find socket for packet\n",
 			   __FUNCTION__);
 		return 1;
