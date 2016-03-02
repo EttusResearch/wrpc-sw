@@ -36,14 +36,8 @@
 #define UDP_CHECKSUM	(UDP_LENGTH+2)
 #define UDP_END		(UDP_CHECKSUM+2)
 
-void ipv4_init(void);
-int ipv4_poll(void);
-
 /* Internal to IP stack: */
 unsigned int ipv4_checksum(unsigned short *buf, int shorts);
-
-void arp_init(void);
-int arp_poll(void);
 
 enum ip_status {
 	IP_TRAINING,

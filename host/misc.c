@@ -111,22 +111,6 @@ void enable_irq(void)
 int wrc_mon_gui(void)
 { printf("%s\n", __func__); return 0;}
 
-int wrc_log_stats(void)
-{
-	static uint32_t last_jiffies;
-
-	if (!wrc_stat_running)
-		return 0;
-
-	if (!last_jiffies)
-		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
-	if (time_before(timer_get_tics(), last_jiffies + wrc_ui_refperiod))
-		return 0;
-	last_jiffies = timer_get_tics();
-	printf("%s\n", __func__);
-	return 1;
-}
-
 void sdb_find_devices(void)
 { printf("%s\n", __func__); }
 

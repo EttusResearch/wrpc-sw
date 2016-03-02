@@ -25,11 +25,6 @@ struct wrc_temp {
         static struct wrc_temp __wrc_temp_ ## _name \
         __attribute__((section(".temp"), __used__))
 
-
-/* the task */
-extern void wrc_temp_init(void);
-extern int wrc_temp_refresh(void);
-
 /* lib functions  */
 extern uint32_t wrc_temp_get(char *name);
 struct wrc_onetemp *wrc_temp_getnext(struct wrc_onetemp *);

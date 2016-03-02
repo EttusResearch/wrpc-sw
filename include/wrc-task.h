@@ -23,5 +23,17 @@ struct wrc_task {
 	unsigned long nanos;
 };
 
+/* Put the tasks in their own section */
+#define DEFINE_WRC_TASK(_name) \
+	static struct wrc_task  __task_ ## _name \
+	__attribute__((section(".task"), used, aligned(sizeof(unsigned long))))
+/* Task 0 must be first, sorry! */
+#define DEFINE_WRC_TASK0(_name) \
+	static struct wrc_task __task_ ## _name \
+	__attribute__((section(".task0"), used, aligned(sizeof(unsigned long))))
+
+extern struct wrc_task __task_begin[];
+extern struct wrc_task __task_end[];
+#define for_each_task(t) for ((t) = __task_begin; (t) < __task_end; (t)++)
 
 #endif /* __WRC_TASK_H__ */

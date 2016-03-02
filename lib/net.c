@@ -308,8 +308,7 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 	return rval;
 }
 
-
-int update_rx_queues()
+static int update_rx_queues(void)
 {
 	struct wrpc_socket *s = NULL, *raws = NULL, *udps = NULL;
 	struct sockq *q;
@@ -402,3 +401,8 @@ int update_rx_queues()
 		    q->avail, q->n, q_required);
 	return 1;
 }
+DEFINE_WRC_TASK(net_bh) = {
+	.name = "net-bh",
+	.enable = &link_status,
+	.job = update_rx_queues,
+};

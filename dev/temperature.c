@@ -85,7 +85,7 @@ extern int wrc_temp_format(char *buffer, int len)
 /*
  * The task
  */
-void wrc_temp_init(void)
+static void wrc_temp_init(void)
 {
 	struct wrc_temp *ta;
 
@@ -94,7 +94,7 @@ void wrc_temp_init(void)
 		ta->read(ta);
 }
 
-int wrc_temp_refresh(void)
+static int wrc_temp_refresh(void)
 {
 	struct wrc_temp *ta;
 	int ret = 0;
@@ -103,6 +103,12 @@ int wrc_temp_refresh(void)
 		ret += ta->read(ta);
 	return (ret > 0);
 }
+
+DEFINE_WRC_TASK(temp) = {
+	.name = "temperature",
+	.init = wrc_temp_init,
+	.job = wrc_temp_refresh,
+};
 
 /*
  * The shell command

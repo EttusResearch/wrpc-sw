@@ -105,6 +105,11 @@ static void wrc_initialize(void)
 	shw_pps_gen_get_time(NULL, &prev_nanos_for_profile);
 }
 
+DEFINE_WRC_TASK0(idle) = {
+	.name = "idle",
+	.init = wrc_initialize,
+};
+
 int link_status;
 
 static int wrc_check_link(void)
@@ -133,6 +138,10 @@ static int wrc_check_link(void)
 
 	return rv;
 }
+DEFINE_WRC_TASK(link) = {
+	.name = "check-link",
+	.job = wrc_check_link,
+};
 
 static int ui_update(void)
 {
@@ -182,55 +191,25 @@ static int update_uptime(void)
 	}
 	return 0;
 }
-
-struct wrc_task wrc_tasks[] = {
-	{
-		.name = "idle",
-		.init = wrc_initialize,
-	}, {
-		.name = "uptime",
-		.init = init_uptime,
-		.job = update_uptime,
-	}, {
-		.name = "check-link",
-		.job = wrc_check_link,
-	}, {
-		.name = "net-bh",
-		.enable = &link_status,
-		.job = update_rx_queues,
-	}, {
-		.name = "ptp",
-		.job = wrc_ptp_update,
-	}, {
-		.name = "shell+gui",
-		.init = shell_boot_script,
-		.job = ui_update,
-	}, {
-		.name = "stats",
-		.job = wrc_log_stats,
-	}, {
-		.name = "spll-bh",
-		.job = spll_update,
-	}, {
-		.name = "temperature",
-		.init = wrc_temp_init,
-		.job = wrc_temp_refresh,
-#ifdef CONFIG_IP
-	}, {
-		.name = "ipv4",
-		.enable = &link_status,
-		.init = ipv4_init,
-		.job = ipv4_poll,
-	}, {
-		.name = "arp",
-		.enable = &link_status,
-		.init = arp_init,
-		.job = arp_poll,
-#endif
-	}
+DEFINE_WRC_TASK(uptime) = {
+	.name = "uptime",
+	.init = init_uptime,
+	.job = update_uptime,
 };
 
-int wrc_n_tasks = ARRAY_SIZE(wrc_tasks);
+DEFINE_WRC_TASK(ptp) = {
+	.name = "ptp",
+	.job = wrc_ptp_update,
+};
+DEFINE_WRC_TASK(shell) = {
+	.name = "shell+gui",
+	.init = shell_boot_script,
+	.job = ui_update,
+};
+DEFINE_WRC_TASK(spll) = {
+	.name = "spll-bh",
+	.job = spll_update,
+};
 
 /* Account the time to either this task or task 0 */
 static void account_task(struct wrc_task *t, int done_sth)
@@ -239,7 +218,7 @@ static void account_task(struct wrc_task *t, int done_sth)
 	signed int delta;
 
 	if (!done_sth)
-		t = wrc_tasks;
+		t = __task_begin; /* task 0 is special */
 	shw_pps_gen_get_time(NULL, &nanos);
 	delta = nanos - prev_nanos_for_profile;
 	if (delta < 0)
@@ -270,19 +249,18 @@ static void wrc_run_task(struct wrc_task *t)
 
 int main(void)
 {
-	int i;
+	struct wrc_task *t;
 
 	check_reset();
 
 	/* initialization of individual tasks */
-	for (i = 0; i < wrc_n_tasks; i++)
-		if (wrc_tasks[i].init)
-			wrc_tasks[i].init();
+	for_each_task(t)
+		if (t->init)
+			t->init();
 
 	for (;;) {
-		/* run your tasks */
-		for (i = 0; i < wrc_n_tasks; i++)
-			wrc_run_task(wrc_tasks + i);
+		for_each_task(t)
+			wrc_run_task(t);
 
 		/* better safe than sorry */
 		check_stack();

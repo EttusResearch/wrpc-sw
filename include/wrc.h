@@ -39,7 +39,6 @@ extern int wrc_vlan_number;
 
 int wrc_mon_gui(void);
 void shell_init(void);
-int wrc_log_stats(void);
 
 /* This header is included by softpll: manage wrc/wrs difference */
 #ifdef CONFIG_WR_NODE
@@ -56,7 +55,6 @@ extern int abs(int val);
 
 /* The following from ptp-noposix */
 extern void wr_servo_reset(void);
-int update_rx_queues(void);
 
 /* refresh period for _gui_ and _stat_ commands */
 extern int wrc_ui_refperiod;

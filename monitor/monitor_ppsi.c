@@ -286,7 +286,7 @@ static void wrc_mon_std_servo(void)
 /* internal "last", exported to shell command */
 uint32_t wrc_stats_last;
 
-int wrc_log_stats(void)
+static int wrc_log_stats(void)
 {
 	struct hal_port_state state;
 	int tx, rx;
@@ -360,3 +360,7 @@ int wrc_log_stats(void)
 
 	return 1;
 }
+DEFINE_WRC_TASK(stats) = {
+	.name = "stats",
+	.job = wrc_log_stats,
+};

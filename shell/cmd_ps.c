@@ -15,22 +15,17 @@ extern int wrc_n_tasks;
 
 static int cmd_ps(const char *args[])
 {
-	int i;
 	struct wrc_task *t;
 
 	if (args[0] && !strcasecmp(args[0], "reset")) {
-		for (i = 0; i < wrc_n_tasks; i++) {
-			t = wrc_tasks + i;
+		for_each_task(t)
 			t->nrun = t->seconds = t->nanos = 0;
-		}
 		return 0;
 	}
 	pp_printf(" iterations     seconds.micros    name\n");
-	for (i = 0; i < wrc_n_tasks; i++) {
-		t = wrc_tasks + i;
+		for_each_task(t)
 		pp_printf("  %9li   %9li.%06li  %s\n", t->nrun,
 			  t->seconds, t->nanos/1000, t->name);
-	}
 	return 0;
 }
 
