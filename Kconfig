@@ -367,6 +367,11 @@ config FAKE_TEMPERATURES
 	  The option adds also a "faketemp" command, used to set
 	  the fake temperatures: e.g. "faketemp 120 -10 50"
 
+config SNMP
+       depends on IP
+       default y
+       boolean "Mini SNMP responder"
+
 config VLAN
 	depends on DEVELOPER
 	boolean "Filter and rx/tx frames in a VLAN (as opposed to untagged)"
