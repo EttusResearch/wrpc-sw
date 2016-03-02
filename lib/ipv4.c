@@ -73,7 +73,7 @@ void ipv4_init(void)
 {
 	struct wr_sockaddr saddr;
 
-	/* Bootp: use UDP engine activated but function arguments  */
+	/* Bootp: use UDP engine activated by function arguments  */
 	bootp_socket = ptpd_netif_create_socket(&__static_bootp_socket, NULL,
 						PTPD_SOCK_UDP, 68 /* bootpc */);
 
