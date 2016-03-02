@@ -85,6 +85,18 @@ char *format_time(uint64_t sec, int format)
 			t.tm_year + YEAR0, t.tm_mon + 1, t.tm_mday,
 			t.tm_hour, t.tm_min, t.tm_sec);
 		break;
+	case TIME_FORMAT_SNMP: /* See "DateAndTime" in mibs/ietf/SNMPv2-TC */
+		t.tm_year += YEAR0;
+		buf[0] = t.tm_year >> 8;
+		buf[1] = t.tm_year & 0xff;
+		buf[2] = t.tm_mon;
+		buf[3] = t.tm_mday;
+		buf[4] = t.tm_hour;
+		buf[5] = t.tm_min;
+		buf[6] = t.tm_sec;
+		buf[7] = 0;
+		/* we stop here, no time zone. Size is 8 */
+		break;
 	}
 
 	return buf;

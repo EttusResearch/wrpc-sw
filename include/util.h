@@ -20,6 +20,7 @@ char *format_time(uint64_t sec, int format);
 #define TIME_FORMAT_LEGACY 0
 #define TIME_FORMAT_SYSLOG 1
 #define TIME_FORMAT_SORTED 2
+#define TIME_FORMAT_SNMP   3
 
 /* Color printf() variant. */
 void cprintf(int color, const char *fmt, ...);
