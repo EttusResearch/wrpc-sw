@@ -353,8 +353,6 @@ static int update_rx_queues(void)
 		s = socks[i];
 		if (!s)
 			continue;
-		if (memcmp(hdr.dstmac, s->bind_addr.mac, 6))
-			continue;
 		if (hdr.ethtype != s->bind_addr.ethertype)
 			continue;
 		if (!port && !s->bind_addr.udpport)
