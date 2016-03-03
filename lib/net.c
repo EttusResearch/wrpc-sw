@@ -63,6 +63,9 @@ struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 		pp_printf("%s: no socket slots left\n", __func__);
 		return NULL;
 	}
+	net_verbose("%s: socket %p for %04x:%04x, slot %i\n", __func__,
+		    sock, ntohs(bind_addr->ethertype),
+		    udpport, i);
 
 	if (wrpc_get_port_state(&pstate, "wr0" /* unused */) < 0)
 		return NULL;
