@@ -554,3 +554,11 @@ config PPSI
 	boolean
 	help
 	  Select this option for the ppsi engine (now only option)
+
+config LLDP
+	depends on DEVELOPER
+  boolean "Include LLDP protocol transmit-only"
+  help
+    This enable LLDP support. LLDP is a vendor-neutral link layer protocol 
+    used by network devices for advertising their identity, capabilities, 
+    and neighbors on local area network.
