@@ -205,6 +205,15 @@ static uint8_t match_array[] = {
 	0x06, BYTE_IGNORE,  /* oid follows */
 };
 
+
+static void print_oid_verbose(uint8_t *oid, int len) {
+	/*uint8_t * oid_end = oid + len;*/
+	int i;
+	snmp_verbose(".1.3");
+	for (i = 1; i < len; i++)
+		snmp_verbose(".%d", *(oid + i));
+}
+
 /* And, now, work out your generic frame responder... */
 static int snmp_respond(uint8_t *buf)
 {
@@ -233,8 +242,9 @@ static int snmp_respond(uint8_t *buf)
 			break;
 	if (!oid->oid_len)
 		return -1;
-	snmp_verbose("%s: oid found: calling %p\n", __func__, oid->fill);
-
+	snmp_verbose("%s: oid found: ", __func__);
+	print_oid_verbose(oid->oid_match, oid->oid_len);
+	snmp_verbose(" calling %p\n", oid->fill);
 	/* Phew.... we matched the OID, so let's call the filler  */
 	newbuf += oid->oid_len;
 	len = oid->fill(newbuf, oid);
