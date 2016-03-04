@@ -100,8 +100,8 @@ static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
 		tmp = htonl(*(uint32_t*)(*(obj->p) + obj->offset));
 		memcpy(buf + 2, &tmp, sizeof(tmp));
 		buf[1] = sizeof(tmp);
-		pp_printf("fill_struct_asn 0x%x\n",
-			  *(uint32_t*)(*(obj->p) + obj->offset));
+		snmp_verbose("fill_struct_asn 0x%x\n",
+			     *(uint32_t*)(*(obj->p) + obj->offset));
 		break;
 	    default:
 		break;
@@ -225,7 +225,7 @@ static int snmp_respond(uint8_t *buf)
 				return -1;
 		}
 	}
-	net_verbose("%s: match ok\n", __func__);
+	snmp_verbose("%s: match ok\n", __func__);
 
 	newbuf = buf + i;
 	for (oid = oid_array; oid->oid_len; oid++)
@@ -233,7 +233,7 @@ static int snmp_respond(uint8_t *buf)
 			break;
 	if (!oid->oid_len)
 		return -1;
-	net_verbose("%s: oid found: calling %p\n", __func__, oid->fill);
+	snmp_verbose("%s: oid found: calling %p\n", __func__, oid->fill);
 
 	/* Phew.... we matched the OID, so let's call the filler  */
 	newbuf += oid->oid_len;
@@ -246,11 +246,11 @@ static int snmp_respond(uint8_t *buf)
 			buf[i] = 0xA2; /* get response */
 		if (match_array[i] != BYTE_SIZE)
 			continue;
-		net_verbose("offset %i 0x%02x is len %i\n", i, i,
+		snmp_verbose("offset %i 0x%02x is len %i\n", i, i,
 			    remain + oid->oid_len + len);
 		buf[i] = remain + oid->oid_len + len;
 	}
-	net_verbose("%s: returning %i bytes\n", __func__, len + (newbuf - buf));
+	snmp_verbose("%s: returning %i bytes\n", __func__, len + (newbuf - buf));
 	return len + (newbuf - buf);
 }
 

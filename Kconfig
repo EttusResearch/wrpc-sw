@@ -136,6 +136,11 @@ config SYSLOG
 	  The user (or init script) must use "syslog <ipaddr> <macaddr>"
 	  to enable it.  The special "off" ipaddr disables syslog.
 
+config SNMP
+       depends on IP
+       default y
+       boolean "Mini SNMP responder"
+
 config BUILD_INIT
 	depends on WR_NODE
 	default n
@@ -360,17 +365,18 @@ config WRC_VERBOSE
 	help
 	  This enables some more diagnostic messages. Normally off.
 
+config SNMP_VERBOSE
+	depends on DEVELOPER && SNMP
+	boolean "More verbose messages in SNMP"
+	help
+	  This enables some more diagnostic messages. Normally off.
+
 config FAKE_TEMPERATURES
 	depends on DEVELOPER
 	boolean "Offer an array of 3 fake temperatures, for testing"
 	help
 	  The option adds also a "faketemp" command, used to set
 	  the fake temperatures: e.g. "faketemp 120 -10 50"
-
-config SNMP
-       depends on IP
-       default y
-       boolean "Mini SNMP responder"
 
 config VLAN
 	depends on DEVELOPER
