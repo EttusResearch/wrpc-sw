@@ -94,18 +94,28 @@ static int fill_date(uint8_t *buf, struct snmp_oid *obj)
 	return 2 + buf[1];
 }
 
+#define MAX_OCTET_STR_LEN 32
 static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint32_t tmp;
+	uint8_t *oid_data = buf + 2;
+	void *src_data = (*(obj->p)) + obj->offset;
+	uint8_t *len;
 	buf[0] = obj->asn;
+	len = &buf[1];
 	switch(obj->asn){
 	    case ASN_COUNTER:
 	    case ASN_INTEGER:
-		tmp = htonl(*(uint32_t*)(*(obj->p) + obj->offset));
-		memcpy(buf + 2, &tmp, sizeof(tmp));
-		buf[1] = sizeof(tmp);
-		snmp_verbose("fill_struct_asn 0x%x\n",
-			     *(uint32_t*)(*(obj->p) + obj->offset));
+		tmp = htonl(*(uint32_t*)src_data);
+		memcpy(oid_data, &tmp, sizeof(tmp));
+		*len = sizeof(tmp);
+		snmp_verbose("fill_struct_asn 0x%x\n", *(uint32_t*)src_data);
+		break;
+	    case ASN_OCTET_STR:
+		*len = strnlen((char *)src_data, MAX_OCTET_STR_LEN - 1);
+		memcpy(oid_data, src_data, *len + 1);
+		snmp_verbose("fill_struct_asn %s len %d\n",
+			     (char*)src_data, *len);
 		break;
 	    default:
 		break;
