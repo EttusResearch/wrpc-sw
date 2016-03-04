@@ -20,6 +20,28 @@
 #define htons(x) x
 #endif
 
+#define ASN_APPLICATION	((u_char)0x40)
+#define ASN_INTEGER	((u_char)0x02)
+#define ASN_OCTET_STR	((u_char)0x04)
+#define ASN_IPADDRESS	(ASN_APPLICATION | 0)
+#define ASN_COUNTER	(ASN_APPLICATION | 1)
+#define ASN_GAUGE	(ASN_APPLICATION | 2)
+#define ASN_UNSIGNED	(ASN_APPLICATION | 2)   /* RFC 1902 - same as GAUGE */
+#define ASN_TIMETICKS	(ASN_APPLICATION | 3)
+#define ASN_COUNTER64   (ASN_APPLICATION | 6)
+
+struct snmp_oid {
+	uint8_t *oid_match;
+	int (*fill)(uint8_t *buf, struct snmp_oid *obj);
+	void **p;
+	uint8_t oid_len;
+	uint8_t asn;
+	uint8_t offset; /* increase it if it is not enough */
+};
+
+extern struct pp_instance ppi_static;
+static struct wr_servo_state *wr_s_state;
+
 static uint8_t __snmp_queue[256];
 static struct wrpc_socket __static_snmp_socket = {
 	.queue.buff = __snmp_queue,
@@ -32,26 +54,29 @@ static void snmp_init(void)
 	/* Use UDP engine activated by function arguments  */
 	snmp_socket = ptpd_netif_create_socket(&__static_snmp_socket, NULL,
 						PTPD_SOCK_UDP, 161 /* snmp */);
+	/* TODO: check if pointer(s) is initialized already */
+	wr_s_state =
+		&((struct wr_data *)ppi_static.ext_data)->servo_state;
 }
 
 /* These fill the actual information, returning the lenght */
-static int fill_name(uint8_t *buf)
+static int fill_name(uint8_t *buf, struct snmp_oid *obj)
 {
 	strcpy((void *)(buf + 2), "wrc");
 	buf[1] = strlen((void *)(buf + 2));
-	buf[0] = 0x04; /* string */
+	buf[0] = ASN_OCTET_STR;
 	return 2 + buf[1];
 }
-static int fill_tics(uint8_t *buf)
+static int fill_tics(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint32_t tics = htonl(timer_get_tics() / 10); /* hundredths... bah! */
 
 	memcpy(buf + 2, &tics, sizeof(tics));
 	buf[1] = sizeof(tics);
-	buf[0] = 0x43; /* who knows... */
+	buf[0] = ASN_TIMETICKS;
 	return 2 + sizeof(tics);
 }
-static int fill_date(uint8_t *buf)
+static int fill_date(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint64_t secs;
 	char *datestr;
@@ -61,26 +86,65 @@ static int fill_date(uint8_t *buf)
 
 	memcpy((void *)(buf + 2), datestr, 12);
 	buf[1] = 8; /* size is hardwired. See mib document or prev. commit */
-	buf[0] = 0x04; /* string! (one more f word entering the repo... */
+	buf[0] = ASN_OCTET_STR;
 	return 2 + buf[1];
 }
 
-
+static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
+{
+	uint32_t tmp;
+	buf[0] = obj->asn;
+	switch(obj->asn){
+	    case ASN_COUNTER:
+	    case ASN_INTEGER:
+		tmp = htonl(*(uint32_t*)(*(obj->p) + obj->offset));
+		memcpy(buf + 2, &tmp, sizeof(tmp));
+		buf[1] = sizeof(tmp);
+		pp_printf("fill_struct_asn 0x%x\n",
+			  *(uint32_t*)(*(obj->p) + obj->offset));
+		break;
+	    default:
+		break;
+	}
+	return 2 + buf[1];
+}
 
 static uint8_t oid_name[] = {0x2B,0x06,0x01,0x02,0x01,0x01,0x05,0x00};
 static uint8_t oid_tics[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x01,0x00};
 static uint8_t oid_date[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x02,0x00};
+static uint8_t oid_wrsPtpServoUpdates[] = {0x2B,6,1,4,1,96,100,7,5,1,15,1};
+static uint8_t oid_wrsPtpDeltaTxM[] =     {0x2B,6,1,4,1,96,100,7,5,1,16,1};
+static uint8_t oid_wrsPtpDeltaRxM[] =     {0x2B,6,1,4,1,96,100,7,5,1,17,1};
+static uint8_t oid_wrsPtpDeltaTxS[] =     {0x2B,6,1,4,1,96,100,7,5,1,18,1};
+static uint8_t oid_wrsPtpDeltaRxS[] =     {0x2B,6,1,4,1,96,100,7,5,1,19,1};
 
-struct snmp_oid {
-	uint8_t *oid_match;
-	int oid_len;
-	int (*fill)(uint8_t *buf);
-};
+#define OID_FIELD_STRUCT(_oid, _fname, _asn, _type, _pointer, _field) { \
+	.oid_match = _oid, \
+	.oid_len = sizeof(_oid), \
+	.fill = _fname, \
+	.asn = _asn, \
+	.p = (void **)_pointer, \
+	.offset = offsetof(_type, _field), \
+}
+
+#define OID_FIELD(_oid, _fname, _asn) { \
+	.oid_match = _oid, \
+	.oid_len = sizeof(_oid), \
+	.fill = _fname, \
+	.asn = _asn, \
+}
+
 
 static struct snmp_oid oid_array[] = {
-	{ oid_name, sizeof(oid_name), fill_name},
-	{ oid_tics, sizeof(oid_tics), fill_tics},
-	{ oid_date, sizeof(oid_date), fill_date},
+	OID_FIELD(oid_name, fill_name, 0),
+	OID_FIELD(oid_tics, fill_tics, 0),
+	OID_FIELD(oid_date, fill_date, 0),
+	OID_FIELD_STRUCT(oid_wrsPtpServoUpdates, fill_struct_asn, ASN_COUNTER,   struct wr_servo_state, &wr_s_state, update_count),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,     fill_struct_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,     fill_struct_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,     fill_struct_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,     fill_struct_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
+	
 	{ 0, }
 };
 
@@ -147,7 +211,6 @@ static int snmp_respond(uint8_t *buf)
 	struct snmp_oid *oid;
 	uint8_t *newbuf;
 	int i, len;
-
 	for (i = 0; i < sizeof(match_array); i++) {
 		switch (match_array[i]) {
 		case BYTE_SIZE:
@@ -174,7 +237,7 @@ static int snmp_respond(uint8_t *buf)
 
 	/* Phew.... we matched the OID, so let's call the filler  */
 	newbuf += oid->oid_len;
-	len = oid->fill(newbuf);
+	len = oid->fill(newbuf, oid);
 	/* now fix all size fields and change PDU */
 	for (i = 0; i < sizeof(match_array); i++) {
 		int remain = (sizeof(match_array) - 1) - i;
