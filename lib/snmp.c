@@ -30,6 +30,10 @@
 #define ASN_TIMETICKS	(ASN_APPLICATION | 3)
 #define ASN_COUNTER64   (ASN_APPLICATION | 6)
 
+#define SNMP_GET 0xA0
+#define SNMP_GET_NEXT 0xA1
+#define SNMP_GET_RESPONSE 0xA2
+
 struct snmp_oid {
 	uint8_t *oid_match;
 	int (*fill)(uint8_t *buf, struct snmp_oid *obj);
@@ -109,6 +113,8 @@ static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
 	return 2 + buf[1];
 }
 
+static uint8_t oid_start[] = {0x2B}; /* magic entry for snmpwalk (.1.3), when
+		    * real snmpget next is implemented it may be unnecessary */
 static uint8_t oid_name[] = {0x2B,0x06,0x01,0x02,0x01,0x01,0x05,0x00};
 static uint8_t oid_tics[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x01,0x00};
 static uint8_t oid_date[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x02,0x00};
@@ -136,6 +142,7 @@ static uint8_t oid_wrsPtpDeltaRxS[] =     {0x2B,6,1,4,1,96,100,7,5,1,19,1};
 
 
 static struct snmp_oid oid_array[] = {
+	OID_FIELD(oid_start, fill_name, 0), /* return whatever, used only for walks */
 	OID_FIELD(oid_name, fill_name, 0),
 	OID_FIELD(oid_tics, fill_tics, 0),
 	OID_FIELD(oid_date, fill_date, 0),
@@ -219,29 +226,47 @@ static int snmp_respond(uint8_t *buf)
 {
 	struct snmp_oid *oid;
 	uint8_t *newbuf;
-	int i, len;
+	int i;
+	uint8_t len;
+	uint8_t snmp_mode;
+	uint8_t incoming_oid_len;
 	for (i = 0; i < sizeof(match_array); i++) {
 		switch (match_array[i]) {
 		case BYTE_SIZE:
 		case BYTE_IGNORE:
 			continue;
 		case BYTE_PDU:
-			if (buf[i] != 0xA0)
+			if (buf[i] != SNMP_GET && buf[i] != SNMP_GET_NEXT)
 				return -1;
+			snmp_mode = buf[i];
 			break;
 		default:
 			if (buf[i] != match_array[i])
 				return -1;
 		}
 	}
-	snmp_verbose("%s: match ok\n", __func__);
+	snmp_verbose("%s: header match ok\n", __func__);
 
 	newbuf = buf + i;
+	/* save size of incoming oid */
+	incoming_oid_len = buf[i - 1];
 	for (oid = oid_array; oid->oid_len; oid++)
-		if (!memcmp(oid->oid_match, newbuf, oid->oid_len))
+		if (oid->oid_len == incoming_oid_len &&
+		    !memcmp(oid->oid_match, newbuf, oid->oid_len))
 			break;
 	if (!oid->oid_len)
 		return -1;
+	if (snmp_mode == SNMP_GET_NEXT) {
+		/* for SNMP_GET_NEXT go to next OID */
+		oid++;
+		if (!oid->oid_len) {
+			/* we got request with last available OID */
+			return -1;
+		}
+		memcpy(newbuf, oid->oid_match, oid->oid_len);
+		/* update OID len, since it might be different */
+		*(newbuf - 1) = oid->oid_len;
+	}
 	snmp_verbose("%s: oid found: ", __func__);
 	print_oid_verbose(oid->oid_match, oid->oid_len);
 	snmp_verbose(" calling %p\n", oid->fill);
@@ -253,7 +278,7 @@ static int snmp_respond(uint8_t *buf)
 		int remain = (sizeof(match_array) - 1) - i;
 
 		if (match_array[i] == BYTE_PDU)
-			buf[i] = 0xA2; /* get response */
+			buf[i] = SNMP_GET_RESPONSE;
 		if (match_array[i] != BYTE_SIZE)
 			continue;
 		snmp_verbose("offset %i 0x%02x is len %i\n", i, i,
