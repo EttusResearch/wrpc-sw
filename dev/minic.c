@@ -52,16 +52,7 @@
 static volatile uint32_t dma_tx_buf[MINIC_DMA_TX_BUF_SIZE / 4];
 static volatile uint32_t dma_rx_buf[MINIC_DMA_RX_BUF_SIZE / 4];
 
-struct wr_minic {
-	volatile uint32_t *rx_head, *rx_base;
-	uint32_t rx_avail, rx_size;
-	volatile uint32_t *tx_head, *tx_base;
-	uint32_t tx_avail, tx_size;
-
-	int tx_count, rx_count;
-};
-
-static struct wr_minic minic;
+struct wr_minic minic;
 
 static inline void minic_writel(uint32_t reg, uint32_t data)
 {
