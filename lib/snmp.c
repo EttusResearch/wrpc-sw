@@ -196,6 +196,15 @@ static uint8_t oid_wrpcNicRX[] =          {0x2B,6,1,4,1,96,101,2,2,0};
 	.fill = _fname, \
 	.asn = _asn, \
 }
+#define OID_FIELD_VAR(_oid, _fname, _asn, _pointer) { \
+	.oid_match = _oid, \
+	.oid_len = sizeof(_oid), \
+	.fill = _fname, \
+	.asn = _asn, \
+	.p = _pointer, \
+	.offset = 0, \
+}
+
 
 static struct snmp_oid oid_array[] = {
 	OID_FIELD(oid_start, fill_name, 0), /* return whatever, used only for walks */
