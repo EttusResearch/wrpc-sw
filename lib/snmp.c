@@ -8,6 +8,7 @@
  */
 #include <string.h>
 #include <wrpc.h>
+#include <minic.h>
 #include <limits.h>
 
 #include "endpoint.h"
@@ -46,6 +47,7 @@ struct snmp_oid {
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
+struct wr_minic * minic_p = &minic;
 /* temp memory used in case we have to "correct" values before we send them */
 static void *tmp_p;
 static int32_t tmp_int32;
@@ -103,6 +105,7 @@ static int fill_date(uint8_t *buf, struct snmp_oid *obj)
 static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint32_t tmp;
+	int tmp_int;
 	uint8_t *oid_data = buf + 2;
 	void *src_data = (*(obj->p)) + obj->offset;
 	uint8_t *len;
@@ -168,6 +171,8 @@ static uint8_t oid_wrsPtpDeltaRxS[] =     {0x2B,6,1,4,1,96,100,7,5,1,19,1};
 static uint8_t oid_wrpcPtpRTTHR[]    =    {0x2B,6,1,4,1,96,101,1,1,0}; /* wrsPtpRTT is 64bit, use here saturated version */
 static uint8_t oid_wrpcPtpDeltaMs[] =     {0x2B,6,1,4,1,96,101,1,2,0};
 static uint8_t oid_wrpcPtpCurSetpoint[] = {0x2B,6,1,4,1,96,101,1,3,0};
+static uint8_t oid_wrpcNicTX[] =          {0x2B,6,1,4,1,96,101,2,1,0};
+static uint8_t oid_wrpcNicRX[] =          {0x2B,6,1,4,1,96,101,2,2,0};
 
 
 #define OID_FIELD_STRUCT(_oid, _fname, _asn, _type, _pointer, _field) { \
@@ -186,7 +191,6 @@ static uint8_t oid_wrpcPtpCurSetpoint[] = {0x2B,6,1,4,1,96,101,1,3,0};
 	.asn = _asn, \
 }
 
-
 static struct snmp_oid oid_array[] = {
 	OID_FIELD(oid_start, fill_name, 0), /* return whatever, used only for walks */
 	OID_FIELD(oid_name, fill_name, 0),
@@ -204,6 +208,8 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_STRUCT(oid_wrpcPtpRTTHR,       fill_int32_saturate, ASN_INTEGER, struct wr_servo_state, &wr_s_state, picos_mu), /* saturated */
 	OID_FIELD_STRUCT(oid_wrpcPtpDeltaMs,     fill_int32_saturate, ASN_INTEGER, struct wr_servo_state, &wr_s_state, delta_ms), /* raw value used to calculate wrsPtpLinkLength, original calculations uses float */
 	OID_FIELD_STRUCT(oid_wrpcPtpCurSetpoint, fill_struct_asn, ASN_INTEGER,  struct wr_servo_state, &wr_s_state, cur_setpoint),
+	OID_FIELD_STRUCT(oid_wrpcNicTX,          fill_struct_asn, ASN_COUNTER,  struct wr_minic, &minic_p, tx_count),
+	OID_FIELD_STRUCT(oid_wrpcNicRX,          fill_struct_asn, ASN_COUNTER,  struct wr_minic, &minic_p, rx_count),
 	
 	{ 0, }
 };
