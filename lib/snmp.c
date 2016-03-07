@@ -165,6 +165,7 @@ static uint8_t oid_start[] = {0x2B}; /* magic entry for snmpwalk (.1.3), when
 static uint8_t oid_name[] = {0x2B,0x06,0x01,0x02,0x01,0x01,0x05,0x00};
 static uint8_t oid_tics[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x01,0x00};
 static uint8_t oid_date[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x02,0x00};
+static uint8_t oid_wrsPtpMode[] =         {0x2B,6,1,4,1,96,100,7,5,1, 5,1};
 static uint8_t oid_wrsPtpServoState[] =   {0x2B,6,1,4,1,96,100,7,5,1, 6,1};
 static uint8_t oid_wrsPtpServoStateN[] =  {0x2B,6,1,4,1,96,100,7,5,1, 7,1};
 static uint8_t oid_wrsPtpClockOffsetPsHR[] = {0x2B,6,1,4,1,96,100,7,5,1,11,1};
@@ -211,6 +212,7 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD(oid_name, fill_name, 0),
 	OID_FIELD(oid_tics, fill_tics, 0),
 	OID_FIELD(oid_date, fill_date, 0),
+	OID_FIELD_VAR(oid_wrsPtpMode, fill_struct_p_asn, ASN_INTEGER, &ptp_mode),
 	OID_FIELD_STRUCT(oid_wrsPtpServoState,   fill_struct_pp_asn, ASN_OCTET_STR, struct wr_servo_state, &wr_s_state, servo_state_name),
 	OID_FIELD_STRUCT(oid_wrsPtpServoStateN,  fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, state),
 	OID_FIELD_STRUCT(oid_wrsPtpClockOffsetPsHR,fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, offset), /* saturated */
