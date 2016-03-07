@@ -8,6 +8,7 @@
  */
 #include <string.h>
 #include <wrpc.h>
+#include <limits.h>
 
 #include "endpoint.h"
 #include "ipv4.h"
@@ -45,6 +46,10 @@ struct snmp_oid {
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
+/* temp memory used in case we have to "correct" values before we send them */
+static void *tmp_p;
+static int32_t tmp_int32;
+struct snmp_oid tmp_obj;
 
 static uint8_t __snmp_queue[256];
 static struct wrpc_socket __static_snmp_socket = {
@@ -122,6 +127,30 @@ static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
 	}
 	return 2 + buf[1];
 }
+
+
+static int fill_int32_saturate(uint8_t *buf, struct snmp_oid *obj) {
+	int64_t tmp_int64;
+	/* if we want to modify an object we need to do that on a copy,
+	 * otherwise pointers to the values will be overwritten */
+	tmp_obj = *obj;
+	tmp_int64 = *(int64_t *)(*(obj->p) + obj->offset);
+	/* gcc doesn't support printing 64bit values */
+	snmp_verbose("fill_int32_saturate 64bit value 0x%08x|%08x\n",
+		     (int32_t)((tmp_int64) >> 32), (uint32_t)tmp_int64);
+	/* saturate int32 */
+	if (tmp_int64 >= INT_MAX)
+		tmp_int64 = INT_MAX;
+	else if (tmp_int64 <= INT_MIN)
+		tmp_int64 = INT_MIN;
+	/* fill_struct_asn will print saturated value anyway */
+	tmp_int32 = (int32_t) tmp_int64;
+	tmp_obj.offset = 0;
+	tmp_p = &tmp_int32;
+	tmp_obj.p = &tmp_p;
+	return fill_struct_asn(buf, &tmp_obj);
+}
+
 
 static uint8_t oid_start[] = {0x2B}; /* magic entry for snmpwalk (.1.3), when
 		    * real snmpget next is implemented it may be unnecessary */
