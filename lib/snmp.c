@@ -48,10 +48,6 @@ struct snmp_oid {
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
 struct wr_minic * minic_p = &minic;
-/* temp memory used in case we have to "correct" values before we send them */
-static void *tmp_p;
-static int32_t tmp_int32;
-struct snmp_oid tmp_obj;
 
 static uint8_t __snmp_queue[256];
 static struct wrpc_socket __static_snmp_socket = {
@@ -102,28 +98,25 @@ static int fill_date(uint8_t *buf, struct snmp_oid *obj)
 }
 
 #define MAX_OCTET_STR_LEN 32
-static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
+static int fill_asn(uint8_t *buf, uint8_t asn, void *p)
 {
 	uint32_t tmp;
-	int tmp_int;
 	uint8_t *oid_data = buf + 2;
-	void *src_data = (*(obj->p)) + obj->offset;
 	uint8_t *len;
-	buf[0] = obj->asn;
+	buf[0] = asn;
 	len = &buf[1];
-	switch(obj->asn){
+	switch(asn){
 	    case ASN_COUNTER:
 	    case ASN_INTEGER:
-		tmp = htonl(*(uint32_t*)src_data);
+		tmp = htonl(*(uint32_t*)p);
 		memcpy(oid_data, &tmp, sizeof(tmp));
 		*len = sizeof(tmp);
-		snmp_verbose("fill_struct_asn 0x%x\n", *(uint32_t*)src_data);
+		snmp_verbose("fill_asn 0x%x\n", *(uint32_t*)p);
 		break;
 	    case ASN_OCTET_STR:
-		*len = strnlen((char *)src_data, MAX_OCTET_STR_LEN - 1);
-		memcpy(oid_data, src_data, *len + 1);
-		snmp_verbose("fill_struct_asn %s len %d\n",
-			     (char*)src_data, *len);
+		*len = strnlen((char *)p, MAX_OCTET_STR_LEN - 1);
+		memcpy(oid_data, p, *len + 1);
+		snmp_verbose("fill_asn %s len %d\n", (char*)p, *len);
 		break;
 	    default:
 		break;
@@ -131,15 +124,21 @@ static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
 	return 2 + buf[1];
 }
 
+static int fill_struct_asn(uint8_t *buf, struct snmp_oid *obj)
+{
+	/* calculate pointer */
+	return fill_asn(buf, obj->asn, (*(obj->p)) + obj->offset);
+}
+
 
 static int fill_int32_saturate(uint8_t *buf, struct snmp_oid *obj) {
 	int64_t tmp_int64;
+	int32_t tmp_int32;
 	/* if we want to modify an object we need to do that on a copy,
 	 * otherwise pointers to the values will be overwritten */
-	tmp_obj = *obj;
 	tmp_int64 = *(int64_t *)(*(obj->p) + obj->offset);
 	/* gcc doesn't support printing 64bit values */
-	snmp_verbose("fill_int32_saturate 64bit value 0x%08x|%08x\n",
+	snmp_verbose("fill_int32_saturate: 64bit value 0x%08x|%08x\n",
 		     (int32_t)((tmp_int64) >> 32), (uint32_t)tmp_int64);
 	/* saturate int32 */
 	if (tmp_int64 >= INT_MAX)
@@ -148,10 +147,7 @@ static int fill_int32_saturate(uint8_t *buf, struct snmp_oid *obj) {
 		tmp_int64 = INT_MIN;
 	/* fill_struct_asn will print saturated value anyway */
 	tmp_int32 = (int32_t) tmp_int64;
-	tmp_obj.offset = 0;
-	tmp_p = &tmp_int32;
-	tmp_obj.p = &tmp_p;
-	return fill_struct_asn(buf, &tmp_obj);
+	return fill_asn(buf, obj->asn, &tmp_int32);
 }
 
 static uint8_t oid_start[] = {0x2B}; /* magic entry for snmpwalk (.1.3), when
