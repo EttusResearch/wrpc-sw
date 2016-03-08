@@ -135,13 +135,12 @@ static int fill_struct_p_asn(uint8_t *buf, struct snmp_oid *obj)
 	return fill_asn(buf, obj->asn, obj->p + obj->offset);
 }
 
-
-static int fill_int32_saturate(uint8_t *buf, struct snmp_oid *obj) {
+static int fill_int32_saturate(uint8_t *buf, uint8_t asn, void *p) {
 	int64_t tmp_int64;
 	int32_t tmp_int32;
 	/* if we want to modify an object we need to do that on a copy,
 	 * otherwise pointers to the values will be overwritten */
-	tmp_int64 = *(int64_t *)(*(void **)obj->p + obj->offset);
+	tmp_int64 = *(int64_t *)p;
 	/* gcc doesn't support printing 64bit values */
 	snmp_verbose("fill_int32_saturate: 64bit value 0x%08x|%08x\n",
 		     (int32_t)((tmp_int64) >> 32), (uint32_t)tmp_int64);
@@ -150,9 +149,15 @@ static int fill_int32_saturate(uint8_t *buf, struct snmp_oid *obj) {
 		tmp_int64 = INT_MAX;
 	else if (tmp_int64 <= INT_MIN)
 		tmp_int64 = INT_MIN;
-	/* fill_struct_asn will print saturated value anyway */
+	/* fill_asn will print saturated value anyway */
 	tmp_int32 = (int32_t) tmp_int64;
-	return fill_asn(buf, obj->asn, &tmp_int32);
+	return fill_asn(buf, asn, &tmp_int32);
+}
+
+static int fill_int32_saturate_pp(uint8_t *buf, struct snmp_oid *obj) {
+	/* calculate pointer, treat obj-> as void ** */
+	return fill_int32_saturate(buf, obj->asn,
+				   *(void **)obj->p + obj->offset);
 }
 
 static uint8_t oid_start[] = {0x2B}; /* magic entry for snmpwalk (.1.3), when
@@ -199,15 +204,15 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD(oid_date, fill_date, 0),
 	OID_FIELD_STRUCT(oid_wrsPtpServoState,   fill_struct_pp_asn, ASN_OCTET_STR, struct wr_servo_state, &wr_s_state, servo_state_name),
 	OID_FIELD_STRUCT(oid_wrsPtpServoStateN,  fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, state),
-	OID_FIELD_STRUCT(oid_wrsPtpClockOffsetPsHR,fill_int32_saturate, ASN_INTEGER, struct wr_servo_state, &wr_s_state, offset), /* saturated */
-	OID_FIELD_STRUCT(oid_wrsPtpSkew,         fill_int32_saturate, ASN_INTEGER, struct wr_servo_state, &wr_s_state, skew), /* saturated */
+	OID_FIELD_STRUCT(oid_wrsPtpClockOffsetPsHR,fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, offset), /* saturated */
+	OID_FIELD_STRUCT(oid_wrsPtpSkew,         fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, skew), /* saturated */
 	OID_FIELD_STRUCT(oid_wrsPtpServoUpdates, fill_struct_pp_asn, ASN_COUNTER,   struct wr_servo_state, &wr_s_state, update_count),
 	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
 	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
 	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
 	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
-	OID_FIELD_STRUCT(oid_wrpcPtpRTTHR,       fill_int32_saturate, ASN_INTEGER, struct wr_servo_state, &wr_s_state, picos_mu), /* saturated */
-	OID_FIELD_STRUCT(oid_wrpcPtpDeltaMs,     fill_int32_saturate, ASN_INTEGER, struct wr_servo_state, &wr_s_state, delta_ms), /* raw value used to calculate wrsPtpLinkLength, original calculations uses float */
+	OID_FIELD_STRUCT(oid_wrpcPtpRTTHR,       fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, picos_mu), /* saturated */
+	OID_FIELD_STRUCT(oid_wrpcPtpDeltaMs,     fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, delta_ms), /* raw value used to calculate wrsPtpLinkLength, original calculations uses float */
 	OID_FIELD_STRUCT(oid_wrpcPtpCurSetpoint, fill_struct_pp_asn, ASN_INTEGER,  struct wr_servo_state, &wr_s_state, cur_setpoint),
 	OID_FIELD_STRUCT(oid_wrpcNicTX,          fill_struct_p_asn, ASN_COUNTER,  struct wr_minic, &minic, tx_count),
 	OID_FIELD_STRUCT(oid_wrpcNicRX,          fill_struct_p_asn, ASN_COUNTER,  struct wr_minic, &minic, rx_count),
