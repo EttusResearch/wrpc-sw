@@ -1,0 +1,83 @@
+WR-WRPC-MIB DEFINITIONS ::= BEGIN
+
+-- Based on the WR-SWITCH-MIB
+-- Adam Wujek, BE-CO-HT, CERN
+
+-- ############################################################################
+-- THIS MIB IS ONLY FOR TESTING PURPOSES IT WILL CHANGE!!
+-- ############################################################################
+
+-- IMPORTS: Include definitions from other mibs here
+IMPORTS
+        OBJECT-TYPE, Integer32, Unsigned32, Counter32, Counter64,
+        MODULE-IDENTITY, enterprises          FROM SNMPv2-SMI
+        DisplayString                         FROM SNMPv2-TC;
+
+
+
+-- A brief description and update information about this mib.
+-- (I follow the CamelCase to be sure I don't mistype. Who knows the rules...
+
+wrWrpcMIB MODULE-IDENTITY
+    LAST-UPDATED "201603081000Z"
+    ORGANIZATION "CERN"
+    CONTACT-INFO "postal:   BE-CO-HT, CERN, Geneva
+                  email:    ht-drivers@cern.ch
+                 "
+    DESCRIPTION  "White Rabbit WRPC internal details
+                 "
+
+    REVISION     "201603081000Z"
+    DESCRIPTION
+        "First revision. For testing purposes only."
+
+    ::= { cern 101 } -- this is not reserved!
+
+cern OBJECT IDENTIFIER ::= { enterprises 96 }
+
+-- Define typical mib nodes
+-- we'll prefix everything in this mib with wrs (White Rabbit Switch)
+wrpcPtp      OBJECT IDENTIFIER ::= { wrWrpcMIB 1 }
+wrpcNic      OBJECT IDENTIFIER ::= { wrWrpcMIB 2 }
+
+wrpcPtpRTTHR OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+            "The round-trip-time, from master, in picoseconds"
+    ::= { wrpcPtp 1 }
+
+wrpcPtpDeltaMs OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-only
+    STATUS      current
+    DESCRIPTION
+        ""
+    ::= { wrpcPtp 2 }
+
+wrpcPtpCurSetpoint   OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        ""
+    ::= { wrpcPtp 3 }
+
+wrpcNicTX   OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        ""
+    ::= { wrpcNic 1 }
+
+wrpcNicRX   OBJECT-TYPE
+    SYNTAX      Counter32
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        ""
+    ::= { wrpcNic 2 }
+
+END
