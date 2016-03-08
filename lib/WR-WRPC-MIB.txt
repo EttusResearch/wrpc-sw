@@ -39,6 +39,7 @@ cern OBJECT IDENTIFIER ::= { enterprises 96 }
 -- we'll prefix everything in this mib with wrs (White Rabbit Switch)
 wrpcPtp      OBJECT IDENTIFIER ::= { wrWrpcMIB 1 }
 wrpcNic      OBJECT IDENTIFIER ::= { wrWrpcMIB 2 }
+wrpcVersion  OBJECT IDENTIFIER ::= { wrWrpcMIB 3 }
 
 wrpcPtpRTTHR OBJECT-TYPE
     SYNTAX      Integer32
@@ -79,5 +80,13 @@ wrpcNicRX   OBJECT-TYPE
     DESCRIPTION
         ""
     ::= { wrpcNic 2 }
+
+wrpcVersionSwVersion   OBJECT-TYPE
+    SYNTAX      DisplayString (SIZE (0..32))
+    MAX-ACCESS  read-write
+    STATUS      current
+    DESCRIPTION
+        ""
+    ::= { wrpcVersion 1 }
 
 END

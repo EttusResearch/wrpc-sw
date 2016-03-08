@@ -17,6 +17,7 @@
 #include "pps_gen.h"
 #include "hw/memlayout.h"
 #include "hw/etherbone-config.h"
+#include "revision.h"
 
 #ifndef htons
 #define htons(x) x
@@ -180,6 +181,7 @@ static uint8_t oid_wrpcPtpDeltaMs[] =     {0x2B,6,1,4,1,96,101,1,2,0};
 static uint8_t oid_wrpcPtpCurSetpoint[] = {0x2B,6,1,4,1,96,101,1,3,0};
 static uint8_t oid_wrpcNicTX[] =          {0x2B,6,1,4,1,96,101,2,1,0};
 static uint8_t oid_wrpcNicRX[] =          {0x2B,6,1,4,1,96,101,2,2,0};
+static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 
 
 #define OID_FIELD_STRUCT(_oid, _fname, _asn, _type, _pointer, _field) { \
@@ -227,6 +229,7 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_STRUCT(oid_wrpcPtpCurSetpoint, fill_struct_pp_asn, ASN_INTEGER,  struct wr_servo_state, &wr_s_state, cur_setpoint),
 	OID_FIELD_STRUCT(oid_wrpcNicTX,          fill_struct_p_asn, ASN_COUNTER,  struct wr_minic, &minic, tx_count),
 	OID_FIELD_STRUCT(oid_wrpcNicRX,          fill_struct_p_asn, ASN_COUNTER,  struct wr_minic, &minic, rx_count),
+	OID_FIELD_VAR(oid_wrpcVersionSwVersion,    fill_struct_pp_asn, ASN_OCTET_STR, &build_revision),
 	
 	{ 0, }
 };
