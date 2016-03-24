@@ -32,6 +32,16 @@
 #define ASN_UNSIGNED	(ASN_APPLICATION | 2)   /* RFC 1902 - same as GAUGE */
 #define ASN_TIMETICKS	(ASN_APPLICATION | 3)
 #define ASN_COUNTER64   (ASN_APPLICATION | 6)
+/*
+ * (error codes from net-snmp's snmp.h)
+ * Error codes (the value of the field error-status in PDUs)
+ */
+#define SNMP_ERR_NOERROR		(0)
+#define SNMP_ERR_TOOBIG			(1)
+#define SNMP_ERR_NOSUCHNAME		(2)
+#define SNMP_ERR_BADVALUE		(3)
+#define SNMP_ERR_READONLY		(4)
+#define SNMP_ERR_GENERR			(5)
 
 #define SNMP_GET 0xA0
 #define SNMP_GET_NEXT 0xA1
@@ -249,7 +259,7 @@ static struct snmp_oid oid_array[] = {
  *     A0 1C                                 get request of 0x1c
  *       02 04 27 05 36 A9                   int of 4: request ID
  *       02 01 00                            int of 1: error
- *       02 01 00                            int of 1: error
+ *       02 01 00                            int of 1: error index
  *       30 0E                               sequence of 0x0e
  *         30 0C                             sequence of 0x0c
  *           06 08  2B 06 01 02 01 01 05 00  oid of 8: .1.3.6.1.2.1.1.5.0
@@ -278,14 +288,22 @@ static struct snmp_oid oid_array[] = {
 #define BYTE_SIZE 0xff
 #define BYTE_IGNORE 0xfe
 #define BYTE_PDU 0xfd
+#define BYTE_ERROR 0xfc
+#define BYTE_ERROR_INDEX 0xfb
+/* indexes of bytes in snmp packet */
+#define BYTE_PACKET_SIZE_i 1
+#define BYTE_PDU_i 13
+#define BYTE_ERROR_i 23
+#define BYTE_ERROR_INDEX_i 26
+
 static uint8_t match_array[] = {
 	0x30, BYTE_SIZE,
 	0x02, 0x01, 0x00,
 	0x04, 0x06, 0x70, 0x75, 0x62, 0x6C, 0x69, 0x63,
 	BYTE_PDU, BYTE_SIZE,
 	0x02, 0x04, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE,
-	0x02, 0x01, 0x00,
-	0x02, 0x01, 0x00,
+	0x02, 0x01, BYTE_ERROR,
+	0x02, 0x01, BYTE_ERROR_INDEX,
 	0x30, BYTE_SIZE,
 	0x30, BYTE_SIZE,
 	0x06, BYTE_IGNORE,  /* oid follows */
@@ -298,6 +316,19 @@ static void print_oid_verbose(uint8_t *oid, int len) {
 	snmp_verbose(".1.3");
 	for (i = 1; i < len; i++)
 		snmp_verbose(".%d", *(oid + i));
+}
+
+/* prepare packet to return error, leave the rest of packet as it was */
+static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
+{
+	uint8_t ret_size;
+
+	buf[BYTE_PDU_i] = SNMP_GET_RESPONSE;
+	buf[BYTE_ERROR_i] = error;
+	buf[BYTE_ERROR_INDEX_i] = 1;
+	ret_size = buf[BYTE_PACKET_SIZE_i] + 2;
+	snmp_verbose("%s: error returning %i bytes\n", __func__, ret_size);
+	return ret_size;
 }
 
 /* And, now, work out your generic frame responder... */
@@ -313,6 +344,8 @@ static int snmp_respond(uint8_t *buf)
 		switch (match_array[i]) {
 		case BYTE_SIZE:
 		case BYTE_IGNORE:
+		case BYTE_ERROR:
+		case BYTE_ERROR_INDEX:
 			continue;
 		case BYTE_PDU:
 			if (buf[i] != SNMP_GET && buf[i] != SNMP_GET_NEXT)
@@ -333,14 +366,16 @@ static int snmp_respond(uint8_t *buf)
 		if (oid->oid_len == incoming_oid_len &&
 		    !memcmp(oid->oid_match, newbuf, oid->oid_len))
 			break;
-	if (!oid->oid_len)
-		return -1;
+	if (!oid->oid_len) {
+		snmp_verbose("%s: OID not found!\n", __func__);
+		return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
+	}
 	if (snmp_mode == SNMP_GET_NEXT) {
 		/* for SNMP_GET_NEXT go to next OID */
 		oid++;
 		if (!oid->oid_len) {
 			/* we got request with last available OID */
-			return -1;
+			return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
 		}
 		memcpy(newbuf, oid->oid_match, oid->oid_len);
 		/* update OID len, since it might be different */
