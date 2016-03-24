@@ -349,12 +349,14 @@ static int snmp_respond(uint8_t *buf)
 			continue;
 		case BYTE_PDU:
 			if (buf[i] != SNMP_GET && buf[i] != SNMP_GET_NEXT)
-				return -1;
+				return snmp_prepare_error(buf,
+							SNMP_ERR_GENERR);
 			snmp_mode = buf[i];
 			break;
 		default:
 			if (buf[i] != match_array[i])
-				return -1;
+				return snmp_prepare_error(buf,
+							SNMP_ERR_GENERR);
 		}
 	}
 	snmp_verbose("%s: header match ok\n", __func__);
