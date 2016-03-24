@@ -171,8 +171,6 @@ static int fill_int32_saturate_pp(uint8_t *buf, struct snmp_oid *obj) {
 				   *(void **)obj->p + obj->offset);
 }
 
-static uint8_t oid_start[] = {0x2B}; /* magic entry for snmpwalk (.1.3), when
-		    * real snmpget next is implemented it may be unnecessary */
 static uint8_t oid_name[] = {0x2B,0x06,0x01,0x02,0x01,0x01,0x05,0x00};
 static uint8_t oid_tics[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x01,0x00};
 static uint8_t oid_date[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x02,0x00};
@@ -218,9 +216,9 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 	.offset = 0, \
 }
 
-
+/* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
+         OIDs */
 static struct snmp_oid oid_array[] = {
-	OID_FIELD(oid_start, fill_name, 0), /* return whatever, used only for walks */
 	OID_FIELD(oid_name, fill_name, 0),
 	OID_FIELD(oid_tics, fill_tics, 0),
 	OID_FIELD(oid_date, fill_date, 0),
@@ -245,7 +243,7 @@ static struct snmp_oid oid_array[] = {
 };
 
 /*
- * Perverse...  snmpwalk does getnext anyways. Let's support snmpget only
+ * Perverse...  snmpwalk does getnext anyways.
  *
  * We support the following ones:
  *    RFC1213-MIB::sysName.0 (string)              .1.3.6.1.2.1.1.5.0
@@ -336,10 +334,12 @@ static int snmp_respond(uint8_t *buf)
 {
 	struct snmp_oid *oid;
 	uint8_t *newbuf;
+	uint8_t *new_oid;;
 	int i;
 	uint8_t len;
 	uint8_t snmp_mode;
 	uint8_t incoming_oid_len;
+	int8_t cmp_result;
 	for (i = 0; i < sizeof(match_array); i++) {
 		switch (match_array[i]) {
 		case BYTE_SIZE:
@@ -362,26 +362,58 @@ static int snmp_respond(uint8_t *buf)
 	snmp_verbose("%s: header match ok\n", __func__);
 
 	newbuf = buf + i;
+	new_oid = buf + i;
 	/* save size of incoming oid */
 	incoming_oid_len = buf[i - 1];
-	for (oid = oid_array; oid->oid_len; oid++)
-		if (oid->oid_len == incoming_oid_len &&
-		    !memcmp(oid->oid_match, newbuf, oid->oid_len))
-			break;
+	for (oid = oid_array; oid->oid_len; oid++) {
+		if (snmp_mode == SNMP_GET &&
+		    oid->oid_len != incoming_oid_len) {
+			/* for SNMP_GET, we need equal lenghts */
+			continue;
+		}
+
+		cmp_result = memcmp(oid->oid_match, new_oid,
+				    min(oid->oid_len, incoming_oid_len));
+		if (snmp_mode == SNMP_GET) {
+			/* we need exact match for SNMP_GET */
+			if (cmp_result == 0) {
+				snmp_verbose("%s: exact match for GET\n",
+					     __func__);
+				break;
+			}
+		} else if (snmp_mode == SNMP_GET_NEXT) {
+			if (cmp_result > 0) { /* current OID is after the one
+					       * that is requested, so use it
+					       */
+				snmp_verbose("%s: take next match for GET_NEXT"
+					     "\n", __func__);
+				break;
+			}
+			if (cmp_result == 0) { /* exact match */
+				if (oid->oid_len <= incoming_oid_len) {
+					/* when incoming OID is equal or longer
+					 * than OID beeing compared, go to next
+					 * OID and break */
+					oid++;
+				}
+				snmp_verbose("%s: exact match for GET_NEXT\n",
+					     __func__);
+				break;
+			}
+		}
+	}
 	if (!oid->oid_len) {
-		snmp_verbose("%s: OID not found!\n", __func__);
+		snmp_verbose("%s: OID not found! ", __func__);
+		print_oid_verbose(new_oid, incoming_oid_len);
+		snmp_verbose(" \n", oid->fill);
+		/* also for last GET_NEXT element */
 		return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
 	}
 	if (snmp_mode == SNMP_GET_NEXT) {
-		/* for SNMP_GET_NEXT go to next OID */
-		oid++;
-		if (!oid->oid_len) {
-			/* we got request with last available OID */
-			return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
-		}
-		memcpy(newbuf, oid->oid_match, oid->oid_len);
+		/* copy new OID */
+		memcpy(new_oid, oid->oid_match, oid->oid_len);
 		/* update OID len, since it might be different */
-		*(newbuf - 1) = oid->oid_len;
+		*(new_oid - 1) = oid->oid_len;
 	}
 	snmp_verbose("%s: oid found: ", __func__);
 	print_oid_verbose(oid->oid_match, oid->oid_len);
