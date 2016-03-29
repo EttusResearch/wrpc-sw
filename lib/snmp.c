@@ -26,6 +26,7 @@
 #define ASN_APPLICATION	((u_char)0x40)
 #define ASN_INTEGER	((u_char)0x02)
 #define ASN_OCTET_STR	((u_char)0x04)
+#define ASN_OBJECT_ID	((u_char)0x06)
 #define ASN_IPADDRESS	(ASN_APPLICATION | 0)
 #define ASN_COUNTER	(ASN_APPLICATION | 1)
 #define ASN_GAUGE	(ASN_APPLICATION | 2)
@@ -83,7 +84,7 @@ static void snmp_init(void)
 		&((struct wr_data *)ppi_static.ext_data)->servo_state;
 }
 
-/* These fill the actual information, returning the lenght */
+/* These fill the actual information, returning the length */
 static int fill_name(uint8_t *buf, struct snmp_oid *obj)
 {
 	strcpy((void *)(buf + 2), "wrc");
@@ -304,15 +305,19 @@ static struct snmp_oid oid_array[] = {
 
 static uint8_t match_array[] = {
 	0x30, BYTE_SIZE,
-	0x02, 0x01, BYTE_VERSION,
-	0x04, 0x06, 0x70, 0x75, 0x62, 0x6C, 0x69, 0x63,
-	BYTE_PDU, BYTE_SIZE,
-	0x02, 0x04, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE,
-	0x02, 0x01, BYTE_ERROR,
-	0x02, 0x01, BYTE_ERROR_INDEX,
+	0x02, 0x01, BYTE_VERSION, /* ASN_INTEGER, size 1 byte, version */
+	0x04, 0x06, /* ASN_OCTET_STR, strlen("public") */
+		0x70, 0x75, 0x62, 0x6C, 0x69, 0x63, /* "public" */
+	BYTE_PDU, BYTE_SIZE, /* SNMP packet type, size of following data */
+	0x02, 0x04, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, /*
+	 * ASN_INTEGER, size 4 bytes, Request/Message ID */
+	0x02, 0x01, BYTE_ERROR, /* ASN_INTEGER, size 1 byte, error type */
+	0x02, 0x01, BYTE_ERROR_INDEX, /* ASN_INTEGER, size 1 byte,
+				       * error index */
 	0x30, BYTE_SIZE,
 	0x30, BYTE_SIZE,
-	0x06, BYTE_IGNORE,  /* oid follows */
+	0x06, BYTE_IGNORE, /* ASN_OBJECT_ID, OID length */
+	/* oid follows */
 };
 
 
@@ -382,7 +387,7 @@ static int snmp_respond(uint8_t *buf)
 	for (oid = oid_array; oid->oid_len; oid++) {
 		if (snmp_mode == SNMP_GET &&
 		    oid->oid_len != incoming_oid_len) {
-			/* for SNMP_GET, we need equal lenghts */
+			/* for SNMP_GET, we need equal lengths */
 			continue;
 		}
 
@@ -435,20 +440,21 @@ static int snmp_respond(uint8_t *buf)
 	/* Phew.... we matched the OID, so let's call the filler  */
 	newbuf += oid->oid_len;
 	len = oid->fill(newbuf, oid);
+	newbuf += len;
 	/* now fix all size fields and change PDU */
 	for (i = 0; i < sizeof(match_array); i++) {
-		int remain = (sizeof(match_array) - 1) - i;
+		int remain = newbuf - buf - i - 1;
 
 		if (match_array[i] == BYTE_PDU)
 			buf[i] = SNMP_GET_RESPONSE;
 		if (match_array[i] != BYTE_SIZE)
 			continue;
 		snmp_verbose("offset %i 0x%02x is len %i\n", i, i,
-			    remain + oid->oid_len + len);
-		buf[i] = remain + oid->oid_len + len;
+			    remain);
+		buf[i] = remain;
 	}
-	snmp_verbose("%s: returning %i bytes\n", __func__, len + (newbuf - buf));
-	return len + (newbuf - buf);
+	snmp_verbose("%s: returning %i bytes\n", __func__, newbuf - buf);
+	return newbuf - buf;
 }
 
 
