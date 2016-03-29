@@ -47,6 +47,10 @@
 #define SNMP_GET_NEXT 0xA1
 #define SNMP_GET_RESPONSE 0xA2
 
+#define SNMP_V1 0
+#define SNMP_V2c 1
+#define SNMP_V_MAX 1 /* Maximum supported version */
+
 struct snmp_oid {
 	uint8_t *oid_match;
 	int (*fill)(uint8_t *buf, struct snmp_oid *obj);
@@ -58,6 +62,9 @@ struct snmp_oid {
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
+
+/* store SNMP version, not fully used yet */
+uint8_t snmp_version;
 
 static uint8_t __snmp_queue[256];
 static struct wrpc_socket __static_snmp_socket = {
@@ -288,6 +295,7 @@ static struct snmp_oid oid_array[] = {
 #define BYTE_PDU 0xfd
 #define BYTE_ERROR 0xfc
 #define BYTE_ERROR_INDEX 0xfb
+#define BYTE_VERSION 0xfa
 /* indexes of bytes in snmp packet */
 #define BYTE_PACKET_SIZE_i 1
 #define BYTE_PDU_i 13
@@ -296,7 +304,7 @@ static struct snmp_oid oid_array[] = {
 
 static uint8_t match_array[] = {
 	0x30, BYTE_SIZE,
-	0x02, 0x01, 0x00,
+	0x02, 0x01, BYTE_VERSION,
 	0x04, 0x06, 0x70, 0x75, 0x62, 0x6C, 0x69, 0x63,
 	BYTE_PDU, BYTE_SIZE,
 	0x02, 0x04, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE,
@@ -346,6 +354,12 @@ static int snmp_respond(uint8_t *buf)
 		case BYTE_IGNORE:
 		case BYTE_ERROR:
 		case BYTE_ERROR_INDEX:
+			continue;
+		case BYTE_VERSION:
+			snmp_version = buf[i];
+			if (snmp_version > SNMP_V_MAX)
+				return snmp_prepare_error(buf,
+							SNMP_ERR_GENERR);
 			continue;
 		case BYTE_PDU:
 			if (buf[i] != SNMP_GET && buf[i] != SNMP_GET_NEXT)
