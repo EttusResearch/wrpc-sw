@@ -55,13 +55,17 @@
 
 #ifdef CONFIG_SNMP_SET
 #define SNMP_SET_ENABLED 1
+#define SNMP_SET_FUNCTION(X) .set = (X)
 #else
 #define SNMP_SET_ENABLED 0
+#define SNMP_SET_FUNCTION(X) .set = NULL
 #endif
 
 struct snmp_oid {
 	uint8_t *oid_match;
 	int (*fill)(uint8_t *buf, struct snmp_oid *obj);
+	/* *set is needed only when support for SNMP SET is enabled */
+	int (*set)(uint8_t *buf, struct snmp_oid *obj);
 	void *p;
 	uint8_t oid_len;
 	uint8_t asn;
@@ -248,10 +252,11 @@ static uint8_t oid_wrpcNicRX[] =          {0x2B,6,1,4,1,96,101,2,2,0};
 static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 
 
-#define OID_FIELD_STRUCT(_oid, _fname, _asn, _type, _pointer, _field) { \
+#define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
-	.fill = _fname, \
+	.fill = _getf, \
+	SNMP_SET_FUNCTION(_setf), \
 	.asn = _asn, \
 	.p = _pointer, \
 	.offset = offsetof(_type, _field), \
@@ -263,52 +268,42 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 	.fill = _fname, \
 	.asn = _asn, \
 }
-#define OID_FIELD_VAR(_oid, _fname, _asn, _pointer) { \
+#define OID_FIELD_VAR(_oid, _getf, _setf, _asn, _pointer) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
-	.fill = _fname, \
+	.fill = _getf, \
+	SNMP_SET_FUNCTION(_setf), \
 	.asn = _asn, \
 	.p = _pointer, \
 	.offset = 0, \
 }
 
+#define NO_SET NULL
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
          OIDs */
 static struct snmp_oid oid_array[] = {
-	OID_FIELD_VAR(oid_name, fill_struct_p_asn, ASN_OCTET_STR, &snmp_system_name),
+	OID_FIELD_VAR(     oid_name,                  fill_struct_p_asn,      set_p,    ASN_OCTET_STR, &snmp_system_name),
 	OID_FIELD(oid_tics, fill_tics, 0),
 	OID_FIELD(oid_date, fill_date, 0),
-	OID_FIELD_VAR(oid_wrsPtpMode, fill_struct_p_asn, ASN_INTEGER, &ptp_mode),
-	OID_FIELD_STRUCT(oid_wrsPtpServoState,   fill_struct_pp_asn, ASN_OCTET_STR, struct wr_servo_state, &wr_s_state, servo_state_name),
-	OID_FIELD_STRUCT(oid_wrsPtpServoStateN,  fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, state),
-	OID_FIELD_STRUCT(oid_wrsPtpClockOffsetPsHR,fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, offset), /* saturated */
-	OID_FIELD_STRUCT(oid_wrsPtpSkew,         fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, skew), /* saturated */
-	OID_FIELD_STRUCT(oid_wrsPtpServoUpdates, fill_struct_pp_asn, ASN_COUNTER,   struct wr_servo_state, &wr_s_state, update_count),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,     fill_struct_pp_asn, ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
-	OID_FIELD_STRUCT(oid_wrpcPtpRTTHR,       fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, picos_mu), /* saturated */
-	OID_FIELD_STRUCT(oid_wrpcPtpDeltaMs,     fill_int32_saturate_pp, ASN_INTEGER, struct wr_servo_state, &wr_s_state, delta_ms), /* raw value used to calculate wrsPtpLinkLength, original calculations uses float */
-	OID_FIELD_STRUCT(oid_wrpcPtpCurSetpoint, fill_struct_pp_asn, ASN_INTEGER,  struct wr_servo_state, &wr_s_state, cur_setpoint),
-	OID_FIELD_STRUCT(oid_wrpcNicTX,          fill_struct_p_asn, ASN_COUNTER,  struct wr_minic, &minic, tx_count),
-	OID_FIELD_STRUCT(oid_wrpcNicRX,          fill_struct_p_asn, ASN_COUNTER,  struct wr_minic, &minic, rx_count),
-	OID_FIELD_VAR(oid_wrpcVersionSwVersion,    fill_struct_pp_asn, ASN_OCTET_STR, &build_revision),
+	OID_FIELD_VAR(     oid_wrsPtpMode,            fill_struct_p_asn,      set_p,    ASN_INTEGER,   &ptp_mode),
+	OID_FIELD_STRUCT(oid_wrsPtpServoState,      fill_struct_pp_asn,     NO_SET,   ASN_OCTET_STR, struct wr_servo_state, &wr_s_state, servo_state_name),
+	OID_FIELD_STRUCT(oid_wrsPtpServoStateN,     fill_struct_pp_asn,     NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, state),
+	OID_FIELD_STRUCT(oid_wrsPtpClockOffsetPsHR, fill_int32_saturate_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, offset), /* saturated */
+	OID_FIELD_STRUCT(oid_wrsPtpSkew,            fill_int32_saturate_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, skew), /* saturated */
+	OID_FIELD_STRUCT(oid_wrsPtpServoUpdates,    fill_struct_pp_asn,     NO_SET,   ASN_COUNTER,   struct wr_servo_state, &wr_s_state, update_count),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,        fill_struct_pp_asn,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,        fill_struct_pp_asn,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,        fill_struct_pp_asn,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,        fill_struct_pp_asn,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
+	OID_FIELD_STRUCT(oid_wrpcPtpRTTHR,          fill_int32_saturate_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, picos_mu), /* saturated */
+	OID_FIELD_STRUCT(oid_wrpcPtpDeltaMs,        fill_int32_saturate_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_ms), /* raw value used to calculate wrsPtpLinkLength, original calculations uses float */
+	OID_FIELD_STRUCT(oid_wrpcPtpCurSetpoint,    fill_struct_pp_asn,     NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, cur_setpoint),
+	OID_FIELD_STRUCT(oid_wrpcNicTX,             fill_struct_p_asn,      NO_SET,   ASN_COUNTER,   struct wr_minic,       &minic,      tx_count),
+	OID_FIELD_STRUCT(oid_wrpcNicRX,             fill_struct_p_asn,      NO_SET,   ASN_COUNTER,   struct wr_minic,       &minic,      rx_count),
+	OID_FIELD_VAR(     oid_wrpcVersionSwVersion,  fill_struct_pp_asn,     NO_SET,   ASN_OCTET_STR, &build_revision),
 	
 	{ 0, }
 };
-
-static struct snmp_oid oid_array_set[] = {
-	OID_FIELD_VAR(     oid_name,               set_p,    ASN_OCTET_STR, &snmp_system_name),
-	OID_FIELD_VAR(     oid_wrsPtpMode,         set_p,    ASN_INTEGER,   &ptp_mode),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
-
-	{ 0 }
-};
-
 
 /*
  * Perverse...  snmpwalk does getnext anyways.
@@ -417,8 +412,8 @@ static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 /* And, now, work out your generic frame responder... */
 static int snmp_respond(uint8_t *buf)
 {
-	struct snmp_oid *oid;
-	uint8_t *newbuf;
+	struct snmp_oid *oid = NULL;
+	uint8_t *newbuf = NULL;
 	uint8_t *new_oid;;
 	int i;
 	int8_t len;
@@ -427,6 +422,15 @@ static int snmp_respond(uint8_t *buf)
 	uint8_t snmp_mode_set = 0;
 	uint8_t incoming_oid_len;
 	int8_t cmp_result;
+
+	/* Hack to avoid compiler warnings "function defined but not used" for
+	 * set_p and set_pp when SNMP compiled without SET support.
+	 * These functions will never be called here. */
+	if (0) {
+		set_p(newbuf, oid);
+		set_pp(newbuf, oid);
+	}
+
 	for (i = 0; i < sizeof(match_array); i++) {
 		switch (match_array[i]) {
 		case BYTE_SIZE:
@@ -464,12 +468,7 @@ static int snmp_respond(uint8_t *buf)
 	new_oid = buf + i;
 	/* save size of incoming oid */
 	incoming_oid_len = buf[i - 1];
-	if (snmp_mode_set) {
-		oid = oid_array_set;
-	} else {
-		oid = oid_array;
-	}
-	for (; oid->oid_len; oid++) {
+	for (oid = oid_array; oid->oid_len; oid++) {
 		if (snmp_mode_get &&
 		    oid->oid_len != incoming_oid_len) {
 			/* for SNMP_GET, we need equal lengths */
@@ -527,7 +526,13 @@ static int snmp_respond(uint8_t *buf)
 	newbuf += oid->oid_len;
 	if (SNMP_SET_ENABLED && snmp_mode_set) {
 		uint8_t community_len;
-		len = oid->fill(newbuf, oid);
+		if (!oid->set) {
+			/* Oid found but there is no set function.
+			 * It is read-only */
+			return snmp_prepare_error(buf,
+						  SNMP_ERR_READONLY);
+		}
+		len = oid->set(newbuf, oid);
 		if (len < 0)
 			return snmp_prepare_error(buf,
 						  SNMP_ERR_BADVALUE);
