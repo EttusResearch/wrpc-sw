@@ -47,10 +47,17 @@
 #define SNMP_GET 0xA0
 #define SNMP_GET_NEXT 0xA1
 #define SNMP_GET_RESPONSE 0xA2
+#define SNMP_SET 0xA3
 
 #define SNMP_V1 0
 #define SNMP_V2c 1
 #define SNMP_V_MAX 1 /* Maximum supported version */
+
+#ifdef CONFIG_SNMP_SET
+#define SNMP_SET_ENABLED 1
+#else
+#define SNMP_SET_ENABLED 0
+#endif
 
 struct snmp_oid {
 	uint8_t *oid_match;
@@ -173,6 +180,53 @@ static int fill_int32_saturate_pp(uint8_t *buf, struct snmp_oid *obj) {
 				   *(void **)obj->p + obj->offset);
 }
 
+static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
+{
+	uint8_t asn_incoming = set_buff[0];
+	uint8_t asn_expected = obj->asn;
+	uint8_t len = set_buff[1];
+	uint8_t *oid_data = set_buff + 2;
+	uint32_t tmp_u32;
+
+	if (asn_incoming != asn_expected) { /* wrong asn */
+		snmp_verbose("%s: wrong asn 0x%02x, expected 0x%02x\n",
+			     __func__, asn_incoming, asn_expected);
+		return -1;
+	}
+	switch(asn_incoming){
+	    case ASN_INTEGER:
+		tmp_u32 = 0;
+		memcpy(&tmp_u32, oid_data, len);
+		tmp_u32 = ntohl(tmp_u32);
+		/* move data when shorter than 4 bytes */
+		tmp_u32 = tmp_u32 >> ((4 - len) * 8);
+		*(uint32_t *)p = tmp_u32;
+		snmp_verbose("%s: 0x%08x 0x%08x len %d\n", __func__,
+			     *(uint32_t*)p, tmp_u32, len);
+		break;
+	    case ASN_OCTET_STR: /* TODO: check the string size */
+		memcpy(p, oid_data, len);
+		*(char*)(p + len) = '\0';
+		snmp_verbose("%s: %s len %d\n", __func__, (char*)p, len);
+		break;
+	    default:
+		break;
+	}
+	return len + 2;
+}
+
+static int set_pp(uint8_t *buf, struct snmp_oid *obj)
+{
+	/* calculate pointer, treat obj-> as void ** */
+	return set_value(buf, obj, *(void **)obj->p + obj->offset);
+}
+
+static int set_p(uint8_t *buf, struct snmp_oid *obj)
+{
+	/* calculate pointer, treat obj-> as void * */
+	return set_value(buf, obj, obj->p + obj->offset);
+}
+
 static uint8_t oid_name[] = {0x2B,0x06,0x01,0x02,0x01,0x01,0x05,0x00};
 static uint8_t oid_tics[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x01,0x00};
 static uint8_t oid_date[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x02,0x00};
@@ -243,6 +297,18 @@ static struct snmp_oid oid_array[] = {
 	
 	{ 0, }
 };
+
+static struct snmp_oid oid_array_set[] = {
+	OID_FIELD_VAR(     oid_name,               set_p,    ASN_OCTET_STR, &snmp_system_name),
+	OID_FIELD_VAR(     oid_wrsPtpMode,         set_p,    ASN_INTEGER,   &ptp_mode),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
+	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,     set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
+
+	{ 0 }
+};
+
 
 /*
  * Perverse...  snmpwalk does getnext anyways.
@@ -347,6 +413,7 @@ static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 	return ret_size;
 }
 
+
 /* And, now, work out your generic frame responder... */
 static int snmp_respond(uint8_t *buf)
 {
@@ -354,8 +421,10 @@ static int snmp_respond(uint8_t *buf)
 	uint8_t *newbuf;
 	uint8_t *new_oid;;
 	int i;
-	uint8_t len;
-	uint8_t snmp_mode;
+	int8_t len;
+	uint8_t snmp_mode_get = 0;
+	uint8_t snmp_mode_get_next = 0;
+	uint8_t snmp_mode_set = 0;
 	uint8_t incoming_oid_len;
 	int8_t cmp_result;
 	for (i = 0; i < sizeof(match_array); i++) {
@@ -372,10 +441,16 @@ static int snmp_respond(uint8_t *buf)
 							SNMP_ERR_GENERR);
 			continue;
 		case BYTE_PDU:
-			if (buf[i] != SNMP_GET && buf[i] != SNMP_GET_NEXT)
+			snmp_mode_get = (SNMP_GET == buf[i]);
+			snmp_mode_get_next = (SNMP_GET_NEXT == buf[i]);
+			snmp_mode_set = SNMP_SET_ENABLED &&
+						(SNMP_SET == buf[i]);
+			if (!(snmp_mode_get
+			      || snmp_mode_get_next
+			      || snmp_mode_set))
 				return snmp_prepare_error(buf,
 							SNMP_ERR_GENERR);
-			snmp_mode = buf[i];
+			
 			break;
 		default:
 			if (buf[i] != match_array[i])
@@ -389,8 +464,13 @@ static int snmp_respond(uint8_t *buf)
 	new_oid = buf + i;
 	/* save size of incoming oid */
 	incoming_oid_len = buf[i - 1];
-	for (oid = oid_array; oid->oid_len; oid++) {
-		if (snmp_mode == SNMP_GET &&
+	if (snmp_mode_set) {
+		oid = oid_array_set;
+	} else {
+		oid = oid_array;
+	}
+	for (; oid->oid_len; oid++) {
+		if (snmp_mode_get &&
 		    oid->oid_len != incoming_oid_len) {
 			/* for SNMP_GET, we need equal lengths */
 			continue;
@@ -398,14 +478,15 @@ static int snmp_respond(uint8_t *buf)
 
 		cmp_result = memcmp(oid->oid_match, new_oid,
 				    min(oid->oid_len, incoming_oid_len));
-		if (snmp_mode == SNMP_GET) {
+		if (snmp_mode_get || snmp_mode_set) {
 			/* we need exact match for SNMP_GET */
 			if (cmp_result == 0) {
-				snmp_verbose("%s: exact match for GET\n",
-					     __func__);
+				snmp_verbose("%s: exact match for %s\n",
+					     __func__,
+					     snmp_mode_set ? "SET" : "GET");
 				break;
 			}
-		} else if (snmp_mode == SNMP_GET_NEXT) {
+		} else if (snmp_mode_get_next) {
 			if (cmp_result > 0) { /* current OID is after the one
 					       * that is requested, so use it
 					       */
@@ -433,7 +514,7 @@ static int snmp_respond(uint8_t *buf)
 		/* also for last GET_NEXT element */
 		return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
 	}
-	if (snmp_mode == SNMP_GET_NEXT) {
+	if (snmp_mode_get_next) {
 		/* copy new OID */
 		memcpy(new_oid, oid->oid_match, oid->oid_len);
 		/* update OID len, since it might be different */
@@ -444,8 +525,24 @@ static int snmp_respond(uint8_t *buf)
 	snmp_verbose(" calling %p\n", oid->fill);
 	/* Phew.... we matched the OID, so let's call the filler  */
 	newbuf += oid->oid_len;
-	len = oid->fill(newbuf, oid);
-	newbuf += len;
+	if (SNMP_SET_ENABLED && snmp_mode_set) {
+		uint8_t community_len;
+		len = oid->fill(newbuf, oid);
+		if (len < 0)
+			return snmp_prepare_error(buf,
+						  SNMP_ERR_BADVALUE);
+		/* After set, perform get */
+		community_len = buf[BYTE_COMMUNITY_LEN_i];
+		/* If community_len is too long, it will return malformed
+		 * packet, but at least something useful for debugging */
+		community_len = min(community_len, MAX_COMMUNITY_LEN);
+		buf[BYTE_PDU_i + community_len] = SNMP_GET;
+		/* recursive call of snmp_respond */
+		return snmp_respond(buf);
+	} else {
+		len = oid->fill(newbuf, oid);
+		newbuf += len;
+	}
 	/* now fix all size fields and change PDU */
 	for (i = 0; i < sizeof(match_array); i++) {
 		int remain = newbuf - buf - i - 1;

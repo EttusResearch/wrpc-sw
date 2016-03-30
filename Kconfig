@@ -141,6 +141,13 @@ config SNMP
        default y
        boolean "Mini SNMP responder"
 
+config SNMP_SET
+       depends on SNMP
+       default y
+       boolean "Add SET support to the Mini SNMP responder"
+       help
+	  This option enables support for SET requests for Mini SNMP responder
+
 config SNMP_SYSTEM_NAME
 	depends on SNMP
 	default "wrc-3.0"
