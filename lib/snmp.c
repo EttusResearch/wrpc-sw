@@ -134,12 +134,12 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 		tmp = htonl(*(uint32_t*)p);
 		memcpy(oid_data, &tmp, sizeof(tmp));
 		*len = sizeof(tmp);
-		snmp_verbose("get_value 0x%x\n", *(uint32_t*)p);
+		snmp_verbose("%s: 0x%x\n", __func__, *(uint32_t*)p);
 		break;
 	    case ASN_OCTET_STR:
 		*len = strnlen((char *)p, MAX_OCTET_STR_LEN - 1);
 		memcpy(oid_data, p, *len + 1);
-		snmp_verbose("get_value %s len %d\n", (char*)p, *len);
+		snmp_verbose("%s: %s len %d\n", __func__, (char*)p, *len);
 		break;
 	    default:
 		break;
@@ -166,7 +166,7 @@ static int get_i32sat(uint8_t *buf, uint8_t asn, void *p) {
 	 * otherwise pointers to the values will be overwritten */
 	tmp_int64 = *(int64_t *)p;
 	/* gcc doesn't support printing 64bit values */
-	snmp_verbose("get_i32sat: 64bit value 0x%08x|%08x\n",
+	snmp_verbose("%s: 64bit value 0x%08x|%08x\n", __func__,
 		     (int32_t)((tmp_int64) >> 32), (uint32_t)tmp_int64);
 	/* saturate int32 */
 	if (tmp_int64 >= INT_MAX)
@@ -404,7 +404,8 @@ static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 	buf[BYTE_ERROR_i + community_len] = error;
 	buf[BYTE_ERROR_INDEX_i + community_len] = 1;
 	ret_size = buf[BYTE_PACKET_SIZE_i] + 2;
-	snmp_verbose("%s: error returning %i bytes\n", __func__, ret_size);
+		snmp_verbose("%s: error returning %i bytes\n", __func__,
+			     ret_size);
 	return ret_size;
 }
 
@@ -556,8 +557,8 @@ static int snmp_respond(uint8_t *buf)
 			buf[i] = SNMP_GET_RESPONSE;
 		if (match_array[i] != BYTE_SIZE)
 			continue;
-		snmp_verbose("offset %i 0x%02x is len %i\n", i, i,
-			    remain);
+		snmp_verbose("%s: offset %i 0x%02x is len %i\n", i, i,
+			     __func__, remain);
 		buf[i] = remain;
 	}
 	snmp_verbose("%s: returning %i bytes\n", __func__, newbuf - buf);
