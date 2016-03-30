@@ -299,9 +299,11 @@ static struct snmp_oid oid_array[] = {
 #define BYTE_VERSION 0xfa
 /* indexes of bytes in snmp packet */
 #define BYTE_PACKET_SIZE_i 1
-#define BYTE_PDU_i 13
-#define BYTE_ERROR_i 23
-#define BYTE_ERROR_INDEX_i 26
+#define BYTE_COMMUNITY_LEN_i 6
+/* indexes below are without the length of the community string */
+#define BYTE_PDU_i 7
+#define BYTE_ERROR_i 17
+#define BYTE_ERROR_INDEX_i 20
 
 static uint8_t match_array[] = {
 	0x30, BYTE_SIZE,
@@ -329,14 +331,23 @@ static void print_oid_verbose(uint8_t *oid, int len) {
 		snmp_verbose(".%d", *(oid + i));
 }
 
+/* Limit community length. Standard says nothing about maximum length, but we
+ * want to limit it to save memory */
+#define MAX_COMMUNITY_LEN 32
+
 /* prepare packet to return error, leave the rest of packet as it was */
 static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 {
 	uint8_t ret_size;
+	uint8_t community_len;
 
-	buf[BYTE_PDU_i] = SNMP_GET_RESPONSE;
-	buf[BYTE_ERROR_i] = error;
-	buf[BYTE_ERROR_INDEX_i] = 1;
+	community_len = buf[BYTE_COMMUNITY_LEN_i];
+	/* If community_len is too long, it will return malformed
+	  * packet, but at least something useful for debugging */
+	community_len = min(community_len, MAX_COMMUNITY_LEN);
+	buf[BYTE_PDU_i + community_len] = SNMP_GET_RESPONSE;
+	buf[BYTE_ERROR_i + community_len] = error;
+	buf[BYTE_ERROR_INDEX_i + community_len] = 1;
 	ret_size = buf[BYTE_PACKET_SIZE_i] + 2;
 	snmp_verbose("%s: error returning %i bytes\n", __func__, ret_size);
 	return ret_size;
