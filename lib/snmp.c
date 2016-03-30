@@ -63,7 +63,8 @@ struct snmp_oid {
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
-
+#define SNMP_SYSTEM_NAME_LEN 32
+char snmp_system_name[SNMP_SYSTEM_NAME_LEN] = CONFIG_SNMP_SYSTEM_NAME;
 /* store SNMP version, not fully used yet */
 uint8_t snmp_version;
 
@@ -85,13 +86,6 @@ static void snmp_init(void)
 }
 
 /* These fill the actual information, returning the length */
-static int fill_name(uint8_t *buf, struct snmp_oid *obj)
-{
-	strcpy((void *)(buf + 2), "wrc");
-	buf[1] = strlen((void *)(buf + 2));
-	buf[0] = ASN_OCTET_STR;
-	return 2 + buf[1];
-}
 static int fill_tics(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint32_t tics = htonl(timer_get_tics() / 10); /* hundredths... bah! */
@@ -227,7 +221,7 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
          OIDs */
 static struct snmp_oid oid_array[] = {
-	OID_FIELD(oid_name, fill_name, 0),
+	OID_FIELD_VAR(oid_name, fill_struct_p_asn, ASN_OCTET_STR, &snmp_system_name),
 	OID_FIELD(oid_tics, fill_tics, 0),
 	OID_FIELD(oid_date, fill_date, 0),
 	OID_FIELD_VAR(oid_wrsPtpMode, fill_struct_p_asn, ASN_INTEGER, &ptp_mode),

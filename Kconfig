@@ -141,6 +141,11 @@ config SNMP
        default y
        boolean "Mini SNMP responder"
 
+config SNMP_SYSTEM_NAME
+	depends on SNMP
+	default "wrc-3.0"
+	string "System's name to be returned by SNMP"
+
 config BUILD_INIT
 	depends on WR_NODE
 	default n
