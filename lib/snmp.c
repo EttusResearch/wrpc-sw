@@ -70,6 +70,7 @@ struct snmp_oid {
 	uint8_t oid_len;
 	uint8_t asn;
 	uint8_t offset; /* increase it if it is not enough */
+	uint8_t data_size;
 };
 
 extern struct pp_instance ppi_static;
@@ -199,6 +200,8 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 	}
 	switch(asn_incoming){
 	    case ASN_INTEGER:
+		if (len > sizeof(uint32_t))
+			return -1;
 		tmp_u32 = 0;
 		memcpy(&tmp_u32, oid_data, len);
 		tmp_u32 = ntohl(tmp_u32);
@@ -208,7 +211,10 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 		snmp_verbose("%s: 0x%08x 0x%08x len %d\n", __func__,
 			     *(uint32_t*)p, tmp_u32, len);
 		break;
-	    case ASN_OCTET_STR: /* TODO: check the string size */
+	    case ASN_OCTET_STR:
+		/* Check the string size */
+		if (len > obj->data_size)
+			return -1;
 		memcpy(p, oid_data, len);
 		*(char*)(p + len) = '\0';
 		snmp_verbose("%s: %s len %d\n", __func__, (char*)p, len);
@@ -260,6 +266,7 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 	.asn = _asn, \
 	.p = _pointer, \
 	.offset = offsetof(_type, _field), \
+	.data_size = sizeof(((_type *)0)->_field) \
 }
 
 #define OID_FIELD(_oid, _fname, _asn) { \
@@ -268,6 +275,7 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 	.get = _fname, \
 	.asn = _asn, \
 }
+
 #define OID_FIELD_VAR(_oid, _getf, _setf, _asn, _pointer) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -276,6 +284,7 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 	.asn = _asn, \
 	.p = _pointer, \
 	.offset = 0, \
+	.data_size = sizeof(*_pointer) \
 }
 
 #define NO_SET NULL
