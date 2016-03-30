@@ -1,8 +1,9 @@
 /*
  * This work is part of the White Rabbit project
  *
- * Copyright (C) 2016 GSI (www.gsi.de)
+ * Copyright (C) 2016 GSI (www.gsi.de), CERN (www.cern.ch)
  * Author: Alessandro Rubini <a.rubini@gsi.de>
+ * Author: Adam Wujek <adam.wujek@cern.ch>
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
