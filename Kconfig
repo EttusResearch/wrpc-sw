@@ -26,6 +26,10 @@ config RAMSIZE
 	default 65536 if WR_SWITCH
 	default 131072
 
+config TEMP_POLL_INTERVAL
+	int
+	default 15
+
 config PLL_VERBOSE
 	boolean
 	default y if WR_SWITCH
@@ -188,6 +192,10 @@ config PRINT_BUFSIZE
 	  also constraints the maximum lenght of text that can be written
 	  in a single call to printf.
 
+config TEMP_POLL_INTERVAL
+	depends on DEVELOPER && WR_NODE
+	int "Poll interval, in seconds, for temperature sensors"
+
 config CMD_LL
 	depends on DEVELOPER && WR_NODE
 	bool "Build low-level commands for development/testing"
@@ -323,6 +331,13 @@ config WRC_VERBOSE
 	default y if WR_SWITCH
 	help
 	  This enables some more diagnostic messages. Normally off.
+
+config FAKE_TEMPERATURES
+	depends on DEVELOPER
+	boolean "Offer an array of 3 fake temperatures, for testing"
+	help
+	  The option adds also a "faketemp" command, used to set
+	  the fake temperatures: e.g. "faketemp 120 -10 50"
 
 config VLAN
 	depends on DEVELOPER
