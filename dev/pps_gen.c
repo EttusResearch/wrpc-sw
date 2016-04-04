@@ -96,7 +96,8 @@ static uint64_t pps_get_utc(void)
 	return out;
 }
 
-void shw_pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds)
+void __attribute__((weak)) shw_pps_gen_get_time(uint64_t * seconds,
+						  uint32_t * nanoseconds)
 {
 	uint32_t ns_cnt;
 	uint64_t sec1, sec2;

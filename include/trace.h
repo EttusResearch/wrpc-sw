@@ -38,4 +38,10 @@
 	({if (NET_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
 
 
+#ifdef CONFIG_HOST_PROCESS
+#define IS_HOST_PROCESS 1
+#else
+#define IS_HOST_PROCESS 0
+#endif
+
 #endif /*  __FREESTANDING_TRACE_H__ */

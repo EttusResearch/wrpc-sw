@@ -64,6 +64,17 @@ config VLAN_FOR_CLASS6
 	default 100 if VLAN
 	default 0
 
+config HOST_PROCESS
+	boolean
+	default n
+
+config LM32
+	boolean
+	default !HOST_PROCESS
+
+config EMBEDDED_NODE
+	boolean
+	default LM32 && WR_NODE
 
 # CONFIG_WR_SWITCH has no further options at all at this point
 
@@ -86,12 +97,12 @@ config PPSI
 	default y
 
 config UART
-	depends on WR_NODE
 	boolean
-	default y
+	default y if EMBEDDED_NODE
+	default n
 
 config W1
-	depends on WR_NODE
+	depends on EMBEDDED_NODE
 	boolean
 	default y
 
@@ -164,8 +175,12 @@ config DEVELOPER
 	  directly working on this package.  Please don't use unless
 	  you are a developer of wrpc-sw.
 
-config RAMSIZE
+config HOST_PROCESS
 	depends on DEVELOPER && WR_NODE
+	boolean "Build as a host process, to develop/debug network"
+
+config RAMSIZE
+	depends on DEVELOPER && EMBEDDED_NODE
 	int "Size of the RAM in the FPGA for this program"
 	default 90112
 	help
@@ -175,7 +190,7 @@ config RAMSIZE
 	  choose your preferred value here.
 
 config STACKSIZE
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER && EMBEDDED_NODE
 	int "Size of the stack area needed by this program"
 	default 2048
 	help
@@ -197,7 +212,7 @@ config TEMP_POLL_INTERVAL
 	int "Poll interval, in seconds, for temperature sensors"
 
 config CMD_LL
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER && EMBEDDED_NODE
 	bool "Build low-level commands for development/testing"
 	help
 	  This enables low-level commands: "devmem" to read/write memory
@@ -207,13 +222,13 @@ config CMD_LL
 	  during the initial handshake
 
 config FLASH_INIT
-	depends on WR_NODE && DEVELOPER
+	depends on DEVELOPER && EMBEDDED_NODE
 	default y
 	boolean "Read init commands from flash storage"
 
 # CHECK_RESET for switch and node
 config CHECK_RESET
-	depends on DEVELOPER
+	depends on DEVELOPER && !HOST_PROCESS
 	bool "Print a stack trace if reset happens"
 	help
 	  If the CPU is following a NULL pointer, the program will
@@ -222,7 +237,7 @@ config CHECK_RESET
 	  then clears the stack (for next time) and restarts again.
 
 config SPLL_FIFO_LOG
-	depends on DEVELOPER
+	depends on DEVELOPER && !HOST_PROCESS
 	bool "Add a circular buffer for spll logging, used by tools/wrpc-dump"
 	help
 	  This option addrs 256 bytes to the wrpc bynary, to log
@@ -273,7 +288,7 @@ config PPSI
 	  Select this option for the ppsi engine (now only option)
 
 config DETERMINISTIC_BINARY
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER && EMBEDDED_NODE
 	boolean "Build a binary that is the same every time"
 	help
 	  This option is used to #ifdef __DATE__ and __TIME__ strings
@@ -287,15 +302,14 @@ config DETERMINISTIC_BINARY
 
 config UART
 	boolean "Use hardware uart (and/or vuart if available)"
-	depends on DEVELOPER && WR_NODE
-	default y
+	depends on DEVELOPER && EMBEDDED_NODE
 	help
 	  This option selects the serial driver, connected to either
 	  the USB socket, or "vuart" (software fifo) or both, according
 	  to how the gateware is built. 
 
 config UART_SW
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER && EMBEDDED_NODE
 	default !UART
 	boolean "Use software uart"
 	help

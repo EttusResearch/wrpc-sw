@@ -8,8 +8,14 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifndef __IEEE_BIG_ENDIAN
-#error "Not big endian, or unknown endianness"
-#endif
+#ifdef CONFIG_HOST_PROCESS
+#  include <arpa/inet.h>
+#else
 
-static inline uint16_t ntohs(uint16_t x) {return x;}
+#  ifndef __IEEE_BIG_ENDIAN
+#    error "Not big endian, or unknown endianness"
+#  endif
+
+  static inline uint16_t ntohs(uint16_t x) {return x;}
+
+#endif
