@@ -26,12 +26,6 @@
 
 #define min(x,y) ((x) < (y) ? (x) : (y))
 
-struct ethhdr {
-	uint8_t dstmac[6];
-	uint8_t srcmac[6];
-	uint16_t ethtype;
-};
-
 static struct wrpc_socket *socks[NET_MAX_SOCKETS];
 
 //#define net_verbose pp_printf
@@ -231,7 +225,7 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 	struct sockq *q = &s->queue;
 
 	uint16_t size;
-	struct ethhdr hdr;
+	struct wr_ethhdr hdr;
 	struct hw_timestamp hwts;
 	uint8_t spll_busy;
 
@@ -243,10 +237,11 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 
 	q->avail += wrap_copy_in(&size, q, 2, 0);
 	q->avail += wrap_copy_in(&hwts, q, sizeof(struct hw_timestamp), 0);
-	q->avail += wrap_copy_in(&hdr, q, sizeof(struct ethhdr), 0);
+	q->avail += wrap_copy_in(&hdr, q, sizeof(struct wr_ethhdr), 0);
 	q->avail += wrap_copy_in(data, q, size, data_length);
 
 	from->ethertype = ntohs(hdr.ethtype);
+	from->vlan = wrc_vlan_number; /* has been checked in rcvd frame */
 	memcpy(from->mac, hdr.srcmac, 6);
 	memcpy(from->mac_dest, hdr.dstmac, 6);
 
@@ -282,19 +277,25 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 {
 	struct wrpc_socket *s = (struct wrpc_socket *)sock;
 	struct hw_timestamp hwts;
-	struct ethhdr hdr;
+	struct wr_ethhdr_vlan hdr;
 	int rval;
 
 	memcpy(hdr.dstmac, to->mac, 6);
 	memcpy(hdr.srcmac, s->local_mac, 6);
-	hdr.ethtype = sock->bind_addr.ethertype;
+	if (wrc_vlan_number) {
+		hdr.ethtype = htons(0x8100);
+		hdr.tag = htons(wrc_vlan_number);
+		hdr.ethtype_2 = sock->bind_addr.ethertype; /* net order */
+	} else {
+		hdr.ethtype = sock->bind_addr.ethertype;
+	}
 	net_verbose("TX: socket %04x:%04x, len %i\n",
 		    ntohs(s->bind_addr.ethertype),
 		    s->bind_addr.udpport,
 		    data_length);
 
 	rval =
-	    minic_tx_frame((uint8_t *) & hdr, (uint8_t *) data,
+	    minic_tx_frame(&hdr, (uint8_t *) data,
 			   data_length, &hwts);
 
 
@@ -313,17 +314,35 @@ int update_rx_queues()
 	struct wrpc_socket *s = NULL;
 	struct sockq *q;
 	struct hw_timestamp hwts;
-	static struct ethhdr hdr;
+	static struct wr_ethhdr hdr;
 	int recvd, i, q_required;
-	static uint8_t payload[NET_MAX_SKBUF_SIZE - 32];
+	static uint8_t buffer[NET_MAX_SKBUF_SIZE - 32];
+	uint8_t *payload = buffer;
 	uint16_t size, port;
+	uint16_t ethtype, tag;
 
 	recvd =
-	    minic_rx_frame((uint8_t *) & hdr, payload, sizeof(payload),
+	    minic_rx_frame(&hdr, buffer, sizeof(buffer),
 			   &hwts);
 
 	if (recvd <= 0)		/* No data received? */
 		return 0;
+
+	/* Remove the vlan tag, but  make sure it's the right one */
+	ethtype = hdr.ethtype;
+	tag = 0;
+	if (ntohs(ethtype) == 0x8100) {
+		memcpy(&tag, buffer, 2);
+		memcpy(&hdr.ethtype, buffer + 2, 2);
+		payload += 4;
+		recvd -= 4;
+	}
+	if ((ntohs(tag) & 0xfff) != wrc_vlan_number) {
+		net_verbose("%s: want vlan %i, got %i: discard\n",
+				    __func__, wrc_vlan_number,
+				    ntohs(tag) & 0xfff);
+			return 0;
+	}
 
 	for (i = 0; i < ARRAY_SIZE(socks); i++) {
 		s = socks[i];
@@ -357,7 +376,7 @@ int update_rx_queues()
 
 	q = &s->queue;
 	q_required =
-	    sizeof(struct ethhdr) + recvd + sizeof(struct hw_timestamp) + 2;
+	    sizeof(struct wr_ethhdr) + recvd + sizeof(struct hw_timestamp) + 2;
 
 	if (q->avail < q_required) {
 		net_verbose
@@ -370,7 +389,7 @@ int update_rx_queues()
 
 	q->avail -= wrap_copy_out(q, &size, 2);
 	q->avail -= wrap_copy_out(q, &hwts, sizeof(struct hw_timestamp));
-	q->avail -= wrap_copy_out(q, &hdr, sizeof(struct ethhdr));
+	q->avail -= wrap_copy_out(q, &hdr, sizeof(struct wr_ethhdr));
 	q->avail -= wrap_copy_out(q, payload, size);
 	q->n++;
 

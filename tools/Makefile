@@ -47,6 +47,9 @@ wrpc-dump: wrpc-dump.c dump-info-host.o
 	-I ../softpll \
 	$^ -o $@
 
+pfilter-builder: pfilter-builder.c
+	$(CC) $(CFLAGS)  -include ../include/generated/autoconf.h \
+		$@.c $(LDFLAGS) -o $@
 
 
 dump-info-host.o: ../dump-info.o

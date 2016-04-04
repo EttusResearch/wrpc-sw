@@ -44,6 +44,8 @@ int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
 uint32_t cal_phase_transition = 2389;
 
+int wrc_vlan_number = CONFIG_VLAN_NR;
+
 static uint32_t prev_nanos_for_profile;
 
 static void wrc_initialize(void)

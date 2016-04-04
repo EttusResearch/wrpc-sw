@@ -43,6 +43,7 @@ struct wr_sockaddr {
 	// RAW ethertype
 	uint16_t ethertype;
 	uint16_t udpport;
+	uint16_t vlan;
 };
 
 struct sockq {
@@ -79,7 +80,6 @@ PACKED struct wr_timestamp {
 	// when 0, tstamp MAY be incorrect (e.g. during timebase adjustment)
 	int correct;
 };
-
 
 // Creates UDP or Ethernet RAW socket (determined by sock_type) bound
 // to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is

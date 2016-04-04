@@ -20,8 +20,24 @@
 #include <endpoint.h>
 #include <hw/endpoint_regs.h>
 
-extern uint32_t _binary_rules_pfilter_bin_start[];
-extern uint32_t _binary_rules_pfilter_bin_end[];
+extern uint32_t _binary_rules_novlan_bin_start[];
+extern uint32_t _binary_rules_novlan_bin_end[];
+extern uint32_t _binary_rules_vlan_bin_start[];
+extern uint32_t _binary_rules_vlan_bin_end[];
+
+struct rule_set {
+	uint32_t *ini;
+	uint32_t *end;
+} rule_sets[2] = {
+	{
+		_binary_rules_novlan_bin_start,
+		_binary_rules_novlan_bin_end,
+	}, {
+		_binary_rules_vlan_bin_start,
+		_binary_rules_vlan_bin_end,
+	}
+};
+
 
 extern volatile struct EP_WB *EP;
 
@@ -38,15 +54,22 @@ static uint32_t swap32(uint32_t v)
 
 void pfilter_init_default(void)
 {
-	/* Use shorter names to avoid getting mad */
-	uint32_t *vini = _binary_rules_pfilter_bin_start;
-	uint32_t *vend = _binary_rules_pfilter_bin_end;
+	struct rule_set *s;
 	uint8_t mac[6];
 	char buf[20];
-	uint32_t m, *v;
+	uint32_t m, *vini, *vend, *v, *v_vlan = NULL;
 	uint64_t cmd_word;
 	int i;
 	static int inited;
+
+	/* If vlan, use rule-set 1, else rule-set 0 */
+	s = rule_sets + (wrc_vlan_number != 0);
+	if (!s->ini) {
+		pp_printf("no pfilter rule-set!\n");
+		return;
+	}
+	vini = s->ini;
+	vend = s->end;
 
 	/*
 	 * The array of words starts with 0x11223344 so we
@@ -91,9 +114,21 @@ void pfilter_init_default(void)
 	pfilter_verbose("fixing MAC adress in rule: use %s\n",
 			format_mac(buf, mac));
 
+	/* If this is the VLAN rule-set, patch the vlan number too */
+	for (v = vini + 1; v < vend; v += 2) {
+		if (((*v >> 13) & 0xffff) == 0x0aaa
+		    && ((*v >> 7) & 0x1f) == 7) {
+			pfilter_verbose("fixing VLAN number in rule: use %i\n",
+					wrc_vlan_number);
+			v_vlan = v;
+			*v &= ~(0xffff << 13);
+			*v |= wrc_vlan_number << 13;
+		}
+	}
+
 	EP->PFCR0 = 0;		// disable pfilter
 
-	for (i = 0;v < vend; v += 2, i++) {
+	for (i = 0, v = vini + 1; v < vend; v += 2, i++) {
 		uint32_t cr0, cr1;
 
 		cmd_word = v[0] | ((uint64_t)v[1] << 32);
@@ -107,6 +142,12 @@ void pfilter_init_default(void)
 
 		EP->PFCR1 = cr1;
 		EP->PFCR0 = cr0;
+	}
+
+	/* Restore the 0xaaa vlan number, so we can re-patch next time */
+	if (v_vlan) {
+		*v_vlan &= ~(0xffff << 13);
+		*v_vlan |= 0x0aaa << 13;
 	}
 
 	EP->PFCR0 = EP_PFCR0_ENABLE;

@@ -59,8 +59,9 @@ CFLAGS_PLATFORM  = -mmultiply-enabled -mbarrel-shift-enabled
 LDFLAGS_PLATFORM = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
 
-# packet-filter rules depend on configuration; default is rules-plain
-pfilter-y                     := rules-default.bin
+# packet-filter rules: for CONFIG_VLAN we use both sets
+pfilter-y                     := rules-novlan.bin
+pfilter-$(CONFIG_VLAN)        += rules-vlan.bin
 export pfilter-y
 
 all:

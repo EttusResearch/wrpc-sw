@@ -35,6 +35,8 @@
 #  define is_wr_node 1
 #endif
 
+extern int wrc_vlan_number;
+
 int wrc_mon_gui(void);
 void shell_init(void);
 int wrc_log_stats(void);
