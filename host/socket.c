@@ -165,14 +165,21 @@ int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t * payload, uint32_t size,
                    struct hw_timestamp *hwts)
 {
 	unsigned char frame[1500];
+	int hsize;
+
+	if (hdr->ethtype == htons(0x8100))
+		hsize = sizeof(struct wr_ethhdr_vlan);
+	else
+		hsize = sizeof(struct wr_ethhdr);
 
 	printf("%s\n", __func__);
-	dumpstruct(stdout, "tx header", hdr, 14);
+	dumpstruct(stdout, "tx header", hdr, hsize);
 	dumpstruct(stdout, "tx payload", payload, size);
 
-	memcpy(frame, hdr, 14);
-	memcpy(frame + 14, payload, size);
-	return send(sock, frame, size + 14, 0);
+
+	memcpy(frame, hdr, hsize);
+	memcpy(frame + hsize, payload, size);
+	return send(sock, frame, size + hsize, 0);
 }
 
 
