@@ -284,7 +284,7 @@ int ptpd_netif_sendto(struct wrpc_socket * sock, struct wr_sockaddr *to, void *d
 	memcpy(hdr.srcmac, s->local_mac, 6);
 	if (wrc_vlan_number) {
 		hdr.ethtype = htons(0x8100);
-		hdr.tag = htons(wrc_vlan_number);
+		hdr.tag = htons(wrc_vlan_number | (sock->prio << 13));
 		hdr.ethtype_2 = sock->bind_addr.ethertype; /* net order */
 	} else {
 		hdr.ethtype = sock->bind_addr.ethertype;
