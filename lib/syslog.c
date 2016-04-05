@@ -50,7 +50,7 @@ static int cmd_syslog(const char *args[])
 	return 0;
 }
 
-DEFINE_WRC_COMMAND(mac) = {
+DEFINE_WRC_COMMAND(syslog) = {
 	.name = "syslog",
 	.exec = cmd_syslog,
 };
