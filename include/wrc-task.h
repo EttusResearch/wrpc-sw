@@ -9,7 +9,7 @@
 /*
  * A task is a data structure, but currently suboptimal.
  * FIXME: init must return int, and both should get a pointer to data
- * FIXME: provide a jiffy-based period.
+ * (but doing this is heavy, and forces to change the submodule too).
  */
 
 struct wrc_task {
@@ -22,6 +22,27 @@ struct wrc_task {
 	unsigned long seconds;
 	unsigned long nanos;
 };
+
+/* An helper for periodic tasks, relying on a static varible */
+static inline int __task_not_yet(uint32_t *lastt, unsigned period,
+	uint32_t now)
+{
+	if (!*lastt) {
+		*lastt = now;
+		return 0;
+	}
+	if (time_before(now, *lastt + period))
+		return 1; /* not yet */
+
+	*lastt += period;
+	return 0;
+}
+
+static inline int task_not_yet(uint32_t *lastt, unsigned period)
+{
+	return __task_not_yet(lastt, period, timer_get_tics());
+}
+
 
 /* Put the tasks in their own section */
 #define DEFINE_WRC_TASK(_name) \
