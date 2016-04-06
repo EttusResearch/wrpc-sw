@@ -100,9 +100,6 @@ static int bootp_poll(void)
 	uint8_t buf[400];
 	int len, ret = 0;
 
-	if (!bootp_tics) /* first time ever */
-		bootp_tics = timer_get_tics() - 1;
-
 	len = ptpd_netif_recvfrom(bootp_socket, &addr,
 				  buf, sizeof(buf), NULL);
 
@@ -112,12 +109,11 @@ static int bootp_poll(void)
 	if (len > 0)
 		ret = process_bootp(buf, len);
 
-	if (time_before(timer_get_tics(), bootp_tics))
-		return ret;
+	if (task_not_yet(&bootp_tics, TICS_PER_SECOND))
+		return 0;
 
 	len = prepare_bootp(&addr, buf, ++bootp_retry);
 	ptpd_netif_sendto(bootp_socket, &addr, buf, len, 0);
-	bootp_tics = timer_get_tics() + TICS_PER_SECOND;
 	return 1;
 }
 
