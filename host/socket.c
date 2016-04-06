@@ -140,9 +140,12 @@ int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
                    struct hw_timestamp *hwts)
 {
 	unsigned char frame[1500];
+	struct timespec ts;
 	int ret;
 
 	ret = recv(sock, frame, sizeof(frame), MSG_DONTWAIT);
+	clock_gettime(CLOCK_REALTIME, &ts);
+
 	if (ret < 0 && errno == EAGAIN)
 		return 0;
 	if (ret < 0) {
@@ -158,6 +161,11 @@ int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 		ret = buf_size;
 	}
 	memcpy(payload, frame + 14, ret);
+	hwts->sec = ts.tv_sec;
+	hwts->nsec = ts.tv_nsec;
+	hwts->phase = 0;
+	net_verbose("%s: %9li.%09i.%03i\n", __func__, (long)hwts->sec,
+		    hwts->nsec, hwts->phase);
 	return ret;
 }
 
@@ -165,7 +173,8 @@ int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t * payload, uint32_t size,
                    struct hw_timestamp *hwts)
 {
 	unsigned char frame[1500];
-	int hsize;
+	struct timespec ts;
+	int hsize, len;
 
 	if (hdr->ethtype == htons(0x8100))
 		hsize = sizeof(struct wr_ethhdr_vlan);
@@ -176,10 +185,16 @@ int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t * payload, uint32_t size,
 	dumpstruct(stdout, "tx header", hdr, hsize);
 	dumpstruct(stdout, "tx payload", payload, size);
 
-
 	memcpy(frame, hdr, hsize);
 	memcpy(frame + hsize, payload, size);
-	return send(sock, frame, size + hsize, 0);
+	clock_gettime(CLOCK_REALTIME, &ts);
+	len = send(sock, frame, size + hsize, 0);
+	hwts->sec = ts.tv_sec;
+	hwts->nsec = ts.tv_nsec;
+	hwts->phase = 0;
+	net_verbose("%s: %9li.%09i.%03i\n", __func__, (long)hwts->sec,
+		    hwts->nsec, hwts->phase);
+	return len;
 }
 
 
