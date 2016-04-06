@@ -52,7 +52,6 @@ struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 {
 	int i;
 	struct hal_port_state pstate;
-	static mac_addr_t zero_mac;
 
 	/* Look for the first available socket. */
 	for (i = 0; i < ARRAY_SIZE(socks); i++)
@@ -72,8 +71,6 @@ struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *sock,
 	memset(&sock->bind_addr, 0, sizeof(struct wr_sockaddr));
 	if (bind_addr)
 		memcpy(&sock->bind_addr, bind_addr, sizeof(struct wr_sockaddr));
-	if (!memcmp(sock->bind_addr.mac, zero_mac, ETH_ALEN))
-		get_mac_addr(sock->bind_addr.mac);
 	sock->bind_addr.udpport = 0;
 	if (udp_or_raw == PTPD_SOCK_UDP) {
 		sock->bind_addr.ethertype = htons(0x0800); /* IPv4 */

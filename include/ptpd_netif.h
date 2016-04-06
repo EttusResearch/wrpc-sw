@@ -83,9 +83,7 @@ PACKED struct wr_timestamp {
 };
 
 // Creates UDP or Ethernet RAW socket (determined by sock_type) bound
-// to bind_addr. If PTPD_FLAG_MULTICAST is set, the socket is
-// automatically added to multicast group. User can specify
-// physical_port field to bind the socket to specific switch port only.
+// to bind_addr.
 struct wrpc_socket *ptpd_netif_create_socket(struct wrpc_socket *s,
 					     struct wr_sockaddr * bind_addr,
 					     int udp_or_raw, int udpport);

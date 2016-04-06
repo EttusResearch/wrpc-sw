@@ -20,8 +20,7 @@ static struct wrpc_socket *latency_socket, __static_latency_socket = {
 };
 
 static struct wr_sockaddr latency_addr = {
-	.mac = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, /* for binding */
-	.mac_dest = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, /* for sending */
+	.mac = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, /* for sending */
 	.ethertype = 0, /* htons(CONFIG_LATENCY_ETHTYPE) -- not constant! */
 };
 
