@@ -413,8 +413,8 @@ void pfilter_init_novlan(char *fname)
 	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);
 	pfilter_logic2(FRAME_UDP, FRAME_UDP, AND, FRAME_IP_OK);
 
-	/* For CPU: arp broadcast or icmp unicast or ptp (or latency) */
-	pfilter_logic3(FRAME_FOR_CPU, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
+	/* For CPU: arp or icmp unicast or ptp (or latency) */
+	pfilter_logic2(FRAME_FOR_CPU, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_OK, AND, FRAME_ICMP, OR, FRAME_FOR_CPU);
 
 	/* Now look in UDP ports: at offset 18 (14 + 20 + 8 = 36) */
