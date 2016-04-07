@@ -181,7 +181,6 @@ int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t * payload, uint32_t size,
 	else
 		hsize = sizeof(struct wr_ethhdr);
 
-	printf("%s\n", __func__);
 	dumpstruct(stdout, "tx header", hdr, hsize);
 	dumpstruct(stdout, "tx payload", payload, size);
 
