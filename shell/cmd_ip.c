@@ -10,10 +10,10 @@
 #include <string.h>
 #include <errno.h>
 #include <wrc.h>
+#include <lib/ipv4.h>
 
 #include "softpll_ng.h"
 #include "shell.h"
-#include "../lib/ipv4.h"
 
 void decode_ip(const char *str, unsigned char *ip)
 {
