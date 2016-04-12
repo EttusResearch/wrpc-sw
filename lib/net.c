@@ -24,8 +24,6 @@
 #include "softpll_ng.h"
 #include "ipv4.h"
 
-#define min(x,y) ((x) < (y) ? (x) : (y))
-
 static struct wrpc_socket *socks[NET_MAX_SOCKETS];
 
 //#define net_verbose pp_printf

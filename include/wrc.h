@@ -21,6 +21,13 @@
 #define vprintf pp_vprintf
 #define sprintf pp_sprintf
 
+#ifndef min
+#define min(a, b) \
+	({ __typeof__ (a) _a = (a); \
+	  __typeof__ (b) _b = (b); \
+	  _a < _b ? _a : _b; })
+#endif
+
 #undef offsetof
 #define offsetof(TYPE, MEMBER) ((long) &((TYPE *)0)->MEMBER)
 #undef ARRAY_SIZE
