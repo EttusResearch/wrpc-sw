@@ -128,23 +128,24 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 	uint32_t tmp;
 	uint8_t *oid_data = buf + 2;
 	uint8_t *len;
+
 	buf[0] = asn;
 	len = &buf[1];
-	switch(asn){
-	    case ASN_COUNTER:
-	    case ASN_INTEGER:
-		tmp = htonl(*(uint32_t*)p);
-		memcpy(oid_data, &tmp, sizeof(tmp));
-		*len = sizeof(tmp);
-		snmp_verbose("%s: 0x%x\n", __func__, *(uint32_t*)p);
-		break;
-	    case ASN_OCTET_STR:
-		*len = strnlen((char *)p, MAX_OCTET_STR_LEN - 1);
-		memcpy(oid_data, p, *len + 1);
-		snmp_verbose("%s: %s len %d\n", __func__, (char*)p, *len);
-		break;
-	    default:
-		break;
+	switch (asn) {
+	case ASN_COUNTER:
+	case ASN_INTEGER:
+	    tmp = htonl(*(uint32_t *)p);
+	    memcpy(oid_data, &tmp, sizeof(tmp));
+	    *len = sizeof(tmp);
+	    snmp_verbose("%s: 0x%x\n", __func__, *(uint32_t *)p);
+	    break;
+	case ASN_OCTET_STR:
+	    *len = strnlen((char *)p, MAX_OCTET_STR_LEN - 1);
+	    memcpy(oid_data, p, *len + 1);
+	    snmp_verbose("%s: %s len %d\n", __func__, (char *)p, *len);
+	    break;
+	default:
+	    break;
 	}
 	return 2 + buf[1];
 }
@@ -161,9 +162,11 @@ static int get_p(uint8_t *buf, struct snmp_oid *obj)
 	return get_value(buf, obj->asn, obj->p + obj->offset);
 }
 
-static int get_i32sat(uint8_t *buf, uint8_t asn, void *p) {
+static int get_i32sat(uint8_t *buf, uint8_t asn, void *p)
+{
 	int64_t tmp_int64;
 	int32_t tmp_int32;
+
 	/* if we want to modify an object we need to do that on a copy,
 	 * otherwise pointers to the values will be overwritten */
 	tmp_int64 = *(int64_t *)p;
@@ -180,7 +183,8 @@ static int get_i32sat(uint8_t *buf, uint8_t asn, void *p) {
 	return get_value(buf, asn, &tmp_int32);
 }
 
-static int get_i32sat_pp(uint8_t *buf, struct snmp_oid *obj) {
+static int get_i32sat_pp(uint8_t *buf, struct snmp_oid *obj)
+{
 	/* calculate pointer, treat obj-> as void ** */
 	return get_i32sat(buf, obj->asn,
 				   *(void **)obj->p + obj->offset);
@@ -199,29 +203,29 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 			     __func__, asn_incoming, asn_expected);
 		return -1;
 	}
-	switch(asn_incoming){
-	    case ASN_INTEGER:
-		if (len > sizeof(uint32_t))
-			return -1;
-		tmp_u32 = 0;
-		memcpy(&tmp_u32, oid_data, len);
-		tmp_u32 = ntohl(tmp_u32);
-		/* move data when shorter than 4 bytes */
-		tmp_u32 = tmp_u32 >> ((4 - len) * 8);
-		*(uint32_t *)p = tmp_u32;
-		snmp_verbose("%s: 0x%08x 0x%08x len %d\n", __func__,
-			     *(uint32_t*)p, tmp_u32, len);
-		break;
-	    case ASN_OCTET_STR:
-		/* Check the string size */
-		if (len > obj->data_size)
-			return -1;
-		memcpy(p, oid_data, len);
-		*(char*)(p + len) = '\0';
-		snmp_verbose("%s: %s len %d\n", __func__, (char*)p, len);
-		break;
-	    default:
-		break;
+	switch (asn_incoming) {
+	case ASN_INTEGER:
+	    if (len > sizeof(uint32_t))
+		return -1;
+	    tmp_u32 = 0;
+	    memcpy(&tmp_u32, oid_data, len);
+	    tmp_u32 = ntohl(tmp_u32);
+	    /* move data when shorter than 4 bytes */
+	    tmp_u32 = tmp_u32 >> ((4 - len) * 8);
+	    *(uint32_t *)p = tmp_u32;
+	    snmp_verbose("%s: 0x%08x 0x%08x len %d\n", __func__,
+			 *(uint32_t *)p, tmp_u32, len);
+	    break;
+	case ASN_OCTET_STR:
+	    /* Check the string size */
+	    if (len > obj->data_size)
+		return -1;
+	    memcpy(p, oid_data, len);
+	    *(char *)(p + len) = '\0';
+	    snmp_verbose("%s: %s len %d\n", __func__, (char *)p, len);
+	    break;
+	default:
+	    break;
 	}
 	return len + 2;
 }
@@ -290,7 +294,7 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 
 #define NO_SET NULL
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
-         OIDs */
+	 OIDs */
 static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_name,                  get_p,         set_p,    ASN_OCTET_STR, &snmp_system_name),
 	OID_FIELD(oid_tics, get_tics, 0),
@@ -311,7 +315,7 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_STRUCT(oid_wrpcNicTX,             get_p,         NO_SET,   ASN_COUNTER,   struct wr_minic,       &minic,      tx_count),
 	OID_FIELD_STRUCT(oid_wrpcNicRX,             get_p,         NO_SET,   ASN_COUNTER,   struct wr_minic,       &minic,      rx_count),
 	OID_FIELD_VAR(   oid_wrpcVersionSwVersion,  get_pp,        NO_SET,   ASN_OCTET_STR, &build_revision),
-	
+
 	{ 0, }
 };
 
@@ -388,9 +392,11 @@ static uint8_t match_array[] = {
 };
 
 
-static void print_oid_verbose(uint8_t *oid, int len) {
+static void print_oid_verbose(uint8_t *oid, int len)
+{
 	/*uint8_t * oid_end = oid + len;*/
 	int i;
+
 	snmp_verbose(".1.3");
 	for (i = 1; i < len; i++)
 		snmp_verbose(".%d", *(oid + i));
@@ -425,7 +431,7 @@ static int snmp_respond(uint8_t *buf)
 {
 	struct snmp_oid *oid = NULL;
 	uint8_t *newbuf = NULL;
-	uint8_t *new_oid;;
+	uint8_t *new_oid;
 	int i;
 	int8_t len;
 	uint8_t snmp_mode_get = 0;
@@ -465,7 +471,6 @@ static int snmp_respond(uint8_t *buf)
 			      || snmp_mode_set))
 				return snmp_prepare_error(buf,
 							SNMP_ERR_GENERR);
-			
 			break;
 		default:
 			if (buf[i] != match_array[i])
@@ -520,7 +525,7 @@ static int snmp_respond(uint8_t *buf)
 	if (!oid->oid_len) {
 		snmp_verbose("%s: OID not found! ", __func__);
 		print_oid_verbose(new_oid, incoming_oid_len);
-		snmp_verbose(" \n");
+		snmp_verbose("\n");
 		/* also for last GET_NEXT element */
 		return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
 	}
