@@ -130,12 +130,14 @@ static int set_p(uint8_t *buf, struct snmp_oid *obj);
 
 static uint8_t oid_wrpcVersionHwType[] =         {0x2B,6,1,4,1,96,101,1,1,1,0};
 static uint8_t oid_wrpcVersionSwVersion[] =      {0x2B,6,1,4,1,96,101,1,1,2,0};
+static uint8_t oid_wrpcVersionSwBuildBy[] =      {0x2B,6,1,4,1,96,101,1,1,3,0};
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
 static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcVersionHwType,      get_p,        NO_SET,   ASN_OCTET_STR, &snmp_hw_type),
 	OID_FIELD_VAR(   oid_wrpcVersionSwVersion,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_revision),
+	OID_FIELD_VAR(   oid_wrpcVersionSwBuildBy,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_by),
 
 	{ 0, }
 };
