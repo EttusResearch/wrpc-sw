@@ -88,6 +88,12 @@ static struct wrpc_socket __static_snmp_socket = {
 };
 static struct wrpc_socket *snmp_socket;
 
+static int get_pp(uint8_t *buf, struct snmp_oid *obj);
+static int get_p(uint8_t *buf, struct snmp_oid *obj);
+static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
+static int set_pp(uint8_t *buf, struct snmp_oid *obj);
+static int set_p(uint8_t *buf, struct snmp_oid *obj);
+
 static void snmp_init(void)
 {
 	/* Use UDP engine activated by function arguments  */
@@ -242,26 +248,6 @@ static int set_p(uint8_t *buf, struct snmp_oid *obj)
 	return set_value(buf, obj, obj->p + obj->offset);
 }
 
-static uint8_t oid_name[] = {0x2B,0x06,0x01,0x02,0x01,0x01,0x05,0x00};
-static uint8_t oid_tics[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x01,0x00};
-static uint8_t oid_date[] = {0x2B,0x06,0x01,0x02,0x01,0x19,0x01,0x02,0x00};
-static uint8_t oid_wrsPtpMode[] =         {0x2B,6,1,4,1,96,100,7,5,1, 5,1};
-static uint8_t oid_wrsPtpServoState[] =   {0x2B,6,1,4,1,96,100,7,5,1, 6,1};
-static uint8_t oid_wrsPtpServoStateN[] =  {0x2B,6,1,4,1,96,100,7,5,1, 7,1};
-static uint8_t oid_wrsPtpClockOffsetPsHR[] = {0x2B,6,1,4,1,96,100,7,5,1,11,1};
-static uint8_t oid_wrsPtpSkew[] =         {0x2B,6,1,4,1,96,100,7,5,1,12,1};
-static uint8_t oid_wrsPtpServoUpdates[] = {0x2B,6,1,4,1,96,100,7,5,1,15,1};
-static uint8_t oid_wrsPtpDeltaTxM[] =     {0x2B,6,1,4,1,96,100,7,5,1,16,1};
-static uint8_t oid_wrsPtpDeltaRxM[] =     {0x2B,6,1,4,1,96,100,7,5,1,17,1};
-static uint8_t oid_wrsPtpDeltaTxS[] =     {0x2B,6,1,4,1,96,100,7,5,1,18,1};
-static uint8_t oid_wrsPtpDeltaRxS[] =     {0x2B,6,1,4,1,96,100,7,5,1,19,1};
-static uint8_t oid_wrpcPtpRTTHR[]    =    {0x2B,6,1,4,1,96,101,1,1,0}; /* wrsPtpRTT is 64bit, use here saturated version */
-static uint8_t oid_wrpcPtpDeltaMs[] =     {0x2B,6,1,4,1,96,101,1,2,0};
-static uint8_t oid_wrpcPtpCurSetpoint[] = {0x2B,6,1,4,1,96,101,1,3,0};
-static uint8_t oid_wrpcNicTX[] =          {0x2B,6,1,4,1,96,101,2,1,0};
-static uint8_t oid_wrpcNicRX[] =          {0x2B,6,1,4,1,96,101,2,2,0};
-static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
-
 
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
@@ -296,25 +282,7 @@ static uint8_t oid_wrpcVersionSwVersion[] = {0x2B,6,1,4,1,96,101,3,1,0};
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
 static struct snmp_oid oid_array[] = {
-	OID_FIELD_VAR(   oid_name,                  get_p,         set_p,    ASN_OCTET_STR, &snmp_system_name),
-	OID_FIELD(oid_tics, get_tics, 0),
-	OID_FIELD(oid_date, get_date, 0),
-	OID_FIELD_VAR(   oid_wrsPtpMode,            get_p,         set_p,    ASN_INTEGER,   &ptp_mode),
-	OID_FIELD_STRUCT(oid_wrsPtpServoState,      get_pp,        NO_SET,   ASN_OCTET_STR, struct wr_servo_state, &wr_s_state, servo_state_name),
-	OID_FIELD_STRUCT(oid_wrsPtpServoStateN,     get_pp,        NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, state),
-	OID_FIELD_STRUCT(oid_wrsPtpClockOffsetPsHR, get_i32sat_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, offset), /* saturated */
-	OID_FIELD_STRUCT(oid_wrsPtpSkew,            get_i32sat_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, skew), /* saturated */
-	OID_FIELD_STRUCT(oid_wrsPtpServoUpdates,    get_pp,        NO_SET,   ASN_COUNTER,   struct wr_servo_state, &wr_s_state, update_count),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxM,        get_pp,        set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxM,        get_pp,        set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaTxS,        get_pp,        set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
-	OID_FIELD_STRUCT(oid_wrsPtpDeltaRxS,        get_pp,        set_pp,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
-	OID_FIELD_STRUCT(oid_wrpcPtpRTTHR,          get_i32sat_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, picos_mu), /* saturated */
-	OID_FIELD_STRUCT(oid_wrpcPtpDeltaMs,        get_i32sat_pp, NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_ms), /* raw value used to calculate wrsPtpLinkLength, original calculations uses float */
-	OID_FIELD_STRUCT(oid_wrpcPtpCurSetpoint,    get_pp,        NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, cur_setpoint),
-	OID_FIELD_STRUCT(oid_wrpcNicTX,             get_p,         NO_SET,   ASN_COUNTER,   struct wr_minic,       &minic,      tx_count),
-	OID_FIELD_STRUCT(oid_wrpcNicRX,             get_p,         NO_SET,   ASN_COUNTER,   struct wr_minic,       &minic,      rx_count),
-	OID_FIELD_VAR(   oid_wrpcVersionSwVersion,  get_pp,        NO_SET,   ASN_OCTET_STR, &build_revision),
+
 
 	{ 0, }
 };
