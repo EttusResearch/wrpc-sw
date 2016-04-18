@@ -62,6 +62,38 @@
 #define SNMP_SET_FUNCTION(X) .set = NULL
 #endif
 
+/* used to define write only OIDs */
+#define NO_SET NULL
+
+#define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
+	.oid_match = _oid, \
+	.oid_len = sizeof(_oid), \
+	.get = _getf, \
+	SNMP_SET_FUNCTION(_setf), \
+	.asn = _asn, \
+	.p = _pointer, \
+	.offset = offsetof(_type, _field), \
+	.data_size = sizeof(((_type *)0)->_field) \
+}
+
+#define OID_FIELD(_oid, _fname, _asn) { \
+	.oid_match = _oid, \
+	.oid_len = sizeof(_oid), \
+	.get = _fname, \
+	.asn = _asn, \
+}
+
+#define OID_FIELD_VAR(_oid, _getf, _setf, _asn, _pointer) { \
+	.oid_match = _oid, \
+	.oid_len = sizeof(_oid), \
+	.get = _getf, \
+	SNMP_SET_FUNCTION(_setf), \
+	.asn = _asn, \
+	.p = _pointer, \
+	.offset = 0, \
+	.data_size = sizeof(*_pointer) \
+}
+
 struct snmp_oid {
 	uint8_t *oid_match;
 	int (*get)(uint8_t *buf, struct snmp_oid *obj);
@@ -81,6 +113,7 @@ char snmp_system_name[SNMP_SYSTEM_NAME_LEN] = CONFIG_SNMP_SYSTEM_NAME;
 /* store SNMP version, not fully used yet */
 uint8_t snmp_version;
 
+
 static uint8_t __snmp_queue[256];
 static struct wrpc_socket __static_snmp_socket = {
 	.queue.buff = __snmp_queue,
@@ -93,6 +126,15 @@ static int get_p(uint8_t *buf, struct snmp_oid *obj);
 static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
+
+/* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
+	 OIDs */
+static struct snmp_oid oid_array[] = {
+
+
+	{ 0, }
+};
+
 
 static void snmp_init(void)
 {
@@ -248,44 +290,6 @@ static int set_p(uint8_t *buf, struct snmp_oid *obj)
 	return set_value(buf, obj, obj->p + obj->offset);
 }
 
-
-#define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
-	.oid_match = _oid, \
-	.oid_len = sizeof(_oid), \
-	.get = _getf, \
-	SNMP_SET_FUNCTION(_setf), \
-	.asn = _asn, \
-	.p = _pointer, \
-	.offset = offsetof(_type, _field), \
-	.data_size = sizeof(((_type *)0)->_field) \
-}
-
-#define OID_FIELD(_oid, _fname, _asn) { \
-	.oid_match = _oid, \
-	.oid_len = sizeof(_oid), \
-	.get = _fname, \
-	.asn = _asn, \
-}
-
-#define OID_FIELD_VAR(_oid, _getf, _setf, _asn, _pointer) { \
-	.oid_match = _oid, \
-	.oid_len = sizeof(_oid), \
-	.get = _getf, \
-	SNMP_SET_FUNCTION(_setf), \
-	.asn = _asn, \
-	.p = _pointer, \
-	.offset = 0, \
-	.data_size = sizeof(*_pointer) \
-}
-
-#define NO_SET NULL
-/* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
-	 OIDs */
-static struct snmp_oid oid_array[] = {
-
-
-	{ 0, }
-};
 
 /*
  * Perverse...  snmpwalk does getnext anyways.
