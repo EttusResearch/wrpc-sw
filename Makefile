@@ -110,6 +110,12 @@ OUTPUT-$(CONFIG_WR_SWITCH) = rt_cpu
 OUTPUT := $(OUTPUT-y)
 
 GIT_VER = $(shell git describe --always --dirty | sed  's;^wr-switch-sw-;;')
+GIT_USR = $(shell git config --get-all user.name)
+
+# if user.name is not available from git use user@hostname
+ifeq ($(GIT_USR),)
+GIT_USR = $(shell whoami)@$(shell hostname)
+endif
 
 all: tools $(OUTPUT).elf $(arch-files-y)
 
@@ -140,7 +146,7 @@ sdb-lib/libsdbfs.a:
 	$(MAKE) -C sdb-lib
 
 $(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
-	$(CC) $(CFLAGS) -D__GIT_VER__="\"$(GIT_VER)\"" -c revision.c
+	$(CC) $(CFLAGS) -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\"" -c revision.c
 	${CC} -o $@ revision.o config.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 	$(SIZE) $@

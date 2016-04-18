@@ -57,7 +57,7 @@
 #define ALIGN_STATE_WAIT_CLKIN 9
 #define ALIGN_STATE_WAIT_PLOCK 10
 
-#define SPLL_STATS_VER 2
+#define SPLL_STATS_VER 3
 
 /* info reported through .stat section */
 /* due to endiannes problem strings has to be 4 bytes alligned */
