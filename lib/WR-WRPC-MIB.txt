@@ -40,15 +40,15 @@ wrpcCore      OBJECT IDENTIFIER ::= { wrWrpcMIB 1 }
 --x wrpcCustom    OBJECT IDENTIFIER ::= { wrWrpcMIB 2 }
 
 -- ****************************************************************************
---x wrpcVersionGroup               OBJECT IDENTIFIER ::= { wrpcCore 1 }
+wrpcVersionGroup               OBJECT IDENTIFIER ::= { wrpcCore 1 }
 
---x wrpcVersionHwType              OBJECT-TYPE
---x     SYNTAX                     DisplayString (SIZE (0..31))
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x         "The hw type"
---x     ::= { wrpcVersionGroup 1 }
+wrpcVersionHwType              OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE (0..31))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+        "The hw type"
+    ::= { wrpcVersionGroup 1 }
 
 --x wrpcVersionSwVersion           OBJECT-TYPE
 --x     SYNTAX                     DisplayString (SIZE (0..31))

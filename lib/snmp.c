@@ -108,8 +108,8 @@ struct snmp_oid {
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
-#define SNMP_SYSTEM_NAME_LEN 32
-char snmp_system_name[SNMP_SYSTEM_NAME_LEN] = CONFIG_SNMP_SYSTEM_NAME;
+#define SNMP_HW_TYPE_LEN 32
+char snmp_hw_type[SNMP_HW_TYPE_LEN] = CONFIG_SNMP_HW_TYPE;
 /* store SNMP version, not fully used yet */
 uint8_t snmp_version;
 
@@ -127,10 +127,13 @@ static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
 
+
+static uint8_t oid_wrpcVersionHwType[] =         {0x2B,6,1,4,1,96,101,1,1,1,0};
+
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
 static struct snmp_oid oid_array[] = {
-
+	OID_FIELD_VAR(   oid_wrpcVersionHwType,      get_p,        NO_SET,   ASN_OCTET_STR, &snmp_hw_type),
 
 	{ 0, }
 };

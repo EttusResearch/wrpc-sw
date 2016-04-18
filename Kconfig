@@ -148,10 +148,10 @@ config SNMP_SET
        help
 	  This option enables support for SET requests for Mini SNMP responder
 
-config SNMP_SYSTEM_NAME
+config SNMP_HW_TYPE
 	depends on SNMP
-	default "wrc-3.0"
-	string "System's name to be returned by SNMP"
+	default "spec"
+	string "Hardware type reported by SNMP"
 
 config BUILD_INIT
 	depends on WR_NODE
