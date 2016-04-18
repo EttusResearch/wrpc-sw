@@ -65,6 +65,9 @@
 /* used to define write only OIDs */
 #define NO_SET NULL
 
+/* limit string len */
+#define MAX_OCTET_STR_LEN 32
+
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -124,9 +127,11 @@ static struct wrpc_socket __static_snmp_socket = {
 };
 static struct wrpc_socket *snmp_socket;
 
+static int get_value(uint8_t *buf, uint8_t asn, void *p);
 static int get_pp(uint8_t *buf, struct snmp_oid *obj);
 static int get_p(uint8_t *buf, struct snmp_oid *obj);
 static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
+static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
 
@@ -181,10 +186,10 @@ static int get_date(uint8_t *buf, struct snmp_oid *obj)
 	return 2 + buf[1];
 }
 
-#define MAX_OCTET_STR_LEN 32
 static int get_value(uint8_t *buf, uint8_t asn, void *p)
 {
 	uint32_t tmp;
+	uint64_t tmp_uint64;
 	uint8_t *oid_data = buf + 2;
 	uint8_t *len;
 
@@ -197,6 +202,14 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 	    memcpy(oid_data, &tmp, sizeof(tmp));
 	    *len = sizeof(tmp);
 	    snmp_verbose("%s: 0x%x\n", __func__, *(uint32_t *)p);
+	    break;
+	case ASN_COUNTER64:
+	    tmp_uint64 = *(uint64_t *)p;
+	    memcpy(oid_data, &tmp_uint64, sizeof(tmp_uint64));
+	    *len = sizeof(tmp_uint64);
+	    /* Our printf has disabled printing of 64bit values */
+	    snmp_verbose("%s: 64bit value 0x%08x|%08x\n", __func__,
+		     (uint32_t)(tmp_uint64 >> 32), (uint32_t)tmp_uint64);
 	    break;
 	case ASN_OCTET_STR:
 	    *len = strnlen((char *)p, MAX_OCTET_STR_LEN - 1);
@@ -229,7 +242,7 @@ static int get_i32sat(uint8_t *buf, uint8_t asn, void *p)
 	/* if we want to modify an object we need to do that on a copy,
 	 * otherwise pointers to the values will be overwritten */
 	tmp_int64 = *(int64_t *)p;
-	/* gcc doesn't support printing 64bit values */
+	/* Our printf has disabled printing of 64bit values */
 	snmp_verbose("%s: 64bit value 0x%08x|%08x\n", __func__,
 		     (int32_t)((tmp_int64) >> 32), (uint32_t)tmp_int64);
 	/* saturate int32 */
