@@ -110,6 +110,9 @@ extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
 #define SNMP_HW_TYPE_LEN 32
 char snmp_hw_type[SNMP_HW_TYPE_LEN] = CONFIG_SNMP_HW_TYPE;
+/* __DATE__ and __TIME__ is already stored in struct spll_stats stats, but
+ * redefining it here makes code smaller than concatenate existing one */
+static char *snmp_build_date = __DATE__ " " __TIME__;
 /* store SNMP version, not fully used yet */
 uint8_t snmp_version;
 
@@ -127,10 +130,10 @@ static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
 
-
 static uint8_t oid_wrpcVersionHwType[] =         {0x2B,6,1,4,1,96,101,1,1,1,0};
 static uint8_t oid_wrpcVersionSwVersion[] =      {0x2B,6,1,4,1,96,101,1,1,2,0};
 static uint8_t oid_wrpcVersionSwBuildBy[] =      {0x2B,6,1,4,1,96,101,1,1,3,0};
+static uint8_t oid_wrpcVersionSwBuildDate[] =    {0x2B,6,1,4,1,96,101,1,1,4,0};
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
@@ -138,6 +141,7 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcVersionHwType,      get_p,        NO_SET,   ASN_OCTET_STR, &snmp_hw_type),
 	OID_FIELD_VAR(   oid_wrpcVersionSwVersion,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_revision),
 	OID_FIELD_VAR(   oid_wrpcVersionSwBuildBy,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_by),
+	OID_FIELD_VAR(   oid_wrpcVersionSwBuildDate, get_pp,       NO_SET,   ASN_OCTET_STR, &snmp_build_date),
 
 	{ 0, }
 };

@@ -67,13 +67,13 @@ wrpcVersionSwBuildBy           OBJECT-TYPE
          'git config -get-all user.name' at build time"
     ::= { wrpcVersionGroup 3 }
 
---x wrpcVersionSwBuildDate         OBJECT-TYPE
---x     SYNTAX                     DisplayString (SIZE (0..31))
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x         "The build time and date of the software"
---x     ::= { wrpcVersionGroup 4 }
+wrpcVersionSwBuildDate         OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE (0..31))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+        "The build time and date of the software"
+    ::= { wrpcVersionGroup 4 }
 
 --x wrpcVersionGwVersion           OBJECT-TYPE
 --x     SYNTAX                     DisplayString (SIZE (0..31))
