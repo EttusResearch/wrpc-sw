@@ -133,31 +133,31 @@ wrpcVersionSwBuildDate         OBJECT-TYPE
 
 
 -- ****************************************************************************
---x wrpcTimeGroup                  OBJECT IDENTIFIER ::= { wrpcCore 2 }
+wrpcTimeGroup                  OBJECT IDENTIFIER ::= { wrpcCore 2 }
 
---x wrpcDateTAI                    OBJECT-TYPE
---x     SYNTAX                     Counter64 ---- actually integer, but it is unsigned so ok
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x         "The current time, in TAI seconds"
---x     ::= { wrpcTimeGroup 1 }
+wrpcDateTAI                    OBJECT-TYPE
+    SYNTAX                     Counter64
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+        "The current time, in TAI seconds"
+    ::= { wrpcTimeGroup 1 }
 
---x wrpcDateTAIString              OBJECT-TYPE
---x     SYNTAX                     DisplayString (SIZE (0..31))
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x         "The current TAI time, printed as %y-%m-%d-%H:%M:%S (no time zone)"
---x     ::= { wrpcTimeGroup 2 }
+wrpcDateTAIString              OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE (0..31))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+        "The current TAI time, printed as %y-%m-%d-%H:%M:%S (no time zone)"
+    ::= { wrpcTimeGroup 2 }
 
---x wrpcSystemUptime               OBJECT-TYPE
---x     SYNTAX                     DisplayString (SIZE (0..32))
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x         "The current TAI time, printed as %y-%m-%d-%H:%M:%S (no time zone)"
---x     ::= { wrpcTimeGroup 3 }
+wrpcSystemUptime               OBJECT-TYPE
+    SYNTAX                     Timetics
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+        "System uptime in hundreds of second"
+    ::= { wrpcTimeGroup 3 }
 
 -- ****************************************************************************
 --x wrpcTemperatureTable           OBJECT-TYPE

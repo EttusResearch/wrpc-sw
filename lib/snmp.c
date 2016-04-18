@@ -68,6 +68,16 @@
 /* limit string len */
 #define MAX_OCTET_STR_LEN 32
 
+/* defines used by get_time function */
+#define TIME_STRING 1
+#define TIME_NUM 0
+#define TYPE_MASK 1
+#define UPTIME_MASK 2
+#define TAI_MASK 4
+#define TAI_STRING (void *) (TAI_MASK | TIME_STRING)
+#define TAI_NUM (void *) (TAI_MASK | TIME_NUM)
+#define UPTIME_NUM (void *) (UPTIME_MASK | TIME_NUM)
+
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -131,14 +141,19 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p);
 static int get_pp(uint8_t *buf, struct snmp_oid *obj);
 static int get_p(uint8_t *buf, struct snmp_oid *obj);
 static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
+static int get_time(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
+
 
 static uint8_t oid_wrpcVersionHwType[] =         {0x2B,6,1,4,1,96,101,1,1,1,0};
 static uint8_t oid_wrpcVersionSwVersion[] =      {0x2B,6,1,4,1,96,101,1,1,2,0};
 static uint8_t oid_wrpcVersionSwBuildBy[] =      {0x2B,6,1,4,1,96,101,1,1,3,0};
 static uint8_t oid_wrpcVersionSwBuildDate[] =    {0x2B,6,1,4,1,96,101,1,1,4,0};
+static uint8_t oid_wrpcDateTAI[] =               {0x2B,6,1,4,1,96,101,1,2,1,0};
+static uint8_t oid_wrpcDateTAIString[] =         {0x2B,6,1,4,1,96,101,1,2,2,0};
+static uint8_t oid_wrpcSystemUptime[] =          {0x2B,6,1,4,1,96,101,1,2,3,0};
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
@@ -147,6 +162,9 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcVersionSwVersion,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_revision),
 	OID_FIELD_VAR(   oid_wrpcVersionSwBuildBy,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_by),
 	OID_FIELD_VAR(   oid_wrpcVersionSwBuildDate, get_pp,       NO_SET,   ASN_OCTET_STR, &snmp_build_date),
+	OID_FIELD_VAR(   oid_wrpcDateTAI,            get_time,     NO_SET,   ASN_COUNTER64, TAI_NUM),
+	OID_FIELD_VAR(   oid_wrpcDateTAIString,      get_time,     NO_SET,   ASN_OCTET_STR, TAI_STRING),
+	OID_FIELD_VAR(   oid_wrpcSystemUptime,       get_time,     NO_SET,   ASN_TIMETICKS, UPTIME_NUM),
 
 	{ 0, }
 };
@@ -172,6 +190,7 @@ static int get_tics(uint8_t *buf, struct snmp_oid *obj)
 	buf[0] = ASN_TIMETICKS;
 	return 2 + sizeof(tics);
 }
+
 static int get_date(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint64_t secs;
@@ -184,6 +203,29 @@ static int get_date(uint8_t *buf, struct snmp_oid *obj)
 	buf[1] = 8; /* size is hardwired. See mib document or prev. commit */
 	buf[0] = ASN_OCTET_STR;
 	return 2 + buf[1];
+}
+
+static int get_time(uint8_t *buf, struct snmp_oid *obj)
+{
+	uint64_t secs;
+	uint32_t tics;
+	char *datestr;
+	int req = (int)obj->p;
+
+	if (req & UPTIME_MASK) {
+		/* It will overflow after ~49 days. The counter in FPGA is
+		 * implemented as 32bit. */
+		tics = timer_get_tics() / 10;
+		return get_value(buf, obj->asn, &tics);
+	} else if (req & TAI_MASK) {
+		shw_pps_gen_get_time(&secs, NULL);
+	}
+
+	if ((req & TYPE_MASK) == TIME_STRING) {
+		datestr = format_time(secs, TIME_FORMAT_SORTED);
+		return get_value(buf, obj->asn, datestr);
+	} else /* TAI_NUM */
+		return get_value(buf, obj->asn, &secs);
 }
 
 static int get_value(uint8_t *buf, uint8_t asn, void *p)
