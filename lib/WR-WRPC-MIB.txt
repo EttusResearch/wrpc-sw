@@ -210,105 +210,105 @@ wrpcSystemUptime               OBJECT-TYPE
 
 
 -- ****************************************************************************
---x wrpcSpllStatusGroup            OBJECT IDENTIFIER ::= { wrpcCore 4 }
+wrpcSpllStatusGroup            OBJECT IDENTIFIER ::= { wrpcCore 4 }
 
---x wrpcSpllMode                   OBJECT-TYPE
---x     SYNTAX INTEGER {
---x                 na(0),
---x                 grandmaster(1),
---x                 master(2),
---x                 slave(3)
---x     }
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Mode of Soft PLL (values taken from softpll_ng.h)"
---x     ::= { wrpcSpllStatusGroup 1 }
+wrpcSpllMode                   OBJECT-TYPE
+    SYNTAX INTEGER {
+                na(0),
+                grandmaster(1),
+                master(2),
+                slave(3)
+    }
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Mode of Soft PLL (values taken from softpll_ng.h)"
+    ::= { wrpcSpllStatusGroup 1 }
 
---x wrpcSpllIrqCnt                 OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Number of interrupts in Soft PLL"
---x     ::= { wrpcSpllStatusGroup 2 }
+wrpcSpllIrqCnt                 OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of interrupts in Soft PLL"
+    ::= { wrpcSpllStatusGroup 2 }
 
---x wrpcSpllSeqState               OBJECT-TYPE
---x     SYNTAX INTEGER {
---x                 startExt(1),
---x                 waitExt(2),
---x                 startHelper(3),
---x                 waitHelper(4),
---x                 startMain(5),
---x                 waitMain(6),
---x                 disabled(7),
---x                 ready(8),
---x                 clearDacs(9),
---x                 waitClearDacs(10)
---x     }
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Sequence state of Soft PLL (values taken from file softpll_ng.c in wrpc-sw repo)"
---x     ::= { wrpcSpllStatusGroup 3 }
+wrpcSpllSeqState               OBJECT-TYPE
+    SYNTAX INTEGER {
+                startExt(1),
+                waitExt(2),
+                startHelper(3),
+                waitHelper(4),
+                startMain(5),
+                waitMain(6),
+                disabled(7),
+                ready(8),
+                clearDacs(9),
+                waitClearDacs(10)
+    }
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Sequence state of Soft PLL (values taken from file softpll_ng.c in wrpc-sw repo)"
+    ::= { wrpcSpllStatusGroup 3 }
 
---x wrpcSpllAlignState             OBJECT-TYPE
---x     SYNTAX INTEGER {
---x                 extOff(0),
---x                 start(1),
---x                 initCsync(2),
---x                 waitCsync(3),
---x                 waitSample(4),
---x                 compensateDelay(5),
---x                 locked(6),
---x                 startAlignment(7),
---x                 startMain(8)
---x     }
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Align state of Soft PLL (values taken from file spll_external.c in wrpc-sw repo)"
---x     ::= { wrpcSpllStatusGroup 4 }
+wrpcSpllAlignState             OBJECT-TYPE
+    SYNTAX INTEGER {
+                extOff(0),
+                start(1),
+                initCsync(2),
+                waitCsync(3),
+                waitSample(4),
+                compensateDelay(5),
+                locked(6),
+                startAlignment(7),
+                startMain(8)
+    }
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Align state of Soft PLL (values taken from file spll_external.c in wrpc-sw repo)"
+    ::= { wrpcSpllStatusGroup 4 }
 
---x wrpcSpllHlock                  OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "HLock in Soft PLL"
---x     ::= { wrpcSpllStatusGroup 5 }
+wrpcSpllHlock                  OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "HLock in Soft PLL"
+    ::= { wrpcSpllStatusGroup 5 }
 
---x wrpcSpllMlock                  OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "MLock at Soft PLL"
---x     ::= { wrpcSpllStatusGroup 6 }
+wrpcSpllMlock                  OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MLock at Soft PLL"
+    ::= { wrpcSpllStatusGroup 6 }
 
---x wrpcSpllHY                     OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "H_y at Soft PLL"
---x     ::= { wrpcSpllStatusGroup 7 }
+wrpcSpllHY                     OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "H_y at Soft PLL"
+    ::= { wrpcSpllStatusGroup 7 }
 
---x wrpcSpllMY                     OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "M_y at Soft PLL"
---x     ::= { wrpcSpllStatusGroup 8 }
+wrpcSpllMY                     OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "M_y at Soft PLL"
+    ::= { wrpcSpllStatusGroup 8 }
 
---x wrpcSpllDelCnt                 OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Del counter at Soft PLL"
---x     ::= { wrpcSpllStatusGroup 9 }
+wrpcSpllDelCnt                 OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Del counter at Soft PLL"
+    ::= { wrpcSpllStatusGroup 9 }
 
 -- ****************************************************************************
 

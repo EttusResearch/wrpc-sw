@@ -19,6 +19,7 @@
 #include "hw/memlayout.h"
 #include "hw/etherbone-config.h"
 #include "revision.h"
+#include "softpll_ng.h"
 
 #ifndef htons
 #define htons(x) x
@@ -154,6 +155,15 @@ static uint8_t oid_wrpcVersionSwBuildDate[] =    {0x2B,6,1,4,1,96,101,1,1,4,0};
 static uint8_t oid_wrpcDateTAI[] =               {0x2B,6,1,4,1,96,101,1,2,1,0};
 static uint8_t oid_wrpcDateTAIString[] =         {0x2B,6,1,4,1,96,101,1,2,2,0};
 static uint8_t oid_wrpcSystemUptime[] =          {0x2B,6,1,4,1,96,101,1,2,3,0};
+static uint8_t oid_wrpcSpllMode[] =              {0x2B,6,1,4,1,96,101,1,4,1,0};
+static uint8_t oid_wrpcSpllIrqCnt[] =            {0x2B,6,1,4,1,96,101,1,4,2,0};
+static uint8_t oid_wrpcSpllSeqState[] =          {0x2B,6,1,4,1,96,101,1,4,3,0};
+static uint8_t oid_wrpcSpllAlignState[] =        {0x2B,6,1,4,1,96,101,1,4,4,0};
+static uint8_t oid_wrpcSpllHlock[] =             {0x2B,6,1,4,1,96,101,1,4,5,0};
+static uint8_t oid_wrpcSpllMlock[] =             {0x2B,6,1,4,1,96,101,1,4,6,0};
+static uint8_t oid_wrpcSpllHY[] =                {0x2B,6,1,4,1,96,101,1,4,7,0};
+static uint8_t oid_wrpcSpllMY[] =                {0x2B,6,1,4,1,96,101,1,4,8,0};
+static uint8_t oid_wrpcSpllDelCnt[] =            {0x2B,6,1,4,1,96,101,1,4,9,0};
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
@@ -165,6 +175,15 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcDateTAI,            get_time,     NO_SET,   ASN_COUNTER64, TAI_NUM),
 	OID_FIELD_VAR(   oid_wrpcDateTAIString,      get_time,     NO_SET,   ASN_OCTET_STR, TAI_STRING),
 	OID_FIELD_VAR(   oid_wrpcSystemUptime,       get_time,     NO_SET,   ASN_TIMETICKS, UPTIME_NUM),
+	OID_FIELD_VAR(   oid_wrpcSpllMode,           get_p,        NO_SET,   ASN_INTEGER,   &stats.mode),
+	OID_FIELD_VAR(   oid_wrpcSpllIrqCnt,         get_p,        NO_SET,   ASN_COUNTER,   &stats.irq_cnt),
+	OID_FIELD_VAR(   oid_wrpcSpllSeqState,       get_p,        NO_SET,   ASN_INTEGER,   &stats.seq_state),
+	OID_FIELD_VAR(   oid_wrpcSpllAlignState,     get_p,        NO_SET,   ASN_INTEGER,   &stats.align_state),
+	OID_FIELD_VAR(   oid_wrpcSpllHlock,          get_p,        NO_SET,   ASN_COUNTER,   &stats.H_lock),
+	OID_FIELD_VAR(   oid_wrpcSpllMlock,          get_p,        NO_SET,   ASN_COUNTER,   &stats.M_lock),
+	OID_FIELD_VAR(   oid_wrpcSpllHY,             get_p,        NO_SET,   ASN_INTEGER,   &stats.H_y),
+	OID_FIELD_VAR(   oid_wrpcSpllMY,             get_p,        NO_SET,   ASN_INTEGER,   &stats.M_y),
+	OID_FIELD_VAR(   oid_wrpcSpllDelCnt,         get_p,        NO_SET,   ASN_COUNTER,   &stats.del_cnt),
 
 	{ 0, }
 };
