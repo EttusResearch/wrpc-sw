@@ -625,20 +625,19 @@ int spll_update()
 	}
 	ret += spll_update_aux_clocks();
 
-	/* currently we have statistics only in the switch */
-	if (is_wr_switch) {
-		stats.sequence++;
-		stats.mode  = softpll.mode;
-		stats.irq_cnt = softpll.irq_count;
-		stats.seq_state = softpll.seq_state;
-		stats.align_state = softpll.ext.align_state;
-		stats.H_lock = softpll.helper.ld.locked;
-		stats.M_lock = softpll.mpll.ld.locked;
-		stats.H_y = softpll.helper.pi.y;
-		stats.M_y = softpll.mpll.pi.y;
-		stats.del_cnt = softpll.delock_count;
-		stats.sequence++;
-	}
+	/* store statistics */
+	stats.sequence++;
+	stats.mode  = softpll.mode;
+	stats.irq_cnt = softpll.irq_count;
+	stats.seq_state = softpll.seq_state;
+	stats.align_state = softpll.ext.align_state;
+	stats.H_lock = softpll.helper.ld.locked;
+	stats.M_lock = softpll.mpll.ld.locked;
+	stats.H_y = softpll.helper.pi.y;
+	stats.M_y = softpll.mpll.pi.y;
+	stats.del_cnt = softpll.delock_count;
+	stats.sequence++;
+
 	return ret != 0;
 }
 
