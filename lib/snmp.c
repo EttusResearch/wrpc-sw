@@ -198,6 +198,7 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 	switch (asn) {
 	case ASN_COUNTER:
 	case ASN_INTEGER:
+	case ASN_TIMETICKS:
 	    tmp = htonl(*(uint32_t *)p);
 	    memcpy(oid_data, &tmp, sizeof(tmp));
 	    *len = sizeof(tmp);
