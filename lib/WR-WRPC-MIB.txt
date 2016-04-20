@@ -581,47 +581,55 @@ wrpcPtpAlpha                   OBJECT-TYPE
 
 
 -- ****************************************************************************
---x wrpcPortGroup            OBJECT IDENTIFIER ::= { wrpcCore 7 }
+wrpcPortGroup            OBJECT IDENTIFIER ::= { wrpcCore 7 }
 
---x wrpcPortLinkStatus             OBJECT-TYPE
---x     SYNTAX                     INTEGER {
---x                                    na(0),
---x                                    down(1),
---x                                    up(2)
---x     }
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Whether the link is up or down"
---x     ::= { wrpcPortGroup 1 }
+wrpcPortLinkStatus             OBJECT-TYPE
+    SYNTAX                     INTEGER {
+                                   na(0),
+                                   down(1),
+                                   up(2)
+    }
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Whether the link is up or down"
+    ::= { wrpcPortGroup 1 }
 
---x wrpcPortSfpInDB                OBJECT-TYPE
---x     SYNTAX                     INTEGER {
---x                                    na(0),
---x                                    notInDataBase(1),
---x                                    inDataBase(2)
---x                                    }
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Whether the SFP is in data base or not"
---x     ::= { wrpcPortGroup 2 }
+wrpcPortSfpPn                  OBJECT-TYPE
+    SYNTAX                     OCTET STRING (SIZE(16))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "SFP product number identifying matched SFP."
+    ::= { wrpcPortGroup 2 }
 
---x wrpcPortInternalTx             OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "RX ptp packets"
---x     ::= { wrpcPortGroup 3 }
+wrpcPortSfpInDB                OBJECT-TYPE
+    SYNTAX                     INTEGER {
+                                   na(0),
+                                   notInDataBase(1),
+                                   inDataBase(2)
+                                   }
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Whether the SFP is in data base or not"
+    ::= { wrpcPortGroup 3 }
 
---x wrpcPortInternalRx             OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "TX ptp packets"
---x     ::= { wrpcPortGroup 4 }
+wrpcPortInternalTx             OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "RX ptp packets"
+    ::= { wrpcPortGroup 4 }
+
+wrpcPortInternalRx             OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "TX ptp packets"
+    ::= { wrpcPortGroup 5 }
 
 -- ****************************************************************************
 

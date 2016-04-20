@@ -20,6 +20,7 @@
 #include "hw/etherbone-config.h"
 #include "revision.h"
 #include "softpll_ng.h"
+#include "sfp.h"
 
 #ifndef htons
 #define htons(x) x
@@ -83,6 +84,9 @@
 #define SERVO_UPDATE_TIME (void *) 1
 #define SERVO_ASYMMETRY (void *) 2
 
+/* defines used by get_port function */
+#define PORT_LINK_STATUS (void *) 1
+
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -126,6 +130,7 @@ struct snmp_oid {
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
+
 #define SNMP_HW_TYPE_LEN 32
 char snmp_hw_type[SNMP_HW_TYPE_LEN] = CONFIG_SNMP_HW_TYPE;
 /* __DATE__ and __TIME__ is already stored in struct spll_stats stats, but
@@ -149,6 +154,7 @@ static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
 static int get_i32sat_pp(uint8_t *buf, struct snmp_oid *obj);
 static int get_time(uint8_t *buf, struct snmp_oid *obj);
 static int get_servo(uint8_t *buf, struct snmp_oid *obj);
+static int get_port(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
@@ -195,6 +201,13 @@ static uint8_t oid_wrpcPtpTX[] =                 {0x2B,6,1,4,1,96,101,1,5,23,0};
 static uint8_t oid_wrpcPtpRX[] =                 {0x2B,6,1,4,1,96,101,1,5,24,0};
 static uint8_t oid_wrpcPtpAlpha[] =              {0x2B,6,1,4,1,96,101,1,5,26,0};
 
+/* wrpcPortGroup */
+static uint8_t oid_wrpcPortLinkStatus[] =        {0x2B,6,1,4,1,96,101,1,7,1,0};
+static uint8_t oid_wrpcPortSfpPn[] =             {0x2B,6,1,4,1,96,101,1,7,2,0};
+static uint8_t oid_wrpcPortSfpInDB[] =           {0x2B,6,1,4,1,96,101,1,7,3,0};
+static uint8_t oid_wrpcPortInternalTX[] =        {0x2B,6,1,4,1,96,101,1,7,4,0};
+static uint8_t oid_wrpcPortInternalRX[] =        {0x2B,6,1,4,1,96,101,1,7,5,0};
+
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
@@ -239,6 +252,13 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcPtpTX,              get_p,        NO_SET,   ASN_COUNTER,   &ppi_static.ptp_tx_count),
 	OID_FIELD_VAR(   oid_wrpcPtpRX,              get_p,        NO_SET,   ASN_COUNTER,   &ppi_static.ptp_rx_count),
 	OID_FIELD_STRUCT(oid_wrpcPtpAlpha,           get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, fiber_fix_alpha),
+
+/* wrpcPortGroup */
+	OID_FIELD_VAR(   oid_wrpcPortLinkStatus,     get_port,     NO_SET,   ASN_INTEGER,   PORT_LINK_STATUS),
+	OID_FIELD_VAR(   oid_wrpcPortSfpPn,          get_p,        NO_SET,   ASN_OCTET_STR, &sfp_pn),
+	OID_FIELD_VAR(   oid_wrpcPortSfpInDB,        get_p,        NO_SET,   ASN_INTEGER,   &sfp_in_db),
+	OID_FIELD_VAR(   oid_wrpcPortInternalTX,     get_p,        NO_SET,   ASN_COUNTER,   &minic.tx_count),
+	OID_FIELD_VAR(   oid_wrpcPortInternalRX,     get_p,        NO_SET,   ASN_COUNTER,   &minic.rx_count),
 
 	{ 0, }
 };
@@ -292,6 +312,21 @@ static int get_servo(uint8_t *buf, struct snmp_oid *obj)
 					1000000000LL
 				+ wr_s_state->update_time.nanoseconds;
 		return get_value(buf, obj->asn, &tmp_uint64);
+	default:
+		break;
+	}
+	return -1;
+}
+
+static int get_port(uint8_t *buf, struct snmp_oid *obj)
+{
+	int32_t tmp_int32;
+
+	switch ((int) obj->p) {
+	case (int)PORT_LINK_STATUS:
+		/* overkill, since we need the link to be up to use SNMP */
+		tmp_int32 = 1 + ep_link_up(NULL);
+		return get_value(buf, obj->asn, &tmp_int32);
 	default:
 		break;
 	}
