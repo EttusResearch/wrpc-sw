@@ -10,7 +10,10 @@
 #include <stdint.h>
 
 #define SFP_PN_LEN 16
+#define SFP_NOT_MATCHED 1
+#define SFP_MATCHED 2
 
+extern int32_t sfp_in_db;
 extern int32_t sfp_alpha;
 extern int32_t sfp_deltaTx;
 extern int32_t sfp_deltaRx;

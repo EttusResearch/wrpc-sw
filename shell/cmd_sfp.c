@@ -106,8 +106,11 @@ static int cmd_sfp(const char *args[])
 			sfp_deltaTx = sfp.dTx;
 			sfp_deltaRx = sfp.dRx;
 			sfp_alpha = sfp.alpha;
-		} else
+			sfp_in_db = SFP_MATCHED;
+		} else {
 			pp_printf("Could not match to DB\n");
+			sfp_in_db = SFP_NOT_MATCHED;
+		}
 		return 0;
 	} else if (args[0] && !strcasecmp(args[0], "ena")) {
 		if(!args[1])
