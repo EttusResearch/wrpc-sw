@@ -79,6 +79,10 @@
 #define TAI_NUM (void *) (TAI_MASK | TIME_NUM)
 #define UPTIME_NUM (void *) (UPTIME_MASK | TIME_NUM)
 
+/* defines used by get_servo function */
+#define SERVO_UPDATE_TIME (void *) 1
+#define SERVO_ASYMMETRY (void *) 2
+
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -142,19 +146,26 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p);
 static int get_pp(uint8_t *buf, struct snmp_oid *obj);
 static int get_p(uint8_t *buf, struct snmp_oid *obj);
 static int get_i32sat(uint8_t *buf, uint8_t asn, void *p);
+static int get_i32sat_pp(uint8_t *buf, struct snmp_oid *obj);
 static int get_time(uint8_t *buf, struct snmp_oid *obj);
+static int get_servo(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
 
 
+/* wrpcVersionGroup */
 static uint8_t oid_wrpcVersionHwType[] =         {0x2B,6,1,4,1,96,101,1,1,1,0};
 static uint8_t oid_wrpcVersionSwVersion[] =      {0x2B,6,1,4,1,96,101,1,1,2,0};
 static uint8_t oid_wrpcVersionSwBuildBy[] =      {0x2B,6,1,4,1,96,101,1,1,3,0};
 static uint8_t oid_wrpcVersionSwBuildDate[] =    {0x2B,6,1,4,1,96,101,1,1,4,0};
+
+/* wrpcTimeGroup */
 static uint8_t oid_wrpcDateTAI[] =               {0x2B,6,1,4,1,96,101,1,2,1,0};
 static uint8_t oid_wrpcDateTAIString[] =         {0x2B,6,1,4,1,96,101,1,2,2,0};
 static uint8_t oid_wrpcSystemUptime[] =          {0x2B,6,1,4,1,96,101,1,2,3,0};
+
+/* wrpcSpllStatusGroup */
 static uint8_t oid_wrpcSpllMode[] =              {0x2B,6,1,4,1,96,101,1,4,1,0};
 static uint8_t oid_wrpcSpllIrqCnt[] =            {0x2B,6,1,4,1,96,101,1,4,2,0};
 static uint8_t oid_wrpcSpllSeqState[] =          {0x2B,6,1,4,1,96,101,1,4,3,0};
@@ -165,16 +176,41 @@ static uint8_t oid_wrpcSpllHY[] =                {0x2B,6,1,4,1,96,101,1,4,7,0};
 static uint8_t oid_wrpcSpllMY[] =                {0x2B,6,1,4,1,96,101,1,4,8,0};
 static uint8_t oid_wrpcSpllDelCnt[] =            {0x2B,6,1,4,1,96,101,1,4,9,0};
 
+/* wrpcPtpGroup */
+static uint8_t oid_wrpcPtpServoStateN[] =        {0x2B,6,1,4,1,96,101,1,5, 5,0};
+static uint8_t oid_wrpcPtpClockOffsetPsHR[] =    {0x2B,6,1,4,1,96,101,1,5, 8,0};
+static uint8_t oid_wrpcPtpSkew[] =               {0x2B,6,1,4,1,96,101,1,5, 9,0};
+static uint8_t oid_wrpcPtpRTT[] =                {0x2B,6,1,4,1,96,101,1,5,10,0};
+static uint8_t oid_wrpcPtpServoUpdates[] =       {0x2B,6,1,4,1,96,101,1,5,12,0};
+static uint8_t oid_wrpcPtpServoUpdateTime[] =    {0x2B,6,1,4,1,96,101,1,5,13,0};
+static uint8_t oid_wrpcPtpDeltaTxM[] =           {0x2B,6,1,4,1,96,101,1,5,14,0};
+static uint8_t oid_wrpcPtpDeltaRxM[] =           {0x2B,6,1,4,1,96,101,1,5,15,0};
+static uint8_t oid_wrpcPtpDeltaTxS[] =           {0x2B,6,1,4,1,96,101,1,5,16,0};
+static uint8_t oid_wrpcPtpDeltaRxS[] =           {0x2B,6,1,4,1,96,101,1,5,17,0};
+static uint8_t oid_wrpcPtpServoStateErrCnt[] =   {0x2B,6,1,4,1,96,101,1,5,18,0};
+static uint8_t oid_wrpcPtpClockOffsetErrCnt[] =  {0x2B,6,1,4,1,96,101,1,5,19,0};
+static uint8_t oid_wrpcPtpRTTErrCnt[] =          {0x2B,6,1,4,1,96,101,1,5,20,0};
+static uint8_t oid_wrpcPtpAsymmetry[] =          {0x2B,6,1,4,1,96,101,1,5,22,0};
+static uint8_t oid_wrpcPtpTX[] =                 {0x2B,6,1,4,1,96,101,1,5,23,0};
+static uint8_t oid_wrpcPtpRX[] =                 {0x2B,6,1,4,1,96,101,1,5,24,0};
+static uint8_t oid_wrpcPtpAlpha[] =              {0x2B,6,1,4,1,96,101,1,5,26,0};
+
+
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
 static struct snmp_oid oid_array[] = {
+/* wrpcVersionGroup */
 	OID_FIELD_VAR(   oid_wrpcVersionHwType,      get_p,        NO_SET,   ASN_OCTET_STR, &snmp_hw_type),
 	OID_FIELD_VAR(   oid_wrpcVersionSwVersion,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_revision),
 	OID_FIELD_VAR(   oid_wrpcVersionSwBuildBy,   get_pp,       NO_SET,   ASN_OCTET_STR, &build_by),
 	OID_FIELD_VAR(   oid_wrpcVersionSwBuildDate, get_pp,       NO_SET,   ASN_OCTET_STR, &snmp_build_date),
+
+/* wrpcTimeGroup */
 	OID_FIELD_VAR(   oid_wrpcDateTAI,            get_time,     NO_SET,   ASN_COUNTER64, TAI_NUM),
 	OID_FIELD_VAR(   oid_wrpcDateTAIString,      get_time,     NO_SET,   ASN_OCTET_STR, TAI_STRING),
 	OID_FIELD_VAR(   oid_wrpcSystemUptime,       get_time,     NO_SET,   ASN_TIMETICKS, UPTIME_NUM),
+
+/* wrpcSpllStatusGroup */
 	OID_FIELD_VAR(   oid_wrpcSpllMode,           get_p,        NO_SET,   ASN_INTEGER,   &stats.mode),
 	OID_FIELD_VAR(   oid_wrpcSpllIrqCnt,         get_p,        NO_SET,   ASN_COUNTER,   &stats.irq_cnt),
 	OID_FIELD_VAR(   oid_wrpcSpllSeqState,       get_p,        NO_SET,   ASN_INTEGER,   &stats.seq_state),
@@ -184,6 +220,25 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcSpllHY,             get_p,        NO_SET,   ASN_INTEGER,   &stats.H_y),
 	OID_FIELD_VAR(   oid_wrpcSpllMY,             get_p,        NO_SET,   ASN_INTEGER,   &stats.M_y),
 	OID_FIELD_VAR(   oid_wrpcSpllDelCnt,         get_p,        NO_SET,   ASN_COUNTER,   &stats.del_cnt),
+
+/* wrpcPtpGroup */
+	OID_FIELD_STRUCT(oid_wrpcPtpServoStateN,     get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, state),
+	OID_FIELD_STRUCT(oid_wrpcPtpClockOffsetPsHR, get_i32sat_pp,NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, offset),
+	OID_FIELD_STRUCT(oid_wrpcPtpSkew,            get_i32sat_pp,NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, skew),
+	OID_FIELD_STRUCT(oid_wrpcPtpRTT,             get_pp,       NO_SET,   ASN_COUNTER64, struct wr_servo_state, &wr_s_state, picos_mu),
+	OID_FIELD_STRUCT(oid_wrpcPtpServoUpdates,    get_pp,       NO_SET,   ASN_COUNTER,   struct wr_servo_state, &wr_s_state, update_count),
+	OID_FIELD_VAR(   oid_wrpcPtpServoUpdateTime, get_servo,    NO_SET,   ASN_COUNTER64, SERVO_UPDATE_TIME),
+	OID_FIELD_STRUCT(oid_wrpcPtpDeltaTxM,        get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_m),
+	OID_FIELD_STRUCT(oid_wrpcPtpDeltaRxM,        get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_m),
+	OID_FIELD_STRUCT(oid_wrpcPtpDeltaTxS,        get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_tx_s),
+	OID_FIELD_STRUCT(oid_wrpcPtpDeltaRxS,        get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, delta_rx_s),
+	OID_FIELD_STRUCT(oid_wrpcPtpServoStateErrCnt,get_pp,       NO_SET,   ASN_COUNTER,   struct wr_servo_state, &wr_s_state, n_err_state),
+	OID_FIELD_STRUCT(oid_wrpcPtpClockOffsetErrCnt,get_pp,      NO_SET,   ASN_COUNTER,   struct wr_servo_state, &wr_s_state, n_err_offset),
+	OID_FIELD_STRUCT(oid_wrpcPtpRTTErrCnt,       get_pp,       NO_SET,   ASN_COUNTER,   struct wr_servo_state, &wr_s_state, n_err_delta_rtt),
+	OID_FIELD_VAR(   oid_wrpcPtpAsymmetry,       get_servo,    NO_SET,   ASN_COUNTER64, SERVO_ASYMMETRY),
+	OID_FIELD_VAR(   oid_wrpcPtpTX,              get_p,        NO_SET,   ASN_COUNTER,   &ppi_static.ptp_tx_count),
+	OID_FIELD_VAR(   oid_wrpcPtpRX,              get_p,        NO_SET,   ASN_COUNTER,   &ppi_static.ptp_rx_count),
+	OID_FIELD_STRUCT(oid_wrpcPtpAlpha,           get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, fiber_fix_alpha),
 
 	{ 0, }
 };
@@ -222,6 +277,25 @@ static int get_date(uint8_t *buf, struct snmp_oid *obj)
 	buf[1] = 8; /* size is hardwired. See mib document or prev. commit */
 	buf[0] = ASN_OCTET_STR;
 	return 2 + buf[1];
+}
+
+static int get_servo(uint8_t *buf, struct snmp_oid *obj)
+{
+	uint64_t tmp_uint64;
+
+	switch ((int) obj->p) {
+	case (int)SERVO_ASYMMETRY:
+		tmp_uint64 = wr_s_state->picos_mu - 2LL * wr_s_state->delta_ms;
+		return get_value(buf, obj->asn, &tmp_uint64);
+	case (int)SERVO_UPDATE_TIME:
+		tmp_uint64 = ((uint64_t) wr_s_state->update_time.seconds) *
+					1000000000LL
+				+ wr_s_state->update_time.nanoseconds;
+		return get_value(buf, obj->asn, &tmp_uint64);
+	default:
+		break;
+	}
+	return -1;
 }
 
 static int get_time(uint8_t *buf, struct snmp_oid *obj)

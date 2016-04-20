@@ -312,7 +312,7 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 
 -- ****************************************************************************
 
---x wrpcPtpGroup                   OBJECT IDENTIFIER ::= { wrpcCore 5 }
+wrpcPtpGroup                   OBJECT IDENTIFIER ::= { wrpcCore 5 }
 
 --x wrpcPtpGrandmasterID           OBJECT-TYPE
 --x     SYNTAX                     OCTET STRING (SIZE(8))
@@ -351,20 +351,20 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "The servo state if slave"
 --x     ::= { wrpcPtpGroup 4 }
 
---x wrpcPtpServoStateN             OBJECT-TYPE
---x     SYNTAX INTEGER {
---x                 uninitialized(0),
---x                 syncNsec(1),
---x                 syncSec(2),
---x                 syncPhase(3),
---x                 trackPhase(4),
---x                 waitOffsetStable(5)
---x     }
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Numeric representation of servo state"
---x     ::= { wrpcPtpGroup 5 }
+wrpcPtpServoStateN             OBJECT-TYPE
+    SYNTAX INTEGER {
+                uninitialized(0),
+                syncNsec(1),
+                syncSec(2),
+                syncPhase(3),
+                trackPhase(4),
+                waitOffsetStable(5)
+    }
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Numeric representation of servo state"
+    ::= { wrpcPtpGroup 5 }
 
 --x wrpcPtpPhaseTracking           OBJECT-TYPE
 --x     SYNTAX INTEGER {
@@ -386,29 +386,31 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "Current clock offset from master, in picoseconds"
 --x     ::= { wrpcPtpGroup 7 }
 
---x wrpcPtpClockOffsetPsHR         OBJECT-TYPE
---x     SYNTAX                     Integer32 ---- should be something like gauge32, but with int range
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Human Readable current clock offset from master, in picoseconds with saturation to integer"
---x     ::= { wrpcPtpGroup 8 }
+wrpcPtpClockOffsetPsHR         OBJECT-TYPE
+    SYNTAX                     Integer32 -- should be something like gauge32, but with int range
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Human Readable current clock offset from master, in picoseconds
+            with saturation to integer"
+    ::= { wrpcPtpGroup 8 }
 
---x wrpcPtpSkew                    OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "The estimated change of master-to-slave delay, in picoseconds"
---x     ::= { wrpcPtpGroup 9 }
+wrpcPtpSkew                    OBJECT-TYPE
+    SYNTAX                     Integer32 -- should be something like gauge32, but with int range
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "The estimated change of master-to-slave delay, in picoseconds.
+            Saturated to +/- int32."
+    ::= { wrpcPtpGroup 9 }
 
---x wrpcPtpRTT                     OBJECT-TYPE
---x     SYNTAX                     Counter64 ---- unsigned64
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "The round-trip-time, from master, in picoseconds"
---x     ::= { wrpcPtpGroup 10 }
+wrpcPtpRTT                     OBJECT-TYPE
+    SYNTAX                     Counter64 -- unsigned64
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "The round-trip-time, from master, in picoseconds"
+    ::= { wrpcPtpGroup 10 }
 
 --x wrpcPtpLinkLength              OBJECT-TYPE
 --x     SYNTAX                     Unsigned32
@@ -418,77 +420,77 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "Estimated fiber length, from master-to-slave delay, in meters"
 --x     ::= { wrpcPtpGroup 11 }
 
---x wrpcPtpServoUpdates            OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "How many time did the servo run"
---x     ::= { wrpcPtpGroup 12 }
+wrpcPtpServoUpdates            OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "How many times did the servo run"
+    ::= { wrpcPtpGroup 12 }
 
---x wrpcPtpServoUpdateDate         OBJECT-TYPE
---x     SYNTAX                     DisplayString (SIZE (0..31))
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Date and Time of last servo's update"
---x     ::= { wrpcPtpGroup 13 }
+wrpcPtpServoUpdateTime         OBJECT-TYPE
+    SYNTAX                     Counter64
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "TAI Nanosecond of the last servo's update"
+    ::= { wrpcPtpGroup 13 }
 
---x wrpcPtpDeltaTxM                OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Fixed Tx latency on Master side"
---x     ::= { wrpcPtpGroup 14 }
+wrpcPtpDeltaTxM                OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Fixed Tx latency on Master side"
+    ::= { wrpcPtpGroup 14 }
 
---x wrpcPtpDeltaRxM                OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Fixed Rx latency on Master side"
---x     ::= { wrpcPtpGroup 15 }
+wrpcPtpDeltaRxM                OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Fixed Rx latency on Master side"
+    ::= { wrpcPtpGroup 15 }
 
---x wrpcPtpDeltaTxS                OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Fixed Tx latency on Slave side"
---x     ::= { wrpcPtpGroup 16 }
+wrpcPtpDeltaTxS                OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Fixed Tx latency on Slave side"
+    ::= { wrpcPtpGroup 16 }
 
---x wrpcPtpDeltaRxS                OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Fixed Rx latency on Slave side"
---x     ::= { wrpcPtpGroup 17 }
+wrpcPtpDeltaRxS                OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Fixed Rx latency on Slave side"
+    ::= { wrpcPtpGroup 17 }
 
---x wrpcPtpServoStateErrCnt        OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Number of servo updates with wrong servo state"
---x     ::= { wrpcPtpGroup 18 }
+wrpcPtpServoStateErrCnt        OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of servo updates with wrong servo state"
+    ::= { wrpcPtpGroup 18 }
 
---x wrpcPtpClockOffsetErrCnt       OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Number of servo updates with wrong clock offset"
---x     ::= { wrpcPtpGroup 19 }
+wrpcPtpClockOffsetErrCnt       OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of servo updates with wrong clock offset"
+    ::= { wrpcPtpGroup 19 }
 
---x wrpcPtpRTTErrCnt               OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Number of servo updates with wrong RTT"
---x     ::= { wrpcPtpGroup 20 }
+wrpcPtpRTTErrCnt               OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of servo updates with wrong RTT"
+    ::= { wrpcPtpGroup 20 }
 
 --x wrpcPtpPeer                    OBJECT-TYPE
 --x     SYNTAX                     OCTET STRING (SIZE(8))
@@ -498,29 +500,29 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "ptp peer ID"
 --x     ::= { wrpcPtpGroup 21 }
 
---x wrpcPtpAsymmetry               OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Asymmetry of XXXXXXXXX"
---x     ::= { wrpcPtpGroup 22 }
+wrpcPtpAsymmetry               OBJECT-TYPE
+    SYNTAX                     Counter64 -- unsigned64
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Asymmetry of Total link asymmetry"
+    ::= { wrpcPtpGroup 22 }
 
---x wrpcPtpRX                      OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "RX ptp packets"
---x     ::= { wrpcPtpGroup 23 }
+wrpcPtpTx                      OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "TX ptp packets"
+    ::= { wrpcPtpGroup 23 }
 
---x wrpcPtpTX                      OBJECT-TYPE
---x     SYNTAX                     Counter32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "TX ptp packets"
---x     ::= { wrpcPtpGroup 24 }
+wrpcPtpRx                      OBJECT-TYPE
+    SYNTAX                     Counter32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "RX ptp packets"
+    ::= { wrpcPtpGroup 24 }
 
 --x wrpcPtpConfigWord              OBJECT-TYPE
 --x     SYNTAX                     Unsigned32
@@ -530,13 +532,13 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "Configuration word of PTP"
 --x     ::= { wrpcPtpGroup 25 }
 
---x wrpcPtpAlpha                   OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Alpha used by ptp"
---x     ::= { wrpcPtpGroup 26 }
+wrpcPtpAlpha                   OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Alpha used by PTP"
+    ::= { wrpcPtpGroup 26 }
 
 -- ****************************************************************************
 --x wrpcPtpConfigGroup             OBJECT IDENTIFIER ::= { wrpcCore 6 }
@@ -553,7 +555,7 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "Apply changing configuration of the ptp"
 --x     ::= { wrpcPtpConfigGroup 1 }
 
---x wrpcPtpConfigDeltaRx           OBJECT-TYPE
+--x wrpcPtpConfigDeltaTx           OBJECT-TYPE
 --x     SYNTAX                     Integer32
 --x     MAX-ACCESS                 read-write
 --x     STATUS                     current
@@ -561,7 +563,7 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             ""
 --x     ::= { wrpcPtpConfigGroup 2 }
 
---x wrpcPtpConfigDeltaTx           OBJECT-TYPE
+--x wrpcPtpConfigDeltaRx           OBJECT-TYPE
 --x     SYNTAX                     Integer32
 --x     MAX-ACCESS                 read-write
 --x     STATUS                     current
@@ -605,7 +607,7 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "Whether the SFP is in data base or not"
 --x     ::= { wrpcPortGroup 2 }
 
---x wrpcPortInternalRX             OBJECT-TYPE
+--x wrpcPortInternalTx             OBJECT-TYPE
 --x     SYNTAX                     Counter32
 --x     MAX-ACCESS                 read-only
 --x     STATUS                     current
@@ -613,7 +615,7 @@ wrpcSpllDelCnt                 OBJECT-TYPE
 --x             "RX ptp packets"
 --x     ::= { wrpcPortGroup 3 }
 
---x wrpcPortInternalTX             OBJECT-TYPE
+--x wrpcPortInternalRx             OBJECT-TYPE
 --x     SYNTAX                     Counter32
 --x     MAX-ACCESS                 read-only
 --x     STATUS                     current
