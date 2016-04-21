@@ -15,6 +15,11 @@
 #include "i2c.h"
 #include "sfp.h"
 
+/* Calibration data (from EEPROM if available) */
+int32_t sfp_alpha = 73622176; /* default values if could not read EEPROM */
+int32_t sfp_deltaTx = 0;
+int32_t sfp_deltaRx = 0;
+
 int sfp_present(void)
 {
 	return !gpio_in(GPIO_SFP_DET);

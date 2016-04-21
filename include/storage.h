@@ -9,6 +9,8 @@
 #ifndef __STORAGE_H
 #define __STORAGE_H
 
+#include "sfp.h"
+
 #define SFP_SECTION_PATTERN 0xdeadbeef
 
 #if defined CONFIG_LEGACY_EEPROM
@@ -38,16 +40,12 @@
 #define SFPS_MAX 4
 #endif
 
-#define SFP_PN_LEN 16
 
 #define EE_RET_I2CERR -1
 #define EE_RET_DBFULL -2
 #define EE_RET_CORRPT -3
 #define EE_RET_POSERR -4
 
-extern int32_t sfp_alpha;
-extern int32_t sfp_deltaTx;
-extern int32_t sfp_deltaRx;
 extern uint32_t cal_phase_transition;
 extern uint8_t has_eeprom;
 

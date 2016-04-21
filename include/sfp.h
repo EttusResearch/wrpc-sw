@@ -9,6 +9,12 @@
 
 #include <stdint.h>
 
+#define SFP_PN_LEN 16
+
+extern int32_t sfp_alpha;
+extern int32_t sfp_deltaTx;
+extern int32_t sfp_deltaRx;
+
 /* Returns 1 if there's a SFP transceiver inserted in the socket. */
 int sfp_present(void);
 

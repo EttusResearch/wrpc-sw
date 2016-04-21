@@ -38,11 +38,6 @@ int wrc_ui_mode = UI_SHELL_MODE;
 int wrc_ui_refperiod = TICS_PER_SECOND; /* 1 sec */
 int wrc_phase_tracking = 1;
 
-///////////////////////////////////
-//Calibration data (from EEPROM if available)
-int32_t sfp_alpha = 73622176;	//default values if could not read EEPROM
-int32_t sfp_deltaTx = 0;
-int32_t sfp_deltaRx = 0;
 uint32_t cal_phase_transition = 2389;
 
 int wrc_vlan_number = CONFIG_VLAN_NR;
