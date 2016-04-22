@@ -36,17 +36,20 @@ static int cmd_sfp(const char *args[])
 {
 	int8_t sfpcount = 1, i, temp;
 	struct s_sfpinfo sfp;
-
-	if (args[0] && !strcasecmp(args[0], "detect")) {
+	if (!args[0]) {
+		pp_printf("Wrong parameter\n");
+		return -EINVAL;
+	}
+	if (!strcasecmp(args[0], "detect")) {
 		/* clear sfp_pn */
 		sfp_pn[0] = '\0';
 		if (!sfp_present()) {
 			pp_printf("No SFP.\n");
-			return -1;
+			return -ENODEV;
 		}
 		if (sfp_read_part_id(sfp_pn)) {
 			pp_printf("SFP read error\n");
-			return -1;
+			return -EIO;
 		}
 		for (temp = 0; temp < SFP_PN_LEN; ++temp)
 				pp_printf("%c", sfp.pn[temp]);
@@ -59,9 +62,11 @@ static int cmd_sfp(const char *args[])
 //    return 0;
 //  }
 	else if (!strcasecmp(args[0], "erase")) {
-		if (storage_sfpdb_erase() ==
-		    EE_RET_I2CERR)
+		if (storage_sfpdb_erase() == EE_RET_I2CERR) {
 			pp_printf("Could not erase DB\n");
+			return -EIO;
+		}
+		return 0;
 	} else if (args[4] && !strcasecmp(args[0], "add")) {
 		if (strlen(args[1]) > SFP_PN_LEN)
 			temp = SFP_PN_LEN;
@@ -75,13 +80,16 @@ static int cmd_sfp(const char *args[])
 		sfp.dRx = atoi(args[3]);
 		sfp.alpha = atoi(args[4]);
 		temp = storage_get_sfp(&sfp, 1, 0);
-		if (temp == EE_RET_DBFULL)
+		if (temp == EE_RET_DBFULL) {
 			pp_printf("SFP DB is full\n");
-		else if (temp == EE_RET_I2CERR)
+			return -ENOSPC;
+		} else if (temp == EE_RET_I2CERR) {
 			pp_printf("I2C error\n");
-		else
-			pp_printf("%d SFPs in DB\n", temp);
-	} else if (args[0] && !strcasecmp(args[0], "show")) {
+			return -EIO;
+		}
+		pp_printf("%d SFPs in DB\n", temp);
+		return 0;
+	} else if (!strcasecmp(args[0], "show")) {
 		for (i = 0; i < sfpcount; ++i) {
 			temp = storage_get_sfp(&sfp, 0, i);
 			if (!i) {
@@ -91,39 +99,41 @@ static int cmd_sfp(const char *args[])
 					return 0;
 				} else if (sfpcount == -1) {
 					pp_printf("SFP database corrupted...\n");
-					return 0;
+					return -EFAULT;
 				}
 			}
 			pp_printf("%d: PN:", i + 1);
 			for (temp = 0; temp < SFP_PN_LEN; ++temp)
 				pp_printf("%c", sfp.pn[temp]);
-			pp_printf(" dTx: %d, dRx: %d, alpha: %d\n", sfp.dTx,
+			pp_printf(" dTx: %d dRx: %d alpha: %d\n", sfp.dTx,
 				sfp.dRx, sfp.alpha);
 		}
-	} else if (args[0] && !strcasecmp(args[0], "match")) {
+		return 0;
+	} else if (!strcasecmp(args[0], "match")) {
 		if (sfp_pn[0] == '\0') {
 			pp_printf("Run sfp detect first\n");
-			return 0;
+			return -EFAULT;
 		}
 		strncpy(sfp.pn, sfp_pn, SFP_PN_LEN);
-		if (storage_match_sfp(&sfp) > 0) {
-			pp_printf("SFP matched, dTx=%d, dRx=%d, alpha=%d\n",
-				sfp.dTx, sfp.dRx, sfp.alpha);
-			sfp_deltaTx = sfp.dTx;
-			sfp_deltaRx = sfp.dRx;
-			sfp_alpha = sfp.alpha;
-			sfp_in_db = SFP_MATCHED;
-		} else {
+		if (storage_match_sfp(&sfp) == 0) {
 			pp_printf("Could not match to DB\n");
 			sfp_in_db = SFP_NOT_MATCHED;
+			return -ENXIO;
 		}
+		pp_printf("SFP matched, dTx=%d, dRx=%d, alpha=%d\n",
+			sfp.dTx, sfp.dRx, sfp.alpha);
+		sfp_deltaTx = sfp.dTx;
+		sfp_deltaRx = sfp.dRx;
+		sfp_alpha = sfp.alpha;
+		sfp_in_db = SFP_MATCHED;
 		return 0;
-	} else if (args[0] && !strcasecmp(args[0], "ena")) {
-		if(!args[1])
-			return -EINVAL;
+	} else if (args[1] && !strcasecmp(args[0], "ena")) {
 		ep_sfp_enable(atoi(args[1]));
+		return 0;
+	} else {
+		pp_printf("Wrong parameter\n");
+		return -EINVAL;
 	}
-
 	return 0;
 }
 
