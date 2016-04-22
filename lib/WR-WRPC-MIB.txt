@@ -541,44 +541,54 @@ wrpcPtpAlpha                   OBJECT-TYPE
     ::= { wrpcPtpGroup 26 }
 
 -- ****************************************************************************
---x wrpcPtpConfigGroup             OBJECT IDENTIFIER ::= { wrpcCore 6 }
+wrpcPtpConfigGroup             OBJECT IDENTIFIER ::= { wrpcCore 6 }
 
---x wrpcPtpConfigApply             OBJECT-TYPE
---x     SYNTAX                     INTEGER {
---x                                    na(0),
---x                                    applySuccessful(1),
---x                                    applyFailed(2)
---x     }
---x     MAX-ACCESS                 read-write
---x     STATUS                     current
---x     DESCRIPTION
---x             "Apply changing configuration of the ptp"
---x     ::= { wrpcPtpConfigGroup 1 }
+wrpcPtpConfigApply             OBJECT-TYPE
+    SYNTAX                     INTEGER {
+                                   na(0),
+                                   writeToFlashGivenSfp(1),
+                                   writeToFlashCurrentSfp(2),
+                                   writeToMemoryCurrentSfp(3),
+                                   applySuccessful(10),
+                                   applyFailed(11),
+    }
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "Apply configuration of the ptp"
+    ::= { wrpcPtpConfigGroup 1 }
 
---x wrpcPtpConfigDeltaTx           OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-write
---x     STATUS                     current
---x     DESCRIPTION
---x             ""
---x     ::= { wrpcPtpConfigGroup 2 }
+wrpcPtpConfigSfpPn             OBJECT-TYPE
+    SYNTAX                     OCTET STRING (SIZE(16))  --17?
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "SFP product number identifying which entry in the flash to update."
+    ::= { wrpcPtpConfigGroup 2 }
 
---x wrpcPtpConfigDeltaRx           OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-write
---x     STATUS                     current
---x     DESCRIPTION
---x             ""
---x     ::= { wrpcPtpConfigGroup 3 }
+wrpcPtpConfigDeltaTx           OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "Delta tx to be set"
+    ::= { wrpcPtpConfigGroup 3 }
 
---x wrpcPtpConfigAlpha             OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-write
---x     STATUS                     current
---x     DESCRIPTION
---x             ""
---x     ::= { wrpcPtpConfigGroup 4 }
+wrpcPtpConfigDeltaRx           OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "Delta rx to be set"
+    ::= { wrpcPtpConfigGroup 4 }
 
+wrpcPtpConfigAlpha             OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "Alpha to be set"
+    ::= { wrpcPtpConfigGroup 5 }
 
 -- ****************************************************************************
 wrpcPortGroup            OBJECT IDENTIFIER ::= { wrpcCore 7 }

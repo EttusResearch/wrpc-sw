@@ -22,6 +22,8 @@
 #include "softpll_ng.h"
 #include "sfp.h"
 
+#include "storage.h"
+
 #ifndef htons
 #define htons(x) x
 #endif
@@ -87,6 +89,14 @@
 /* defines used by get_port function */
 #define PORT_LINK_STATUS (void *) 1
 
+/* defines for wrpcPtpConfigApply */
+#define writeToFlashGivenSfp 1
+#define writeToFlashCurrentSfp 2
+#define writeToMemoryCurrentSfp 3
+#define applySuccessful 10
+#define applyFailed 11
+
+
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -128,6 +138,9 @@ struct snmp_oid {
 	uint8_t data_size;
 };
 
+static struct s_sfpinfo snmp_ptp_config;
+static int ptp_config_apply_status;
+
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
 
@@ -158,6 +171,7 @@ static int get_port(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
+static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj);
 
 
 /* wrpcVersionGroup */
@@ -200,6 +214,13 @@ static uint8_t oid_wrpcPtpAsymmetry[] =          {0x2B,6,1,4,1,96,101,1,5,22,0};
 static uint8_t oid_wrpcPtpTX[] =                 {0x2B,6,1,4,1,96,101,1,5,23,0};
 static uint8_t oid_wrpcPtpRX[] =                 {0x2B,6,1,4,1,96,101,1,5,24,0};
 static uint8_t oid_wrpcPtpAlpha[] =              {0x2B,6,1,4,1,96,101,1,5,26,0};
+
+/* wrpcPtpConfigGroup */
+static uint8_t oid_wrpcPtpConfigApply[] =        {0x2B,6,1,4,1,96,101,1,6,1,0};
+static uint8_t oid_wrpcPtpConfigSfpPn[] =        {0x2B,6,1,4,1,96,101,1,6,2,0};
+static uint8_t oid_wrpcPtpConfigDeltaTx[] =      {0x2B,6,1,4,1,96,101,1,6,3,0};
+static uint8_t oid_wrpcPtpConfigDeltaRx[] =      {0x2B,6,1,4,1,96,101,1,6,4,0};
+static uint8_t oid_wrpcPtpConfigAlpha[] =        {0x2B,6,1,4,1,96,101,1,6,5,0};
 
 /* wrpcPortGroup */
 static uint8_t oid_wrpcPortLinkStatus[] =        {0x2B,6,1,4,1,96,101,1,7,1,0};
@@ -252,6 +273,13 @@ static struct snmp_oid oid_array[] = {
 	OID_FIELD_VAR(   oid_wrpcPtpTX,              get_p,        NO_SET,   ASN_COUNTER,   &ppi_static.ptp_tx_count),
 	OID_FIELD_VAR(   oid_wrpcPtpRX,              get_p,        NO_SET,   ASN_COUNTER,   &ppi_static.ptp_rx_count),
 	OID_FIELD_STRUCT(oid_wrpcPtpAlpha,           get_pp,       NO_SET,   ASN_INTEGER,   struct wr_servo_state, &wr_s_state, fiber_fix_alpha),
+
+/* wrpcPtpConfigGroup */
+	OID_FIELD_VAR(   oid_wrpcPtpConfigApply,     get_p,        set_ptp_config,ASN_INTEGER,&ptp_config_apply_status),
+	OID_FIELD_VAR(   oid_wrpcPtpConfigSfpPn,     get_p,        set_p,    ASN_OCTET_STR, &snmp_ptp_config.pn),
+	OID_FIELD_VAR(   oid_wrpcPtpConfigDeltaTx,   get_p,        set_p,    ASN_INTEGER,   &snmp_ptp_config.dTx),
+	OID_FIELD_VAR(   oid_wrpcPtpConfigDeltaRx,   get_p,        set_p,    ASN_INTEGER,   &snmp_ptp_config.dRx),
+	OID_FIELD_VAR(   oid_wrpcPtpConfigAlpha,     get_p,        set_p,    ASN_INTEGER,   &snmp_ptp_config.alpha),
 
 /* wrpcPortGroup */
 	OID_FIELD_VAR(   oid_wrpcPortLinkStatus,     get_port,     NO_SET,   ASN_INTEGER,   PORT_LINK_STATUS),
@@ -485,6 +513,34 @@ static int set_p(uint8_t *buf, struct snmp_oid *obj)
 	return set_value(buf, obj, obj->p + obj->offset);
 }
 
+static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
+{
+	int ret;
+	int32_t *apply_mode;
+
+	apply_mode = obj->p;
+	ret = set_value(buf, obj, apply_mode);
+	switch (*apply_mode) {
+	case writeToMemoryCurrentSfp:
+		sfp_deltaTx = snmp_ptp_config.dTx;
+		sfp_deltaRx = snmp_ptp_config.dRx;
+		sfp_alpha = snmp_ptp_config.alpha;
+		*apply_mode = applySuccessful;
+		break;
+	case writeToFlashCurrentSfp:
+		*apply_mode = applySuccessful;
+		break;
+	case writeToFlashGivenSfp:
+		*apply_mode = applySuccessful;
+		break;
+	default:
+		*apply_mode = applyFailed;
+	}
+	snmp_verbose("%s: delta tx: %d\ndelta rx: %d\nalpha: %d\n", __func__,
+		     snmp_ptp_config.dTx, snmp_ptp_config.dRx,
+		     snmp_ptp_config.alpha);
+	return ret;
+}
 
 /*
  * Perverse...  snmpwalk does getnext anyways.
