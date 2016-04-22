@@ -36,15 +36,21 @@ static int cmd_sfp(const char *args[])
 {
 	int8_t sfpcount = 1, i, temp;
 	struct s_sfpinfo sfp;
-	static char pn[SFP_PN_LEN + 1] = "\0";
 
 	if (args[0] && !strcasecmp(args[0], "detect")) {
-		if (!sfp_present())
+		/* clear sfp_pn */
+		sfp_pn[0] = '\0';
+		if (!sfp_present()) {
 			pp_printf("No SFP.\n");
-		else
-			sfp_read_part_id(pn);
-		pn[16] = 0;
-		pp_printf("%s\n", pn);
+			return -1;
+		}
+		if (sfp_read_part_id(sfp_pn)) {
+			pp_printf("SFP read error\n");
+			return -1;
+		}
+		for (temp = 0; temp < SFP_PN_LEN; ++temp)
+				pp_printf("%c", sfp.pn[temp]);
+		pp_printf("\n");
 		return 0;
 	}
 //  else if (!strcasecmp(args[0], "i2cscan"))
@@ -57,13 +63,13 @@ static int cmd_sfp(const char *args[])
 		    EE_RET_I2CERR)
 			pp_printf("Could not erase DB\n");
 	} else if (args[4] && !strcasecmp(args[0], "add")) {
-		if (strlen(args[1]) > 16)
-			temp = 16;
+		if (strlen(args[1]) > SFP_PN_LEN)
+			temp = SFP_PN_LEN;
 		else
 			temp = strlen(args[1]);
 		for (i = 0; i < temp; ++i)
 			sfp.pn[i] = args[1][i];
-		while (i < 16)
+		while (i < SFP_PN_LEN)
 			sfp.pn[i++] = ' ';	//padding
 		sfp.dTx = atoi(args[2]);
 		sfp.dRx = atoi(args[3]);
@@ -89,17 +95,17 @@ static int cmd_sfp(const char *args[])
 				}
 			}
 			pp_printf("%d: PN:", i + 1);
-			for (temp = 0; temp < 16; ++temp)
+			for (temp = 0; temp < SFP_PN_LEN; ++temp)
 				pp_printf("%c", sfp.pn[temp]);
 			pp_printf(" dTx: %d, dRx: %d, alpha: %d\n", sfp.dTx,
 				sfp.dRx, sfp.alpha);
 		}
 	} else if (args[0] && !strcasecmp(args[0], "match")) {
-		if (pn[0] == '\0') {
+		if (sfp_pn[0] == '\0') {
 			pp_printf("Run sfp detect first\n");
 			return 0;
 		}
-		strncpy(sfp.pn, pn, SFP_PN_LEN);
+		strncpy(sfp.pn, sfp_pn, SFP_PN_LEN);
 		if (storage_match_sfp(&sfp) > 0) {
 			pp_printf("SFP matched, dTx=%d, dRx=%d, alpha=%d\n",
 				sfp.dTx, sfp.dRx, sfp.alpha);

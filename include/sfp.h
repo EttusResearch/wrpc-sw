@@ -13,6 +13,8 @@
 #define SFP_NOT_MATCHED 1
 #define SFP_MATCHED 2
 
+extern char sfp_pn[SFP_PN_LEN];
+
 extern int32_t sfp_in_db;
 extern int32_t sfp_alpha;
 extern int32_t sfp_deltaTx;

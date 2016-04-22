@@ -21,6 +21,8 @@ int32_t sfp_deltaTx = 0;
 int32_t sfp_deltaRx = 0;
 int32_t sfp_in_db = 0;
 
+char sfp_pn[SFP_PN_LEN];
+
 int sfp_present(void)
 {
 	return !gpio_in(GPIO_SFP_DET);
