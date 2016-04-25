@@ -10,11 +10,35 @@
 #define __STORAGE_H
 
 #define SFP_SECTION_PATTERN 0xdeadbeef
+
+#if defined CONFIG_LEGACY_EEPROM
+
+#define EE_BASE_CAL (4 * 1024)
+#define EE_BASE_SFP (4 * 1024 + 4)
+/* Limit SFPs to 3, see comments below why. */
+#define SFPS_MAX 3
+/* The definition of EE_BASE_INIT below is wrong! But kept for backward
+ * compatibility. */
+#define EE_BASE_INIT (4 * 1024 + 4 * 29)
+/* It should be:
+ * #define EE_BASE_INIT (EE_BASE_SFP + sizeof(sfpcount) + \
+ *                       SFPS_MAX * sizeof(struct s_sfpinfo))
+ * The used definition define the start of the init script 5 bytes
+ * (sizeof(sfpcount) + sizeof(t24p)) before the end of SFP database.
+ * To make the init script working during the update of old versions of wrpc
+ * SFPS_MAX is limited to 3. Adding the 4th SFP will corrupt the init script
+ * anyway.
+ * If someone needs to have 4 SFPs in the database SFPS_MAX can be set to 4 and
+ * the proper define should be used.
+ * SDB is not affected by this bug.
+ */
+#endif
+
+#if defined CONFIG_SDB_STORAGE
 #define SFPS_MAX 4
+#endif
+
 #define SFP_PN_LEN 16
-#define EE_BASE_CAL 4*1024
-#define EE_BASE_SFP 4*1024+4
-#define EE_BASE_INIT 4*1024+SFPS_MAX*29
 
 #define EE_RET_I2CERR -1
 #define EE_RET_DBFULL -2
