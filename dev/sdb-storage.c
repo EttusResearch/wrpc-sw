@@ -417,27 +417,33 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_SFP) < 0)
 		return -1;
 
-	//read how many SFPs are in the database, but only in the first call
+	/* Read how many SFPs are in the database, but only in the first
+	 * call */
 	if(!pos) {
 		sfpcount = 0;
-		while (sdbfs_fread(&wrc_sdb, sizeof(sfpcount) +
-					sfpcount*sizeof(tempsfp), &tempsfp,
-					sizeof(tempsfp)) == sizeof(tempsfp)) {
+		while (sdbfs_fread(&wrc_sdb, sizeof(sfpcount)
+					     + sfpcount * sizeof(tempsfp),
+				   &tempsfp, sizeof(tempsfp))
+		       == sizeof(tempsfp)) {
 			if(!sfp_valid(&tempsfp))
 				break;
-
 			sfpcount++;
 		}
 	}
 
-	if (add && sfpcount == SFPS_MAX)	//no more space to add new SFPs
-		return EE_RET_DBFULL;
-	if (!pos && !add && sfpcount == 0)	// no SFPs in the database
-		return 0;
+	if (add && sfpcount == SFPS_MAX) { /* no more space to add new SFPs */
+		ret = EE_RET_DBFULL;
+		goto out;
+	}
+
+	if (!pos && !add && sfpcount == 0) { /* no SFPs in the database */
+		ret = 0;
+		goto out;
+	}
 
 	if (!add) {
 		if (sdbfs_fread(&wrc_sdb, sizeof(sfpcount) + pos * sizeof(*sfp),
-				sfp, sizeof(*sfp))
+				 sfp, sizeof(*sfp))
 		    != sizeof(*sfp))
 			goto out;
 
@@ -450,7 +456,7 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 			goto out;
 		}
 	} else {
-		/*count checksum */
+		/* count checksum */
 		ptr = (uint8_t *)sfp;
 		/* use sizeof() - 1 because we don't include checksum */
 		for (i = 0; i < sizeof(struct s_sfpinfo) - 1; ++i)
@@ -458,19 +464,18 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 		sfp->chksum = chksum;
 		/* add SFP at the end of DB */
 		if (sdbfs_fwrite(&wrc_sdb, sizeof(sfpcount)
-				  + sfpcount * sizeof(*sfp), sfp, sizeof(*sfp))
-		    != sizeof(*sfp))
+					   + sfpcount * sizeof(*sfp),
+				 sfp, sizeof(*sfp))
+		    != sizeof(*sfp)) {
+
 			goto out;
+		}
 		sfpcount++;
-		if (sdbfs_fwrite(&wrc_sdb, 0, &sfpcount, sizeof(sfpcount))
-		    != sizeof(sfpcount))
-			goto out;
 	}
 	ret = sfpcount;
 out:
 	sdbfs_close(&wrc_sdb);
 	return ret;
-	return 0;
 }
 
 int storage_match_sfp(struct s_sfpinfo * sfp)
