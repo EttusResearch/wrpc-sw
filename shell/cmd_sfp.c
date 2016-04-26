@@ -7,18 +7,18 @@
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
-/*  Command: sfp
-    Arguments: subcommand [subcommand-specific args]
-
-    Description: SFP detection/database manipulation.
-
-		Subcommands:
-			add vendor_type delta_tx delta_rx alpha - adds an SFP to the database, with given alpha/delta_rx/delta_rx values
-			show - shows the SFP database
-      match - tries to get calibration parameters from DB for a detected SFP
-      erase - cleans the SFP database
-			detect - detects the transceiver type
-*/
+/* Command: sfp
+ * Arguments: subcommand [subcommand-specific args]
+ *
+ * Description: SFP detection/database manipulation.
+ * Subcommands:
+ * add <product_number> <delta_tx> <delta_rx> <alpha> - adds an SFP to
+ *                      the database, with given alpha/delta_rx/delta_rx values
+ * show - shows the SFP database
+ * match - detects the transceiver type and tries to get calibration parameters
+ *         from DB for a detected SFP
+ * erase - cleans the SFP database
+ */
 
 #include <string.h>
 #include <stdlib.h>
@@ -40,38 +40,14 @@ static int cmd_sfp(const char *args[])
 		pp_printf("Wrong parameter\n");
 		return -EINVAL;
 	}
-	if (!strcasecmp(args[0], "detect")) {
-		/* clear sfp_pn */
-		sfp_pn[0] = '\0';
-		if (!sfp_present()) {
-			pp_printf("No SFP.\n");
-			return -ENODEV;
-		}
-		if (sfp_read_part_id(sfp_pn)) {
-			pp_printf("SFP read error\n");
-			return -EIO;
-		}
-		for (temp = 0; temp < SFP_PN_LEN; ++temp)
-				pp_printf("%c", sfp.pn[temp]);
-		pp_printf("\n");
-		return 0;
-	}
-//  else if (!strcasecmp(args[0], "i2cscan"))
-//  {
-//    mi2c_scan(WRPC_FMC_I2C);
-//    return 0;
-//  }
-	else if (!strcasecmp(args[0], "erase")) {
+	if (!strcasecmp(args[0], "erase")) {
 		if (storage_sfpdb_erase() == EE_RET_I2CERR) {
 			pp_printf("Could not erase DB\n");
 			return -EIO;
 		}
 		return 0;
 	} else if (args[4] && !strcasecmp(args[0], "add")) {
-		if (strlen(args[1]) > SFP_PN_LEN)
-			temp = SFP_PN_LEN;
-		else
-			temp = strlen(args[1]);
+		temp = strnlen(args[1], SFP_PN_LEN);
 		for (i = 0; i < temp; ++i)
 			sfp.pn[i] = args[1][i];
 		while (i < SFP_PN_LEN)
@@ -105,22 +81,31 @@ static int cmd_sfp(const char *args[])
 			pp_printf("%d: PN:", i + 1);
 			for (temp = 0; temp < SFP_PN_LEN; ++temp)
 				pp_printf("%c", sfp.pn[temp]);
-			pp_printf(" dTx: %d dRx: %d alpha: %d\n", sfp.dTx,
+			pp_printf(" dTx: %8d dRx: %8d alpha: %8d\n", sfp.dTx,
 				sfp.dRx, sfp.alpha);
 		}
 		return 0;
 	} else if (!strcasecmp(args[0], "match")) {
-		if (sfp_pn[0] == '\0') {
-			pp_printf("Run sfp detect first\n");
-			return -EFAULT;
+		sfp_pn[0] = '\0';
+		if (!sfp_present()) {
+			pp_printf("No SFP.\n");
+			return -ENODEV;
 		}
+		if (sfp_read_part_id(sfp_pn)) {
+			pp_printf("SFP read error\n");
+			return -EIO;
+		}
+		for (temp = 0; temp < SFP_PN_LEN; ++temp)
+			pp_printf("%c", sfp_pn[temp]);
+		pp_printf("\n");
+
 		strncpy(sfp.pn, sfp_pn, SFP_PN_LEN);
 		if (storage_match_sfp(&sfp) == 0) {
 			pp_printf("Could not match to DB\n");
 			sfp_in_db = SFP_NOT_MATCHED;
 			return -ENXIO;
 		}
-		pp_printf("SFP matched, dTx=%d, dRx=%d, alpha=%d\n",
+		pp_printf("SFP matched, dTx=%d dRx=%d alpha=%d\n",
 			sfp.dTx, sfp.dRx, sfp.alpha);
 		sfp_deltaTx = sfp.dTx;
 		sfp_deltaRx = sfp.dRx;
