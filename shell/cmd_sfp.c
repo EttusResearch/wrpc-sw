@@ -55,7 +55,7 @@ static int cmd_sfp(const char *args[])
 		sfp.dTx = atoi(args[2]);
 		sfp.dRx = atoi(args[3]);
 		sfp.alpha = atoi(args[4]);
-		temp = storage_get_sfp(&sfp, 1, 0);
+		temp = storage_get_sfp(&sfp, SFP_ADD, 0);
 		if (temp == EE_RET_DBFULL) {
 			pp_printf("SFP DB is full\n");
 			return -ENOSPC;
@@ -70,7 +70,7 @@ static int cmd_sfp(const char *args[])
 		return 0;
 	} else if (!strcasecmp(args[0], "show")) {
 		for (i = 0; i < sfpcount; ++i) {
-			sfpcount = storage_get_sfp(&sfp, 0, i);
+			sfpcount = storage_get_sfp(&sfp, SFP_GET, i);
 			if (sfpcount == 0) {
 				pp_printf("SFP database empty\n");
 				return 0;

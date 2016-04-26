@@ -183,7 +183,7 @@ int storage_get_sfp(struct s_sfpinfo *sfp, uint8_t oper, uint8_t pos)
 	if (sfpcount == SFP_DB_EMPTY)
 		sfpcount = 0;
 
-	if (!oper) {
+	if (oper == SFP_GET) {
 		if (sfpcount == 0) {
 			/* There are no SFPs in the database to read */
 			return 0;
@@ -199,7 +199,7 @@ int storage_get_sfp(struct s_sfpinfo *sfp, uint8_t oper, uint8_t pos)
 		if (sfp_chksum((uint8_t *)sfp) != sfp->chksum)
 			return EE_RET_CORRPT;
 	}
-	if (oper) {
+	if (oper == SFP_ADD) {
 		for (i = 0; i < sfpcount; i++) {
 			if (eeprom_read(i2cif, i2c_addr,
 				EE_BASE_SFP + sizeof(sfpcount)
@@ -244,7 +244,7 @@ int storage_match_sfp(struct s_sfpinfo * sfp)
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfp_cnt; ++i) {
-		sfp_cnt = storage_get_sfp(&dbsfp, 0, i);
+		sfp_cnt = storage_get_sfp(&dbsfp, SFP_GET, i);
 		if (sfp_cnt <= 0)
 			return sfp_cnt;
 
