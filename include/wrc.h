@@ -53,9 +53,6 @@ void shell_init(void);
 /* This is in the library, somewhere */
 extern int abs(int val);
 
-/* The following from ptp-noposix */
-extern void wr_servo_reset(void);
-
 /* refresh period for _gui_ and _stat_ commands */
 extern int wrc_ui_refperiod;
 

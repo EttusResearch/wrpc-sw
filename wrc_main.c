@@ -121,12 +121,14 @@ static int wrc_check_link(void)
 	if (!prev_state && state) {
 		wrc_verbose("Link up.\n");
 		gpio_out(GPIO_LED_LINK, 1);
+		wrc_ptp_start();
 		link_status = LINK_WENT_UP;
 		rv = 1;
 	} else if (prev_state && !state) {
 		wrc_verbose("Link down.\n");
 		gpio_out(GPIO_LED_LINK, 0);
 		link_status = LINK_WENT_DOWN;
+		wrc_ptp_stop();
 		rv = 1;
 		/* special case */
 		spll_init(SPLL_MODE_FREE_RUNNING_MASTER, 0, 1);
