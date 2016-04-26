@@ -209,14 +209,10 @@ int storage_match_sfp(struct s_sfpinfo * sfp)
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = storage_get_sfp(&dbsfp, 0, i);
-		if (!i) {
-			sfpcount = temp;	//only in first round valid sfpcount is returned from eeprom_get_sfp
-			if (sfpcount == 0 || sfpcount == 0xFF)
-				return 0;
-			else if (sfpcount < 0)
-				return sfpcount;
-		}
+		sfpcount = storage_get_sfp(&dbsfp, 0, i);
+		if (sfpcount <= 0)
+			return sfpcount;
+
 		if (!strncmp(dbsfp.pn, sfp->pn, 16)) {
 			sfp->dTx = dbsfp.dTx;
 			sfp->dRx = dbsfp.dRx;

@@ -67,16 +67,13 @@ static int cmd_sfp(const char *args[])
 		return 0;
 	} else if (!strcasecmp(args[0], "show")) {
 		for (i = 0; i < sfpcount; ++i) {
-			temp = storage_get_sfp(&sfp, 0, i);
-			if (!i) {
-				sfpcount = temp;	//only in first round valid sfpcount is returned from storage_get_sfp
-				if (sfpcount == 0 || sfpcount == 0xFF) {
-					pp_printf("SFP database empty...\n");
-					return 0;
-				} else if (sfpcount == -1) {
-					pp_printf("SFP database corrupted...\n");
-					return -EFAULT;
-				}
+			sfpcount = storage_get_sfp(&sfp, 0, i);
+			if (sfpcount == 0) {
+				pp_printf("SFP database empty...\n");
+				return 0;
+			} else if (sfpcount == -1) {
+				pp_printf("SFP database corrupted...\n");
+				return -EFAULT;
 			}
 			pp_printf("%d: PN:", i + 1);
 			for (temp = 0; temp < SFP_PN_LEN; ++temp)

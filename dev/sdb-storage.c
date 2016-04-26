@@ -481,19 +481,13 @@ out:
 int storage_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
-	int8_t i, temp;
+	int8_t i;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = storage_get_sfp(&dbsfp, 0, i);
-		if (!i) {
-			// first round: valid sfpcount is returned
-			sfpcount = temp;
-			if (sfpcount == 0 || sfpcount == 0xFF)
-				return 0;
-			else if (sfpcount < 0)
-				return sfpcount;
-		}
+		sfpcount = storage_get_sfp(&dbsfp, 0, i);
+		if (sfpcount <= 0)
+			return sfpcount;
 		if (!strncmp(dbsfp.pn, sfp->pn, 16)) {
 			sfp->dTx = dbsfp.dTx;
 			sfp->dRx = dbsfp.dRx;
