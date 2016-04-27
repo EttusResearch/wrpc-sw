@@ -549,17 +549,32 @@ wrpcPtpConfigApply             OBJECT-TYPE
                                    writeToFlashGivenSfp(1),
                                    writeToFlashCurrentSfp(2),
                                    writeToMemoryCurrentSfp(3),
-                                   applySuccessful(10),
-                                   applyFailed(11),
+                                   eraseFlash(50),
+                                   applySuccessful(100),
+                                   applySuccessfulMatchFailed(101),
+                                   applyFailed(200),
+                                   applyFailedI2CError(201),
+                                   applyFailedDBFull(202),
+                                   applyFailedInvalidPN(203)
     }
     MAX-ACCESS                 read-write
     STATUS                     current
     DESCRIPTION
-            "Apply configuration of the ptp"
+            "Apply configuration of the ptp
+            writeToFlashGivenSfp - Write delta TX/RX and alpha for provided SFP's PN to the sfp database in the flash. Perform sfp match.
+            writeToFlashCurrentSfp - Write delta TX/RX and alpha for currently used SFP to the sfp database in the flash. Perform sfp match.
+            writeToMemoryCurrentSfp - Write delta TX/RX and alpha for currently used SFP to the the memory. Do not perform sfp match.
+            eraseFlash - Erase sfp database in the flash. Do not perform sfp match.
+            applySuccessful - Configuration applied successfully.
+            applySuccessfulMatchFailed - SFP entry written, but failed to match with the plugged SFP.
+            applyFailed - Failed to apply configuration.
+            applyFailedI2CError - Failed to apply configuration due to communication error with the flash memory.
+            applyFailedDBFull - Failed to apply configuration. Database is full.
+            applyFailedInvalidPN - Invalid Product Number (PN) provided."
     ::= { wrpcPtpConfigGroup 1 }
 
 wrpcPtpConfigSfpPn             OBJECT-TYPE
-    SYNTAX                     OCTET STRING (SIZE(16))  --17?
+    SYNTAX                     OCTET STRING (SIZE(0..16))
     MAX-ACCESS                 read-write
     STATUS                     current
     DESCRIPTION
@@ -606,7 +621,7 @@ wrpcPortLinkStatus             OBJECT-TYPE
     ::= { wrpcPortGroup 1 }
 
 wrpcPortSfpPn                  OBJECT-TYPE
-    SYNTAX                     OCTET STRING (SIZE(16))
+    SYNTAX                     OCTET STRING (SIZE(0..16))
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION

@@ -93,9 +93,13 @@
 #define writeToFlashGivenSfp 1
 #define writeToFlashCurrentSfp 2
 #define writeToMemoryCurrentSfp 3
-#define applySuccessful 10
-#define applyFailed 11
-
+#define eraseFlash 50
+#define applySuccessful 100
+#define applySuccessfulMatchFailed 101
+#define applyFailed 200
+#define applyFailedI2CError 201
+#define applyFailedDBFull 202
+#define applyFailedInvalidPN 203
 
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
@@ -517,6 +521,7 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 {
 	int ret;
 	int32_t *apply_mode;
+	int temp;
 
 	apply_mode = obj->p;
 	ret = set_value(buf, obj, apply_mode);
@@ -525,13 +530,50 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 		sfp_deltaTx = snmp_ptp_config.dTx;
 		sfp_deltaRx = snmp_ptp_config.dRx;
 		sfp_alpha = snmp_ptp_config.alpha;
+		/* restart of ppsi is needed here */
 		*apply_mode = applySuccessful;
 		break;
 	case writeToFlashCurrentSfp:
+		memcpy(snmp_ptp_config.pn, sfp_pn, SFP_PN_LEN);
+		/* continue with writeToFlashGivenSfp */
+	case writeToFlashGivenSfp:
+		if (snmp_ptp_config.pn[0] == '\0') { /* empty PN */
+			snmp_verbose("%s: Invalid PN\n", __func__);
+			*apply_mode = applyFailedInvalidPN;
+			break;
+		}
+
+		temp = strnlen(snmp_ptp_config.pn, SFP_PN_LEN);
+		 /* padding with spaces */
+		while (temp < SFP_PN_LEN)
+			snmp_ptp_config.pn[temp++] = ' ';
+
+		/* add a sfp to the DB */
+		temp = storage_get_sfp(&snmp_ptp_config, SFP_ADD, 0);
+		if (temp == EE_RET_DBFULL) {
+			snmp_verbose("%s: SFP DB is full\n", __func__);
+			*apply_mode = applyFailedDBFull;
+			break;
+		} else if (temp == EE_RET_I2CERR) {
+			snmp_verbose("%s: I2C error\n", __func__);
+			*apply_mode = applyFailedI2CError;
+			break;
+		}
+		/* perform a sfp match */
+		temp = sfp_match();
+		if (temp) {
+			snmp_verbose("%s: Match error (%d)\n", __func__, temp);
+			*apply_mode = applySuccessfulMatchFailed;
+			break;
+		}
+		/* restart of ppsi is needed here */
 		*apply_mode = applySuccessful;
 		break;
-	case writeToFlashGivenSfp:
-		*apply_mode = applySuccessful;
+	case eraseFlash:
+		if (storage_sfpdb_erase() == EE_RET_I2CERR)
+			*apply_mode = applyFailed;
+		else
+			*apply_mode = applySuccessful;
 		break;
 	default:
 		*apply_mode = applyFailed;
