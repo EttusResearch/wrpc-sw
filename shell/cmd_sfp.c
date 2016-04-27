@@ -34,8 +34,9 @@
 
 static int cmd_sfp(const char *args[])
 {
-	int8_t sfpcount = 1, i, temp;
+	int8_t sfpcount = 1, i, temp, ret;
 	struct s_sfpinfo sfp;
+
 	if (!args[0]) {
 		pp_printf("Wrong parameter\n");
 		return -EINVAL;
@@ -87,32 +88,29 @@ static int cmd_sfp(const char *args[])
 		}
 		return 0;
 	} else if (!strcasecmp(args[0], "match")) {
-		sfp_pn[0] = '\0';
-		if (!sfp_present()) {
+		ret = sfp_match();
+		if (ret == -ENODEV) {
 			pp_printf("No SFP.\n");
-			return -ENODEV;
+			return ret;
 		}
-		if (sfp_read_part_id(sfp_pn)) {
+		if (ret == -EIO) {
 			pp_printf("SFP read error\n");
-			return -EIO;
+			return ret;
 		}
+
+		/* SFP read correctly */
 		for (temp = 0; temp < SFP_PN_LEN; ++temp)
 			pp_printf("%c", sfp_pn[temp]);
 		pp_printf("\n");
 
-		strncpy(sfp.pn, sfp_pn, SFP_PN_LEN);
-		if (storage_match_sfp(&sfp) == 0) {
+		if (ret == -ENXIO) {
 			pp_printf("Could not match to DB\n");
-			sfp_in_db = SFP_NOT_MATCHED;
-			return -ENXIO;
+			return ret;
 		}
+		/* match successful */
 		pp_printf("SFP matched, dTx=%d dRx=%d alpha=%d\n",
 			sfp.dTx, sfp.dRx, sfp.alpha);
-		sfp_deltaTx = sfp.dTx;
-		sfp_deltaRx = sfp.dRx;
-		sfp_alpha = sfp.alpha;
-		sfp_in_db = SFP_MATCHED;
-		return 0;
+		return ret;
 	} else if (args[1] && !strcasecmp(args[0], "ena")) {
 		ep_sfp_enable(atoi(args[1]));
 		return 0;
