@@ -135,7 +135,7 @@ wrpcVersionSwBuildDate         OBJECT-TYPE
 -- ****************************************************************************
 wrpcTimeGroup                  OBJECT IDENTIFIER ::= { wrpcCore 2 }
 
-wrpcDateTAI                    OBJECT-TYPE
+wrpcTimeTAI                    OBJECT-TYPE
     SYNTAX                     Counter64
     MAX-ACCESS                 read-only
     STATUS                     current
@@ -143,7 +143,7 @@ wrpcDateTAI                    OBJECT-TYPE
         "The current time, in TAI seconds"
     ::= { wrpcTimeGroup 1 }
 
-wrpcDateTAIString              OBJECT-TYPE
+wrpcTimeTAIString              OBJECT-TYPE
     SYNTAX                     DisplayString (SIZE (0..31))
     MAX-ACCESS                 read-only
     STATUS                     current
@@ -151,7 +151,7 @@ wrpcDateTAIString              OBJECT-TYPE
         "The current TAI time, printed as %y-%m-%d-%H:%M:%S (no time zone)"
     ::= { wrpcTimeGroup 2 }
 
-wrpcSystemUptime               OBJECT-TYPE
+wrpcTimeSystemUptime               OBJECT-TYPE
     SYNTAX                     Timetics
     MAX-ACCESS                 read-only
     STATUS                     current
@@ -160,53 +160,53 @@ wrpcSystemUptime               OBJECT-TYPE
     ::= { wrpcTimeGroup 3 }
 
 -- ****************************************************************************
---x wrpcTemperatureTable           OBJECT-TYPE
---x     SYNTAX                     SEQUENCE OF WrpcTemperatureEntry
---x     MAX-ACCESS  not-accessible
---x     STATUS      current
---x     DESCRIPTION
---x             "Information for each mounted partition"
---x     ::= { wrpcCore 3 }
+wrpcTemperatureTable           OBJECT-TYPE
+    SYNTAX                     SEQUENCE OF WrpcTemperatureEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "Information for each mounted partition"
+    ::= { wrpcCore 3 }
 
---x wrpcTemperatureEntry OBJECT-TYPE
---x     SYNTAX      WrpcTemperatureEntry
---x     MAX-ACCESS  not-accessible
---x     STATUS      current
---x     DESCRIPTION
---x             "An entry containing partitions' details"
---x     INDEX   { wrpcTemperatureIndex }
---x     ::= { wrpcTemperatureTable 1 }
+wrpcTemperatureEntry OBJECT-TYPE
+    SYNTAX      WrpcTemperatureEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "An entry containing partitions' details"
+    INDEX   { wrpcTemperatureIndex }
+    ::= { wrpcTemperatureTable 1 }
 
---x WrpcTemperatureEntry ::=
---x     SEQUENCE {
---x         wrpcTemperatureIndex       Unsigned32,
---x         wrpcTemperatureName        DisplayString,
---x         wrpcTemperatureValue       Integer32
---x     }
+WrpcTemperatureEntry ::=
+    SEQUENCE {
+        wrpcTemperatureIndex       Unsigned32,
+        wrpcTemperatureName        DisplayString,
+        wrpcTemperatureValue       Integer32
+    }
 
---x wrpcTemperatureIndex           OBJECT-TYPE
---x     SYNTAX                     Unsigned32
---x     MAX-ACCESS                 not-accessible
---x     STATUS                     current
---x     DESCRIPTION
---x             "Index for wrpcTemperatureTable"
---x     ::= { wrpcTemperatureEntry 1 }
+wrpcTemperatureIndex           OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Index for wrpcTemperatureTable"
+    ::= { wrpcTemperatureEntry 1 }
 
---x wrpcTemperatureName            OBJECT-TYPE
---x     SYNTAX                     DisplayString (SIZE (0..32))
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Temperature sensor's name"
---x     ::= { wrpcTemperatureEntry 2 }
+wrpcTemperatureName            OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE (0..32))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Temperature sensor's name"
+    ::= { wrpcTemperatureEntry 2 }
 
---x wrpcTemperatureValue           OBJECT-TYPE
---x     SYNTAX                     Integer32
---x     MAX-ACCESS                 read-only
---x     STATUS                     current
---x     DESCRIPTION
---x             "Temperature in tenths of a celsius degree of given sensor"
---x     ::= { wrpcTemperatureEntry 3 }
+wrpcTemperatureValue           OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE (0..32))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Temperature in tenths of a celsius degree of given sensor"
+    ::= { wrpcTemperatureEntry 3 }
 
 
 -- ****************************************************************************
