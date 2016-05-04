@@ -119,6 +119,13 @@
 #define TABLE_FIRST_COL 2
 #define TABLE_TABLE_OID_LEN 3
 
+/* Limit community length. Standard says nothing about maximum length, but we
+ * want to limit it to save memory */
+#define MAX_COMMUNITY_LEN 32
+/* Limit the request-id. Standard says max is 4 */
+#define MAX_REQID_LEN 4
+
+
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
 	.oid_len = sizeof(_oid), \
@@ -1012,13 +1019,16 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 #define BYTE_ERROR 0xfc
 #define BYTE_ERROR_INDEX 0xfb
 #define BYTE_VERSION 0xfa
+#define BYTE_REQ_SIZE 0xf9
 /* indexes of bytes in snmp packet */
 #define BYTE_PACKET_SIZE_i 1
 #define BYTE_COMMUNITY_LEN_i 6
 /* indexes below are without the length of the community string */
 #define BYTE_PDU_i 7
-#define BYTE_ERROR_i 17
-#define BYTE_ERROR_INDEX_i 20
+/* below indexes are without the length of request ID */
+#define BYTE_REQ_SIZE_i 10
+#define BYTE_ERROR_i 13
+#define BYTE_ERROR_INDEX_i 16
 
 static uint8_t match_array[] = {
 	0x30, BYTE_SIZE,
@@ -1026,8 +1036,8 @@ static uint8_t match_array[] = {
 	0x04, 0x06, /* ASN_OCTET_STR, strlen("public") */
 		0x70, 0x75, 0x62, 0x6C, 0x69, 0x63, /* "public" */
 	BYTE_PDU, BYTE_SIZE, /* SNMP packet type, size of following data */
-	0x02, 0x04, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, BYTE_IGNORE, /*
-	 * ASN_INTEGER, size 4 bytes, Request/Message ID */
+	0x02, BYTE_REQ_SIZE, /*
+	 * ASN_INTEGER, size in bytes, Request/Message ID */
 	0x02, 0x01, BYTE_ERROR, /* ASN_INTEGER, size 1 byte, error type */
 	0x02, 0x01, BYTE_ERROR_INDEX, /* ASN_INTEGER, size 1 byte,
 				       * error index */
@@ -1052,29 +1062,28 @@ static void print_oid_verbose(uint8_t *oid, int len)
 		snmp_verbose(".%d", *(oid + i));
 }
 
-/* Limit community length. Standard says nothing about maximum length, but we
- * want to limit it to save memory */
-#define MAX_COMMUNITY_LEN 32
-
 /* prepare packet to return error, leave the rest of packet as it was */
 static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 {
 	uint8_t ret_size;
 	uint8_t community_len;
+	uint8_t shift;
+	uint8_t reqid_size;
 
 	community_len = buf[BYTE_COMMUNITY_LEN_i];
 	/* If community_len is too long, it will return malformed
 	  * packet, but at least something useful for debugging */
-	community_len = min(community_len, MAX_COMMUNITY_LEN);
-	buf[BYTE_PDU_i + community_len] = SNMP_GET_RESPONSE;
-	buf[BYTE_ERROR_i + community_len] = error;
-	buf[BYTE_ERROR_INDEX_i + community_len] = 1;
+	shift = min(community_len, MAX_COMMUNITY_LEN);
+	buf[BYTE_PDU_i + shift] = SNMP_GET_RESPONSE;
+	reqid_size = buf[BYTE_REQ_SIZE_i + shift];
+	shift += min(reqid_size, MAX_REQID_LEN);
+	buf[BYTE_ERROR_i + shift] = error;
+	buf[BYTE_ERROR_INDEX_i + shift] = 1;
 	ret_size = buf[BYTE_PACKET_SIZE_i] + 2;
 		snmp_verbose("%s: error returning %i bytes\n", __func__,
 			     ret_size);
 	return ret_size;
 }
-
 
 /* And, now, work out your generic frame responder... */
 static int snmp_respond(uint8_t *buf)
@@ -1083,9 +1092,10 @@ static int snmp_respond(uint8_t *buf)
 	uint8_t *newbuf = NULL;
 	uint8_t *new_oid;
 	uint8_t *buf_oid_len;
-	int i;
+	int a_i, h_i;
 	uint8_t snmp_mode = 0;
 	int8_t cmp_result;
+
 
 	uint8_t oid_branch_matching_len;
 	/* Hack to avoid compiler warnings "function defined but not used" for
@@ -1097,25 +1107,28 @@ static int snmp_respond(uint8_t *buf)
 		set_ptp_config(NULL, NULL);
 	}
 
-	for (i = 0; i < sizeof(match_array); i++) {
-		switch (match_array[i]) {
+	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {
+		switch (match_array[a_i]) {
 		case BYTE_SIZE:
 		case BYTE_IGNORE:
 		case BYTE_ERROR:
 		case BYTE_ERROR_INDEX:
 			continue;
+		case BYTE_REQ_SIZE:
+			h_i += buf[h_i];
+			continue;
 		case BYTE_VERSION:
-			snmp_version = buf[i];
+			snmp_version = buf[h_i];
 			if (snmp_version > SNMP_V_MAX)
 				return snmp_prepare_error(buf,
 							SNMP_ERR_GENERR);
 			continue;
 		case BYTE_PDU:
-			if (SNMP_GET == buf[i])
+			if (SNMP_GET == buf[h_i])
 				snmp_mode = MASK_GET;
-			if (SNMP_GET_NEXT == buf[i])
+			if (SNMP_GET_NEXT == buf[h_i])
 				snmp_mode = MASK_GET_NEXT;
-			if (SNMP_SET_ENABLED && (SNMP_SET == buf[i]))
+			if (SNMP_SET_ENABLED && (SNMP_SET == buf[h_i]))
 				snmp_mode = MASK_SET;
 
 			if (!(snmp_mode))
@@ -1123,16 +1136,16 @@ static int snmp_respond(uint8_t *buf)
 							SNMP_ERR_GENERR);
 			break;
 		default:
-			if (buf[i] != match_array[i])
+			if (buf[h_i] != match_array[a_i])
 				return snmp_prepare_error(buf,
 							SNMP_ERR_GENERR);
 		}
 	}
 	snmp_verbose("%s: header match ok\n", __func__);
 
-	buf_oid_len = buf + i;
-	newbuf = buf + i + 1;
-	new_oid = buf + i + 1;
+	buf_oid_len = buf + h_i;
+	newbuf = buf + h_i + 1;
+	new_oid = buf + h_i + 1;
 	/* Save the size of the incoming OID */
 	for (oid_limb = oid_limb_array; oid_limb->oid_len; oid_limb++) {
 		int res;
@@ -1227,16 +1240,20 @@ static int snmp_respond(uint8_t *buf)
 	}
 
 	/* now fix all size fields and change PDU */
-	for (i = 0; i < sizeof(match_array); i++) {
-		int remain = newbuf - buf - i - 1;
+	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {
+		int remain = newbuf - buf - h_i - 1;
 
-		if (match_array[i] == BYTE_PDU)
-			buf[i] = SNMP_GET_RESPONSE;
-		if (match_array[i] != BYTE_SIZE)
+		if (match_array[a_i] == BYTE_PDU)
+			buf[h_i] = SNMP_GET_RESPONSE;
+		if (match_array[a_i] == BYTE_REQ_SIZE) {
+			h_i += buf[h_i];
 			continue;
-		snmp_verbose("%s: offset %i 0x%02x is len %i\n", i, i,
+		}
+		if (match_array[a_i] != BYTE_SIZE)
+			continue;
+		snmp_verbose("%s: offset %i 0x%02x is len %i\n", h_i, h_i,
 			     __func__, remain);
-		buf[i] = remain;
+		buf[h_i] = remain;
 	}
 	snmp_verbose("%s: returning %i bytes\n", __func__, newbuf - buf);
 	return newbuf - buf;
