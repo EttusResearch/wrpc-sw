@@ -1002,7 +1002,11 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 		sfp_deltaTx = snmp_ptp_config.dTx;
 		sfp_deltaRx = snmp_ptp_config.dRx;
 		sfp_alpha = snmp_ptp_config.alpha;
-		/* restart of ppsi is needed here */
+		/* Since ppsi does not support update of deltas in runtime,
+		 * we need to restart the ppsi */
+		wrc_ptp_stop();
+		wrc_ptp_start();
+
 		*apply_mode = applySuccessful;
 		break;
 	case writeToFlashCurrentSfp:
@@ -1038,7 +1042,11 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 			*apply_mode = applySuccessfulMatchFailed;
 			break;
 		}
-		/* restart of ppsi is needed here */
+		/* Since ppsi does not support update of deltas in runtime,
+		 * we need to restart the ppsi */
+		wrc_ptp_stop();
+		wrc_ptp_start();
+
 		*apply_mode = applySuccessful;
 		break;
 	case eraseFlash:
