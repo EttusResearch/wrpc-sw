@@ -116,6 +116,7 @@ static int wrc_check_link(void)
 	if (!prev_state && state) {
 		wrc_verbose("Link up.\n");
 		gpio_out(GPIO_LED_LINK, 1);
+		sfp_match();
 		wrc_ptp_start();
 		link_status = LINK_WENT_UP;
 		rv = 1;
