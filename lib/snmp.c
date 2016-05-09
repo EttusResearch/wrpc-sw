@@ -34,10 +34,12 @@
 #define htons(x) x
 #endif
 
-#define ASN_APPLICATION	((u_char)0x40)
+#define ASN_BOOLEAN	((u_char)0x01)
 #define ASN_INTEGER	((u_char)0x02)
 #define ASN_OCTET_STR	((u_char)0x04)
+#define ASN_NULL	((u_char)0x05)
 #define ASN_OBJECT_ID	((u_char)0x06)
+#define ASN_APPLICATION	((u_char)0x40)
 #define ASN_IPADDRESS	(ASN_APPLICATION | 0)
 #define ASN_COUNTER	(ASN_APPLICATION | 1)
 #define ASN_GAUGE	(ASN_APPLICATION | 2)
@@ -124,6 +126,8 @@
 #define MAX_COMMUNITY_LEN 32
 /* Limit the request-id. Standard says max is 4 */
 #define MAX_REQID_LEN 4
+/* Limit the OID length */
+#define MAX_OID_LEN 40
 
 
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
@@ -1029,6 +1033,7 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 #define BYTE_REQ_SIZE_i 10
 #define BYTE_ERROR_i 13
 #define BYTE_ERROR_INDEX_i 16
+#define BYTE_OIDLEN_INDEX_i 22
 
 static uint8_t match_array[] = {
 	0x30, BYTE_SIZE,
@@ -1069,6 +1074,7 @@ static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 	uint8_t community_len;
 	uint8_t shift;
 	uint8_t reqid_size;
+	uint8_t oid_len;
 
 	community_len = buf[BYTE_COMMUNITY_LEN_i];
 	/* If community_len is too long, it will return malformed
@@ -1079,9 +1085,12 @@ static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 	shift += min(reqid_size, MAX_REQID_LEN);
 	buf[BYTE_ERROR_i + shift] = error;
 	buf[BYTE_ERROR_INDEX_i + shift] = 1;
+	oid_len = buf[BYTE_OIDLEN_INDEX_i + shift];
+	shift += min(oid_len, MAX_OID_LEN);
+	/* write ASN_NULL after the OID */
+	buf[BYTE_OIDLEN_INDEX_i + shift + 1] = ASN_NULL;
 	ret_size = buf[BYTE_PACKET_SIZE_i] + 2;
-		snmp_verbose("%s: error returning %i bytes\n", __func__,
-			     ret_size);
+	snmp_verbose("%s: error returning %i bytes\n", __func__, ret_size);
 	return ret_size;
 }
 
