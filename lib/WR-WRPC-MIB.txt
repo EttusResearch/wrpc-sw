@@ -657,6 +657,73 @@ wrpcPortInternalRx             OBJECT-TYPE
     ::= { wrpcPortGroup 5 }
 
 -- ****************************************************************************
+wrpcSfpTable                   OBJECT-TYPE
+    SYNTAX                     SEQUENCE OF WrpcSfpEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "Information of the SFPs database"
+    ::= { wrpcCore 8 }
+
+wrpcSfpEntry OBJECT-TYPE
+    SYNTAX      WrpcSfpEntry
+    MAX-ACCESS  not-accessible
+    STATUS      current
+    DESCRIPTION
+            "An entry containing SFP entry"
+    INDEX   { wrpcSfpIndex }
+    ::= { wrpcSfpTable 1 }
+
+WrpcSfpEntry ::=
+    SEQUENCE {
+        wrpcSfpIndex       Integer32,
+        wrpcSfpSfpPn       DisplayString,
+        wrpcSfpDeltaTx     Integer32,
+        wrpcSfpDeltaTx     Integer32,
+        wrpcSfpAlpha       Integer32
+    }
+
+wrpcSfpIndex                   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Index for wrpcSfpTable"
+    ::= { wrpcSfpEntry 1 }
+
+wrpcSfpPn                      OBJECT-TYPE
+    SYNTAX                     DisplayString (SIZE (0..16))
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "SFPs Product Number"
+    ::= { wrpcSfpEntry 2 }
+
+wrpcSfpDeltaTx                 OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "SFPs Delta TX"
+    ::= { wrpcSfpEntry 3 }
+
+wrpcSfpDeltaRx                 OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "SFPs Delta RX"
+    ::= { wrpcSfpEntry 4 }
+
+wrpcSfpAlpha                   OBJECT-TYPE
+    SYNTAX                     Integer32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "SFPs Alpha"
+    ::= { wrpcSfpEntry 5 }
+
+-- ****************************************************************************
 
 
 END

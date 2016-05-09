@@ -223,6 +223,7 @@ static int get_time(uint8_t *buf, struct snmp_oid *obj);
 static int get_servo(uint8_t *buf, struct snmp_oid *obj);
 static int get_port(uint8_t *buf, struct snmp_oid *obj);
 static int get_temp(uint8_t *buf, struct snmp_oid *obj);
+static int get_sfp(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
@@ -237,6 +238,7 @@ static uint8_t oid_wrpcSpllStatusGroup[] =  {0x2B,6,1,4,1,96,101,1,4};
 static uint8_t oid_wrpcPtpGroup[] =         {0x2B,6,1,4,1,96,101,1,5};
 static uint8_t oid_wrpcPtpConfigGroup[] =   {0x2B,6,1,4,1,96,101,1,6};
 static uint8_t oid_wrpcPortGroup[] =        {0x2B,6,1,4,1,96,101,1,7};
+static uint8_t oid_wrpcSfpTable[] =         {0x2B,6,1,4,1,96,101,1,8};
 
 /* wrpcVersionGroup */
 static uint8_t oid_wrpcVersionHwType[] =         {1,0};
@@ -297,6 +299,11 @@ static uint8_t oid_wrpcPortSfpInDB[] =           {3,0};
 static uint8_t oid_wrpcPortInternalTX[] =        {4,0};
 static uint8_t oid_wrpcPortInternalRX[] =        {5,0};
 
+/* oid_wrpcSfpTable */
+static uint8_t oid_wrpcSfpPn[] =                 {1,2};
+static uint8_t oid_wrpcSfpDeltaTx[] =            {1,3};
+static uint8_t oid_wrpcSfpDeltaRx[] =            {1,4};
+static uint8_t oid_wrpcSfpAlpha[] =              {1,5};
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
@@ -381,6 +388,15 @@ static struct snmp_oid oid_array_wrpcPortGroup[] = {
 	{ 0, }
 };
 
+/* wrpcSfpTable */
+static struct snmp_oid oid_array_wrpcSfpTable[] = {
+	OID_FIELD_VAR(   oid_wrpcSfpPn,        get_sfp,        NULL,    ASN_OCTET_STR, NULL),
+	OID_FIELD_VAR(   oid_wrpcSfpDeltaTx,   get_sfp,        NULL,    ASN_INTEGER,   NULL),
+	OID_FIELD_VAR(   oid_wrpcSfpDeltaRx,   get_sfp,        NULL,    ASN_INTEGER,   NULL),
+	OID_FIELD_VAR(   oid_wrpcSfpAlpha,     get_sfp,        NULL,    ASN_INTEGER,   NULL),
+	{ 0, }
+};
+
 /* Array of groups and tables */
 static struct snmp_oid_limb oid_limb_array[] = {
 	OID_LIMB_FIELD(oid_wrpcVersionGroup,     func_group, oid_array_wrpcVersionGroup),
@@ -390,6 +406,7 @@ static struct snmp_oid_limb oid_limb_array[] = {
 	OID_LIMB_FIELD(oid_wrpcPtpGroup,         func_group, oid_array_wrpcPtpGroup),
 	OID_LIMB_FIELD(oid_wrpcPtpConfigGroup,   func_group, oid_array_wrpcPtpConfigGroup),
 	OID_LIMB_FIELD(oid_wrpcPortGroup,        func_group, oid_array_wrpcPortGroup),
+	OID_LIMB_FIELD(oid_wrpcSfpTable,         func_table, oid_array_wrpcSfpTable),
 	{ 0, }
 };
 
@@ -848,6 +865,69 @@ static int get_temp(uint8_t *buf, struct snmp_oid *obj)
 	if (p) {
 		/* data found return it */
 		return get_value(buf, obj->asn, buffer);
+	}
+
+	return 0;
+}
+
+
+static int get_sfp(uint8_t *buf, struct snmp_oid *obj)
+{
+	int i;
+	struct s_sfpinfo sfp;
+	int row;
+	int col;
+	void *p = NULL;
+	int sfpcount = 1;
+	int temp;
+	char sfp_pn[SFP_PN_LEN + 1];
+
+	row = obj->oid_match[2];
+	col = obj->oid_match[1];
+	snmp_verbose("%s: row%d, col%d\n", __func__, row, col);
+	for (i = 1; i < sfpcount+1; ++i) {
+		sfpcount = storage_get_sfp(&sfp, SFP_GET, i - 1);
+		if (sfpcount == 0) {
+			snmp_verbose("SFP database empty...\n");
+			return 0;
+		} else if (sfpcount == -1) {
+			snmp_verbose("SFP database corrupted...\n");
+			return 0;
+		}
+
+		snmp_verbose("%d: PN:", i);
+		for (temp = 0; temp < SFP_PN_LEN; ++temp)
+			snmp_verbose("%c", sfp.pn[temp]);
+		snmp_verbose(" dTx: %8d dRx: %8d alpha: %8d\n", sfp.dTx,
+			sfp.dRx, sfp.alpha);
+		if (row == i) {
+			if (col == 2) {
+				/* Use local buffer for sfp PN, since stored
+				 * version is without null character at
+				 * the end */
+				memcpy(sfp_pn, sfp.pn, SFP_PN_LEN);
+				sfp_pn[SFP_PN_LEN] = '\0';
+				p = sfp_pn;
+				break;
+			}
+			if (col == 3) {
+				p = &sfp.dTx;
+				break;
+			}
+			if (col == 4) {
+				p = &sfp.dRx;
+				break;
+			}
+			if (col == 5) {
+				p = &sfp.alpha;
+				break;
+			}
+		}
+	}
+
+	if (p) {
+		/* Data found, return it */
+		return get_value(buf, obj->asn, p);
 	}
 
 	return 0;
