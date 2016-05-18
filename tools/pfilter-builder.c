@@ -211,7 +211,8 @@ enum pf_symbolic_regs {
 
 	/* The first set is used for straight comparisons */
 	FRAME_BROADCAST = R_1,
-	FRAME_OUR_MAC,
+	FRAME_MAC_OK,
+	FRAME_MAC_PTP,
 	FRAME_OUR_VLAN,
 	FRAME_TYPE_IPV4,
 	FRAME_TYPE_PTP2,
@@ -374,14 +375,24 @@ void pfilter_init_novlan(char *fname)
 	 */
 
 	/* Local frame, using fake MAC: 12:34:56:78:9a:bc */
-	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_OUR_MAC);
-	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_OUR_MAC);
-	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_MAC_OK);
+	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_MAC_OK);
+	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_MAC_OK);
 
 	/* Broadcast frame */
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
 	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);
+
+	/* PTP UDP (end to end: 01:00:5e:00:01:81    224.0.1.129) */
+	pfilter_cmp(0, 0x0100, 0xffff, MOV, FRAME_MAC_PTP);
+	pfilter_cmp(1, 0x5e00, 0xffff, AND, FRAME_MAC_PTP);
+	pfilter_cmp(2, 0x0181, 0xffff, MOV, R_TMP);
+
+	/* PTP UDP (peer-to-p:  01:00:5e:00:00:6b    224.0.0.197) */
+	pfilter_cmp(2, 0x006b, 0xffff, OR, R_TMP);
+
+	pfilter_logic3(FRAME_MAC_OK, FRAME_MAC_PTP, AND, R_TMP, OR, FRAME_MAC_OK);
 
 	/* Tagged is dropped. We'll invert the check in the vlan rule-set */
 	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
@@ -392,9 +403,8 @@ void pfilter_init_novlan(char *fname)
 	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
 	pfilter_cmp(6, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);
 
-	/* Mark bits for ip unicast and ip-valid (unicast or broadcast) */
-	pfilter_logic2(FRAME_IP_UNI, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
-	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_OUR_MAC, AND, FRAME_TYPE_IPV4);
+	/* Mark one bits for ip-valid (unicast or broadcast) */
+	pfilter_logic3(FRAME_IP_OK, FRAME_BROADCAST, OR, FRAME_MAC_OK, AND, FRAME_TYPE_IPV4);
 
 	/* Ethernet = 14 bytes, Offset to type in IP: 8 bytes = 22/2 = 11 */
 	pfilter_cmp(11, 0x0001, 0x00ff, MOV, FRAME_ICMP);
@@ -403,20 +413,19 @@ void pfilter_init_novlan(char *fname)
 
 	/* For CPU: arp broadcast or icmp unicast or ptp */
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
-	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_UNI, AND, FRAME_ICMP, OR, FRAME_FOR_CPU);
+	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_OK, AND, FRAME_ICMP, OR, FRAME_FOR_CPU);
 
 	/* Now look in UDP ports: at offset 18 (14 + 20 + 8 = 36) */
 	pfilter_cmp(18, 0x0000, 0xff00, MOV, PORT_UDP_HOST);	/* ports 0-255 */
 	pfilter_cmp(18, 0x0100, 0xff00, OR, PORT_UDP_HOST);	/* ports 256-511 */
 
 	/* The CPU gets those ports in a proper UDP frame, plus the previous selections */
-	pfilter_logic3(FRAME_FOR_CPU, FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);
+	pfilter_logic3(R_CLASS(0), FRAME_UDP, AND, PORT_UDP_HOST, OR, FRAME_FOR_CPU);
 
 	/* Etherbone is UDP at port 0xebd0, let's "or" in the last move */
 	pfilter_cmp(18, 0xebd0, 0xffff, MOV, PORT_UDP_ETHERBONE);
 
-	/* and now copy out the stuff: one cpu class, two fabric classes: 7 etherbone, 6 for anything else */
-	pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, MOV, R_ZERO);
+	/* and now copy out fabric selections: 7 etherbone, 6 for anything else */
 	pfilter_logic2(R_CLASS(7), FRAME_UDP, AND, PORT_UDP_ETHERBONE);
 	pfilter_logic2(R_CLASS(6), FRAME_UDP, NAND, PORT_UDP_ETHERBONE);
 
@@ -446,14 +455,24 @@ void pfilter_init_vlan(char *fname)
 	 */
 
 	/* Local frame, using fake MAC: 12:34:56:78:9a:bc */
-	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_OUR_MAC);
-	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_OUR_MAC);
-	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_OUR_MAC);
+	pfilter_cmp(0, 0x1234, 0xffff, MOV, FRAME_MAC_OK);
+	pfilter_cmp(1, 0x5678, 0xffff, AND, FRAME_MAC_OK);
+	pfilter_cmp(2, 0x9abc, 0xffff, AND, FRAME_MAC_OK);
 
 	/* Broadcast frame */
 	pfilter_cmp(0, 0xffff, 0xffff, MOV, FRAME_BROADCAST);
 	pfilter_cmp(1, 0xffff, 0xffff, AND, FRAME_BROADCAST);
 	pfilter_cmp(2, 0xffff, 0xffff, AND, FRAME_BROADCAST);
+
+	/* PTP UDP (end to end: 01:00:5e:00:01:81    224.0.1.129) */
+	pfilter_cmp(0, 0x0100, 0xffff, MOV, FRAME_MAC_PTP);
+	pfilter_cmp(1, 0x5e00, 0xffff, AND, FRAME_MAC_PTP);
+	pfilter_cmp(2, 0x0181, 0xffff, MOV, R_TMP);
+
+	/* PTP UDP (peer-to-p:  01:00:5e:00:00:6b    224.0.0.197) */
+	pfilter_cmp(2, 0x006b, 0xffff, OR, R_TMP);
+
+	pfilter_logic3(FRAME_MAC_OK, FRAME_MAC_PTP, AND, R_TMP, OR, FRAME_MAC_OK);
 
 	/* Untagged is dropped. */
 	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
@@ -469,7 +488,7 @@ void pfilter_init_vlan(char *fname)
 
 	/* Loose match: keep all bcast, all our mac and all ptp ... */
 	pfilter_logic3(FRAME_FOR_CPU,
-		FRAME_OUR_MAC, OR, FRAME_BROADCAST, OR, FRAME_TYPE_PTP2);
+		FRAME_MAC_OK, OR, FRAME_BROADCAST, OR, FRAME_TYPE_PTP2);
 
 	/* .... but only for our current VLAN */
 	pfilter_logic2(R_CLASS(0), FRAME_FOR_CPU, AND, FRAME_OUR_VLAN);
@@ -481,7 +500,7 @@ void pfilter_init_vlan(char *fname)
 	 *
 	 * We reuse FRAME_OUR_VLAN, even if it's not OUR as in "this CPU"
 	 */
-	pfilter_logic2(R_TMP, FRAME_OUR_MAC, OR, FRAME_BROADCAST);
+	pfilter_logic2(R_TMP, FRAME_MAC_OK, OR, FRAME_BROADCAST);
 
 	pfilter_cmp(7, CONFIG_VLAN_1_FOR_CLASS7, 0x0fff, MOV, FRAME_OUR_VLAN);
 	pfilter_cmp(7, CONFIG_VLAN_2_FOR_CLASS7, 0x0fff, OR, FRAME_OUR_VLAN);
