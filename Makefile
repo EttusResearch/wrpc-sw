@@ -63,6 +63,8 @@ obj-$(CONFIG_EMBEDDED_NODE) += \
 cflags-$(CONFIG_LM32) += -mmultiply-enabled -mbarrel-shift-enabled
 ldflags-$(CONFIG_LM32) = -mmultiply-enabled -mbarrel-shift-enabled \
 	-nostdlib -T $(LDS-y)
+arch-files-$(CONFIG_LM32) = $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
+
 
 # packet-filter rules: for CONFIG_VLAN we use both sets
 pfilter-y                     := rules-novlan.bin
@@ -109,7 +111,7 @@ OUTPUT := $(OUTPUT-y)
 
 GIT_VER = $(shell git describe --always --dirty | sed  's;^wr-switch-sw-;;')
 
-all: tools $(OUTPUT).ram $(OUTPUT).vhd $(OUTPUT).mif
+all: tools $(OUTPUT).elf $(arch-files-y)
 
 .PRECIOUS: %.elf %.bin
 .PHONY: all tools clean gitmodules $(PPSI)/ppsi.o

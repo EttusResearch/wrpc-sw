@@ -1,4 +1,4 @@
-obj-y += \
+obj-$(CONFIG_LM32) += \
 	softpll/spll_common.o \
 	softpll/spll_external.o \
 	softpll/spll_helper.o \
