@@ -216,6 +216,7 @@ enum pf_symbolic_regs {
 	FRAME_OUR_VLAN,
 	FRAME_TYPE_IPV4,
 	FRAME_TYPE_PTP2,
+	FRAME_TYPE_LATENCY,
 	FRAME_TYPE_ARP,
 	FRAME_ICMP,
 	FRAME_UDP,
@@ -398,8 +399,9 @@ void pfilter_init_novlan(char *fname)
 	pfilter_cmp(6, 0x8100, 0xffff, MOV, R_TMP);
 	pfilter_logic2(R_DROP, R_TMP, MOV, R_ZERO);
 
-	/* Identify some Ethertypes used later.  */
+	/* Identify some Ethertypes used later -- type latency is 0xcafe */
 	pfilter_cmp(6, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
+	pfilter_cmp(6, 0xcafe, 0xffff, OR, FRAME_TYPE_PTP2);
 	pfilter_cmp(6, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
 	pfilter_cmp(6, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);
 
@@ -411,7 +413,7 @@ void pfilter_init_novlan(char *fname)
 	pfilter_cmp(11, 0x0011, 0x00ff, MOV, FRAME_UDP);
 	pfilter_logic2(FRAME_UDP, FRAME_UDP, AND, FRAME_IP_OK);
 
-	/* For CPU: arp broadcast or icmp unicast or ptp */
+	/* For CPU: arp broadcast or icmp unicast or ptp (or latency) */
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_BROADCAST, AND, FRAME_TYPE_ARP, OR, FRAME_TYPE_PTP2);
 	pfilter_logic3(FRAME_FOR_CPU, FRAME_IP_OK, AND, FRAME_ICMP, OR, FRAME_FOR_CPU);
 
@@ -481,8 +483,9 @@ void pfilter_init_vlan(char *fname)
 	/* Compare with our vlan (fake number 0xaaa) */
 	pfilter_cmp(7, 0x0aaa, 0x0fff, MOV, FRAME_OUR_VLAN);
 
-	/* Identify some Ethertypes used later.  */
+	/* Identify some Ethertypes used later -- type latency is 0xcafe */
 	pfilter_cmp(8, 0x88f7, 0xffff, MOV, FRAME_TYPE_PTP2);
+	pfilter_cmp(8, 0xcafe, 0xffff, OR, FRAME_TYPE_PTP2);
 	pfilter_cmp(8, 0x0800, 0xffff, MOV, FRAME_TYPE_IPV4);
 	pfilter_cmp(8, 0x0806, 0xffff, MOV, FRAME_TYPE_ARP);
 

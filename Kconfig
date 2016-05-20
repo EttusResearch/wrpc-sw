@@ -106,6 +106,10 @@ config W1
 	boolean
 	default y
 
+config LATENCY_ETHTYPE
+	int
+	default 0
+
 # The other ones can be set by non-developers
 
 config IP
@@ -395,6 +399,21 @@ config LEGACY_EEPROM
 	depends on WR_NODE
 	boolean
 	default !SDB_STORAGE
+
+config LATENCY_PROBE
+	depends on DEVELOPER
+	bool "Build the latency probe mechanism (send/recv)"
+	help
+	  The latency prober sends two frames to broadcast and
+	  then the timestamp of their departure time. The receiver
+	  measures the network latency and reports it.
+
+	  If this option is set, the receiver is always running. The
+	  sender is built but must be activated by the latency shell cmd.
+
+config LATENCY_ETHTYPE
+	depends on LATENCY_PROBE
+	int "Ethtype to use for latency probing"
 
 # This is needed to size the pp_instance data strucuture. Instead of
 # including the ppsi autoconf.h, with duplicate definitions, define it

@@ -55,6 +55,7 @@ struct sockq {
 struct wrpc_socket {
 	struct wr_sockaddr bind_addr;
 	mac_addr_t local_mac;
+	uint16_t prio;
 
 	uint32_t phase_transition;
 	uint32_t dmtd_phase;

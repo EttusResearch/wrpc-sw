@@ -61,6 +61,7 @@ void pfilter_init_default(void)
 	uint64_t cmd_word;
 	int i;
 	static int inited;
+	uint32_t latency_ethtype = CONFIG_LATENCY_ETHTYPE;
 
 	/* If vlan, use rule-set 1, else rule-set 0 */
 	s = rule_sets + (wrc_vlan_number != 0);
@@ -113,6 +114,22 @@ void pfilter_init_default(void)
 	v[6] |= ((mac[4] << 8) | mac[5]) << 13;
 	pfilter_verbose("fixing MAC adress in rule: use %s\n",
 			format_mac(buf, mac));
+
+	/*
+	 * Patch in the "latency" ethtype too. This is set at build time
+	 * so there's not need to remember the place or the value.
+	 */
+	if (latency_ethtype == 0)
+		latency_ethtype = 0x88f7; /* reuse PTPv2 type: turn into NOP */
+	for (v = vini + 1; v < vend; v += 2) {
+		if (((*v >> 13) & 0xffff) == 0xcafe
+		    && (*v & 0x7) == OR) {
+			pfilter_verbose("fixing latency eth_type: use 0x%x\n",
+					latency_ethtype);
+			*v &= ~(0xffff << 13);
+			*v |= latency_ethtype << 13;
+		}
+	}
 
 	/* If this is the VLAN rule-set, patch the vlan number too */
 	for (v = vini + 1; v < vend; v += 2) {
