@@ -38,7 +38,7 @@ static struct latency_frame {
 	struct wr_timestamp ts1, ts2;
 } frame;
 
-static uint16_t prev_sequence, prev_type;
+static uint32_t prev_sequence, prev_type;
 
 static void ts_sub(struct wr_timestamp *t2, struct wr_timestamp *t1,
 		      struct wr_timestamp *res)
