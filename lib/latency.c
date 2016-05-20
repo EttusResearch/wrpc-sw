@@ -34,8 +34,8 @@ static void latency_init(void)
 }
 
 static struct latency_frame {
-	uint16_t type;   /* 0, 1, 2 */
-	uint16_t sequence;
+	uint32_t type;   /* 1, 2, 3 */
+	uint32_t sequence;
 	struct wr_timestamp ts1, ts2;
 } frame;
 
@@ -58,14 +58,15 @@ static void ts_sub(struct wr_timestamp *t2, struct wr_timestamp *t1,
 }
 
 static void latency_warning(void) {
-	pp_printf("%s: unexpected %i.%i after %i.%i\n", __func__,
+	pp_printf("lat: unexpected %i.%i after %i.%i\n",
 		  frame.sequence, frame.type, prev_sequence, prev_type);
 }
 
 static int latency_poll_rx(void)
 {
 	static struct wr_timestamp ts[2];
-	struct wr_timestamp ts_tmp;
+	static int nframes;
+	struct wr_timestamp ts_tmp, lat[2];
 	struct wr_sockaddr addr;
 	int len;
 
@@ -76,31 +77,35 @@ static int latency_poll_rx(void)
 
 	/* check sequence and type is ok */
 	switch(frame.type) {
-	case 0:
-		if (frame.sequence != prev_sequence + 1 || prev_type != 2)
+	case 1:
+		if (frame.sequence != prev_sequence + 1 || prev_type != 3)
 			latency_warning();
 		ts[0] = ts_tmp; /* 0 is always valid, it's a new set */
+		nframes = 1;
 		ts[1].sec = 0; /* but still incomplete info */
-		break;
 
-	case 1:
-		if (frame.sequence != prev_sequence || prev_type != 0)
-			latency_warning();
-		else
-			ts[1] = ts_tmp;
 		break;
 
 	case 2:
 		if (frame.sequence != prev_sequence || prev_type != 1) {
 			latency_warning();
-			break;
+		} else {
+			ts[1] = ts_tmp;
+			nframes++;
 		}
-		if (!ts[1].sec)
-			break;
+		break;
+
+	case 3:
+		if (frame.sequence != prev_sequence || prev_type != 2) {
+			latency_warning();
+		} else {
+			nframes++;
+		}
+		break;
 	}
 	prev_sequence = frame.sequence;
 	prev_type = frame.type;
-	if (frame.type != 2)
+	if (frame.type != 3 || nframes != 3)
 		return 1;
 
 
@@ -114,35 +119,47 @@ static int latency_poll_rx(void)
 	net_verbose("ts_tx 2: %9li.%09i.%03i\n", (long)frame.ts2.sec,
 		    frame.ts2.nsec, frame.ts2.phase);
 
-	ts_sub(ts + 0, &frame.ts1, &ts_tmp);
-	pp_printf("latency prio7: %i.%03i\n", ts_tmp.nsec, ts_tmp.phase);
-
-	ts_sub(ts + 1, &frame.ts2, &ts_tmp);
-	pp_printf("latency prio6: %i.%03i\n", ts_tmp.nsec, ts_tmp.phase);
+	ts_sub(ts + 0, &frame.ts1, lat + 0);
+	ts_sub(ts + 1, &frame.ts2, lat + 1);
+	pp_printf("lat: %9i %6i.%03i %6i.%03i\n",
+		  frame.sequence,
+		  lat[0].nsec, lat[0].phase,
+		  lat[1].nsec, lat[1].phase);
 	return 1;
 }
 
 static int latency_poll_tx(void)
 {
-	static uint16_t sequence;
+	static uint32_t sequence;
+	static uint32_t lasts;
 
 	/* Send three frames -- lazily in native byte order */
 	memset(&frame, 0, sizeof(frame));
 	frame.sequence = sequence++;
 
+	frame.type = 1;
 	latency_socket->prio = 7;
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  &frame.ts1);
 
-	frame.type = 1;
+	frame.type = 2;
 	latency_socket->prio = 6;
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  &frame.ts2);
 
-	frame.type = 2;
+	frame.type = 3;
 	latency_socket->prio = 0;
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  NULL);
+
+	/* Every 10s remind we are sending ltest */
+	if (!lasts) {
+		lasts = frame.ts2.sec;
+	} else if (frame.ts2.sec - lasts >= 10) {
+		lasts = frame.ts2.sec;
+		pp_printf("latency: seq %9i sent @ %9i\n",
+			  sequence, lasts);
+	}
 	return 1;
 
 }
