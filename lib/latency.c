@@ -12,6 +12,16 @@
 #include <shell.h>
 #include "ipv4.h"
 
+#ifdef CONFIG_LATENCY_SYSLOG
+#define HAS_SYSLOG 1
+static int lat_verbose = 0;
+#else
+#define HAS_SYSLOG 0
+static int lat_verbose = 1;
+#endif
+
+static unsigned long prios[] = {7, 6, 0}; /* the prio for the 3 frames */
+
 /* latency probe: we need to enqueue 3 short frames: 64*3+overhead = 256 */
 static uint8_t __latency_queue[256];
 static struct wrpc_socket *latency_socket, __static_latency_socket = {
@@ -35,7 +45,7 @@ static void latency_init(void)
 static struct latency_frame {
 	uint32_t type;   /* 1, 2, 3 */
 	uint32_t sequence;
-	struct wr_timestamp ts1, ts2;
+	struct wr_timestamp ts[2];
 } frame;
 
 static uint32_t prev_sequence, prev_type;
@@ -57,6 +67,8 @@ static void ts_sub(struct wr_timestamp *t2, struct wr_timestamp *t1,
 }
 
 static void latency_warning(void) {
+	if (!lat_verbose)
+		return;
 	pp_printf("lat: unexpected %i.%i after %i.%i\n",
 		  frame.sequence, frame.type, prev_sequence, prev_type);
 }
@@ -65,13 +77,14 @@ static int latency_poll_rx(void)
 {
 	static struct wr_timestamp ts[2];
 	static int nframes;
+	static int lost[2];
 	struct wr_timestamp ts_tmp, lat[2];
 	struct wr_sockaddr addr;
-	int len;
+	int i, j;
 
-	len = ptpd_netif_recvfrom(latency_socket, &addr,
+	i = ptpd_netif_recvfrom(latency_socket, &addr,
 				  &frame, sizeof(frame), &ts_tmp);
-	if (len < sizeof(frame))
+	if (i < sizeof(frame))
 		return 0;
 
 	/* check sequence and type is ok */
@@ -102,6 +115,16 @@ static int latency_poll_rx(void)
 		}
 		break;
 	}
+
+	/* count lost frames */
+	i = prev_sequence * 3 + prev_type - 1; /* type: 1..3 -> 0..2 */
+	j = frame.sequence * 3 + frame.type - 2;
+	if (HAS_SYSLOG && j != i && j < i + 100) {
+		lost[1] = j;
+		lost[0] += j;
+		syslog_latency_report(-1, NULL, lost);
+	}
+
 	prev_sequence = frame.sequence;
 	prev_type = frame.type;
 	if (frame.type != 3 || nframes != 3)
@@ -110,20 +133,38 @@ static int latency_poll_rx(void)
 
 	net_verbose("ts_rx 1: %9li.%09i.%03i\n", (long)ts[0].sec,
 		    ts[0].nsec, ts[0].phase);
-	net_verbose("ts_tx 1: %9li.%09i.%03i\n", (long)frame.ts1.sec,
-		    frame.ts1.nsec, frame.ts1.phase);
+	net_verbose("ts_tx 1: %9li.%09i.%03i\n", (long)frame.ts[0].sec,
+		    frame.ts[0].nsec, frame.ts[0].phase);
 
 	net_verbose("ts_rx 2: %9li.%09i.%03i\n", (long)ts[1].sec,
 		    ts[1].nsec, ts[1].phase);
-	net_verbose("ts_tx 2: %9li.%09i.%03i\n", (long)frame.ts2.sec,
-		    frame.ts2.nsec, frame.ts2.phase);
+	net_verbose("ts_tx 2: %9li.%09i.%03i\n", (long)frame.ts[1].sec,
+		    frame.ts[1].nsec, frame.ts[1].phase);
 
-	ts_sub(ts + 0, &frame.ts1, lat + 0);
-	ts_sub(ts + 1, &frame.ts2, lat + 1);
-	pp_printf("lat: %9i %6i.%03i %6i.%03i\n",
-		  frame.sequence,
-		  lat[0].nsec, lat[0].phase,
-		  lat[1].nsec, lat[1].phase);
+	ts_sub(ts + 0, frame.ts + 0, lat + 0);
+	ts_sub(ts + 1, frame.ts + 1, lat + 1);
+
+	if (lat[0].sec || lat[1].sec)
+		return 1; /* not synchronized for sure */
+
+	if (lat_verbose) {
+		pp_printf("lat: %9i %6i.%03i %6i.%03i\n",
+			  frame.sequence,
+			  lat[0].nsec, lat[0].phase,
+			  lat[1].nsec, lat[1].phase);
+	} else {
+		/* keep a running average of 8 samples */
+		static unsigned long avg_ns[2];
+		int i;
+
+		for (i = 0; i < 2; i++) {
+			if (!avg_ns[i])
+				avg_ns[i] = 2 * lat[i].nsec;
+			if (lat[i].nsec > avg_ns[i] * 2)
+				syslog_latency_report(prios[i], lat + i, lost);
+			avg_ns[i] = (7 * avg_ns[i] + lat[i].nsec) / 8;
+		}
+	}
 	return 1;
 }
 
@@ -137,25 +178,25 @@ static int latency_poll_tx(void)
 	frame.sequence = sequence++;
 
 	frame.type = 1;
-	latency_socket->prio = 7;
+	latency_socket->prio = prios[0];
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
-			  &frame.ts1);
+			  frame.ts + 0);
 
 	frame.type = 2;
-	latency_socket->prio = 6;
+	latency_socket->prio = prios[1];
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
-			  &frame.ts2);
+			  frame.ts + 1);
 
 	frame.type = 3;
-	latency_socket->prio = 0;
+	latency_socket->prio = prios[2];
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  NULL);
 
 	/* Every 10s remind we are sending ltest */
 	if (!lasts) {
-		lasts = frame.ts2.sec;
-	} else if (frame.ts2.sec - lasts >= 10) {
-		lasts = frame.ts2.sec;
+		lasts = frame.ts->sec;
+	} else if (frame.ts->sec - lasts >= 10) {
+		lasts = frame.ts->sec;
 		pp_printf("latency: seq %9i sent @ %9i\n",
 			  sequence, lasts);
 	}
@@ -192,12 +233,18 @@ static int cmd_ltest(const char *args[])
 		fromdec(args[1], &v1); /* ms */
 	}
 	if (args[0]) {
-		fromdec(args[0], &v);
-		latency_period_ms = v * 1000 + v1;
-		lastt = 0; /* reset, so it fires immediately */
+		if (HAS_SYSLOG && !strcmp(args[0], "verbose"))
+			lat_verbose = 1;
+		else if (HAS_SYSLOG && !strcmp(args[0], "quiet"))
+			lat_verbose = 0;
+		else {
+			fromdec(args[0], &v);
+			latency_period_ms = v * 1000 + v1;
+			lastt = 0; /* reset, so it fires immediately */
+		}
 	}
-	pp_printf("%i.%03i\n", latency_period_ms / 1000,
-		  latency_period_ms % 1000);
+	pp_printf("%i.%03i (%s)\n", latency_period_ms / 1000,
+		  latency_period_ms % 1000, lat_verbose ? "verbose" : "quiet");
 	return 0;
 }
 

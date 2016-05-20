@@ -110,6 +110,9 @@ config LATENCY_ETHTYPE
 	int
 	default 291
 
+config LATENCY_SYSLOG
+	bool
+
 # The other ones can be set by non-developers
 
 config P2P
@@ -494,6 +497,11 @@ config LATENCY_ETHTYPE
 	help
 	  Ethertypes 0x0101-0x01ff are marked as "experimental", apparently.
 	  So 0x0123 (291)is a good default, but please pick yours.
+
+config LATENCY_SYSLOG
+	depends on LATENCY_PROBE && SYSLOG
+	bool "Report latency problems to syslog"
+	default y
 
 # This is needed to size the pp_instance data strucuture. Instead of
 # including the ppsi autoconf.h, with duplicate definitions, define it
