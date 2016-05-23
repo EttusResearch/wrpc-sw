@@ -62,6 +62,9 @@ static int cmd_sfp(const char *args[])
 		} else if (temp == EE_RET_I2CERR) {
 			pp_printf("I2C error\n");
 			return -EIO;
+		} else if (temp < 0) {
+			pp_printf("SFP database error (%d)\n", temp);
+			return -EFAULT;
 		}
 		pp_printf("%d SFPs in DB\n", temp);
 		return 0;
@@ -69,10 +72,11 @@ static int cmd_sfp(const char *args[])
 		for (i = 0; i < sfpcount; ++i) {
 			sfpcount = storage_get_sfp(&sfp, 0, i);
 			if (sfpcount == 0) {
-				pp_printf("SFP database empty...\n");
+				pp_printf("SFP database empty\n");
 				return 0;
-			} else if (sfpcount == -1) {
-				pp_printf("SFP database corrupted...\n");
+			} else if (sfpcount < 0) {
+				pp_printf("SFP database error (%d)\n",
+					  sfpcount);
 				return -EFAULT;
 			}
 			pp_printf("%d: PN:", i + 1);
