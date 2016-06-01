@@ -37,22 +37,6 @@ int spll_n_chan_ref, spll_n_chan_out;
 
 #define MAIN_CHANNEL (spll_n_chan_ref)
 
-#define SEQ_START_EXT 1
-#define SEQ_WAIT_EXT 2
-#define SEQ_START_HELPER 3
-#define SEQ_WAIT_HELPER 4
-#define SEQ_START_MAIN 5
-#define SEQ_WAIT_MAIN 6
-#define SEQ_DISABLED 7
-#define SEQ_READY 8
-#define SEQ_CLEAR_DACS 9
-#define SEQ_WAIT_CLEAR_DACS 10
-
-#define AUX_DISABLED 1
-#define AUX_LOCK_PLL 2
-#define AUX_ALIGN_PHASE 3
-#define AUX_READY 4
-
 static const struct stringlist_entry seq_states [] =
 {
 	{ SEQ_START_EXT, "start-ext" },

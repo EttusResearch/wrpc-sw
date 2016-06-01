@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include "util.h"
+#include "softpll_export.h"
 #include "spll_defs.h"
 #include "spll_common.h"
 #include "spll_debug.h"
@@ -22,20 +23,6 @@
 #include "spll_ptracker.h"
 #include "spll_external.h"
 
-
-/* SoftPLL operating modes, for mode parameter of spll_init(). */
-
-/* Grand Master - lock to 10 MHz external reference */
-#define SPLL_MODE_GRAND_MASTER 1
-
-/* Free running master - 125 MHz refrence free running, DDMTD locked to it */
-#define SPLL_MODE_FREE_RUNNING_MASTER 2
-
-/* Slave mode - 125 MHz reference locked to one of the input clocks */
-#define SPLL_MODE_SLAVE 3
-
-/* Disabled mode: SoftPLL inactive */
-#define SPLL_MODE_DISABLED 4
 
 /* Shortcut for 'channels' parameter in various API functions to perform operation on all channels */
 #define SPLL_ALL_CHANNELS 0xffffffff
@@ -124,31 +111,6 @@ void spll_set_dac(int out_channel, int value);
 int spll_get_dac(int out_channel);
 
 void check_vco_frequencies(void);
-
-#define SPLL_STATS_VER 2
-
-/* info reported through .stat section */
-/* due to endiannes problem strings has to be 4 bytes alligned */
-struct spll_stats {
-	int magic;	/* 0x5b1157a7 = SPLLSTAT ?;)*/
-	int ver;	/* version of the structure */
-	int sequence;	/* sequence number, so the host can retry */
-	int mode;
-	int irq_cnt;
-	int seq_state;
-	int align_state;
-	int H_lock;
-	int M_lock;
-	int H_y, M_y;
-	int del_cnt;
-	int start_cnt;
-	char commit_id[32];
-	char build_date[16];
-	char build_time[16];
-};
-
-/* This only exists in wr-switch, but we should use it always */
-extern struct spll_stats stats;
 
 /*
  * Aux and main state:
