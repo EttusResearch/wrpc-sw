@@ -594,7 +594,6 @@ is presented below:
 @example
 wrc# init erase
 wrc# init add ptp stop
-wrc# init add sfp detect
 wrc# init add sfp match
 wrc# init add mode slave
 wrc# init add ptp start
@@ -622,13 +621,15 @@ script:
 
 @example
 executing: ptp stop
-executing: sfp detect
-AXGE-3454-0531  
+PTP stop
 executing: sfp match
-SFP matched, dTx=180707, dRx=148323, alpha=-73685416
+AXGE-3454-0531
+SFP matched, dTx=180707 dRx=148323 alpha=-73685416
 executing: mode slave
+PTP stop
 Locking PLL
 executing: ptp start
+PTP start
 Slave Only, clock class set to 255
 @end example
 
@@ -811,9 +812,6 @@ Slave mode)
 aligned to external 1-PPS and 10 MHz)
 @item @code{time setnsec <nsec>} @tab sets only nanoseconds of the @sc{wrpc} time
 
-@item @code{sfp detect} @tab prints the ID of a currently used @sc{sfp}
-transceiver
-
 @item @code{sfp erase} @tab erases the @sc{sfp} database stored in the Flash/EEPROM
 
 @item @code{sfp add <ID> <deltaTx> <deltaRx> <alpha>} @tab stores calibration
@@ -821,8 +819,8 @@ parameters for @sc{sfp} to a file in Flash/EEPROM
 
 @item @code{sfp show} @tab prints all @sc{sfp} transceivers stored in database
 
-@item @code{sfp match} @tab tries to load the calibration parameters for
-currently used @sc{sfp} transceiver (@t{sfp detect} must be executed before @t{match})
+@item @code{sfp match} @tab prints the ID of a currently used @sc{sfp}
+transceiver and tries to load the calibration parameters for it
 
 @item @code{init erase} @tab erases the initialization script in Flash/EEPROM
 @item @code{init add <cmd>} @tab adds shell command at the end of the
