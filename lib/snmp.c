@@ -668,31 +668,6 @@ static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 	return return_len;
 }
 
-/* These get the actual information, returning the length */
-static int get_tics(uint8_t *buf, struct snmp_oid *obj)
-{
-	uint32_t tics = htonl(timer_get_tics() / 10); /* hundredths... bah! */
-
-	memcpy(buf + 2, &tics, sizeof(tics));
-	buf[1] = sizeof(tics);
-	buf[0] = ASN_TIMETICKS;
-	return 2 + sizeof(tics);
-}
-
-static int get_date(uint8_t *buf, struct snmp_oid *obj)
-{
-	uint64_t secs;
-	char *datestr;
-
-	shw_pps_gen_get_time(&secs, NULL);
-	datestr = format_time(secs, TIME_FORMAT_SNMP);
-
-	memcpy((void *)(buf + 2), datestr, 12);
-	buf[1] = 8; /* size is hardwired. See mib document or prev. commit */
-	buf[0] = ASN_OCTET_STR;
-	return 2 + buf[1];
-}
-
 static int get_servo(uint8_t *buf, struct snmp_oid *obj)
 {
 	uint64_t tmp_uint64;
