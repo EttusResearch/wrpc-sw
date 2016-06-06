@@ -517,6 +517,8 @@ static int func_group(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 			return_len = oid->get(in_oid_limb_end + oid->oid_len,
 					      oid);
 			/* add the length of twig part of the OID */
+			if (!return_len)
+				continue;
 			return_len += oid->oid_len;
 			return return_len;
 		}
@@ -744,6 +746,10 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 	    snmp_verbose("%s: 0x%x\n", __func__, *(uint32_t *)p);
 	    break;
 	case ASN_COUNTER64:
+	    if (snmp_version == SNMP_V1) {
+		/* There is no support for 64bit counters in SNMPv1 */
+		return 0;
+	    }
 	    tmp_uint64 = *(uint64_t *)p;
 	    memcpy(oid_data, &tmp_uint64, sizeof(tmp_uint64));
 	    *len = sizeof(tmp_uint64);
