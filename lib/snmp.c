@@ -501,7 +501,7 @@ static int func_group(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 				if (!oid->set) {
 					snmp_verbose("%s: no SET function!\n",
 						     __func__);
-					return -1;
+					return -SNMP_ERR_READONLY;
 				}
 				/* Finally call the SET function */
 				return_len = oid->set(in_oid_limb_end
@@ -550,7 +550,7 @@ static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 
 	if (flags & MASK_SET) {
 		/* We don't support SETs yet */
-		return -1;
+		return -SNMP_ERR_READONLY;
 	}
 
 	if (flags & RETURN_FIRST)
@@ -926,12 +926,12 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 	if (asn_incoming != asn_expected) { /* wrong asn */
 		snmp_verbose("%s: wrong asn 0x%02x, expected 0x%02x\n",
 			     __func__, asn_incoming, asn_expected);
-		return -1;
+		return -SNMP_ERR_BADVALUE;
 	}
 	switch (asn_incoming) {
 	case ASN_INTEGER:
 	    if (len > sizeof(uint32_t))
-		return -1;
+		return -SNMP_ERR_BADVALUE;
 	    tmp_u32 = 0;
 	    memcpy(&tmp_u32, oid_data, len);
 	    tmp_u32 = ntohl(tmp_u32);
@@ -946,7 +946,7 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 	    if (len > obj->data_size) {
 		snmp_verbose("%s: string too long (%d), max expected %d\n",
 			     len, obj->data_size,__func__);
-		return -1;
+		return -SNMP_ERR_BADVALUE;
 	    }
 	    memcpy(p, oid_data, len);
 	    *(char *)(p + len) = '\0';
@@ -978,6 +978,8 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 
 	apply_mode = obj->p;
 	ret = set_value(buf, obj, apply_mode);
+	if (ret < 0)
+		return ret;
 	switch (*apply_mode) {
 	case writeToMemoryCurrentSfp:
 		sfp_deltaTx = snmp_ptp_config.dTx;
@@ -1296,7 +1298,7 @@ static int snmp_respond(uint8_t *buf)
 				continue;
 			} else if (res < 0) {
 				return snmp_prepare_error(buf,
-							  SNMP_ERR_BADVALUE);
+							  -res);
 			}
 		}
 		if (cmp_result > 0) {
