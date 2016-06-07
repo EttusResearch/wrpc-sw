@@ -230,6 +230,7 @@ static int set_p(uint8_t *buf, struct snmp_oid *obj);
 static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj);
 
 static void print_oid_verbose(uint8_t *oid, int len);
+static void snmp_fix_size(uint8_t *buf, int size);
 
 static uint8_t oid_wrpcVersionGroup[] =     {0x2B,6,1,4,1,96,101,1,1};
 static uint8_t oid_wrpcTimeGroup[] =        {0x2B,6,1,4,1,96,101,1,2};
@@ -1138,6 +1139,31 @@ static void print_oid_verbose(uint8_t *oid, int len)
 		snmp_verbose(".%d", *(oid + i));
 }
 
+/* fix sizes of fields in the SNMP packet */
+static void snmp_fix_size(uint8_t *buf, int size)
+{
+	int remain;
+	int a_i, h_i;
+
+	size--;
+	/* now fix all size fields and change PDU */
+	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {
+		remain = size - h_i;
+
+		if (match_array[a_i] == BYTE_PDU)
+			buf[h_i] = SNMP_GET_RESPONSE;
+		if (match_array[a_i] == BYTE_REQ_SIZE) {
+			h_i += buf[h_i];
+			continue;
+		}
+		if (match_array[a_i] != BYTE_SIZE)
+			continue;
+		snmp_verbose("%s: offset %i 0x%02x is len %i\n", __func__,
+			     h_i, h_i, remain);
+		buf[h_i] = remain;
+	}
+}
+
 /* prepare packet to return error, leave the rest of packet as it was */
 static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 {
@@ -1160,7 +1186,10 @@ static uint8_t snmp_prepare_error(uint8_t *buf, uint8_t error)
 	shift += min(oid_len, MAX_OID_LEN);
 	/* write ASN_NULL after the OID */
 	buf[BYTE_OIDLEN_INDEX_i + shift + 1] = ASN_NULL;
-	ret_size = buf[BYTE_PACKET_SIZE_i] + 2;
+	buf[BYTE_OIDLEN_INDEX_i + shift + 2] = 0;
+	ret_size = BYTE_OIDLEN_INDEX_i + shift + 2 + 1;
+	/* recalculate sizes of the fields inside packet */
+	snmp_fix_size(buf, ret_size);
 	snmp_verbose("%s: error returning %i bytes\n", __func__, ret_size);
 	return ret_size;
 }
@@ -1319,25 +1348,11 @@ static int snmp_respond(uint8_t *buf)
 		return snmp_prepare_error(buf, SNMP_ERR_NOSUCHNAME);
 	}
 
-	/* now fix all size fields and change PDU */
-	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {
-		int remain = newbuf - buf - h_i - 1;
-
-		if (match_array[a_i] == BYTE_PDU)
-			buf[h_i] = SNMP_GET_RESPONSE;
-		if (match_array[a_i] == BYTE_REQ_SIZE) {
-			h_i += buf[h_i];
-			continue;
-		}
-		if (match_array[a_i] != BYTE_SIZE)
-			continue;
-		snmp_verbose("%s: offset %i 0x%02x is len %i\n", h_i, h_i,
-			     __func__, remain);
-		buf[h_i] = remain;
-	}
+	snmp_fix_size(buf, newbuf - buf);
 	snmp_verbose("%s: returning %i bytes\n", __func__, newbuf - buf);
 	return newbuf - buf;
 }
+
 
 /* receive snmp through the UDP mechanism */
 static int snmp_poll(void)
