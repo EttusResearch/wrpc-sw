@@ -402,8 +402,7 @@ static int sfp_valid(struct s_sfpinfo *sfp)
 	return 1;
 }
 
-int storage_get_sfp(struct s_sfpinfo * sfp,
-		       uint8_t add, uint8_t pos)
+static int sfp_entry(struct s_sfpinfo *sfp, uint8_t oper, uint8_t pos)
 {
 	static uint8_t sfpcount = 0;
 	struct s_sfpinfo tempsfp;
@@ -417,27 +416,35 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_SFP) < 0)
 		return -1;
 
-	//read how many SFPs are in the database, but only in the first call
+	/* Read how many SFPs are in the database, but only in the first
+	 * call */
 	if(!pos) {
 		sfpcount = 0;
-		while (sdbfs_fread(&wrc_sdb, sizeof(sfpcount) +
-					sfpcount*sizeof(tempsfp), &tempsfp,
-					sizeof(tempsfp)) == sizeof(tempsfp)) {
+		while (sdbfs_fread(&wrc_sdb, sizeof(sfpcount)
+					     + sfpcount * sizeof(tempsfp),
+				   &tempsfp, sizeof(tempsfp))
+		       == sizeof(tempsfp)) {
 			if(!sfp_valid(&tempsfp))
 				break;
-
 			sfpcount++;
 		}
 	}
 
-	if (add && sfpcount == SFPS_MAX)	//no more space to add new SFPs
-		return EE_RET_DBFULL;
-	if (!pos && !add && sfpcount == 0)	// no SFPs in the database
-		return 0;
+	if ((oper == SFP_ADD) && (sfpcount == SFPS_MAX)) {
+		/* no more space to add new SFPs */
+		ret = EE_RET_DBFULL;
+		goto out;
+	}
 
-	if (!add) {
+	if (!pos && (oper == SFP_GET) && sfpcount == 0) {
+		/* no SFPs in the database */
+		ret = 0;
+		goto out;
+	}
+
+	if (oper == SFP_GET) {
 		if (sdbfs_fread(&wrc_sdb, sizeof(sfpcount) + pos * sizeof(*sfp),
-				sfp, sizeof(*sfp))
+				 sfp, sizeof(*sfp))
 		    != sizeof(*sfp))
 			goto out;
 
@@ -449,8 +456,9 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 			pp_printf("sfp: corrupted checksum\n");
 			goto out;
 		}
-	} else {
-		/*count checksum */
+	}
+	if (oper == SFP_ADD) {
+		/* count checksum */
 		ptr = (uint8_t *)sfp;
 		/* use sizeof() - 1 because we don't include checksum */
 		for (i = 0; i < sizeof(struct s_sfpinfo) - 1; ++i)
@@ -458,37 +466,91 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 		sfp->chksum = chksum;
 		/* add SFP at the end of DB */
 		if (sdbfs_fwrite(&wrc_sdb, sizeof(sfpcount)
-				  + sfpcount * sizeof(*sfp), sfp, sizeof(*sfp))
-		    != sizeof(*sfp))
+					   + sfpcount * sizeof(*sfp),
+				 sfp, sizeof(*sfp))
+		    != sizeof(*sfp)) {
+
 			goto out;
+		}
 		sfpcount++;
-		if (sdbfs_fwrite(&wrc_sdb, 0, &sfpcount, sizeof(sfpcount))
-		    != sizeof(sfpcount))
-			goto out;
 	}
 	ret = sfpcount;
 out:
 	sdbfs_close(&wrc_sdb);
 	return ret;
-	return 0;
+}
+
+static int storage_update_sfp(struct s_sfpinfo *sfp)
+{
+	int sfpcount = 1;
+	int temp;
+	int8_t i;
+	struct s_sfpinfo sfp_db[SFPS_MAX];
+	struct s_sfpinfo *dbsfp;
+
+	/* copy entries from flash to the memory, update entry if matched */
+	for (i = 0; i < sfpcount; ++i) {
+		dbsfp = &sfp_db[i];
+		sfpcount = sfp_entry(dbsfp, SFP_GET, i);
+		if (sfpcount <= 0)
+			return sfpcount;
+		if (!strncmp(dbsfp->pn, sfp->pn, 16)) {
+			/* update matched entry */
+			dbsfp->dTx = sfp->dTx;
+			dbsfp->dRx = sfp->dRx;
+			dbsfp->alpha = sfp->alpha;
+		}
+	}
+
+	/* erase entire database */
+	if (storage_sfpdb_erase() == EE_RET_I2CERR) {
+			pp_printf("Could not erase DB\n");
+			return -1;
+		}
+
+	/* add all SFPs */
+	for (i = 0; i < sfpcount; ++i) {
+		dbsfp = &sfp_db[i];
+		temp = sfp_entry(dbsfp, SFP_ADD, 0);
+		if (temp < 0) {
+			/* if error, return it */
+			return temp;
+		}
+	}
+	return i;
+}
+
+int storage_get_sfp(struct s_sfpinfo *sfp, uint8_t oper, uint8_t pos)
+{
+	struct s_sfpinfo tmp_sfp;
+
+	if (oper == SFP_GET) {
+		/* Get SFP entry */
+		return sfp_entry(sfp, SFP_GET, pos);
+	}
+
+	/* storage_match_sfp replaces content of parameter, so do the copy
+	 * first */
+	tmp_sfp = *sfp;
+	if (!storage_match_sfp(&tmp_sfp)) { /* add a new sfp entry */
+		pp_printf("Adding new SFP entry\n");
+		return sfp_entry(sfp, SFP_ADD, 0);
+	}
+
+	pp_printf("Update existing SFP entry\n");
+	return storage_update_sfp(sfp);
 }
 
 int storage_match_sfp(struct s_sfpinfo * sfp)
 {
 	uint8_t sfpcount = 1;
-	int8_t i, temp;
+	int8_t i;
 	struct s_sfpinfo dbsfp;
 
 	for (i = 0; i < sfpcount; ++i) {
-		temp = storage_get_sfp(&dbsfp, 0, i);
-		if (!i) {
-			// first round: valid sfpcount is returned
-			sfpcount = temp;
-			if (sfpcount == 0 || sfpcount == 0xFF)
-				return 0;
-			else if (sfpcount < 0)
-				return sfpcount;
-		}
+		sfpcount = sfp_entry(&dbsfp, SFP_GET, i);
+		if (sfpcount <= 0)
+			return sfpcount;
 		if (!strncmp(dbsfp.pn, sfp->pn, 16)) {
 			sfp->dTx = dbsfp.dTx;
 			sfp->dRx = dbsfp.dRx;

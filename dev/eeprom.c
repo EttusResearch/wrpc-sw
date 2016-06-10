@@ -57,6 +57,10 @@
  * ------------------------------------------------
  */
 
+#define SFP_DB_EMPTY 0xff
+
+static uint8_t sfpcount = SFP_DB_EMPTY;
+
 uint8_t has_eeprom = 0;
 
 static int i2cif, i2c_addr; /* globals, using the names we always used */
@@ -137,7 +141,7 @@ static int eeprom_write(uint8_t i2cif, uint8_t i2c_addr, uint32_t offset,
 
 int32_t storage_sfpdb_erase(void)
 {
-	uint8_t sfpcount = 0;
+	sfpcount = 0;
 
 	//just a dummy function that writes '0' to sfp count field of the SFP DB
 	if (eeprom_write(i2cif, i2c_addr, EE_BASE_SFP, &sfpcount,
@@ -147,28 +151,44 @@ int32_t storage_sfpdb_erase(void)
 		return sfpcount;
 }
 
-int storage_get_sfp(struct s_sfpinfo * sfp,
-		       uint8_t add, uint8_t pos)
+static uint8_t sfp_chksum(uint8_t *ptr)
 {
-	static uint8_t sfpcount = 0;
-	uint8_t i, chksum = 0;
-	uint8_t *ptr;
+	int i;
+	uint8_t chksum = 0;
 
-	if (pos >= SFPS_MAX)
-		return EE_RET_POSERR;	//position in database outside the range
+	/* '-1' because we do not include chksum in computation */
+	for (i = 0; i < sizeof(struct s_sfpinfo) - 1; ++i)
+		chksum = (uint8_t) ((uint16_t) chksum + *(ptr++)) & 0xff;
+	return chksum;
+}
 
-	//read how many SFPs are in the database, but only in the first call (pos==0)
-	if (!pos
+int storage_get_sfp(struct s_sfpinfo *sfp, uint8_t oper, uint8_t pos)
+{
+	uint8_t i;
+	struct s_sfpinfo dbsfp;
+
+	if (pos >= SFPS_MAX) {
+		/* position in database outside the range */
+		return EE_RET_POSERR;
+	}
+
+	/* Read how many SFPs are in the database, but only in the first call
+	 */
+	if (sfpcount == SFP_DB_EMPTY
 	    && eeprom_read(i2cif, i2c_addr, EE_BASE_SFP, &sfpcount,
 			   sizeof(sfpcount)) != sizeof(sfpcount))
 		return EE_RET_I2CERR;
 
-	if (add && sfpcount == SFPS_MAX)	//no more space in the database to add new SFPs
-		return EE_RET_DBFULL;
-	else if (!pos && !add && sfpcount == 0)	//there are no SFPs in the database to read
-		return sfpcount;
+	/* for not written flash set sfpcount to 0 */
+	if (sfpcount == SFP_DB_EMPTY)
+		sfpcount = 0;
 
-	if (!add) {
+	if (oper == SFP_GET) {
+		if (sfpcount == 0) {
+			/* There are no SFPs in the database to read */
+			return 0;
+		}
+
 		if (eeprom_read(i2cif, i2c_addr,
 				EE_BASE_SFP + sizeof(sfpcount)
 				+ pos * sizeof(struct s_sfpinfo),
@@ -176,27 +196,42 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 		    != sizeof(struct s_sfpinfo) )
 			return EE_RET_I2CERR;
 
-		ptr = (uint8_t *) sfp;
-		for (i = 0; i < sizeof(struct s_sfpinfo) - 1; ++i)	//'-1' because we do not include chksum in computation
-			chksum =
-			    (uint8_t) ((uint16_t) chksum + *(ptr++)) & 0xff;
-		if (chksum != sfp->chksum)
+		if (sfp_chksum((uint8_t *)sfp) != sfp->chksum)
 			return EE_RET_CORRPT;
-	} else {
-		/*count checksum */
-		ptr = (uint8_t *) sfp;
-		for (i = 0; i < sizeof(struct s_sfpinfo) - 1; ++i)	//'-1' because we do not include chksum in computation
-			chksum =
-			    (uint8_t) ((uint16_t) chksum + *(ptr++)) & 0xff;
-		sfp->chksum = chksum;
-		/*add SFP at the end of DB */
+	}
+	if (oper == SFP_ADD) {
+		for (i = 0; i < sfpcount; i++) {
+			if (eeprom_read(i2cif, i2c_addr,
+				EE_BASE_SFP + sizeof(sfpcount)
+				+ i * sizeof(struct s_sfpinfo),
+				(uint8_t *)&dbsfp, sizeof(struct s_sfpinfo))
+			    != sizeof(struct s_sfpinfo))
+				return EE_RET_I2CERR;
+			if (!strncmp(dbsfp.pn, sfp->pn, 16)) { /* sfp matched */
+				pp_printf("Update existing SFP entry\n");
+				break;
+			}
+		}
+
+		if (i >= SFPS_MAX) { /* database is full */
+			return EE_RET_DBFULL;
+		}
+
+		/* Count checksum */
+		sfp->chksum = sfp_chksum((uint8_t *)sfp);
+
+		/* Add an entry at the given pos in the DB */
 		eeprom_write(i2cif, i2c_addr,
 			     EE_BASE_SFP + sizeof(sfpcount)
-			     + sfpcount * sizeof(struct s_sfpinfo),
+			     + i * sizeof(struct s_sfpinfo),
 			     (uint8_t *) sfp, sizeof(struct s_sfpinfo));
-		sfpcount++;
-		eeprom_write(i2cif, i2c_addr, EE_BASE_SFP, &sfpcount,
-			     sizeof(sfpcount));
+		if (i >= sfpcount) {
+			pp_printf("Adding new SFP entry\n");
+			/* We're adding a new entry, update sfpcount */
+			sfpcount++;
+			eeprom_write(i2cif, i2c_addr, EE_BASE_SFP, &sfpcount,
+				    sizeof(sfpcount));
+		}
 	}
 
 	return sfpcount;
@@ -204,19 +239,15 @@ int storage_get_sfp(struct s_sfpinfo * sfp,
 
 int storage_match_sfp(struct s_sfpinfo * sfp)
 {
-	uint8_t sfpcount = 1;
-	int8_t i, temp;
+	int8_t i;
+	int sfp_cnt = 1;
 	struct s_sfpinfo dbsfp;
 
-	for (i = 0; i < sfpcount; ++i) {
-		temp = storage_get_sfp(&dbsfp, 0, i);
-		if (!i) {
-			sfpcount = temp;	//only in first round valid sfpcount is returned from eeprom_get_sfp
-			if (sfpcount == 0 || sfpcount == 0xFF)
-				return 0;
-			else if (sfpcount < 0)
-				return sfpcount;
-		}
+	for (i = 0; i < sfp_cnt; ++i) {
+		sfp_cnt = storage_get_sfp(&dbsfp, SFP_GET, i);
+		if (sfp_cnt <= 0)
+			return sfp_cnt;
+
 		if (!strncmp(dbsfp.pn, sfp->pn, 16)) {
 			sfp->dTx = dbsfp.dTx;
 			sfp->dRx = dbsfp.dRx;

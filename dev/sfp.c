@@ -10,10 +10,21 @@
 
 #include <stdio.h>
 #include <inttypes.h>
+#include <string.h>
+#include <errno.h>
 
 #include "syscon.h"
 #include "i2c.h"
 #include "sfp.h"
+#include "storage.h"
+
+/* Calibration data (from EEPROM if available) */
+int32_t sfp_alpha = 73622176; /* default values if could not read EEPROM */
+int32_t sfp_deltaTx = 0;
+int32_t sfp_deltaRx = 0;
+int32_t sfp_in_db = 0;
+
+char sfp_pn[SFP_PN_LEN];
 
 int sfp_present(void)
 {
@@ -51,4 +62,28 @@ int sfp_read_part_id(char *part_id)
 		return 0;
 
 	return -1;
+}
+
+int sfp_match(void)
+{
+	struct s_sfpinfo sfp;
+
+	sfp_pn[0] = '\0';
+	if (!sfp_present()) {
+		return -ENODEV;
+	}
+	if (sfp_read_part_id(sfp_pn)) {
+		return -EIO;
+	}
+
+	strncpy(sfp.pn, sfp_pn, SFP_PN_LEN);
+	if (storage_match_sfp(&sfp) == 0) {
+		sfp_in_db = SFP_NOT_MATCHED;
+		return -ENXIO;
+	}
+	sfp_deltaTx = sfp.dTx;
+	sfp_deltaRx = sfp.dRx;
+	sfp_alpha = sfp.alpha;
+	sfp_in_db = SFP_MATCHED;
+	return 0;
 }

@@ -80,6 +80,11 @@ int flash_write(uint32_t addr, uint8_t *buf, int count)
 	}
 	bbspi_transfer(1,0);
 
+	/* make sure the write is complete */
+	while (flash_rsr() & 0x01) {
+		/* do nothing */
+		}
+
 	return count;
 }
 
