@@ -58,7 +58,7 @@ load snmp_test_helpers
   # set known value first
   helper_snmpset wrpcPtpConfigSfpPn.0 "TEST sfp2"
   # set too long, bad length (erorr from target)
-  run snmpset $SNMP_OPTIONS_NO_M $TARGET_IP .1.3.6.1.4.1.96.101.1.6.5.0 s "0123456789012345678"
+  run snmpset $SNMP_OPTIONS_NO_M $TARGET_IP .1.3.6.1.4.1.96.101.1.6.3.0 s "0123456789012345678"
   echo $status
   [ "$status" -eq 2 ]
   # expect value to be not changed
@@ -69,7 +69,7 @@ load snmp_test_helpers
   # set known value first
   helper_snmpset wrpcPtpConfigSfpPn.0 "TEST sfp3"
   # set too long, bad length (erorr from target)
-  run snmpset $SNMP_OPTIONS_NO_M $TARGET_IP .1.3.6.1.4.1.96.101.1.6.2.0 i "012345678"
+  run snmpset $SNMP_OPTIONS_NO_M $TARGET_IP .1.3.6.1.4.1.96.101.1.6.3.0 i "012345678"
   echo $status
   [ "$status" -eq 2 ]
   # expect value to be not changed

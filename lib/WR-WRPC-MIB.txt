@@ -543,6 +543,22 @@ wrpcPtpAlpha                   OBJECT-TYPE
 -- ****************************************************************************
 wrpcPtpConfigGroup             OBJECT IDENTIFIER ::= { wrpcCore 6 }
 
+wrpcPtpConfigRestart             OBJECT-TYPE
+    SYNTAX                     INTEGER {
+                                   na(0),
+                                   restartPtp(1)
+                                   restartPtpSuccessful(100)
+                                   restartPtpFailed(200)
+    }
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "restart PTP
+            restartPtp - trigger the restart of PTP
+            restartPtpSuccessful - PTP restart triggered
+            restartPtpFailed - failed to trigger PTP restart"
+    ::= { wrpcPtpConfigGroup 1 }
+
 wrpcPtpConfigApply             OBJECT-TYPE
     SYNTAX                     INTEGER {
                                    na(0),
@@ -571,7 +587,7 @@ wrpcPtpConfigApply             OBJECT-TYPE
             applyFailedI2CError - Failed to apply configuration due to communication error with the flash memory.
             applyFailedDBFull - Failed to apply configuration. Database is full.
             applyFailedInvalidPN - Invalid Product Number (PN) provided."
-    ::= { wrpcPtpConfigGroup 1 }
+    ::= { wrpcPtpConfigGroup 2 }
 
 wrpcPtpConfigSfpPn             OBJECT-TYPE
     SYNTAX                     OCTET STRING (SIZE(0..16))
@@ -579,7 +595,7 @@ wrpcPtpConfigSfpPn             OBJECT-TYPE
     STATUS                     current
     DESCRIPTION
             "SFP product number identifying which entry in the flash to update."
-    ::= { wrpcPtpConfigGroup 2 }
+    ::= { wrpcPtpConfigGroup 3 }
 
 wrpcPtpConfigDeltaTx           OBJECT-TYPE
     SYNTAX                     Integer32
@@ -587,7 +603,7 @@ wrpcPtpConfigDeltaTx           OBJECT-TYPE
     STATUS                     current
     DESCRIPTION
             "Delta tx to be set"
-    ::= { wrpcPtpConfigGroup 3 }
+    ::= { wrpcPtpConfigGroup 4 }
 
 wrpcPtpConfigDeltaRx           OBJECT-TYPE
     SYNTAX                     Integer32
@@ -595,7 +611,7 @@ wrpcPtpConfigDeltaRx           OBJECT-TYPE
     STATUS                     current
     DESCRIPTION
             "Delta rx to be set"
-    ::= { wrpcPtpConfigGroup 4 }
+    ::= { wrpcPtpConfigGroup 5 }
 
 wrpcPtpConfigAlpha             OBJECT-TYPE
     SYNTAX                     Integer32
@@ -603,7 +619,7 @@ wrpcPtpConfigAlpha             OBJECT-TYPE
     STATUS                     current
     DESCRIPTION
             "Alpha to be set"
-    ::= { wrpcPtpConfigGroup 5 }
+    ::= { wrpcPtpConfigGroup 6 }
 
 -- ****************************************************************************
 wrpcPortGroup            OBJECT IDENTIFIER ::= { wrpcCore 7 }

@@ -101,6 +101,11 @@
 /* defines used by get_port function */
 #define PORT_LINK_STATUS (void *) 1
 
+/* defines for wrpcPtpConfigRestart */
+#define restartPtp 1
+#define restartPtpSuccessful 100
+#define restartPtpFailed 200
+
 /* defines for wrpcPtpConfigApply */
 #define writeToFlashGivenSfp 1
 #define writeToFlashCurrentSfp 2
@@ -188,6 +193,7 @@ struct snmp_oid_limb {
 
 static struct s_sfpinfo snmp_ptp_config;
 static int ptp_config_apply_status;
+static int ptp_restart_status;
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
@@ -227,6 +233,7 @@ static int get_sfp(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
+static int set_ptp_restart(uint8_t *buf, struct snmp_oid *obj);
 static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj);
 
 static void print_oid_verbose(uint8_t *oid, int len);
@@ -287,11 +294,12 @@ static uint8_t oid_wrpcPtpRX[] =                 {24,0};
 static uint8_t oid_wrpcPtpAlpha[] =              {26,0};
 
 /* wrpcPtpConfigGroup */
-static uint8_t oid_wrpcPtpConfigApply[] =        {1,0};
-static uint8_t oid_wrpcPtpConfigSfpPn[] =        {2,0};
-static uint8_t oid_wrpcPtpConfigDeltaTx[] =      {3,0};
-static uint8_t oid_wrpcPtpConfigDeltaRx[] =      {4,0};
-static uint8_t oid_wrpcPtpConfigAlpha[] =        {5,0};
+static uint8_t oid_wrpcPtpConfigRestart[] =      {1,0};
+static uint8_t oid_wrpcPtpConfigApply[] =        {2,0};
+static uint8_t oid_wrpcPtpConfigSfpPn[] =        {3,0};
+static uint8_t oid_wrpcPtpConfigDeltaTx[] =      {4,0};
+static uint8_t oid_wrpcPtpConfigDeltaRx[] =      {5,0};
+static uint8_t oid_wrpcPtpConfigAlpha[] =        {6,0};
 
 /* wrpcPortGroup */
 static uint8_t oid_wrpcPortLinkStatus[] =        {1,0};
@@ -370,7 +378,8 @@ static struct snmp_oid oid_array_wrpcPtpGroup[] = {
 
 /* wrpcPtpConfigGroup */
 static struct snmp_oid oid_array_wrpcPtpConfigGroup[] = {
-	OID_FIELD_VAR(   oid_wrpcPtpConfigApply,     get_p,        set_ptp_config,ASN_INTEGER,&ptp_config_apply_status),
+	OID_FIELD_VAR(   oid_wrpcPtpConfigRestart,   get_p,        set_ptp_restart,ASN_INTEGER, &ptp_restart_status),
+	OID_FIELD_VAR(   oid_wrpcPtpConfigApply,     get_p,        set_ptp_config, ASN_INTEGER, &ptp_config_apply_status),
 	OID_FIELD_VAR(   oid_wrpcPtpConfigSfpPn,     get_p,        set_p,    ASN_OCTET_STR, &snmp_ptp_config.pn),
 	OID_FIELD_VAR(   oid_wrpcPtpConfigDeltaTx,   get_p,        set_p,    ASN_INTEGER,   &snmp_ptp_config.dTx),
 	OID_FIELD_VAR(   oid_wrpcPtpConfigDeltaRx,   get_p,        set_p,    ASN_INTEGER,   &snmp_ptp_config.dRx),
@@ -971,6 +980,29 @@ static int set_p(uint8_t *buf, struct snmp_oid *obj)
 	return set_value(buf, obj, obj->p + obj->offset);
 }
 
+static int set_ptp_restart(uint8_t *buf, struct snmp_oid *obj)
+{
+	int ret;
+	int32_t *restart_val;
+
+	restart_val = obj->p;
+	ret = set_value(buf, obj, restart_val);
+	if (ret < 0)
+		return ret;
+	switch (*restart_val) {
+	case restartPtp:
+		snmp_verbose("%s: restart PTP\n", __func__);
+		wrc_ptp_stop();
+		wrc_ptp_start();
+
+		*restart_val = restartPtpSuccessful;
+		break;
+	default:
+		*restart_val = restartPtpFailed;
+	}
+	return ret;
+}
+
 static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 {
 	int ret;
@@ -986,8 +1018,10 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 		sfp_deltaTx = snmp_ptp_config.dTx;
 		sfp_deltaRx = snmp_ptp_config.dRx;
 		sfp_alpha = snmp_ptp_config.alpha;
+
 		/* Since ppsi does not support update of deltas in runtime,
 		 * we need to restart the ppsi */
+		pp_printf("SNMP: SFP updated in memory, restart PTP\n");
 		wrc_ptp_stop();
 		wrc_ptp_start();
 
@@ -1026,10 +1060,6 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 			*apply_mode = applySuccessfulMatchFailed;
 			break;
 		}
-		/* Since ppsi does not support update of deltas in runtime,
-		 * we need to restart the ppsi */
-		wrc_ptp_stop();
-		wrc_ptp_start();
 
 		*apply_mode = applySuccessful;
 		break;
@@ -1208,12 +1238,13 @@ static int snmp_respond(uint8_t *buf)
 
 	uint8_t oid_branch_matching_len;
 	/* Hack to avoid compiler warnings "function defined but not used" for
-	 * set_p and set_pp when SNMP compiled without SET support.
+	 * functions below when SNMP compiled without SET support.
 	 * These functions will never be called here. */
 	if (0) {
 		set_p(NULL, NULL);
 		set_pp(NULL, NULL);
 		set_ptp_config(NULL, NULL);
+		set_ptp_restart(NULL, NULL);
 	}
 
 	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {
