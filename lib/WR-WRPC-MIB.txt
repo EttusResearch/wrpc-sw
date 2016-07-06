@@ -3,24 +3,24 @@ WR-WRPC-MIB DEFINITIONS ::= BEGIN
 -- Based on the WR-SWITCH-MIB
 -- Adam Wujek, BE-CO-HT, CERN
 
--- ############################################################################
--- THIS MIB IS ONLY FOR TESTING PURPOSES IT WILL CHANGE!!
--- ############################################################################
-
 -- IMPORTS: Include definitions from other mibs here
 IMPORTS
         OBJECT-TYPE, Integer32, Unsigned32, Counter32, Counter64,
-        MODULE-IDENTITY, enterprises          FROM SNMPv2-SMI
+        MODULE-IDENTITY, enterprises, TimeTicks FROM SNMPv2-SMI
         DisplayString                         FROM SNMPv2-TC;
 
 wrWrpcMIB MODULE-IDENTITY
-    LAST-UPDATED "201603081000Z"
+    LAST-UPDATED "201607061700Z"
     ORGANIZATION "CERN"
     CONTACT-INFO "postal:   BE-CO-HT, CERN, Geneva
                   email:    ht-drivers@cern.ch
                  "
     DESCRIPTION  "White Rabbit WRPC internal details
                  "
+
+    REVISION     "201607061700Z"
+    DESCRIPTION
+        "Clean up MIB."
 
     REVISION     "201604181000Z"
     DESCRIPTION
@@ -30,7 +30,7 @@ wrWrpcMIB MODULE-IDENTITY
     DESCRIPTION
         "First revision. For testing purposes only."
 
-    ::= { cern 101 } -- this is not reserved yet!
+    ::= { cern 101 }
 
 cern OBJECT IDENTIFIER ::= { enterprises 96 }
 
@@ -151,8 +151,8 @@ wrpcTimeTAIString              OBJECT-TYPE
         "The current TAI time, printed as %y-%m-%d-%H:%M:%S (no time zone)"
     ::= { wrpcTimeGroup 2 }
 
-wrpcTimeSystemUptime               OBJECT-TYPE
-    SYNTAX                     Timetics
+wrpcTimeSystemUptime           OBJECT-TYPE
+    SYNTAX                     TimeTicks
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
@@ -162,16 +162,16 @@ wrpcTimeSystemUptime               OBJECT-TYPE
 -- ****************************************************************************
 wrpcTemperatureTable           OBJECT-TYPE
     SYNTAX                     SEQUENCE OF WrpcTemperatureEntry
-    MAX-ACCESS  not-accessible
-    STATUS      current
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
     DESCRIPTION
             "Information for each mounted partition"
     ::= { wrpcCore 3 }
 
-wrpcTemperatureEntry OBJECT-TYPE
-    SYNTAX      WrpcTemperatureEntry
-    MAX-ACCESS  not-accessible
-    STATUS      current
+wrpcTemperatureEntry           OBJECT-TYPE
+    SYNTAX                     WrpcTemperatureEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
     DESCRIPTION
             "An entry containing partitions' details"
     INDEX   { wrpcTemperatureIndex }
@@ -179,9 +179,9 @@ wrpcTemperatureEntry OBJECT-TYPE
 
 WrpcTemperatureEntry ::=
     SEQUENCE {
-        wrpcTemperatureIndex       Unsigned32,
-        wrpcTemperatureName        DisplayString,
-        wrpcTemperatureValue       Integer32
+        wrpcTemperatureIndex   Unsigned32,
+        wrpcTemperatureName    DisplayString,
+        wrpcTemperatureValue   DisplayString
     }
 
 wrpcTemperatureIndex           OBJECT-TYPE
@@ -213,16 +213,16 @@ wrpcTemperatureValue           OBJECT-TYPE
 wrpcSpllStatusGroup            OBJECT IDENTIFIER ::= { wrpcCore 4 }
 
 wrpcSpllMode                   OBJECT-TYPE
-    SYNTAX INTEGER {
-                na(0),
-                grandmaster(1),
-                master(2),
-                slave(3)
-    }
+    SYNTAX                     INTEGER {
+                                   na(0),
+                                   grandmaster(1),
+                                   master(2),
+                                   slave(3)
+                               }
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
-            "Mode of Soft PLL (values taken from softpll_ng.h)"
+            "Mode of Soft PLL (values taken from softpll_export.h)"
     ::= { wrpcSpllStatusGroup 1 }
 
 wrpcSpllIrqCnt                 OBJECT-TYPE
@@ -234,36 +234,36 @@ wrpcSpllIrqCnt                 OBJECT-TYPE
     ::= { wrpcSpllStatusGroup 2 }
 
 wrpcSpllSeqState               OBJECT-TYPE
-    SYNTAX INTEGER {
-                startExt(1),
-                waitExt(2),
-                startHelper(3),
-                waitHelper(4),
-                startMain(5),
-                waitMain(6),
-                disabled(7),
-                ready(8),
-                clearDacs(9),
-                waitClearDacs(10)
-    }
+    SYNTAX                     INTEGER {
+                                   startExt(1),
+                                   waitExt(2),
+                                   startHelper(3),
+                                   waitHelper(4),
+                                   startMain(5),
+                                   waitMain(6),
+                                   disabled(7),
+                                   ready(8),
+                                   clearDacs(9),
+                                   waitClearDacs(10)
+                               }
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
-            "Sequence state of Soft PLL (values taken from file softpll_ng.c in wrpc-sw repo)"
+            "Sequence state of Soft PLL (values taken from file softpll_export.h in wrpc-sw repo)"
     ::= { wrpcSpllStatusGroup 3 }
 
 wrpcSpllAlignState             OBJECT-TYPE
-    SYNTAX INTEGER {
-                extOff(0),
-                start(1),
-                initCsync(2),
-                waitCsync(3),
-                waitSample(4),
-                compensateDelay(5),
-                locked(6),
-                startAlignment(7),
-                startMain(8)
-    }
+    SYNTAX                     INTEGER {
+                                   extOff(0),
+                                   start(1),
+                                   initCsync(2),
+                                   waitCsync(3),
+                                   waitSample(4),
+                                   compensateDelay(5),
+                                   locked(6),
+                                   startAlignment(7),
+                                   startMain(8)
+                               }
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
@@ -352,14 +352,14 @@ wrpcPtpGroup                   OBJECT IDENTIFIER ::= { wrpcCore 5 }
 --x     ::= { wrpcPtpGroup 4 }
 
 wrpcPtpServoStateN             OBJECT-TYPE
-    SYNTAX INTEGER {
-                uninitialized(0),
-                syncNsec(1),
-                syncSec(2),
-                syncPhase(3),
-                trackPhase(4),
-                waitOffsetStable(5)
-    }
+    SYNTAX                     INTEGER {
+                                   uninitialized(0),
+                                   syncNsec(1),
+                                   syncSec(2),
+                                   syncPhase(3),
+                                   trackPhase(4),
+                                   waitOffsetStable(5)
+                               }
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
@@ -543,13 +543,13 @@ wrpcPtpAlpha                   OBJECT-TYPE
 -- ****************************************************************************
 wrpcPtpConfigGroup             OBJECT IDENTIFIER ::= { wrpcCore 6 }
 
-wrpcPtpConfigRestart             OBJECT-TYPE
+wrpcPtpConfigRestart           OBJECT-TYPE
     SYNTAX                     INTEGER {
                                    na(0),
-                                   restartPtp(1)
-                                   restartPtpSuccessful(100)
+                                   restartPtp(1),
+                                   restartPtpSuccessful(100),
                                    restartPtpFailed(200)
-    }
+                               }
     MAX-ACCESS                 read-write
     STATUS                     current
     DESCRIPTION
@@ -572,7 +572,7 @@ wrpcPtpConfigApply             OBJECT-TYPE
                                    applyFailedI2CError(201),
                                    applyFailedDBFull(202),
                                    applyFailedInvalidPN(203)
-    }
+                               }
     MAX-ACCESS                 read-write
     STATUS                     current
     DESCRIPTION
@@ -629,7 +629,7 @@ wrpcPortLinkStatus             OBJECT-TYPE
                                    na(0),
                                    down(1),
                                    up(2)
-    }
+                               }
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
@@ -649,7 +649,7 @@ wrpcPortSfpInDB                OBJECT-TYPE
                                    na(0),
                                    notInDataBase(1),
                                    inDataBase(2)
-                                   }
+                               }
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
@@ -675,16 +675,16 @@ wrpcPortInternalRx             OBJECT-TYPE
 -- ****************************************************************************
 wrpcSfpTable                   OBJECT-TYPE
     SYNTAX                     SEQUENCE OF WrpcSfpEntry
-    MAX-ACCESS  not-accessible
-    STATUS      current
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
     DESCRIPTION
             "Information of the SFPs database"
     ::= { wrpcCore 8 }
 
 wrpcSfpEntry OBJECT-TYPE
-    SYNTAX      WrpcSfpEntry
-    MAX-ACCESS  not-accessible
-    STATUS      current
+    SYNTAX                     WrpcSfpEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
     DESCRIPTION
             "An entry containing SFP entry"
     INDEX   { wrpcSfpIndex }
@@ -692,11 +692,11 @@ wrpcSfpEntry OBJECT-TYPE
 
 WrpcSfpEntry ::=
     SEQUENCE {
-        wrpcSfpIndex       Integer32,
-        wrpcSfpSfpPn       DisplayString,
-        wrpcSfpDeltaTx     Integer32,
-        wrpcSfpDeltaTx     Integer32,
-        wrpcSfpAlpha       Integer32
+        wrpcSfpIndex           Unsigned32,
+        wrpcSfpPn              DisplayString,
+        wrpcSfpDeltaTx         Integer32,
+        wrpcSfpDeltaRx         Integer32,
+        wrpcSfpAlpha           Integer32
     }
 
 wrpcSfpIndex                   OBJECT-TYPE
