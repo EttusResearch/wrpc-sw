@@ -17,6 +17,7 @@ obj-$(CONFIG_EMBEDDED_NODE) += \
 	shell/cmd_gui.o \
 	shell/cmd_sdb.o \
 	shell/cmd_ptrack.o \
+	shell/cmd_diag.o \
 
 obj-$(CONFIG_IP) +=				shell/cmd_ip.o
 obj-$(CONFIG_PPSI) +=				shell/cmd_verbose.o
