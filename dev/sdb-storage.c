@@ -200,7 +200,8 @@ void storage_init(int chosen_i2cif, int chosen_i2c_addr)
 				0x200,		/* IPMI with MultiRecord */
 				0x300,		/* IPMI with larger MultiRecord */
 				0x170000,	/* after first FPGA bitstream */
-				0x2e0000};	/* after MultiBoot bitstream */
+				0x2e0000,	/* after MultiBoot bitstream */
+				0x600000};	/* after SVEC AFPGA bitstream */
 	int i, ret;
 
 	/*
