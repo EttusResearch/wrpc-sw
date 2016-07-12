@@ -16,11 +16,6 @@
 
 static int cmd_init(const char *args[])
 {
-	if (!mi2c_devprobe(WRPC_FMC_I2C, FMC_EEPROM_ADR)) {
-		pp_printf("EEPROM not found..\n");
-		return -1;
-	}
-
 	if (args[0] && !strcasecmp(args[0], "erase")) {
 		if (storage_init_erase() < 0)
 			pp_printf("Could not erase init script\n");
