@@ -748,6 +748,7 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 	len = &buf[1];
 	switch (asn) {
 	case ASN_COUNTER:
+	case ASN_UNSIGNED:
 	case ASN_INTEGER:
 	case ASN_TIMETICKS:
 	    tmp = htonl(*(uint32_t *)p);
@@ -773,7 +774,7 @@ static int get_value(uint8_t *buf, uint8_t asn, void *p)
 	    snmp_verbose("%s: %s len %d\n", __func__, (char *)p, *len);
 	    break;
 	default:
-	    break;
+	    return 0;
 	}
 	return 2 + buf[1];
 }
@@ -939,6 +940,7 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 		return -SNMP_ERR_BADVALUE;
 	}
 	switch (asn_incoming) {
+	case ASN_UNSIGNED:
 	case ASN_INTEGER:
 	    if (len > sizeof(uint32_t))
 		return -SNMP_ERR_BADVALUE;
@@ -963,7 +965,7 @@ static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 	    snmp_verbose("%s: %s len %d\n", __func__, (char *)p, len);
 	    break;
 	default:
-	    break;
+	    return 0;
 	}
 	return len + 2;
 }
