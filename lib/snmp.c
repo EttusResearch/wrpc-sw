@@ -631,6 +631,7 @@ static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 	leaf_obj.oid_len = oid->oid_len;
 	leaf_obj.oid_match = in_oid_limb_end;
 	leaf_obj.asn = oid->asn;
+	leaf_obj.p = oid->p;
 
 	if (get_next_increase_oid)
 		in_oid_limb_end[TABLE_ROW]++;
@@ -653,6 +654,7 @@ static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 		/* Update leaf_obj with changed values */
 		leaf_obj.oid_len = oid->oid_len;
 		leaf_obj.asn = oid->asn;
+		leaf_obj.p = oid->p;
 
 		/* Get the value for the leaf in the next column, first row */
 		return_len = oid->get(&in_oid_limb_end[oid->oid_len + 1],
