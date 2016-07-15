@@ -14,3 +14,7 @@ bats/libexec/bats:
 
 test: prepare
 	bats/libexec/bats snmp_tests_*.bats
+
+aux_diag: prepare
+	bats/libexec/bats snmp_test_aux_diag_*.bats
+
