@@ -119,12 +119,11 @@
 #define applyFailedInvalidPN 203
 
 /* defines for wrpcTemperatureTable */
-#define TABLE_ROW 2
-#define TABLE_COL 1
+#define TABLE_ROW 1
+#define TABLE_COL 0
 #define TABLE_ENTRY 0
 #define TABLE_FIRST_ROW 1
 #define TABLE_FIRST_COL 2
-#define TABLE_TABLE_OID_LEN 3
 
 /* Limit community length. Standard says nothing about maximum length, but we
  * want to limit it to save memory */
@@ -241,12 +240,14 @@ static void snmp_fix_size(uint8_t *buf, int size);
 
 static uint8_t oid_wrpcVersionGroup[] =     {0x2B,6,1,4,1,96,101,1,1};
 static uint8_t oid_wrpcTimeGroup[] =        {0x2B,6,1,4,1,96,101,1,2};
-static uint8_t oid_wrpcTemperatureTable[] = {0x2B,6,1,4,1,96,101,1,3};
+/* Include wrpcTemperatureEntry into OID */
+static uint8_t oid_wrpcTemperatureTable[] = {0x2B,6,1,4,1,96,101,1,3,1};
 static uint8_t oid_wrpcSpllStatusGroup[] =  {0x2B,6,1,4,1,96,101,1,4};
 static uint8_t oid_wrpcPtpGroup[] =         {0x2B,6,1,4,1,96,101,1,5};
 static uint8_t oid_wrpcPtpConfigGroup[] =   {0x2B,6,1,4,1,96,101,1,6};
 static uint8_t oid_wrpcPortGroup[] =        {0x2B,6,1,4,1,96,101,1,7};
-static uint8_t oid_wrpcSfpTable[] =         {0x2B,6,1,4,1,96,101,1,8};
+/* Include wrpcSfpEntry into OID */
+static uint8_t oid_wrpcSfpTable[] =         {0x2B,6,1,4,1,96,101,1,8,1};
 
 /* wrpcVersionGroup */
 static uint8_t oid_wrpcVersionHwType[] =         {1,0};
@@ -260,8 +261,8 @@ static uint8_t oid_wrpcTimeTAIString[] =         {2,0};
 static uint8_t oid_wrpcTimeSystemUptime[] =      {3,0};
 
 /* wrpcTemperatureTable */
-static uint8_t oid_wrpcTemperatureName[] =       {1,2};
-static uint8_t oid_wrpcTemperatureValue[] =      {1,3};
+static uint8_t oid_wrpcTemperatureName[] =       {2};
+static uint8_t oid_wrpcTemperatureValue[] =      {3};
 
 /* wrpcSpllStatusGroup */
 static uint8_t oid_wrpcSpllMode[] =              {1,0};
@@ -309,10 +310,10 @@ static uint8_t oid_wrpcPortInternalTX[] =        {4,0};
 static uint8_t oid_wrpcPortInternalRX[] =        {5,0};
 
 /* oid_wrpcSfpTable */
-static uint8_t oid_wrpcSfpPn[] =                 {1,2};
-static uint8_t oid_wrpcSfpDeltaTx[] =            {1,3};
-static uint8_t oid_wrpcSfpDeltaRx[] =            {1,4};
-static uint8_t oid_wrpcSfpAlpha[] =              {1,5};
+static uint8_t oid_wrpcSfpPn[] =                 {2};
+static uint8_t oid_wrpcSfpDeltaTx[] =            {3};
+static uint8_t oid_wrpcSfpDeltaRx[] =            {4};
+static uint8_t oid_wrpcSfpAlpha[] =              {5};
 
 /* NOTE: to have SNMP_GET_NEXT working properly this array has to be sorted by
 	 OIDs */
@@ -828,8 +829,8 @@ static int get_temp(uint8_t *buf, struct snmp_oid *obj)
 	int col;
 	char buffer[20];
 
-	row = obj->oid_match[2];
-	col = obj->oid_match[1];
+	row = obj->oid_match[TABLE_ROW];
+	col = obj->oid_match[TABLE_COL];
 	snmp_verbose("%s: row%d, col%d\n", __func__, row, col);
 	for (p = wrc_temp_getnext(NULL); p; p = wrc_temp_getnext(p), i++) {
 		if (row == i) {
@@ -874,8 +875,8 @@ static int get_sfp(uint8_t *buf, struct snmp_oid *obj)
 	int temp;
 	char sfp_pn[SFP_PN_LEN + 1];
 
-	row = obj->oid_match[2];
-	col = obj->oid_match[1];
+	row = obj->oid_match[TABLE_ROW];
+	col = obj->oid_match[TABLE_COL];
 	snmp_verbose("%s: row%d, col%d\n", __func__, row, col);
 	for (i = 1; i < sfpcount+1; ++i) {
 		sfpcount = storage_get_sfp(&sfp, SFP_GET, i - 1);
