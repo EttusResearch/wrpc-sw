@@ -37,7 +37,7 @@ cern OBJECT IDENTIFIER ::= { enterprises 96 }
 -- Define typical mib nodes
 -- we'll prefix everything in this mib with wrpc
 wrpcCore      OBJECT IDENTIFIER ::= { wrWrpcMIB 1 }
---x wrpcCustom    OBJECT IDENTIFIER ::= { wrWrpcMIB 2 }
+--wrpcAuxDiag   OBJECT IDENTIFIER ::= { wrWrpcMIB 2 }
 
 -- ****************************************************************************
 wrpcVersionGroup               OBJECT IDENTIFIER ::= { wrpcCore 1 }
