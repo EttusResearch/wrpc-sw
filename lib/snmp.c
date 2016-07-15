@@ -992,7 +992,7 @@ static int set_ptp_restart(uint8_t *buf, struct snmp_oid *obj)
 
 	restart_val = obj->p;
 	ret = set_value(buf, obj, restart_val);
-	if (ret < 0)
+	if (ret <= 0)
 		return ret;
 	switch (*restart_val) {
 	case restartPtp:
@@ -1016,7 +1016,7 @@ static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj)
 
 	apply_mode = obj->p;
 	ret = set_value(buf, obj, apply_mode);
-	if (ret < 0)
+	if (ret <= 0)
 		return ret;
 	switch (*apply_mode) {
 	case writeToMemoryCurrentSfp:
