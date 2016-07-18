@@ -45,7 +45,6 @@ void timer_delay(uint32_t tics)
 	       ;
 }
 
-
 static int diag_rw_words, diag_ro_words;
 
 /****************************
@@ -64,7 +63,6 @@ void diag_read_info(uint32_t *id, uint32_t *ver, uint32_t *nrw, uint32_t *nro)
 		*nrw = diag_rw_words;
 	if (nro)
 		*nro = diag_ro_words;
-	
 }
 
 int diag_read_word(uint32_t adr, int bank, uint32_t *val)

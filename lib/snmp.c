@@ -74,6 +74,12 @@
 #define SNMP_SET_FUNCTION(X) .set = NULL
 #endif
 
+#ifdef CONFIG_SNMP_AUX_DIAG
+#define SNMP_AUX_DIAG_ENABLED 1
+#else
+#define SNMP_AUX_DIAG_ENABLED 0
+#endif
+
 #define MASK_SET 0x1
 #define MASK_GET 0x2
 #define MASK_GET_NEXT 0x4
@@ -458,8 +464,10 @@ static struct snmp_oid_limb oid_limb_array[] = {
 	OID_LIMB_FIELD(oid_wrpcPtpConfigGroup,   func_group, oid_array_wrpcPtpConfigGroup),
 	OID_LIMB_FIELD(oid_wrpcPortGroup,        func_group, oid_array_wrpcPortGroup),
 	OID_LIMB_FIELD(oid_wrpcSfpTable,         func_table, oid_array_wrpcSfpTable),
+#ifdef CONFIG_SNMP_AUX_DIAG
 	OID_LIMB_FIELD(oid_wrpcAuxRoTable,       func_aux_diag, oid_array_wrpcAuxRoTable),
 	OID_LIMB_FIELD(oid_wrpcAuxRwTable,       func_aux_diag, oid_array_wrpcAuxRwTable),
+#endif
 	{ 0, }
 };
 
@@ -473,15 +481,17 @@ static void snmp_init(void)
 	/* TODO: check if pointer(s) is initialized already */
 	wr_s_state =
 		&((struct wr_data *)ppi_static.ext_data)->servo_state;
-	/* Fix ID and version of aux diag registers by values read from FPGA */
-	diag_read_info(&aux_diag_id, &aux_diag_ver, &aux_diag_reg_rw_num,
-		       &aux_diag_reg_ro_num);
-	snmp_verbose("aux_diag_id %d, aux_diag_ver %d\n",
-		     aux_diag_id, aux_diag_ver);
-	oid_wrpcAuxRoTable[AUX_DIAG_ID_INDEX] = aux_diag_id;
-	oid_wrpcAuxRoTable[AUX_DIAG_VER_INDEX] = aux_diag_ver;
-	oid_wrpcAuxRwTable[AUX_DIAG_ID_INDEX] = aux_diag_id;
-	oid_wrpcAuxRwTable[AUX_DIAG_VER_INDEX] = aux_diag_ver;
+	if (SNMP_AUX_DIAG_ENABLED) {
+		/* Fix ID and version of aux diag registers by values read from FPGA */
+		diag_read_info(&aux_diag_id, &aux_diag_ver, &aux_diag_reg_rw_num,
+			      &aux_diag_reg_ro_num);
+		snmp_verbose("aux_diag_id %d, aux_diag_ver %d\n",
+			    aux_diag_id, aux_diag_ver);
+		oid_wrpcAuxRoTable[AUX_DIAG_ID_INDEX] = aux_diag_id;
+		oid_wrpcAuxRoTable[AUX_DIAG_VER_INDEX] = aux_diag_ver;
+		oid_wrpcAuxRwTable[AUX_DIAG_ID_INDEX] = aux_diag_id;
+		oid_wrpcAuxRwTable[AUX_DIAG_VER_INDEX] = aux_diag_ver;
+	}
 }
 
 static int func_group(uint8_t *buf, uint8_t in_oid_limb_matched_len,
@@ -1495,6 +1505,10 @@ static int snmp_respond(uint8_t *buf)
 		set_pp(NULL, NULL);
 		set_ptp_config(NULL, NULL);
 		set_ptp_restart(NULL, NULL);
+		set_aux_diag(NULL, NULL);
+		func_aux_diag(NULL, 0, NULL, 0);
+		oid_array_wrpcAuxRwTable[0].oid_len = 0;
+		oid_array_wrpcAuxRoTable[0].oid_len = 0;
 	}
 
 	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {
