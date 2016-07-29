@@ -136,6 +136,23 @@ config SYSLOG
 	  The user (or init script) must use "syslog <ipaddr> <macaddr>"
 	  to enable it.  The special "off" ipaddr disables syslog.
 
+config SNMP
+       depends on IP
+       default y
+       boolean "Mini SNMP responder"
+
+config SNMP_SET
+       depends on SNMP
+       default y
+       boolean "Add SET support to the Mini SNMP responder"
+       help
+	  This option enables support for SET requests for Mini SNMP responder
+
+config SNMP_HW_TYPE
+	depends on SNMP
+	default "spec"
+	string "Hardware type reported by SNMP"
+
 config BUILD_INIT
 	depends on WR_NODE
 	default n
@@ -357,6 +374,12 @@ config WRC_VERBOSE
 	depends on DEVELOPER
 	boolean "More verbose messages in wr core"
 	default y if WR_SWITCH
+	help
+	  This enables some more diagnostic messages. Normally off.
+
+config SNMP_VERBOSE
+	depends on DEVELOPER && SNMP
+	boolean "More verbose messages in SNMP"
 	help
 	  This enables some more diagnostic messages. Normally off.
 
