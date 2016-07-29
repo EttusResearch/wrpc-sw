@@ -61,6 +61,7 @@ struct wr_udp_addr {
 };
 
 void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr);
+int check_dest_ip(unsigned char *buf);
 
 void syslog_init(void);
 int syslog_poll(void);
