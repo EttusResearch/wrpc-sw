@@ -13,7 +13,7 @@
  * Description: SFP detection/database manipulation.
  * Subcommands:
  * add <product_number> <delta_tx> <delta_rx> <alpha> - adds an SFP to
- *                      the database, with given alpha/delta_rx/delta_rx values
+ *                      the database, with given alpha/delta_rx/delta_tx values
  * show - shows the SFP database
  * match - detects the transceiver type and tries to get calibration parameters
  *         from DB for a detected SFP
