@@ -25,6 +25,12 @@
 #define WRC_IS_VERBOSE 0
 #endif
 
+#ifdef CONFIG_SNMP_VERBOSE
+#define SNMP_IS_VERBOSE 1
+#else
+#define SNMP_IS_VERBOSE 0
+#endif
+
 #define pll_verbose(...) \
 	({if (PLL_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
 
@@ -36,6 +42,9 @@
 
 #define net_verbose(...) \
 	({if (NET_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
+
+#define snmp_verbose(...) \
+	({if (SNMP_IS_VERBOSE) __debug_printf(__VA_ARGS__);})
 
 
 #ifdef CONFIG_HOST_PROCESS

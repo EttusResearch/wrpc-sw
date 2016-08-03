@@ -37,22 +37,6 @@ int spll_n_chan_ref, spll_n_chan_out;
 
 #define MAIN_CHANNEL (spll_n_chan_ref)
 
-#define SEQ_START_EXT 1
-#define SEQ_WAIT_EXT 2
-#define SEQ_START_HELPER 3
-#define SEQ_WAIT_HELPER 4
-#define SEQ_START_MAIN 5
-#define SEQ_WAIT_MAIN 6
-#define SEQ_DISABLED 7
-#define SEQ_READY 8
-#define SEQ_CLEAR_DACS 9
-#define SEQ_WAIT_CLEAR_DACS 10
-
-#define AUX_DISABLED 1
-#define AUX_LOCK_PLL 2
-#define AUX_ALIGN_PHASE 3
-#define AUX_READY 4
-
 static const struct stringlist_entry seq_states [] =
 {
 	{ SEQ_START_EXT, "start-ext" },
@@ -641,20 +625,19 @@ int spll_update()
 	}
 	ret += spll_update_aux_clocks();
 
-	/* currently we have statistics only in the switch */
-	if (is_wr_switch) {
-		stats.sequence++;
-		stats.mode  = softpll.mode;
-		stats.irq_cnt = softpll.irq_count;
-		stats.seq_state = softpll.seq_state;
-		stats.align_state = softpll.ext.align_state;
-		stats.H_lock = softpll.helper.ld.locked;
-		stats.M_lock = softpll.mpll.ld.locked;
-		stats.H_y = softpll.helper.pi.y;
-		stats.M_y = softpll.mpll.pi.y;
-		stats.del_cnt = softpll.delock_count;
-		stats.sequence++;
-	}
+	/* store statistics */
+	stats.sequence++;
+	stats.mode  = softpll.mode;
+	stats.irq_cnt = softpll.irq_count;
+	stats.seq_state = softpll.seq_state;
+	stats.align_state = softpll.ext.align_state;
+	stats.H_lock = softpll.helper.ld.locked;
+	stats.M_lock = softpll.mpll.ld.locked;
+	stats.H_y = softpll.helper.pi.y;
+	stats.M_y = softpll.mpll.pi.y;
+	stats.del_cnt = softpll.delock_count;
+	stats.sequence++;
+
 	return ret != 0;
 }
 

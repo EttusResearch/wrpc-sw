@@ -33,6 +33,17 @@ struct wr_ethhdr_vlan {
 	uint16_t ethtype_2;
 };
 
+struct wr_minic {
+	volatile uint32_t *rx_head, *rx_base;
+	uint32_t rx_avail, rx_size;
+	volatile uint32_t *tx_head, *tx_base;
+	uint32_t tx_avail, tx_size;
+
+	int tx_count, rx_count;
+};
+
+extern struct wr_minic minic;
+
 int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 		   struct hw_timestamp *hwts);
 int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t * payload, uint32_t size,
