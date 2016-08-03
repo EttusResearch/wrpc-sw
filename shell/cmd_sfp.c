@@ -109,7 +109,7 @@ static int cmd_sfp(const char *args[])
 		}
 		/* match successful */
 		pp_printf("SFP matched, dTx=%d dRx=%d alpha=%d\n",
-			sfp.dTx, sfp.dRx, sfp.alpha);
+			sfp_deltaTx, sfp_deltaRx, sfp_alpha);
 		return ret;
 	} else if (args[1] && !strcasecmp(args[0], "ena")) {
 		ep_sfp_enable(atoi(args[1]));
