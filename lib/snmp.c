@@ -1403,6 +1403,14 @@ static int snmp_poll(void)
 	if (len <= UDP_END + sizeof(match_array))
 		return 0;
 
+	/* Check the destination IP of SNMP packets. IP version, protocol and
+	 * port are checked in the function update_rx_queues, so no need to
+	 * check it again */
+	if (check_dest_ip(buf)) {
+		snmp_verbose("wrong destination IP\n");
+		return 0;
+	}
+
 	len = snmp_respond(buf + UDP_END);
 	if (len < 0)
 		return 0;

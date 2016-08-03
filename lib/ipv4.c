@@ -205,3 +205,11 @@ void setIP(unsigned char *IP)
 		ip_status = IP_TRAINING;
 	bootp_retry = 0;
 }
+
+/* Check the destination IP of the incoming packet */
+int check_dest_ip(unsigned char *buf)
+{
+	if (!buf)
+		return -1;
+	return memcmp(buf + IP_DEST, myIP, 4);
+}
