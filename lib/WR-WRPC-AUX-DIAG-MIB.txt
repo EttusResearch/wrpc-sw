@@ -1,0 +1,153 @@
+WR-WRPC-AUX-DIAG-MIB DEFINITIONS ::= BEGIN
+
+-- Template for Aux Registers used by WRPC
+-- Based on the WR-WRPC-MIB
+-- Adam Wujek, BE-CO-HT, CERN
+
+-- IMPORTS: Include definitions from other mibs here
+IMPORTS
+        OBJECT-TYPE, Unsigned32, MODULE-IDENTITY FROM SNMPv2-SMI
+        wrWrpcMIB FROM WR-WRPC-MIB;
+
+wrpcAuxDiag MODULE-IDENTITY
+    LAST-UPDATED "201607151000Z"
+    ORGANIZATION "CERN"
+    CONTACT-INFO "postal:   BE-CO-HT, CERN, Geneva
+                  email:    ht-drivers@cern.ch
+                 "
+    DESCRIPTION  "Template of MIB for White Rabbit WRPC aux registers
+                 "
+
+    REVISION     "201607151000Z"
+    DESCRIPTION
+        "First revision."
+
+    ::= { wrWrpcMIB 2 }
+
+-- put your assigned ID number in the line below
+wrpcAuxDiagId1                 OBJECT IDENTIFIER ::= { wrpcAuxDiag 1 }
+-- put the version number in the line below
+wrpcAuxDiagVersion101          OBJECT IDENTIFIER ::= { wrpcAuxDiagId1 1 }
+
+-- ****************************************************************************
+
+wrpcAuxDiag101RoTable          OBJECT-TYPE
+    SYNTAX                     SEQUENCE OF WrpcAuxDiag101RoEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Table with read only registers"
+    ::= { wrpcAuxDiagVersion101 1 }
+
+wrpcAuxDiag101RoEntry          OBJECT-TYPE
+    SYNTAX                     WrpcAuxDiag101RoEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "An entry for read only registers"
+    INDEX   { wrpcAuxDiag101RoIndex }
+    ::= { wrpcAuxDiag101RoTable 1 }
+
+WrpcAuxDiag101RoEntry ::=
+    SEQUENCE {
+        wrpcAuxDiag101RoIndex              Unsigned32,
+        wrpcAuxDiag101RoRegCount           Unsigned32,
+        wrpcAuxDiag101RoReg1               Unsigned32,
+        wrpcAuxDiag101RoReg2               Unsigned32
+    }
+
+wrpcAuxDiag101RoIndex          OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Index for wrpcAuxDiag101RoTable"
+    ::= { wrpcAuxDiag101RoEntry 1 }
+
+wrpcAuxDiag101RoRegCount       OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of registers available in the wrpcAuxDiag101RoTable"
+    ::= { wrpcAuxDiag101RoEntry 2 }
+
+wrpcAuxDiag101RoReg1           OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "First read-only register"
+    ::= { wrpcAuxDiag101RoEntry 3 }
+
+wrpcAuxDiag101RoReg2           OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Second read-only register"
+    ::= { wrpcAuxDiag101RoEntry 4 }
+
+-- ****************************************************************************
+
+wrpcAuxDiag101RwTable          OBJECT-TYPE
+    SYNTAX                     SEQUENCE OF WrpcAuxDiag101RwEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Table with read-write registers"
+    ::= { wrpcAuxDiagVersion101 2 }
+
+wrpcAuxDiag101RwEntry          OBJECT-TYPE
+    SYNTAX                     WrpcAuxDiag101RwEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "An entry for read-write registers"
+    INDEX   { wrpcAuxDiag101RwIndex }
+    ::= { wrpcAuxDiag101RwTable 1 }
+
+WrpcAuxDiag101RwEntry ::=
+    SEQUENCE {
+        wrpcAuxDiag101RwIndex            Unsigned32,
+        wrpcAuxDiag101RwRegCount         Unsigned32,
+        wrpcAuxDiag101RwReg1             Unsigned32,
+        wrpcAuxDiag101RwReg2             Unsigned32
+    }
+
+wrpcAuxDiag101RwIndex          OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Index for wrpcAuxDiag101RwTable"
+    ::= { wrpcAuxDiag101RwEntry 1 }
+
+wrpcAuxDiag101RwRegCount       OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of registers available in the wrpcAuxDiag101RwTable"
+    ::= { wrpcAuxDiag101RwEntry 2 }
+
+
+wrpcAuxDiag101RwReg1           OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "First read-write register"
+    ::= { wrpcAuxDiag101RwEntry 3 }
+
+wrpcAuxDiag101RwReg2           OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-write
+    STATUS                     current
+    DESCRIPTION
+            "Second read-write register"
+    ::= { wrpcAuxDiag101RwEntry 4 }
+
+-- ****************************************************************************
+
+END

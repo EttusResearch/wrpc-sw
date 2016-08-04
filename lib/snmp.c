@@ -74,6 +74,12 @@
 #define SNMP_SET_FUNCTION(X) .set = NULL
 #endif
 
+#ifdef CONFIG_SNMP_AUX_DIAG
+#define SNMP_AUX_DIAG_ENABLED 1
+#else
+#define SNMP_AUX_DIAG_ENABLED 0
+#endif
+
 #define MASK_SET 0x1
 #define MASK_GET 0x2
 #define MASK_GET_NEXT 0x4
@@ -133,6 +139,22 @@
 /* Limit the OID length */
 #define MAX_OID_LEN 40
 
+/* Index of a byte in the OID corresponding to the ID of the aux diag
+ * registers */
+#define AUX_DIAG_ID_INDEX 8
+/* Index of a byte in the OID corresponding to the version of the aux diag
+ * registers */
+#define AUX_DIAG_VER_INDEX 9
+
+#define AUX_DIAG_RO (void *) DIAG_RO_BANK
+#define AUX_DIAG_RW (void *) DIAG_RW_BANK
+/* add the AUX_DIAG_DATA_COL_SHIFT to the aux diag register's index to get
+ * column in the table. Columns are following:
+ * col 1 -- index
+ * col 2 -- number of registers
+ * col 3 -- first aux diag register
+ */
+#define AUX_DIAG_DATA_COL_SHIFT 3
 
 #define OID_FIELD_STRUCT(_oid, _getf, _setf, _asn, _type, _pointer, _field) { \
 	.oid_match = _oid, \
@@ -193,6 +215,10 @@ struct snmp_oid_limb {
 static struct s_sfpinfo snmp_ptp_config;
 static int ptp_config_apply_status;
 static int ptp_restart_status;
+/* Keep the number of aux diag registers available in the FPGA bitstream */
+static uint32_t aux_diag_reg_ro_num;
+static uint32_t aux_diag_reg_rw_num;
+
 
 extern struct pp_instance ppi_static;
 static struct wr_servo_state *wr_s_state;
@@ -218,6 +244,8 @@ static int func_group(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 		      struct snmp_oid *obj, uint8_t flags);
 static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 		      struct snmp_oid *obj, uint8_t flags);
+static int func_aux_diag(uint8_t *buf, uint8_t in_oid_limb_matched_len,
+			 struct snmp_oid *obj, uint8_t flags);
 
 static int get_value(uint8_t *buf, uint8_t asn, void *p);
 static int get_pp(uint8_t *buf, struct snmp_oid *obj);
@@ -229,11 +257,14 @@ static int get_servo(uint8_t *buf, struct snmp_oid *obj);
 static int get_port(uint8_t *buf, struct snmp_oid *obj);
 static int get_temp(uint8_t *buf, struct snmp_oid *obj);
 static int get_sfp(uint8_t *buf, struct snmp_oid *obj);
+static int get_aux_diag(uint8_t *buf, struct snmp_oid *obj);
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p);
 static int set_pp(uint8_t *buf, struct snmp_oid *obj);
 static int set_p(uint8_t *buf, struct snmp_oid *obj);
 static int set_ptp_restart(uint8_t *buf, struct snmp_oid *obj);
 static int set_ptp_config(uint8_t *buf, struct snmp_oid *obj);
+static int set_aux_diag(uint8_t *buf, struct snmp_oid *obj);
+static int data_aux_diag(uint8_t *buf, struct snmp_oid *obj, int mode);
 
 static void print_oid_verbose(uint8_t *oid, int len);
 static void snmp_fix_size(uint8_t *buf, int size);
@@ -248,6 +279,10 @@ static uint8_t oid_wrpcPtpConfigGroup[] =   {0x2B,6,1,4,1,96,101,1,6};
 static uint8_t oid_wrpcPortGroup[] =        {0x2B,6,1,4,1,96,101,1,7};
 /* Include wrpcSfpEntry into OID */
 static uint8_t oid_wrpcSfpTable[] =         {0x2B,6,1,4,1,96,101,1,8,1};
+/* In below OIDs zeros will be replaced in the snmp_init function by values
+ * read from FPA */
+static uint8_t oid_wrpcAuxRoTable[] =       {0x2B,6,1,4,1,96,101,2,0,0,1,1};
+static uint8_t oid_wrpcAuxRwTable[] =       {0x2B,6,1,4,1,96,101,2,0,0,2,1};
 
 /* wrpcVersionGroup */
 static uint8_t oid_wrpcVersionHwType[] =         {1,0};
@@ -408,6 +443,17 @@ static struct snmp_oid oid_array_wrpcSfpTable[] = {
 	{ 0, }
 };
 
+static struct snmp_oid oid_array_wrpcAuxRoTable[] = {
+	OID_FIELD_VAR(NULL, get_aux_diag, NO_SET, ASN_UNSIGNED, AUX_DIAG_RO),
+	{ 0, }
+};
+
+static struct snmp_oid oid_array_wrpcAuxRwTable[] = {
+	OID_FIELD_VAR(NULL, get_aux_diag, set_aux_diag, ASN_UNSIGNED, AUX_DIAG_RW),
+	{ 0, }
+};
+
+
 /* Array of groups and tables */
 static struct snmp_oid_limb oid_limb_array[] = {
 	OID_LIMB_FIELD(oid_wrpcVersionGroup,     func_group, oid_array_wrpcVersionGroup),
@@ -418,17 +464,34 @@ static struct snmp_oid_limb oid_limb_array[] = {
 	OID_LIMB_FIELD(oid_wrpcPtpConfigGroup,   func_group, oid_array_wrpcPtpConfigGroup),
 	OID_LIMB_FIELD(oid_wrpcPortGroup,        func_group, oid_array_wrpcPortGroup),
 	OID_LIMB_FIELD(oid_wrpcSfpTable,         func_table, oid_array_wrpcSfpTable),
+#ifdef CONFIG_SNMP_AUX_DIAG
+	OID_LIMB_FIELD(oid_wrpcAuxRoTable,       func_aux_diag, oid_array_wrpcAuxRoTable),
+	OID_LIMB_FIELD(oid_wrpcAuxRwTable,       func_aux_diag, oid_array_wrpcAuxRwTable),
+#endif
 	{ 0, }
 };
 
 static void snmp_init(void)
 {
+	uint32_t aux_diag_id;
+	uint32_t aux_diag_ver;
 	/* Use UDP engine activated by function arguments  */
 	snmp_socket = ptpd_netif_create_socket(&__static_snmp_socket, NULL,
 						PTPD_SOCK_UDP, 161 /* snmp */);
 	/* TODO: check if pointer(s) is initialized already */
 	wr_s_state =
 		&((struct wr_data *)ppi_static.ext_data)->servo_state;
+	if (SNMP_AUX_DIAG_ENABLED) {
+		/* Fix ID and version of aux diag registers by values read from FPGA */
+		diag_read_info(&aux_diag_id, &aux_diag_ver, &aux_diag_reg_rw_num,
+			      &aux_diag_reg_ro_num);
+		snmp_verbose("aux_diag_id %d, aux_diag_ver %d\n",
+			    aux_diag_id, aux_diag_ver);
+		oid_wrpcAuxRoTable[AUX_DIAG_ID_INDEX] = aux_diag_id;
+		oid_wrpcAuxRoTable[AUX_DIAG_VER_INDEX] = aux_diag_ver;
+		oid_wrpcAuxRwTable[AUX_DIAG_ID_INDEX] = aux_diag_id;
+		oid_wrpcAuxRwTable[AUX_DIAG_VER_INDEX] = aux_diag_ver;
+	}
 }
 
 static int func_group(uint8_t *buf, uint8_t in_oid_limb_matched_len,
@@ -541,7 +604,6 @@ static int func_group(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 	}
 	return 0;
 }
-
 
 static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 		      struct snmp_oid *twigs_array, uint8_t flags)
@@ -678,6 +740,118 @@ static int func_table(uint8_t *buf, uint8_t in_oid_limb_matched_len,
 	return_len += oid->oid_len + 1;
 	if (snmp_get_next || return_first) {
 		buf[0] = oid->oid_len + 1;
+	}
+
+	return return_len;
+}
+
+static int func_aux_diag(uint8_t *buf, uint8_t in_oid_limb_matched_len,
+			 struct snmp_oid *twigs_array, uint8_t flags)
+{
+	int oid_twig_len = buf[0] - in_oid_limb_matched_len;
+	uint8_t *in_oid_limb_end = &buf[1 + in_oid_limb_matched_len];
+	uint8_t oid_twig_matching_len;
+	struct snmp_oid *oid;
+	struct snmp_oid leaf_obj;
+	int return_first = 0;
+	int i;
+	int get_next_increase_oid = 0;
+	int snmp_get_next = 0;
+	int return_len;
+	int table_size = 2; /* two */
+
+	oid = twigs_array;
+	if (flags & RETURN_FIRST)
+		return_first = 1;
+
+	snmp_verbose("%s: table wants coordinates:", __func__);
+	for (i = 0; i < oid_twig_len; i++)
+		snmp_verbose(" %d", in_oid_limb_end[i]);
+	snmp_verbose("\n");
+
+	if (flags & MASK_GET_NEXT) {
+		/* By default increase OID for SNMP_GET_NEXT */
+		get_next_increase_oid = 1;
+		snmp_get_next = 1;
+	}
+
+	/* Fill packet with valid OID, when OID is shorter than it
+	 * should be */
+	if (return_first || (snmp_get_next && oid_twig_len < table_size)) {
+		get_next_increase_oid = 0;
+		in_oid_limb_end[TABLE_COL] = TABLE_FIRST_COL;
+		in_oid_limb_end[TABLE_ROW] = TABLE_FIRST_ROW;
+		oid_twig_len = table_size;
+	}
+	/* Decide what is shorter the rest of the OID, or the
+	 * matching part */
+	oid_twig_matching_len = min(oid_twig_len, table_size);
+
+	/* For get and set twig size has to be exact */
+	if (!snmp_get_next && (oid_twig_len != table_size)) {
+		snmp_verbose("%s: wrong twig len %d (expected %d)",
+			     __func__, oid_twig_len, table_size);
+		return 0;
+	}
+
+	/* For get next requested twig part of oid is longer than table size */
+	if (snmp_get_next && (oid_twig_len > table_size)) {
+		get_next_increase_oid = 1;
+	}
+
+	/* Copy OID information to the leaf_obj */
+	leaf_obj.oid_len = table_size;
+	leaf_obj.oid_match = in_oid_limb_end;
+	leaf_obj.asn = oid->asn;
+	leaf_obj.p = oid->p;
+
+	if (get_next_increase_oid)
+		in_oid_limb_end[TABLE_ROW]++;
+
+	if (flags & MASK_SET) {
+		if (!oid->set) {
+			/* No set function */
+			snmp_verbose("%s: no set function!", __func__);
+			return -SNMP_ERR_READONLY;
+		}
+		/* Set the value for the leaf */
+		return_len = oid->set(&in_oid_limb_end[table_size], &leaf_obj);
+		if (return_len < 0) {
+			snmp_verbose("%s: SET error %d\n", __func__,
+				     return_len);
+			return return_len;
+			}
+	} else {
+		/* Get the value for the leaf */
+		return_len = oid->get(&in_oid_limb_end[table_size], &leaf_obj);
+	}
+
+	if (return_len == 0 && get_next_increase_oid) {
+		in_oid_limb_end[TABLE_COL]++;
+		in_oid_limb_end[TABLE_ROW] = TABLE_FIRST_ROW;
+
+		/* Get the value for the leaf in the next column, first row */
+		return_len = oid->get(&in_oid_limb_end[table_size],
+				      &leaf_obj);
+
+		/* If no value is available for first row in next column,
+		 * it means previous column was the last one */
+		if (return_len == 0)
+			return 0;
+	}
+	/* Leaf not found */
+	if (return_len == 0)
+		return 0;
+
+	if (return_len < 0) /* If error */ {
+		snmp_verbose("%s: GET error %d\n",
+			      __func__, return_len);
+		return return_len;
+	}
+
+	return_len += table_size;
+	if (snmp_get_next || return_first) {
+		buf[0] = table_size;
 	}
 
 	return return_len;
@@ -928,6 +1102,87 @@ static int get_sfp(uint8_t *buf, struct snmp_oid *obj)
 	return 0;
 }
 
+static int set_aux_diag(uint8_t *buf, struct snmp_oid *obj)
+{
+	return data_aux_diag(buf, obj, SNMP_SET);
+}
+
+static int get_aux_diag(uint8_t *buf, struct snmp_oid *obj)
+{
+	return data_aux_diag(buf, obj, SNMP_GET);
+}
+
+static int data_aux_diag(uint8_t *buf, struct snmp_oid *obj, int mode)
+{
+	int row;
+	int col;
+	int bank; /* RO or RW */
+	uint32_t val;
+	int regs_available;
+	int ret;
+
+	bank = (int) obj->p;
+	snmp_verbose("%s: bank %d\n", __func__, obj->p);
+	if ((void *)bank == AUX_DIAG_RO) {
+		regs_available = aux_diag_reg_ro_num;
+		snmp_verbose("%s: RO bank\n", __func__);
+	} else if ((void *)bank == AUX_DIAG_RW) {
+		regs_available = aux_diag_reg_rw_num;
+		snmp_verbose("%s: RW bank\n", __func__);
+	} else {
+		snmp_verbose("%s: wrong AUX bank %d\n", __func__, bank);
+		return -SNMP_ERR_BADVALUE;
+	}
+	row = obj->oid_match[1];
+	col = obj->oid_match[0];
+	snmp_verbose("%s: row%d, col%d\n", __func__, row, col);
+	if (row != 1) {
+		/* So far we support only one row in this table. */
+		snmp_verbose("%s: wrong row %d, should be 1\n", __func__, row);
+		return 0;
+	}
+
+	/* Ignore cols < 2 */
+	if ((col < 2) || (col >= regs_available + AUX_DIAG_DATA_COL_SHIFT)) {
+		snmp_verbose("%s: wrong col %d, max %d\n", __func__,
+			     col, regs_available + AUX_DIAG_DATA_COL_SHIFT);
+		return 0;
+	}
+	if (col == 2) {
+		/* Col 2 is a register containing the number of registers
+		 * available in this bank */
+		if (mode == SNMP_SET) {
+			/* Register with the number of registers is read
+			 * only */
+			return -SNMP_ERR_READONLY;
+		}
+		val = regs_available;
+	} else {
+		if (mode == SNMP_SET) {
+			/* write */
+			ret = set_value(buf, obj, &val);
+			if (ret <= 0) {
+				/* Error while checking SET value,
+				 * like wrong ASN */
+				return ret;
+			}
+			ret = diag_write_word(col - AUX_DIAG_DATA_COL_SHIFT,
+					      val);
+			if (ret < 0) {
+				/* Something went wrong during the write */
+				return -SNMP_ERR_GENERR;
+			}
+		}
+		/* Read a word, even if we just set it */
+		ret = diag_read_word(col - AUX_DIAG_DATA_COL_SHIFT, bank, &val);
+		if (ret < 0) {
+			/* Something went wrong during the read */
+			return -SNMP_ERR_GENERR;
+		}
+	}
+
+	return get_value(buf, obj->asn, &val);
+}
 
 static int set_value(uint8_t *set_buff, struct snmp_oid *obj, void *p)
 {
@@ -1250,6 +1505,10 @@ static int snmp_respond(uint8_t *buf)
 		set_pp(NULL, NULL);
 		set_ptp_config(NULL, NULL);
 		set_ptp_restart(NULL, NULL);
+		set_aux_diag(NULL, NULL);
+		func_aux_diag(NULL, 0, NULL, 0);
+		oid_array_wrpcAuxRwTable[0].oid_len = 0;
+		oid_array_wrpcAuxRoTable[0].oid_len = 0;
 	}
 
 	for (a_i = 0, h_i = 0; a_i < sizeof(match_array); a_i++, h_i++) {

@@ -51,6 +51,10 @@ struct SYSCON_WB {
 	uint32_t HWFR;		/*Hardware Feature Register */
 	uint32_t TCR;		/*Timer Control Register */
 	uint32_t TVR;		/*Timer Counter Value Register */
+	uint32_t DIAG_INFO;
+	uint32_t DIAG_NW;
+	uint32_t DIAG_CR;
+	uint32_t DIAG_DAT;
 };
 
 /*GPIO pins*/
@@ -100,6 +104,12 @@ static inline int sysc_get_memsize(void)
 {
 	return (SYSC_HWFR_MEMSIZE_R(syscon->HWFR) + 1) * 16;
 }
+
+#define DIAG_RW_BANK 0
+#define DIAG_RO_BANK 1
+void diag_read_info(uint32_t *id, uint32_t *ver, uint32_t *nrw, uint32_t *nro);
+int diag_read_word(uint32_t adr, int bank, uint32_t *val);
+int diag_write_word(uint32_t adr, uint32_t val);
 
 #endif /* CONFIG_WR_NODE */
 #endif

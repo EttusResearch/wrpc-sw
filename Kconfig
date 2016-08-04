@@ -148,6 +148,14 @@ config SNMP_SET
        help
 	  This option enables support for SET requests for Mini SNMP responder
 
+config SNMP_AUX_DIAG
+       depends on SNMP && AUX_DIAG
+       default y if AUX_DIAG
+       default n
+       boolean "Adds support of auxiliary diagnostics registers to SNMP"
+       help
+	  This option adds branch wrpcAuxDiag to the SNMP
+
 config SNMP_HW_TYPE
 	depends on SNMP
 	default "spec"
@@ -182,6 +190,13 @@ config FLASH_INIT
   boolean
   default y if EMBEDDED_NODE
   default n
+
+config AUX_DIAG
+       default n
+       boolean "Add support for auxiliary diagnostics registers"
+       help
+	  This option adds support for read/write of aux diag registers and
+	  the diag command.
 
 #
 # This is a set of configuration options that should not be changed by
