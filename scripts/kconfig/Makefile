@@ -76,7 +76,7 @@ update-po-config: $(obj)/kxgettext $(obj)/gconf.glade.h
 	$(Q)rm -f $(obj)/config.pot
 
 # These targets map 1:1 to the commandline options of 'conf'
-simple-targets := oldconfig allnoconfig allyesconfig allmodconfig \
+simple-targets := oldconfig allnoconfig allyesconfig \
 	alldefconfig randconfig listnewconfig olddefconfig
 PHONY += $(simple-targets)
 
@@ -97,9 +97,9 @@ defconfig: $(obj)/conf
 ifeq ($(KBUILD_DEFCONFIG),)
 	$< $(silent) --defconfig $(Kconfig)
 else
-ifneq ($(wildcard $(srctree)/arch/$(SRCARCH)/configs/$(KBUILD_DEFCONFIG)),)
+ifneq ($(wildcard $(srctree)/configs/$(KBUILD_DEFCONFIG)),)
 	@$(kecho) "*** Default configuration is based on '$(KBUILD_DEFCONFIG)'"
-	$(Q)$< $(silent) --defconfig=arch/$(SRCARCH)/configs/$(KBUILD_DEFCONFIG) $(Kconfig)
+	$(Q)$< $(silent) --defconfig=configs/$(KBUILD_DEFCONFIG) $(Kconfig)
 else
 	@$(kecho) "*** Default configuration is based on target '$(KBUILD_DEFCONFIG)'"
 	$(Q)$(MAKE) -f $(srctree)/Makefile $(KBUILD_DEFCONFIG)
@@ -107,26 +107,14 @@ endif
 endif
 
 %_defconfig: $(obj)/conf
-	$(Q)$< $(silent) --defconfig=arch/$(SRCARCH)/configs/$@ $(Kconfig)
+	$(Q)$< $(silent) --defconfig=configs/$@ $(Kconfig)
 
-configfiles=$(wildcard $(srctree)/kernel/configs/$@ $(srctree)/arch/$(SRCARCH)/configs/$@)
+configfiles=$(wildcard $(srctree)/configs/$@)
 
 %.config: $(obj)/conf
 	$(if $(call configfiles),, $(error No configuration exists for this target on this architecture))
 	$(Q)$(CONFIG_SHELL) $(srctree)/scripts/kconfig/merge_config.sh -m .config $(configfiles)
 	+$(Q)yes "" | $(MAKE) -f $(srctree)/Makefile oldconfig
-
-PHONY += kvmconfig
-kvmconfig: kvm_guest.config
-	@:
-
-PHONY += xenconfig
-xenconfig: xen.config
-	@:
-
-PHONY += tinyconfig
-tinyconfig:
-	$(Q)$(MAKE) -f $(srctree)/Makefile allnoconfig tiny.config
 
 # Help text used by make help
 help:
@@ -144,15 +132,11 @@ help:
 	@echo  '  savedefconfig   - Save current config as ./defconfig (minimal config)'
 	@echo  '  allnoconfig	  - New config where all options are answered with no'
 	@echo  '  allyesconfig	  - New config where all options are accepted with yes'
-	@echo  '  allmodconfig	  - New config selecting modules when possible'
 	@echo  '  alldefconfig    - New config with all symbols set to default'
 	@echo  '  randconfig	  - New config with random answer to all options'
 	@echo  '  listnewconfig   - List new options'
 	@echo  '  olddefconfig	  - Same as silentoldconfig but sets new symbols to their'
 	@echo  '                    default value'
-	@echo  '  kvmconfig	  - Enable additional options for kvm guest kernel support'
-	@echo  '  xenconfig       - Enable additional options for xen dom0 and guest kernel support'
-	@echo  '  tinyconfig	  - Configure the tiniest possible kernel'
 
 # lxdialog stuff
 check-lxdialog  := $(srctree)/$(src)/lxdialog/check-lxdialog.sh
