@@ -32,7 +32,13 @@ wasted on disk for them and the output file is short).
 
 To create the flash filesystem image, don't forget about setting the sector
 size. For flash chip on SPEC card, it is 64k:
-gensdbfs -b 65536 tools/sdbfs /tmp/sdb-wrpc.bin
+gensdbfs -b 65536 tools/sdbfs-flash /tmp/sdb-wrpc.bin
+
+For non-Linux users, who want to use Xilinx Impact or promgen to merge their own
+bitstream with the sdbfs image for standalone SPEC/SVEC operation, the image
+generated has to be modified. Normally, first part of the sdbfs image is the
+empty gateware file. These bytes have to be cut:
+cut -b 1507329- /tmp/sdb-wrpc.bin > /tmp/sdb-wrpc-standalone.bin
 
 To check: "sdb-read -l /tmp/sdb-wrpc.bin":
 
