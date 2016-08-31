@@ -17,10 +17,6 @@ config PRINT_BUFSIZE
 	int
 	default 128
 
-config PRINTF_XINT
-	boolean
-	default y
-
 config RAMSIZE
 	int
 	default 65536 if WR_SWITCH
@@ -295,7 +291,7 @@ choice
 	prompt "Implementation of pp_printf"
 	depends on DEVELOPER && WR_NODE
 
-config PRINTF_XINT
+config PRINTF_IS_XINT
 	bool "hex-and-int"
 	help
 	  This selects a printf that can only print decimal and hex
@@ -303,7 +299,7 @@ config PRINTF_XINT
 	  supported too, and %p is equivalent to %x.
 	  See pp_printf/README for details.
 
-config PRINTF_FULL
+config PRINTF_IS_FULL
 	bool "full"
 	help
 	  This selects an implementation that supports all standard
@@ -311,7 +307,7 @@ config PRINTF_FULL
 	  around 2k of compiled code more than XINT.
 	  See pp_printf/README for details.
 
-config PRINTF_MINI
+config PRINTF_IS_MINI
 	bool "minimal"
 	help
 	  This selects a printf that prints all integers as hex,
@@ -319,13 +315,30 @@ config PRINTF_MINI
 	  supported too. See pp_printf/README for details.
 	  This is not probably what you want for wrpc-sw.
 
-config PRINTF_NONE
+config PRINTF_IS_NONE
 	bool "empty"
 	help
 	  This selects a printf that prints the format string
 	  alone and ignores all further arguments. Minimal size,
 	  but not suited for wrpc-sw. See pp_printf/README for details.
 endchoice
+
+config PRINTF_XINT
+	boolean
+	default PRINTF_IS_XINT if (DEVELOPER && WR_NODE)
+	default y
+
+config PRINTF_FULL
+       boolean
+       default PRINTF_IS_FULL
+
+config PRINTF_MINI
+       boolean
+       default PRINTF_IS_MINI
+
+config PRINTF_NONE
+       boolean
+       default PRINTF_IS_NONE
 
 config PPSI
 	depends on WR_NODE
@@ -348,7 +361,7 @@ config DETERMINISTIC_BINARY
 
 config UART
 	boolean "Use hardware uart (and/or vuart if available)"
-	depends on DEVELOPER && EMBEDDED_NODE
+	depends on (DEVELOPER && EMBEDDED_NODE) || WR_SWITCH
 	help
 	  This option selects the serial driver, connected to either
 	  the USB socket, or "vuart" (software fifo) or both, according
