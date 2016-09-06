@@ -1,8 +1,12 @@
 #!/bin/sh
 # A trivial script to build with all known configurations
-# (please add a configs/ file to test your special case
+# (please add a file in confifs/ to test your special case)
 
 T=$(mktemp /tmp/wrpc-config.XXXXXX)
+TW=$(mktemp /tmp/save-dotconfig-wrpc.XXXXXX)
+TP=$(mktemp /tmp/save-dotconfig-ppsi.XXXXXX)
+test -f .config && cp .config $TW
+test -f ppsi/.config && cp ppsi/.config $TP
 
 configs=$(cd configs; echo *_defconfig)
 if [ $# -ne 0 ]; then
@@ -11,11 +15,18 @@ fi
 
 for c in $configs; do
     echo "##### Building with '$c'"
+    make -s clean; rm ppsi/.config; touch ppsi/.config
     if ! make $c 2>&1 >> $T; then
 	echo "Error in configuration (see $T)"
 	exit 1
     fi
-    make -s clean
-    make -s
+    # Remove "# configuration written to .config" from output
+    make -s | grep -v '^#'
 done
+make -s clean
+
+# Recover local configs
+cp $TW .config; rm $TW
+cp $TP ppsi/.config; rm $TP
+
 rm $T

@@ -137,7 +137,7 @@ PPSI-CFG-$(CONFIG_HOST_PROCESS) = unix_defconfig
 PPSI-FLAGS-$(CONFIG_LM32) = CONFIG_NO_PRINTF=y
 
 $(obj-ppsi):
-	test -f $(PPSI)/.config || $(MAKE) -C $(PPSI) $(PPSI-CFG-y)
+	test -s $(PPSI)/.config || $(MAKE) -C $(PPSI) $(PPSI-CFG-y)
 	$(MAKE) -C $(PPSI) ppsi.o WRPCSW_ROOT=.. \
 		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y
 		USER_CFLAGS="$(PPSI_USER_CFLAGS)"
