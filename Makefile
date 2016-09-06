@@ -133,6 +133,7 @@ endif
 PPSI_USER_CFLAGS += -DDIAG_PUTS=uart_sw_write_string
 
 PPSI-CFG-y = wrpc_defconfig
+PPSI-CFG-$(CONFIG_P2P) = wrpc_pdelay_defconfig
 PPSI-CFG-$(CONFIG_HOST_PROCESS) = unix_defconfig
 PPSI-FLAGS-$(CONFIG_LM32) = CONFIG_NO_PRINTF=y
 

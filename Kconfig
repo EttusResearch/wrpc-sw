@@ -112,6 +112,17 @@ config LATENCY_ETHTYPE
 
 # The other ones can be set by non-developers
 
+config P2P
+	depends on WR_NODE
+	default n
+	boolean "Build peer-delay mechanism (and prefer it)"
+	help
+	  This choice selects peer-to-peer ("P2P"), or "peer delay"
+	  PTP protocol. If activated, but P2P and E2E (end to end)
+	  are built, and they can be chosen at run time, with P2P preset.
+	  If you deny this option, P2P code is not built, to save some
+	  binary size.
+
 config IP
 	depends on WR_NODE
 	boolean "Compile minimal IP support in wrpc-sw"
