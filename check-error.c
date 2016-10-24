@@ -21,6 +21,7 @@ int mprintf(const char *fmt, ...);
 
 long long __moddi3 (long long A, long long B);
 long long __divdi3 (long long A, long long B);
+long long __udivdi3 (long long A, long long B);
 
 int printf(const char *fmt, ...)
 {
@@ -35,10 +36,16 @@ int mprintf(const char *fmt, ...)
 	return 0;
 }
 
-
 #ifdef CONFIG_PPSI /* with ppsi we can avoid libgcc code for division */
 /* was used twice in picos_to_ts  */
 long long __moddi3 (long long A, long long B)
+{
+	__you_should_not_divide_ll_in_wrpc_sw();
+	return 0;
+}
+
+/* picos_to_ts again */
+long long __udivdi3 (long long A, long long B)
 {
 	__you_should_not_divide_ll_in_wrpc_sw();
 	return 0;
