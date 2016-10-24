@@ -246,18 +246,20 @@ int wrc_mon_gui(void)
 	return 1;
 }
 
-static inline void cprintf_ti(int color, struct TimeInternal *ti)
+static inline void cprintf_time(int color, struct pp_time *time)
 {
-	if ((ti->seconds > 0) ||
-		((ti->seconds == 0) && (ti->nanoseconds >= 0)))
-		cprintf(color, "%2i.%09i s", ti->seconds, ti->nanoseconds);
-	else {
-		if (ti->seconds == 0)
-			cprintf(color, "-%i.%09i s", ti->seconds, -ti->nanoseconds);
-		else
-			cprintf(color, "%2i.%09i s", ti->seconds, -ti->nanoseconds);
-	}
+	int s, ns;
 
+	s = (int)time->secs;
+	ns = (int)(time->scaled_nsecs >> 16);
+	if (s > 0 || (s == 0 && ns >= 0)) {
+		cprintf(color, "%2i.%09i s", s, ns);
+	} else { /* negative */
+		if (time->secs == 0)
+			cprintf(color, "-%i.%09i s", s, -ns);
+		else
+			cprintf(color, "%i.%09i s", s, -ns);
+	}
 }
 
 static void wrc_mon_std_servo(void)
@@ -269,16 +271,18 @@ static void wrc_mon_std_servo(void)
 
 	cprintf(C_GREY, "Clock offset:                 ");
 
-	if (DSCUR(ppi)->offsetFromMaster.seconds)
-		cprintf_ti(C_WHITE, &DSCUR(ppi)->offsetFromMaster);
+	if (DSCUR(ppi)->offsetFromMaster.secs)
+		cprintf_time(C_WHITE, &DSCUR(ppi)->offsetFromMaster);
 	else {
-		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->offsetFromMaster.nanoseconds);
+		cprintf(C_WHITE, "%9i ns",
+			(int)(DSCUR(ppi)->offsetFromMaster.scaled_nsecs >> 16));
 
 		cprintf(C_GREY, "\nOne-way delay averaged:       ");
-		cprintf(C_WHITE, "%9i ns", DSCUR(ppi)->meanPathDelay.nanoseconds);
+		cprintf(C_WHITE, "%9i ns",
+			(int)(DSCUR(ppi)->meanPathDelay.scaled_nsecs >> 16));
 
 		cprintf(C_GREY, "\nObserved drift:               ");
-		cprintf(C_WHITE, "%9i ns", SRV(ppi)->obs_drift);
+		cprintf(C_WHITE, "%9i ns",SRV(ppi)->obs_drift);
 	}
 }
 

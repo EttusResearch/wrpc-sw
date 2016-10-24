@@ -866,9 +866,9 @@ static int get_servo(uint8_t *buf, struct snmp_oid *obj)
 		tmp_uint64 = wr_s_state->picos_mu - 2LL * wr_s_state->delta_ms;
 		return get_value(buf, obj->asn, &tmp_uint64);
 	case (int)SERVO_UPDATE_TIME:
-		tmp_uint64 = ((uint64_t) wr_s_state->update_time.seconds) *
+		tmp_uint64 = ((uint64_t) wr_s_state->update_time.secs) *
 					1000000000LL
-				+ wr_s_state->update_time.nanoseconds;
+				+ (wr_s_state->update_time.scaled_nsecs >> 16);
 		return get_value(buf, obj->asn, &tmp_uint64);
 	default:
 		break;
