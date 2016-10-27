@@ -6,19 +6,28 @@
 
 #include <errno.h>
 #include <string.h>
+#include <wrpc.h>
 #include "wrc_ptp.h"
 #include "shell.h"
 
+struct subcmd {
+	char *name;
+	int (*fun)(int);
+	int arg;
+} subcmd[] = {
+	{"start", wrc_ptp_run, 1},
+	{"stop", wrc_ptp_run, 0},
+};
+
 static int cmd_ptp(const char *args[])
 {
-	if (!strcasecmp(args[0], "start"))
-		return wrc_ptp_start();
-	else if (!strcasecmp(args[0], "stop"))
-		return wrc_ptp_stop();
-	else
-		return -EINVAL;
+	int i;
+	struct subcmd *c;
 
-	return 0;
+	for (i = 0, c = subcmd; i < ARRAY_SIZE(subcmd); i++, c++)
+		if (!strcasecmp(args[0], c->name))
+			return c->fun(c->arg);
+	return -EINVAL;
 }
 
 DEFINE_WRC_COMMAND(ptp) = {
