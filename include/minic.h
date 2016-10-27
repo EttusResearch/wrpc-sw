@@ -34,11 +34,6 @@ struct wr_ethhdr_vlan {
 };
 
 struct wr_minic {
-	volatile uint32_t *rx_head, *rx_base;
-	uint32_t rx_avail, rx_size;
-	volatile uint32_t *tx_head, *tx_base;
-	uint32_t tx_avail, tx_size;
-
 	int tx_count, rx_count;
 };
 
