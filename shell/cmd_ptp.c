@@ -21,6 +21,9 @@ struct subcmd {
 	{"delay", wrc_ptp_sync_mech, PP_E2E_MECH},
 	{"p2p", wrc_ptp_sync_mech, PP_P2P_MECH},
 	{"pdelay", wrc_ptp_sync_mech, PP_P2P_MECH},
+	{"gm", wrc_ptp_set_mode, WRC_MODE_GM},
+	{"master", wrc_ptp_set_mode, WRC_MODE_MASTER},
+	{"slave", wrc_ptp_set_mode, WRC_MODE_SLAVE},
 };
 
 static int cmd_ptp(const char *args[])
@@ -36,5 +39,9 @@ static int cmd_ptp(const char *args[])
 
 DEFINE_WRC_COMMAND(ptp) = {
 	.name = "ptp",
+	.exec = cmd_ptp,
+};
+DEFINE_WRC_COMMAND(mode) = {
+	.name = "mode",
 	.exec = cmd_ptp,
 };

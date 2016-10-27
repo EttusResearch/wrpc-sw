@@ -2,7 +2,6 @@ obj-$(CONFIG_WR_NODE) += \
 	shell/shell.o \
 	shell/cmd_version.o \
 	shell/cmd_ptp.o \
-	shell/cmd_mode.o \
 	shell/cmd_help.o \
 	shell/cmd_mac.o \
 	shell/cmd_ps.o \
