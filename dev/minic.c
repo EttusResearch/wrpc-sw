@@ -215,7 +215,7 @@ int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 	minic.rx_count++;
 
 	if (minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
-		pp_printf("Warning: Minic Rx fifo full, expect wrong frames");
+		pp_printf("Warning: Minic Rx fifo full, expect wrong frames\n");
 
 	/* return number of bytes written to the *payload buffer */
 	return (buf_size < payload_size ? buf_size : payload_size);
