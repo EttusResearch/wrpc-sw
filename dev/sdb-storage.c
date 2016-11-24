@@ -31,6 +31,10 @@
 #define SDB_DEV_SFP	0x7366702d /* sfp- (database) */
 #define SDB_DEV_CALIB	0x63616c69 /* cali (bration) */
 
+/* constants for scanning I2C EEPROMs */
+#define EEPROM_START_ADR 0
+#define EEPROM_STOP_ADR  127
+
 /* Functions for Flash access */
 static int sdb_flash_read(struct sdbfs *fs, int offset, void *buf, int count)
 {
@@ -252,28 +256,35 @@ void storage_init(int chosen_i2cif, int chosen_i2c_addr)
 	 * 3. If w1 failed, look for i2c: start from low offsets.
 	 */
 	i2c_params.ifnum = chosen_i2cif;
-	i2c_params.addr = chosen_i2c_addr;
-	if (!mi2c_devprobe(i2c_params.ifnum, i2c_params.addr))
-		return;
+	i2c_params.addr = EEPROM_START_ADR;
+	while (i2c_params.addr <= EEPROM_STOP_ADR) {
+		/* First, we check if I2C EEPROM is there */
+	        if (!mi2c_devprobe(i2c_params.ifnum, i2c_params.addr)) {
+			i2c_params.addr++;
+			continue;
+		}
+		/* While looking for the magic number, use sdb-based read function */
+		for (i = 0; i < ARRAY_SIZE(entry_points_eeprom); i++) {
+			sdb_i2c_read(&wrc_sdb, entry_points_eeprom[i], (void *)&magic,
+				    sizeof(magic));
+			if (magic == SDB_MAGIC)
+				break;
+		}
+		if (magic == SDB_MAGIC) {
+			pp_printf("sdbfs: found at %i in I2C(0x%2X)\n",
+				entry_points_eeprom[i], i2c_params.addr);
+			wrc_sdb.drvdata = &i2c_params;
+			wrc_sdb.blocksize = 1;
+			wrc_sdb.entrypoint = entry_points_eeprom[i];
+			wrc_sdb.read = sdb_i2c_read;
+			wrc_sdb.write = sdb_i2c_write;
+			wrc_sdb.erase = sdb_i2c_erase;
+			goto found_exit;
+		}
+		i2c_params.addr++;
+	}
 
-	/* While looking for the magic number, use sdb-based read function */
-	for (i = 0; i < ARRAY_SIZE(entry_points_eeprom); i++) {
-		sdb_i2c_read(&wrc_sdb, entry_points_eeprom[i], (void *)&magic,
-			    sizeof(magic));
-		if (magic == SDB_MAGIC)
-			break;
-	}
-	if (magic == SDB_MAGIC) {
-		pp_printf("sdbfs: found at %i in I2C\n", entry_points_eeprom[i]);
-		wrc_sdb.drvdata = &i2c_params;
-		wrc_sdb.blocksize = 1;
-		wrc_sdb.entrypoint = entry_points_eeprom[i];
-		wrc_sdb.read = sdb_i2c_read;
-		wrc_sdb.write = sdb_i2c_write;
-		wrc_sdb.erase = sdb_i2c_erase;
-		goto found_exit;
-	}
-	if (i == ARRAY_SIZE(entry_points_eeprom)) {
+	if (i2c_params.addr == EEPROM_STOP_ADR) {
 		pp_printf("No SDB filesystem in i2c eeprom\n");
 		return;
 	}
