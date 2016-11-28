@@ -443,6 +443,13 @@ $ sudo tools/flash-write -b 0x20 -c 0x0 0 1507712 < \
      <your_location>/sdbfs-flash.bin
 @end example
 
+@b{Note:} The @code{-b} parameter takes the PCI bus address of the SPEC. This
+can be found either in the list of the PCI devices installed in the system
+(@code{lspci}) or in the kernel messages (@code{dmesg}) when inserting the
+spec.ko module. See the example below on loading the FPGA code. We see that the
+second number in the colon/dotted notation provides the argument in the example
+above.
+
 @b{Note:} Please refer to @ref{Writing @sc{sdbfs} image in standalone configuration}
 for instructions on how to write the @sc{sdbfs} image to a standalone @sc{spec}
 or custom hardware.
