@@ -46,8 +46,8 @@ struct dump_info  dump_info[] = {
 
 	DUMP_HEADER("DSCurrent"),
 	DUMP_FIELD(UInteger16, stepsRemoved),
-	DUMP_FIELD(TimeInternal, offsetFromMaster),
-	DUMP_FIELD(TimeInternal, meanPathDelay), /* oneWayDelay */
+	DUMP_FIELD(pp_time, offsetFromMaster),
+	DUMP_FIELD(pp_time, meanPathDelay), /* oneWayDelay */
 	DUMP_FIELD(UInteger16, primarySlavePortNumber),
 
 #undef DUMP_STRUCT
@@ -88,15 +88,15 @@ struct dump_info  dump_info[] = {
 	DUMP_FIELD(Integer32, delta_rx_s),
 	DUMP_FIELD(Integer32, fiber_fix_alpha),
 	DUMP_FIELD(Integer32, clock_period_ps),
-	DUMP_FIELD(TimeInternal, t1),
-	DUMP_FIELD(TimeInternal, t2),
-	DUMP_FIELD(TimeInternal, t3),
-	DUMP_FIELD(TimeInternal, t4),
-	DUMP_FIELD(TimeInternal, t5),
-	DUMP_FIELD(TimeInternal, t6),
+	DUMP_FIELD(pp_time, t1),
+	DUMP_FIELD(pp_time, t2),
+	DUMP_FIELD(pp_time, t3),
+	DUMP_FIELD(pp_time, t4),
+	DUMP_FIELD(pp_time, t5),
+	DUMP_FIELD(pp_time, t6),
 	DUMP_FIELD(Integer64, delta_ms_prev),
 	DUMP_FIELD(int, missed_iters),
-	DUMP_FIELD(TimeInternal, mu),		/* half of the RTT */
+	DUMP_FIELD(pp_time, mu),		/* half of the RTT */
 	DUMP_FIELD(Integer64, picos_mu),
 	DUMP_FIELD(Integer32, cur_setpoint),
 	DUMP_FIELD(Integer64, delta_ms),
@@ -108,7 +108,7 @@ struct dump_info  dump_info[] = {
 	DUMP_FIELD(UInteger32, n_err_state),
 	DUMP_FIELD(UInteger32, n_err_offset),
 	DUMP_FIELD(UInteger32, n_err_delta_rtt),
-	DUMP_FIELD(TimeInternal, update_time),
+	DUMP_FIELD(pp_time, update_time),
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT struct pp_instance
@@ -155,17 +155,17 @@ struct dump_info  dump_info[] = {
 	DUMP_FIELD_SIZE(bina, peer, 6),
 	DUMP_FIELD(uint16_t, peer_vid),
 
-	DUMP_FIELD(TimeInternal, t1),
-	DUMP_FIELD(TimeInternal, t2),
-	DUMP_FIELD(TimeInternal, t3),
-	DUMP_FIELD(TimeInternal, t4),
-	DUMP_FIELD(TimeInternal, t5),
-	DUMP_FIELD(TimeInternal, t6),
+	DUMP_FIELD(pp_time, t1),
+	DUMP_FIELD(pp_time, t2),
+	DUMP_FIELD(pp_time, t3),
+	DUMP_FIELD(pp_time, t4),
+	DUMP_FIELD(pp_time, t5),
+	DUMP_FIELD(pp_time, t6),
 	DUMP_FIELD(Integer32, t4_cf),
 	DUMP_FIELD(Integer32, t6_cf),
-	DUMP_FIELD(TimeInternal, cField),
-	DUMP_FIELD(TimeInternal, last_rcv_time),
-	DUMP_FIELD(TimeInternal, last_snt_time),
+	DUMP_FIELD(pp_time, cField),
+	DUMP_FIELD(pp_time, last_rcv_time),
+	DUMP_FIELD(pp_time, last_snt_time),
 	DUMP_FIELD(UInteger16, frgn_rec_num),
 	DUMP_FIELD(Integer16,  frgn_rec_best),
 	//DUMP_FIELD(struct pp_frgn_master frgn_master[PP_NR_FOREIGN_RECORDS]),

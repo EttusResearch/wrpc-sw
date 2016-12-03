@@ -57,6 +57,19 @@ static int wrpc_get_i32(void *p)
 {
 	return wrpc_get_l32(p);
 }
+static int64_t wrpc_get_i64(void *p)
+{
+	int64_t *p64 = p, i64;
+
+	if (endian_flag == DUMP_ENDIAN_FLAG)
+		return *p64;
+	/* uff... */
+	i64 = *p64;
+	i64 = __bswap_32(i64 & 0xffffffff);
+	i64 <<= 32;
+	i64 |= __bswap_32(i64 >> 32);
+	return i64;
+}
 
 static int wrpc_get_16(void *p)
 {
@@ -71,7 +84,7 @@ static int wrpc_get_16(void *p)
 void dump_one_field(void *addr, struct dump_info *info)
 {
 	void *p = addr + wrpc_get_i32(&info->offset);
-	struct TimeInternal *ti = p;
+	struct pp_time *t = p;
 	struct PortIdentity *pi = p;
 	struct ClockQuality *cq = p;
 	char format[16];
@@ -137,13 +150,19 @@ void dump_one_field(void *addr, struct dump_info *info)
 	case dump_type_Integer16:
 		printf("%i\n", wrpc_get_16(p));
 		break;
-	case dump_type_TimeInternal:
-		printf("correct %i: %10i.%09i:%04i\n",
-		       wrpc_get_i32(&ti->correct),
-		       wrpc_get_i32(&ti->seconds),
-		       wrpc_get_i32(&ti->nanoseconds),
-		       wrpc_get_i32(&ti->phase));
+	case dump_type_pp_time:
+	{
+		struct pp_time localt;
+		localt.secs = wrpc_get_i64(&t->secs);
+		localt.scaled_nsecs = wrpc_get_i64(&t->scaled_nsecs);
+
+		printf("correct %i: %10lli.%09li:0x%04x\n",
+		       !is_incorrect(&localt),
+		       (long long)localt.secs,
+		       (long)(localt.scaled_nsecs >> 16),
+		       (int)(localt.scaled_nsecs & 0xffff));
 		break;
+	}
 
 	case dump_type_ip_address:
 		for (i = 0; i < 4; i++)

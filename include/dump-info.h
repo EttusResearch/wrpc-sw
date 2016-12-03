@@ -39,12 +39,13 @@ enum dump_type {
 	dump_type_PortIdentity,
 	dump_type_ClockQuality,
 	/* and this is ours */
-	dump_type_TimeInternal,
+	dump_type_pp_time,
 	dump_type_ip_address,
 };
 
 /* because of the sizeof later on, we need these typedefs */
 typedef void *         pointer;
+typedef struct pp_time pp_time;
 typedef unsigned long  unsigned_long;
 typedef unsigned char  unsigned_char;
 typedef unsigned short unsigned_short;
