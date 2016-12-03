@@ -34,9 +34,7 @@ static long long wrpc_get_64(void *p)
 	uint64_t result;
 
 	if (endian_flag == DUMP_ENDIAN_FLAG) {
-		result = *p64 >> 32;
-		result |= (uint32_t)*p64;
-		return result;
+		return *p64;
 	}
 	result = __bswap_32((uint32_t)(*p64 >> 32));
 	result <<= 32;
@@ -57,20 +55,6 @@ static int wrpc_get_i32(void *p)
 {
 	return wrpc_get_l32(p);
 }
-static int64_t wrpc_get_i64(void *p)
-{
-	int64_t *p64 = p, i64;
-
-	if (endian_flag == DUMP_ENDIAN_FLAG)
-		return *p64;
-	/* uff... */
-	i64 = *p64;
-	i64 = __bswap_32(i64 & 0xffffffff);
-	i64 <<= 32;
-	i64 |= __bswap_32(i64 >> 32);
-	return i64;
-}
-
 static int wrpc_get_16(void *p)
 {
 	uint16_t *p16 = p;
@@ -153,8 +137,8 @@ void dump_one_field(void *addr, struct dump_info *info)
 	case dump_type_pp_time:
 	{
 		struct pp_time localt;
-		localt.secs = wrpc_get_i64(&t->secs);
-		localt.scaled_nsecs = wrpc_get_i64(&t->scaled_nsecs);
+		localt.secs = wrpc_get_64(&t->secs);
+		localt.scaled_nsecs = wrpc_get_64(&t->scaled_nsecs);
 
 		printf("correct %i: %10lli.%09li:0x%04x\n",
 		       !is_incorrect(&localt),
