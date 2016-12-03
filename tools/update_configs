@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Use ./tools/update_configs
+
+for n in configs/*; do
+    b=$(basename $n)
+    echo; echo; echo "            #### Updating $b ######"; echo
+    cp $n .config
+    make oldconfig
+    cp .config $n
+done
