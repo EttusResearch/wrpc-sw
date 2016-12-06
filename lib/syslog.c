@@ -203,11 +203,11 @@ int syslog_poll(void)
 
 send:
 	syslog_send(buf, ip, len);
+	return 1;
 }
 
-#ifdef CONFIG_LATENCY_SYSLOG
-
-void syslog_latency_report(int prio, struct wr_timestamp *ts, int lost[2])
+/* A report tool for others to call (used by ltest at least) */
+void syslog_report(char *msg)
 {
 	char buf[256];
 	unsigned char ip[4];
@@ -219,15 +219,7 @@ void syslog_latency_report(int prio, struct wr_timestamp *ts, int lost[2])
 		return;
 
 	len = syslog_header(buf, SYSLOG_DEFAULT_LEVEL, ip);
-	if (lost[1]) {
-		len += pp_sprintf(buf + len,
-				  "ltest: lost %i frames (total %i)\n",
-				  lost[1], lost[0]);
-	} else {
-		len += pp_sprintf(buf + len, "ltest: prio %i, %i ns\n",
-				  prio, ts->nsec);
-	}
+	strcpy(buf + len, msg);
+	len += strlen(msg);
 	syslog_send(buf, ip, len);
 }
-
-#endif

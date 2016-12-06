@@ -11,6 +11,10 @@
 #include <ptpd_netif.h>
 #include <shell.h>
 #include "ipv4.h"
+#include <endpoint.h> /* get_mac_addr() */
+#include <ppsi/jiffies.h> /* time_before() */
+
+#define jiffies timer_get_tics()
 
 #ifdef CONFIG_LATENCY_SYSLOG
 #define HAS_SYSLOG 1
@@ -73,11 +77,51 @@ static void latency_warning(void) {
 		  frame.sequence, frame.type, prev_sequence, prev_type);
 }
 
+/* report once a minute */
+static void latency_report(struct wr_timestamp *lat)
+{
+	static unsigned long nextj;
+	static unsigned long min[2], max[2], tot[2], n;
+	char buf[128];
+	int i;
+
+	if (!nextj) {
+		unsigned char mac[6];
+
+		/* first time; pick a time in the future */
+		get_mac_addr(mac);
+		nextj = jiffies + TICS_PER_SECOND * (10 + (mac[5] % 60));
+		pp_printf("%s: first sending at %li\n", __func__, nextj);
+	}
+
+	n++;
+	for (i = 0; i < 2; i++) {
+		if (!min[i] || lat[i].nsec < min[i])
+			min[i] = lat[i].nsec;
+		if ( lat[i].nsec > max[i])
+			max[i] = lat[i].nsec;
+		tot[i] += lat[i].nsec;
+	}
+
+	if (time_before(jiffies, nextj))
+		return;
+	nextj += 60 * TICS_PER_SECOND;
+
+	if (!n)
+		return;
+
+	pp_sprintf(buf, "ltest: %li samples, "
+		   "min %li %li, avg %li %li, max %li %li\n",
+		   n, min[0], min[1], tot[0]/n, tot[1]/n, max[0], max[1]);
+	n = min[0] = min[1] = max[0] = max[1] = tot[0] = tot[1] = 0;
+	syslog_report(buf);
+}
+
 static int latency_poll_rx(void)
 {
 	static struct wr_timestamp ts[2];
 	static int nframes;
-	static int lost[2];
+	static unsigned lost;
 	struct wr_timestamp ts_tmp, lat[2];
 	struct wr_sockaddr addr;
 	int i, j;
@@ -119,10 +163,13 @@ static int latency_poll_rx(void)
 	/* count lost frames */
 	i = prev_sequence * 3 + prev_type - 1; /* type: 1..3 -> 0..2 */
 	j = frame.sequence * 3 + frame.type - 2;
-	if (HAS_SYSLOG && j != i && j < i + 100) {
-		lost[1] = j;
-		lost[0] += j;
-		syslog_latency_report(-1, NULL, lost);
+	if (HAS_SYSLOG && j != i) {
+		char buf[64];
+
+		lost += (j - i);
+		pp_sprintf(buf, "ltest: lost %i frames, total %i\n",
+			   j - i, lost);
+		syslog_report(buf);
 	}
 
 	prev_sequence = frame.sequence;
@@ -152,21 +199,14 @@ static int latency_poll_rx(void)
 			  frame.sequence,
 			  lat[0].nsec, lat[0].phase,
 			  lat[1].nsec, lat[1].phase);
+		return 1;
 	} else {
-		/* keep a running average of 8 samples */
-		static unsigned long avg_ns[2];
-		int i;
-
-		for (i = 0; i < 2; i++) {
-			if (!avg_ns[i])
-				avg_ns[i] = 2 * lat[i].nsec;
-			if (lat[i].nsec > avg_ns[i] * 2)
-				syslog_latency_report(prios[i], lat + i, lost);
-			avg_ns[i] = (7 * avg_ns[i] + lat[i].nsec) / 8;
-		}
+		latency_report(lat);
 	}
 	return 1;
 }
+
+
 
 static int latency_poll_tx(void)
 {

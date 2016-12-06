@@ -65,7 +65,6 @@ int check_dest_ip(unsigned char *buf);
 
 void syslog_init(void);
 int syslog_poll(void);
-void syslog_latency_report(int prio, struct wr_timestamp *lat, int lost[2]);
-
+void syslog_report(char *buf);
 
 #endif
