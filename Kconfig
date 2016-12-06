@@ -108,7 +108,7 @@ config W1
 
 config LATENCY_ETHTYPE
 	int
-	default 0
+	default 291
 
 # The other ones can be set by non-developers
 
@@ -490,6 +490,10 @@ config LATENCY_PROBE
 config LATENCY_ETHTYPE
 	depends on LATENCY_PROBE
 	int "Ethtype to use for latency probing"
+	default 291
+	help
+	  Ethertypes 0x0101-0x01ff are marked as "experimental", apparently.
+	  So 0x0123 (291)is a good default, but please pick yours.
 
 # This is needed to size the pp_instance data strucuture. Instead of
 # including the ppsi autoconf.h, with duplicate definitions, define it
