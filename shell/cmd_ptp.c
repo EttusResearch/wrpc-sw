@@ -33,7 +33,7 @@ static char *is_mode[] = {[WRC_MODE_GM] = "gm", [WRC_MODE_MASTER] = "master",
 
 static int cmd_ptp(const char *args[])
 {
-	int i;
+	int i, j, ret;
 	struct subcmd *c;
 
 
@@ -45,10 +45,21 @@ static int cmd_ptp(const char *args[])
 		return 0;
 	}
 
-	for (i = 0, c = subcmd; i < ARRAY_SIZE(subcmd); i++, c++)
-		if (!strcasecmp(args[0], c->name))
-			return c->fun(c->arg);
-	return -EINVAL;
+	for (j = 0; args[j]; j++) {
+		for (i = 0, c = subcmd; i < ARRAY_SIZE(subcmd); i++, c++) {
+			if (!strcasecmp(args[j], c->name)) {
+				ret = c->fun(c->arg);
+				if (ret < 0)
+					return ret;
+				break;
+			}
+		}
+		if (i == ARRAY_SIZE(subcmd)) {
+			pp_printf("Unknown subcommand \"%s\"\n", args[j]);
+			return -EINVAL;
+		}
+	}
+	return 0;
 }
 
 DEFINE_WRC_COMMAND(ptp) = {
