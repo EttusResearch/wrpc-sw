@@ -138,6 +138,11 @@ PPSI-FLAGS-$(CONFIG_LM32) = CONFIG_NO_PRINTF=y
 
 $(obj-ppsi):
 	test -s $(PPSI)/.config || $(MAKE) -C $(PPSI) $(PPSI-CFG-y)
+	@if [ "$(CONFIG_PPSI_FORCE_CONFIG)" = "y" ]; then \
+		$(MAKE) -C $(PPSI) $(PPSI-CFG-y); \
+	else \
+		echo "Warning: keeping previous ppsi configuration" >& 2; \
+	fi
 	$(MAKE) -C $(PPSI) ppsi.o WRPCSW_ROOT=.. \
 		CROSS_COMPILE=$(CROSS_COMPILE) CONFIG_NO_PRINTF=y
 		USER_CFLAGS="$(PPSI_USER_CFLAGS)"

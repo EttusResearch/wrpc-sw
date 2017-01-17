@@ -13,6 +13,10 @@ config WR_NODE
 
 # most options with no prompt here are prompted-for in the "advanced" section
 
+config PPSI_FORCE_CONFIG
+	bool
+	default y
+
 config PRINT_BUFSIZE
 	int
 	default 128
@@ -206,6 +210,16 @@ config DEVELOPER
 	  special customizations not normally useful for people not
 	  directly working on this package.  Please don't use unless
 	  you are a developer of wrpc-sw.
+
+config PPSI_FORCE_CONFIG
+	depends on DEVELOPER && WR_NODE       
+	bool "Reconfigure ppsi from wrpc-sw at every build"
+	default y
+	help
+	  If you are playing with custom ppsi configurations, please
+	  disable this. Otherwise the option allows wrpc-sw to always
+	  reconfigura ppsi, so if you change from end-to-end to
+	  peer-to-peer here, the change is propagated to the ppsi build.
 
 config HOST_PROCESS
 	depends on DEVELOPER && WR_NODE
