@@ -155,6 +155,7 @@ $(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
 	${CC} -o $@ revision.o config.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 	$(SIZE) $@
+	./save_size.sh $(SIZE) $@
 
 $(OUTPUT).o: $(OBJS)
 	$(LD) $(WRC-O-FLAGS-y) -r $(OBJS) -T bigobj.lds -o $@
