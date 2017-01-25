@@ -19,8 +19,10 @@ struct subcmd {
 	{"stop", wrc_ptp_run, 0},
 	{"e2e", wrc_ptp_sync_mech, PP_E2E_MECH},
 	{"delay", wrc_ptp_sync_mech, PP_E2E_MECH},
+#ifdef CONFIG_P2P
 	{"p2p", wrc_ptp_sync_mech, PP_P2P_MECH},
 	{"pdelay", wrc_ptp_sync_mech, PP_P2P_MECH},
+#endif
 	{"gm", wrc_ptp_set_mode, WRC_MODE_GM},
 	{"master", wrc_ptp_set_mode, WRC_MODE_MASTER},
 	{"slave", wrc_ptp_set_mode, WRC_MODE_SLAVE},
