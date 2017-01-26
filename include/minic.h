@@ -14,6 +14,13 @@
 
 #define WRPC_FID				0
 
+#define WRF_DATA   0
+#define WRF_OOB    1
+#define WRF_STATUS 2
+#define WRF_BYTESEL 3
+
+#define TX_OOB 0x1000
+
 void minic_init(void);
 void minic_disable(void);
 int minic_poll_rx(void);
@@ -34,11 +41,6 @@ struct wr_ethhdr_vlan {
 };
 
 struct wr_minic {
-	volatile uint32_t *rx_head, *rx_base;
-	uint32_t rx_avail, rx_size;
-	volatile uint32_t *tx_head, *tx_base;
-	uint32_t tx_avail, tx_size;
-
 	int tx_count, rx_count;
 };
 

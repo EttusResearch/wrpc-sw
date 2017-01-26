@@ -1,7 +1,7 @@
 /*
  * This work is part of the White Rabbit project
  *
- * Copyright (C) 2011,2012 CERN (www.cern.ch)
+ * Copyright (C) 2011,2012,2016 CERN (www.cern.ch)
  * Author: Tomasz Wlostowski <tomasz.wlostowski@cern.ch>
  * Author: Grzegorz Daniluk <grzegorz.daniluk@cern.ch>
  *
@@ -20,26 +20,15 @@
 
 #include <hw/minic_regs.h>
 
-#define MINIC_DMA_TX_BUF_SIZE 1024
-#define MINIC_DMA_RX_BUF_SIZE 2048
-
-#define MINIC_MTU 256
+#define MINIC_HDL_VERSION 1
 
 #define F_COUNTER_BITS 4
 #define F_COUNTER_MASK ((1<<F_COUNTER_BITS)-1)
 
-#define RX_DESC_VALID(d) ((d) & (1<<31) ? 1 : 0)
-#define RX_DESC_ERROR(d) ((d) & (1<<30) ? 1 : 0)
-#define RX_DESC_HAS_OOB(d)  ((d) & (1<<29) ? 1 : 0)
-#define RX_DESC_SIZE(d)  (((d) & (1<<0) ? -1 : 0) + (d & 0xffe))
-
+#define RX_STATUS_ERROR(d) ((d) & (1<<1) ? 1 : 0)
 #define RXOOB_TS_INCORRECT (1<<11)
 
-#define TX_DESC_VALID (1<<31)
-#define TX_DESC_WITH_OOB (1<<30)
-#define TX_DESC_HAS_OWN_MAC (1<<28)
-
-#define RX_OOB_SIZE 6
+#define RX_OOB_SIZE 3	/* as the number of FIFO data words */
 
 #define ETH_HEADER_SIZE 14
 
@@ -49,10 +38,8 @@
   rc = (raw) & 0xfffffff;		  \
   fc = (raw >> 28) & 0xf;
 
-static volatile uint32_t dma_tx_buf[MINIC_DMA_TX_BUF_SIZE / 4];
-static volatile uint32_t dma_rx_buf[MINIC_DMA_RX_BUF_SIZE / 4];
-
 struct wr_minic minic;
+int ver_supported;
 
 static inline void minic_writel(uint32_t reg, uint32_t data)
 {
@@ -64,109 +51,46 @@ static inline uint32_t minic_readl(uint32_t reg)
 	return *(volatile uint32_t *)(BASE_MINIC + reg);
 }
 
-/*
- * uint32_t size - in bytes
- */
-static uint8_t *minic_rx_memcpy(uint8_t * dst, uint8_t * src, uint32_t size)
+static inline void minic_txword(uint8_t type, uint16_t word)
 {
-	uint32_t part;
-	//if src is outside the circular buffer, bring it back to the beginning
-	src = (uint8_t *)((uint32_t)minic.rx_base +
-			  ((uint32_t)src - (uint32_t) minic.rx_base)
-			  % (minic.rx_size << 2));
-
-	if ((uint32_t)src + size <=  (uint32_t)minic.rx_base
-	    + (minic.rx_size << 2))
-		return memcpy(dst, src, size);
-
-	part = (uint32_t)minic.rx_base + (minic.rx_size << 2) - (uint32_t)src;
-	memcpy(dst, src, part);
-	memcpy((void *)(dst + part), (void *)minic.rx_base, size - part);
-	return dst;
+	minic_writel(MINIC_REG_TX_FIFO,
+			MINIC_TX_FIFO_TYPE_W(type) | MINIC_TX_FIFO_DAT_W(word));
 }
 
-/*
- * uint32_t size - in bytes
- */
-static uint8_t *minic_rx_memset(uint8_t * mem, uint8_t c, uint32_t size)
+static inline void minic_rxword(uint8_t *type, uint16_t *data, uint8_t *empty,
+		uint8_t *full)
 {
-	uint32_t part;
-	uint32_t *src;
+	uint32_t rx;
 
-	//if src is outside the circular buffer, bring it back to the beginning
-	src = (uint32_t *)((uint32_t)minic.rx_base +
-			   ((uint32_t) mem - (uint32_t) minic.rx_base)
-			   % (minic.rx_size << 2));
-
-	if ((uint32_t) src + size <= (uint32_t) minic.rx_base
-	    + (minic.rx_size << 2))
-		return memset((void *)src, c, size);
-
-	part = (uint32_t) minic.rx_base + (minic.rx_size << 2) - (uint32_t) src;
-	memset(src, c, part);
-	memset((void *)minic.rx_base, c, size - part);
-
-	return (uint8_t *) src;
-}
-
-static void minic_new_rx_buffer(void)
-{
-	minic_writel(MINIC_REG_MCR, 0);
-	minic.rx_base = dma_rx_buf;
-	minic.rx_size = MINIC_DMA_RX_BUF_SIZE / 4;
-	minic.rx_head = minic.rx_base;
-	minic_rx_memset((uint8_t *) minic.rx_base, 0x00, minic.rx_size << 2);
-	minic_writel(MINIC_REG_RX_ADDR, (uint32_t) minic.rx_base);
-	minic_writel(MINIC_REG_RX_SIZE, minic.rx_size);
-	//new buffer allocated, clear any old RX interrupts
-	minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
-	minic_writel(MINIC_REG_MCR, MINIC_MCR_RX_EN);
-}
-
-static void minic_rxbuf_free(uint32_t words)
-{
-	minic_rx_memset((uint8_t *) minic.rx_head, 0x00, words << 2);
-	minic_writel(MINIC_REG_RX_AVAIL, words);
-}
-
-static void minic_new_tx_buffer(void)
-{
-	minic.tx_base = dma_tx_buf;
-	minic.tx_size = MINIC_DMA_TX_BUF_SIZE >> 2;
-
-	minic.tx_head = minic.tx_base;
-	minic.tx_avail = minic.tx_size;
-
-	minic_writel(MINIC_REG_TX_ADDR, (uint32_t) minic.tx_base);
+	rx = minic_readl(MINIC_REG_RX_FIFO);
+	*type = (uint8_t)  MINIC_RX_FIFO_TYPE_R(rx);
+	*data = (uint16_t) MINIC_RX_FIFO_DAT_R(rx);
+	if (empty)
+		*empty = (rx & MINIC_RX_FIFO_EMPTY) ? 1 : 0;
+	if (full)
+		*full  = (rx & MINIC_RX_FIFO_FULL)  ? 1 : 0;
 }
 
 void minic_init()
 {
-	uint32_t lo, hi;
+	uint32_t mcr;
 
-	minic_writel(MINIC_REG_EIC_IDR, MINIC_EIC_IDR_RX);
-	minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
-	minic.rx_base = dma_rx_buf;
-	minic.rx_size = sizeof(dma_rx_buf);
+	/* before doing anything, check the HDL interface version */
+	mcr = minic_readl(MINIC_REG_MCR);
+	if (MINIC_MCR_VER_R(mcr) != MINIC_HDL_VERSION) {
+		pp_printf("Error: Minic HDL version %d not supported by sw\n",
+				MINIC_MCR_VER_R(mcr));
+		ver_supported = 0;
+		return;
+	}
+	ver_supported = 1;
 
-/* FIXME: now we have a temporary HW protection against accidentally overwriting the memory - there's some
-   very well hidden bug in Minic's RX logic which sometimes causes an overwrite of the memory outside
-   the buffer. */
+	/* disable interrupts, driver does polling */
+	minic_writel(MINIC_REG_EIC_IDR, MINIC_EIC_IDR_TX |
+			MINIC_EIC_IDR_RX | MINIC_EIC_IDR_TXTS);
 
-	lo = (uint32_t) minic.rx_base >> 2;
-	hi = ((uint32_t) minic.rx_base >> 2) + (sizeof(dma_rx_buf) >> 2) - 1;
-
-	minic_writel(MINIC_REG_MPROT,
-		     MINIC_MPROT_LO_W(lo) | MINIC_MPROT_HI_W(hi));
-
-	minic.tx_base = dma_tx_buf;
-	minic.tx_size = MINIC_DMA_TX_BUF_SIZE >> 2;
-
-	minic.tx_count = 0;
-	minic.rx_count = 0;
-
-	minic_new_rx_buffer();
-	minic_writel(MINIC_REG_EIC_IER, MINIC_EIC_IER_RX);
+	/* enable RX path */
+	minic_writel(MINIC_REG_MCR, mcr | MINIC_MCR_RX_EN);
 }
 
 void minic_disable()
@@ -176,144 +100,176 @@ void minic_disable()
 
 int minic_poll_rx()
 {
-	uint32_t isr;
+	uint32_t mcr;
 
-	isr = minic_readl(MINIC_REG_EIC_ISR);
+	if (!ver_supported)
+		return 0;
 
-	return (isr & MINIC_EIC_ISR_RX) ? 1 : 0;
+	mcr = minic_readl(MINIC_REG_MCR);
+
+	return (mcr & MINIC_MCR_RX_EMPTY) ? 0 : 1;
 }
 
 int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 		   struct hw_timestamp *hwts)
 {
-	uint32_t frame_size, payload_size, num_words;
-	uint32_t desc_hdr;
+	uint32_t hdr_size, payload_size;
 	uint32_t raw_ts;
-	uint32_t cur_avail;
-	int n_recvd;
+	uint8_t  rx_empty, rx_full, rx_type;
+	uint16_t rx_data;
+	uint16_t *ptr16_hdr, *ptr16_payload;
+	uint32_t oob_cnt;
+	uint16_t oob_hdr;
+	uint64_t sec;
+	uint32_t counter_r, counter_f, counter_ppsg;
+	int cntr_diff;
 
-	if (!(minic_readl(MINIC_REG_EIC_ISR) & MINIC_EIC_ISR_RX))
+
+	/* check if there is something in the Rx FIFO to be retrieved */
+	if ((minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_EMPTY) || !ver_supported)
 		return 0;
 
-	desc_hdr = *minic.rx_head;
+	hdr_size = 0;
+	payload_size = 0;
+	/* uint16_t pointers to copy directly 16-bit data from FIFO to memory */
+	ptr16_hdr = (uint16_t *)hdr;
+	ptr16_payload = (uint16_t *)payload;
+	/* Read the whole frame till OOB or till the FIFO is empty */
+	do {
+		minic_rxword(&rx_type, &rx_data, &rx_empty, &rx_full);
 
-	if (!RX_DESC_VALID(desc_hdr)) {	/* invalid descriptor? Weird, the RX_ADDR seems to be saying something different. Ignore the packet and purge the RX buffer. */
-		//invalid descriptor ? then probably the interrupt was generated by full rx buffer
-		if (minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL) {
-			minic_new_rx_buffer();
-		} else {
-			//otherwise, weird !!
-			pp_printf("invalid descriptor @%x = %x\n",
-				(uint32_t) minic.rx_head, desc_hdr);
-			minic_new_rx_buffer();
+		if (rx_type == WRF_DATA && hdr_size < ETH_HEADER_SIZE) {
+			/* reading header */
+			ptr16_hdr[hdr_size>>1] = rx_data;
+			hdr_size += 2;
+		} else if (rx_type != WRF_STATUS && payload_size > buf_size) {
+			/* we've filled the whole buffer, in this case retreive
+			 * remaining part of this frame (WRF_DATA or
+			 * WRF_BYTESEL) but don't store it in the buffer */
+			payload_size += 2;
+		} else if (rx_type == WRF_DATA) {
+			/* normal situation, retreiving payload */
+			ptr16_payload[payload_size>>1] = rx_data;
+			payload_size += 2;
+		} else if (rx_type == WRF_BYTESEL) {
+			ptr16_payload[payload_size>>1] = rx_data;
+			payload_size += 1;
+		} else if (rx_type == WRF_STATUS && hdr_size > 0) {
+			/* receiving status means error in our frame or
+			 * beginning of next frame. We check hdr_size > 0 to
+			 * make sure it's not the first received word, i.e. our
+			 * own initial status.*/
+			if (RX_STATUS_ERROR(rx_data))
+				pp_printf("Warning: Minic received erroneous "
+						"frame\n");
+
+			break;
 		}
-		return 0;
-	}
-	frame_size = RX_DESC_SIZE(desc_hdr);
-	num_words = ((frame_size + 3) >> 2) + 1;
+	} while (!rx_empty && rx_type != WRF_OOB);
 
-	/* valid packet */
-	if (!RX_DESC_ERROR(desc_hdr)) {
-
-		if (RX_DESC_HAS_OOB(desc_hdr) && hwts != NULL) {
-			uint32_t counter_r, counter_f, counter_ppsg;
-			uint64_t sec;
-			int cntr_diff;
-			uint16_t dhdr;
-
-			frame_size -= RX_OOB_SIZE;
-
-			/* fixme: ugly way of doing unaligned read */
-			minic_rx_memcpy((uint8_t *) & raw_ts,
-					(uint8_t *) minic.rx_head
-					+ frame_size + 6, 4);
-			minic_rx_memcpy((uint8_t *) & dhdr,
-					(uint8_t *) minic.rx_head +
-					frame_size + 4, 2);
-			EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
-
-			shw_pps_gen_get_time(&sec, &counter_ppsg);
-
-			if (counter_r > 3 * REF_CLOCK_FREQ_HZ / 4
-			    && counter_ppsg < 250000000)
-				sec--;
-
-			hwts->sec = sec & 0x7fffffff;
-
-			cntr_diff = (counter_r & F_COUNTER_MASK) - counter_f;
-
-			if (cntr_diff == 1 || cntr_diff == (-F_COUNTER_MASK))
-				hwts->ahead = 1;
-			else
-				hwts->ahead = 0;
-
-			hwts->nsec = counter_r * (REF_CLOCK_PERIOD_PS / 1000);
-			hwts->valid = (dhdr & RXOOB_TS_INCORRECT) ? 0 : 1;
-		}
-		payload_size = frame_size - ETH_HEADER_SIZE;
-		n_recvd = (buf_size < payload_size ? buf_size : payload_size);
-		minic.rx_count++;
-
-		minic_rx_memcpy((void *)hdr, (void *)minic.rx_head + 4,
-				ETH_HEADER_SIZE);
-		minic_rx_memcpy(payload, (void *)minic.rx_head + 4
-				+ ETH_HEADER_SIZE, n_recvd);
-	} else {
-		n_recvd = -1;
-	}
-	minic_rxbuf_free(num_words);
-	minic.rx_head = (uint32_t *)((uint32_t)minic.rx_base +
-		     ((uint32_t) minic.rx_head
-		     + (num_words << 2) - (uint32_t)minic.rx_base)
-		     % (minic.rx_size << 2));
-
-	cur_avail = minic_readl(MINIC_REG_RX_AVAIL) & 0xFFFFFF;	/* 24-bit field */
-
-	/*empty buffer->no more received packets, or packet reception in progress but not done */
-	if (!RX_DESC_VALID(*minic.rx_head)) {
-		if (minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
-			minic_new_rx_buffer();
-
-		minic_writel(MINIC_REG_EIC_ISR, MINIC_EIC_ISR_RX);
+	/* Receive OOB, if it's there */
+	oob_cnt = 0;
+	raw_ts  = 0;
+	oob_hdr = RXOOB_TS_INCORRECT;
+	while (!rx_empty && rx_type == WRF_OOB) {
+		if (oob_cnt == 0)
+			oob_hdr = rx_data;
+		else if (oob_cnt == 1)
+			raw_ts = (rx_data << 16) & 0xffff0000;
+		else if (oob_cnt == 2)
+			raw_ts |= (rx_data & 0x0000ffff);
+		minic_rxword(&rx_type, &rx_data, &rx_empty, &rx_full);
+		oob_cnt++;
 	}
 
-	return n_recvd;
+	if (oob_cnt == 0 || oob_cnt > RX_OOB_SIZE) {
+		/* in WRPC we expect every Rx frame to contain a valid OOB.
+		 * If it's not the case, something went wrong... */
+		net_verbose("Warning: got incorrect or missing Rx OOB\n");
+		if (hwts)
+			hwts->valid = 0;
+	} else if (hwts) {
+		/* build correct timestamp to return in hwts structure */
+		shw_pps_gen_get_time(&sec, &counter_ppsg);
+
+		EXPLODE_WR_TIMESTAMP(raw_ts, counter_r, counter_f);
+
+		if (counter_r > 3 * REF_CLOCK_FREQ_HZ / 4
+		    && counter_ppsg < 250000000)
+			sec--;
+
+		hwts->sec = sec & 0x7fffffff;
+
+		cntr_diff = (counter_r & F_COUNTER_MASK) - counter_f;
+
+		if (cntr_diff == 1 || cntr_diff == (-F_COUNTER_MASK))
+			hwts->ahead = 1;
+		else
+			hwts->ahead = 0;
+
+		hwts->nsec = counter_r * (REF_CLOCK_PERIOD_PS / 1000);
+		hwts->valid = (oob_hdr & RXOOB_TS_INCORRECT) ? 0 : 1;
+	}
+
+	/* Increment Rx counter for statistics */
+	minic.rx_count++;
+
+	if (minic_readl(MINIC_REG_MCR) & MINIC_MCR_RX_FULL)
+		pp_printf("Warning: Minic Rx fifo full, expect wrong frames\n");
+
+	/* return number of bytes written to the *payload buffer */
+	return (buf_size < payload_size ? buf_size : payload_size);
 }
 
 int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t *payload, uint32_t size,
 		   struct hw_timestamp *hwts)
 {
-	uint32_t d_hdr, mcr, nwords;
+	uint32_t d_hdr, mcr, pwords, hwords;
 	uint8_t ts_valid;
 	int i, hsize;
+	uint16_t *ptr;
 
-	minic_new_tx_buffer();
+	if (!ver_supported)
+		return 0;
 
 	if (hdr->ethtype == htons(0x8100))
 		hsize = sizeof(struct wr_ethhdr_vlan);
 	else
 		hsize = sizeof(struct wr_ethhdr);
+	hwords = hsize >> 1;
 
-	memset((void *)minic.tx_head, 0x0, size + hsize + 4);
-	memcpy((void *)minic.tx_head + 4, hdr, hsize);
-	memcpy((void *)minic.tx_head + 4 + hsize, payload, size);
-	size += hsize;
-
-	if (size < 60)
-		size = 60;
-
-	nwords = ((size + 1) >> 1);
+	if (size + hsize < 60)
+		size = 60 - hsize;
+	pwords = ((size + 1) >> 1);
 
 	d_hdr = 0;
 
-	if (hwts)
-		d_hdr = TX_DESC_WITH_OOB | (WRPC_FID << 12);
+	/* First we write status word (empty status for Tx) */
+	minic_txword(WRF_STATUS, 0);
 
-	d_hdr |= TX_DESC_VALID | nwords;
+	/* Write the header of the frame */
+	ptr = (uint16_t *)hdr;
+	for (i = 0; i < hwords; ++i)
+		minic_txword(WRF_DATA, ptr[i]);
 
-	*(volatile uint32_t *)(minic.tx_head) = d_hdr;
-	*(volatile uint32_t *)(minic.tx_head + nwords) = 0;
+	/* Write the payload without the last word (which can be one byte) */
+	ptr = (uint16_t *)payload;
+	for (i = 0; i < pwords-1; ++i)
+		minic_txword(WRF_DATA, ptr[i]);
 
+	/* Write last word of the payload (which can be one byte) */
+	if (size % 2 == 0)
+		minic_txword(WRF_DATA, ptr[i]);
+	else
+		minic_txword(WRF_BYTESEL, ptr[i]);
+
+	/* Write also OOB if needed */
+	if (hwts) {
+		minic_txword(WRF_OOB, TX_OOB);
+		minic_txword(WRF_OOB, WRPC_FID);
+	}
+
+	/* Start sending the frame */
 	mcr = minic_readl(MINIC_REG_MCR);
 	minic_writel(MINIC_REG_MCR, mcr | MINIC_MCR_TX_START);
 
@@ -373,7 +329,6 @@ int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t *payload, uint32_t size,
 		hwts->ahead = 0;
 		hwts->nsec = counter_r * (REF_CLOCK_PERIOD_PS / 1000);
 		
-//        wrc_verbose("minic_tx_frame [%d bytes] TS: %d.%d valid %d\n", size, hwts->utc, hwts->nsec, hwts->valid);
 		minic.tx_count++;
         }
         
