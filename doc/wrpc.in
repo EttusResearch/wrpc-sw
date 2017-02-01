@@ -1122,6 +1122,53 @@ responder}.
 @section Other Diagnostic Tools
 
 @c --------------------------------------------------------------------------
+@node Syslog
+@subsection Syslog
+
+To be written
+
+@c --------------------------------------------------------------------------
+@node Latency Test
+@subsection Latency Test
+
+The configuration choice @t{CONFIG_LATENCY_PROBE} activates a
+mechanism for @i{wr} nodes to measure network latency, base on the same
+hardware timestamps that are used for synchronization -- the mechanism
+assumes the nodes are synchronized.
+
+@i{ltest} frames can be used to verify whether the network is
+overloaded and/or has strange inconsistencies in node-to-node delays.
+
+@i{ltest} frames use a special ethernet type, @t{CONFIG_LATENCY_ETHTYPE},
+which defaults to 0x0123 (291). If @i{vlans} are active, these frames
+are sent and received in the same @i{vlans} as other CPU frames.
+
+The @t{ltest} sender periodically sends three frames, with a sequence
+number. One frames is at priority 7, one is at priority 6, and one is
+at priority 0. The last frames reports the departure timestamps of the
+previous frames.  The @i{ltest} receiver uses ingress timestamps to
+measure latency and report lost frames.
+
+Every node built with @t{CONFIG_LATENCY_PROBE} listens for frames
+belonging to @t{CONFIG_LATENCY_ETHTYPE}.  A single node in the
+network is expected to send @i{ltest} frames; use the @t{ltest}
+shell command to select how often to send an @i{ltest} tuple of three
+frames. To enable sending every second use ``@t{ltest 1}'', to enable
+sending every 100ms use ``@t{ltest 0 100}'', to stop sending use
+@t{ltest 0}.
+
+In the sender node, a reminder is sent to the console very 10s
+reporting the node is currently sendin @i{ltest} frames.  All
+non-sending nodes report every minute to @i{syslog}. The
+report message includes the number of samples received as well
+as the minimum, average and maximum latency, in nanoseconds.
+Any lost frames are reported both to the console and to @i{syslog}.
+
+You can use @i{ltest} without @t{CONFIG_SYSLOG}. In that case the
+receiver nodes print the exact latency (picosecond resolution) for
+every received event.
+
+@c --------------------------------------------------------------------------
 @node wrpc-dump
 @subsection wrpc-dump
 
@@ -1199,6 +1246,114 @@ know roughly when a node got stuck, and whether software is still
 running when a node is not active on the network. Neither of this even
 happens in production, but the tool is useful during development.
 
+@c --------------------------------------------------------------------------
+@node Profiling
+@subsection Profiling
+
+The node now has a @i{ps} command, that shows the number of iterations
+and time spent in each @i{task}. Each task reports when it did
+something (as opposed to just polling the clock or network socket and
+see nothing is there to do); the @i{iterations} count shouws how many
+times the task did something.
+
+@example
+   wrc# ps
+    iterations     seconds.micros    name
+      44288501        4242.816329  idle
+             0           0.000000  spll-bh
+            37           0.016549  shell+gui
+          8992           1.158969  ptp
+          4252           0.037005  uptime
+             1           0.001035  check-link
+             0           0.000000  stats
+             0           0.000000  net-bh
+           568           5.068343  temperature
+@end example
+
+By using ``@t{ps reset}'' you can zero all counters to start a new
+test run.
+
+@c --------------------------------------------------------------------------
+@node Pfilter rules
+@subsection Pfilter rules
+
+By setting @t{CONFIG_PFILTER_VERBOSE}, which depends on
+@t{CONFIG_DEVELOPER}, you can get a dump of packet-filter rules
+whenever they are activated.  This happens at initialization time and
+whenever you change the MAC address or @i{vlan} choice.
+
+@c ==========================================================================
+@node Network Services
+@section Network Services
+
+If built with @t{CONFIG_IP=y}, @i{wrpc-sw} implements the following
+udp-based network services, in addition to @i{ptp}:
+
+@table @i
+
+@item bootp
+
+	The node will get an IPV4 address by making @i{bootp} queries
+        once per second, until it gets a reply from a server. As an
+        alternative, the address can be set using the shell command,
+        and in this case the node won't send @i{bootp} queries, or will
+        stop sending them.
+
+@item rdate
+
+	The node can be queried using @t{rdate -u}, once it has an IP
+        address.
+
+@item syslog
+
+	If @t{CONFIG_SYSLOG} is set, the node is a syslog client.
+        See @ref{Syslog} for details.
+
+@end table
+
+@c ==========================================================================
+@node VLAN Support
+@section VLAN Support
+
+The White Rabbit node can be configured to be vlan-aware, by setting
+@t{CONFIG_VLAN} in @i{Kconfig}.  The setting depends on @t{CONFIG_DEVELOPER}.
+
+If configured for @i{vlan} support, the node select packet-filter rules
+to receive frames in several @i{vlan}s, all set at configuration time.
+
+At run time you can use @t{vlan off} in the shell to turn off all @i{vlan}
+processing and get back to the ``standard'' packet-filter rules.
+
+@table @code
+
+@item CONFIG_VLAN
+
+	This is the top-level choice. It can be enabled or disabled.
+        If disabled, the following values default to 0 and the
+        packet filter will discard all tagged frames.
+
+@item CONFIG_VLAN_NR
+
+	The default @i{vlan} number for the CPU.  All network traffic
+        directed to (and originating from)the @i{lm32} processor will
+        belong to this @i{vlan}.  The value can be changed at run time
+        using the @t{vlan} shell command.
+
+@item CONFIG_VLAN_1_FOR_CLASS7
+@itemx CONFIG_VLAN_2_FOR_CLASS7
+
+	The packet-filter rules are setup to deliver frames belonging
+        to two specific @i{vlans} to class 7, usually @i{etherbone}.
+        To deliver one @i{vlan} only, set the two options to the same
+        number.
+
+@item CONFIG_VLAN_FOR_CLASS6
+
+	The packet-filter rules are setup to deliver frames belonging
+        to one specific @i{vlan} to class 6, usually routed to the
+        @i{streamer} or @i{nic} logic blocks.
+
+@end table
 
 @c ##########################################################################
 @node Troubleshooting
@@ -1337,6 +1492,9 @@ initialization script
 
 @item @code{ip get}
 @item @code{ip set <ip>} @tab reports or sets the IPv4 address of the @sc{wrpc} (only available if @t{CONFIG_IP} is set at build time
+
+@item @code{vlan}
+@item @code{vlan set <n>} @tab reorts or sets the active vlan used for sending/receiving network frames. The command exists only if @t{CONFIG_VLAN} is set.
 
 @item @code{w1w <offset> <byte> [<byte> ...]}
 @item @code{w1r <offset> <len>} @tab If @t{CONFIG_W1} is set and a OneWire @sc{eeprom} exists, write and read data. For writing, @t{byte} values are decimal
