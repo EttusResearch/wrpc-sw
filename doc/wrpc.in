@@ -1186,6 +1186,19 @@ and @t{duration} fields come from reading the @t{PPSG} nanosecond counter.
         [... repeats for 5 more events ...]
 @end smallexample
 
+@c --------------------------------------------------------------------------
+@node Uptime Counter
+@subsection Uptime Counter
+
+@i{Wrpc-sw} now maintains an ``uptime'' counter, in seconds. It lives
+at binary address 0xa0. It can be queried by @i{etherbone}, or
+seen in memory maps.
+
+In addition to know how much as the node been up, it can be used to
+know roughly when a node got stuck, and whether software is still
+running when a node is not active on the network. Neither of this even
+happens in production, but the tool is useful during development.
+
 
 @c ##########################################################################
 @node Troubleshooting
