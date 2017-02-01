@@ -1116,6 +1116,77 @@ in file @t{snmp_test_config.bash}.
 
 These tests have to be executed after any changes are made to the @i{Mini SNMP
 responder}.
+
+@c ==========================================================================
+@node Other Diagnostic Tools
+@section Other Diagnostic Tools
+
+@c --------------------------------------------------------------------------
+@node wrpc-dump
+@subsection wrpc-dump
+
+When trying to diagnose software issues, especially lockup situations,
+it may be useful to look at the current values or critical variables
+within @i{wrpc-sw}/@i{ppsi}.
+
+To this aim, you can pass a memory image of @i{wrpc} to @t{tools/wrpc-dump}.
+The tools will print information for softpll, ppsi data structures
+and ptp data sets.
+
+For example, for a @i{spec} device, you can use the resource file in
+@i{syfs} to look at a live system, or copy the file for off-line
+analysis. The following command line show both uses:
+
+@smallexample
+   # Look for "resource0" in /sys/devices/pci, choose your bus number.
+   FILE=/sys/devices/pci0000:00/0000:00:04.0/0000:04:00.0/resource0
+
+   sudo ./tools/wrpc-dump $FILE
+
+   sudo tools/mapper $FILE 0 0x20000 > wrpc-memory-image
+   ./tools/wrpc-dump wrpc-memory-image
+@end smallexample
+
+The @i{mapper} tool used above, and part of @i{wrpc-sw}, reads a file
+using @i{mmap()}. The kernel doesn't allow plain @i{read()} from a
+resource file.
+
+With @i{etherbone}, you can get a snapshot for @i{wrpc} memory using
+@t{eb-get} and the proper address (the size is always 128kB)
+
+@smallexample
+   eb-get dev/wbm2 0x4040000/0x20000 wrpc-memory-image
+   eb-get dev/ttyUSB2 0x4040000/0x20000 wrpc-memory-image
+@end smallexample
+
+We won't show the 180 output lines here, to save some paper, but they
+are readable dumps of the data structures, including the PTP timestamps.
+
+@c --------------------------------------------------------------------------
+@node spll Softpll Timing
+@subsection Softpll Timing
+
+To help understanding the CPU time spent in the @i{softpll}, you can
+set @t{CONFIG_SPLL_FIFO_LOG} in the configuration. The option
+depends on @t{CONFIG_DEVELOPER} and is disabled by default, because
+it costs half a kilobyte in binary size and Adam is scared about any size
+increase.
+
+When the configuration option is set, @t{wrpc-dump} will also show 
+information about the last 16 @i{softpll} iterations. Both the @t{tstamp}
+and @t{duration} fields come from reading the @t{PPSG} nanosecond counter.
+
+@smallexample
+   fifo log at 0x17258
+        trr:                           0x0126d921
+        tstamp:                        0x06b58d6a
+        duration:                      0x00000c7e
+        irq_count:                     2305
+        tag_count:                     2304
+        [... repeats for 5 more events ...]
+@end smallexample
+
+
 @c ##########################################################################
 @node Troubleshooting
 @chapter Troubleshooting
@@ -1352,37 +1423,8 @@ write your @i{output.mcs} file to the Flash memory.
 
 @c ##########################################################################
 @page
-@node wrpc-dump
-@appendix wrpc-dump
-
-In December 2015, we added @t{tools/wrpc-dump}. The program accesses
-a wrpc memory image (the 128k binary dump) and prints the internal
-status of the program.
-
-@c ==========================================================================
-@node wrpc-dump with Current Code
-@section wrpc-dump with Current Code
-
-
-@t{wrpc-dump} uses some information that we included at offset 0x80
-in the binary, to detect endianness conversions and to find the actual data.
-Thus, it only needs to receive the name of the file, either an on-disk file
-or the live PCI memory if available (for @i{spec} devices, it's resource 0 of
-the PCI space).
-
-@example
-   tools/wrpc-dump /tmp/logs/vetar-dump-42
-   tools/wrpc-dump /sys/bus/pci/devices/0000:02:00.0/resource0
-@end example
-
-If you built @i{wrpc-sw} with @t{CONFIG_SPLL_FIFO_LOG} (a
-``developer'' configuration option), the dump includes the last 16
-tags being accessed by @i{softpll}, in relation with interrupts and
-timing.  Please see @i{sofpll/softpll_ng::_irq_enter} for details.
-
-@c ==========================================================================
 @node wrpc-dump with Older WRPC Binaries
-@section wrpc-dump with Older WRPC Binaries
+@appendix wrpc-dump with Older WRPC Binaries
 
 The tool has another working mode, that you can use with older
 @i{wrpc} builds, where the special table is missing (but please be
