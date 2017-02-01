@@ -41,7 +41,7 @@ static char* print64(uint64_t x)
 	else{
 		l_half = __div64_32(&x, PRINT64_FACTOR);
 		h_half = (uint32_t) x;
-		sprintf(buf, "%u%u", h_half, l_half);
+		sprintf(buf, "%u%09u", h_half, l_half);
 	}
 	return buf;
 
