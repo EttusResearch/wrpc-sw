@@ -109,7 +109,7 @@ int link_status;
 
 static int wrc_check_link(void)
 {
-	static int prev_state = -1;
+	static int prev_state = 0;
 	int state = ep_link_up(NULL);
 	int rv = 0;
 
