@@ -13,6 +13,9 @@ static int number(char *out, unsigned value, int base, int lead, int wid)
 	char tmp[16];
 	int i = 16, ret, negative = 0;
 
+	if (wid == 0)
+		wid = 1;
+
 	/* No error checking at all: it is as ugly as possible */
 	if ((signed)value < 0 && base == 10) {
 		negative = 1;
@@ -51,23 +54,27 @@ int pp_vsprintf(char *buf, const char *fmt, va_list args)
 
 		base = 10;
 		lead = ' ';
-		wid = 1;
+		wid = 0;
 	repeat:
 		fmt++;		/* Skip '%' initially, other stuff later */
 		switch(*fmt) {
 		case '\0':
 			goto ret;
-		case '0':
-			lead = '0';
-			goto repeat;
-
 		case '*':
 			/* should be precision, just eat it */
 			base = va_arg(args, int);
 			/* fall through: discard unknown stuff */
+		case '0':
+			if (wid == 0) {
+				lead = '0';
+				goto repeat;
+			} /* else go to default */
 		default:
-			if (*fmt >= '1' && *fmt <= '9')
-				wid = *fmt - '0';
+			if (*fmt >= '0' && *fmt <= '9') {
+				/* decimal shift left */
+				wid *= 10;
+				wid += *fmt - '0';
+				}
 			goto repeat;
 
 			/* Special cases for conversions */
