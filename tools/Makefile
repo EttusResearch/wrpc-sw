@@ -6,7 +6,7 @@ LDFLAGS = -lutil
 ALL    = genraminit genramvhd genrammif wrpc-uart-sw
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder
-ALL   += wrpc-dump
+ALL   += wrpc-dump mapper
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
