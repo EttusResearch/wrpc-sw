@@ -32,20 +32,27 @@ const char *ptp_unknown_str= "unknown";
 static void wrc_mon_std_servo(void);
 
 #define PRINT64_FACTOR	1000000000LL
-static char* print64(uint64_t x)
+static char* print64(uint64_t x, int align)
 {
 	uint32_t h_half, l_half;
 	static char buf[2*10+1];	//2x 32-bit value + \0
+
 	if (x < PRINT64_FACTOR)
-		sprintf(buf, "%u", (uint32_t)x);
-	else{
+		if (align)
+			sprintf(buf, "%20u", (uint32_t)x);
+		else
+			sprintf(buf, "%u", (uint32_t)x);
+	else {
 		l_half = __div64_32(&x, PRINT64_FACTOR);
 		h_half = (uint32_t) x;
-		sprintf(buf, "%u%09u", h_half, l_half);
+		if (align)
+			sprintf(buf, "%11u%09u", h_half, l_half);
+		else
+			sprintf(buf, "%u%09u", h_half, l_half);
 	}
 	return buf;
-
 }
+
 
 static const char* wrc_ptp_state(void)
 {
@@ -205,40 +212,41 @@ int wrc_mon_gui(void)
 
 	cprintf(C_BLUE, "\nTiming parameters:\n");
 
-	cprintf(C_GREY, "Round-trip time (mu):    ");
-	cprintf(C_WHITE, "%s ps\n", print64(s->picos_mu));
-	cprintf(C_GREY, "Master-slave delay:      ");
-	cprintf(C_WHITE, "%s ps\n", print64(s->delta_ms));
+	cprintf(C_GREY, "Round-trip time (mu): ");
+	cprintf(C_WHITE, "%s ps\n", print64(s->picos_mu, 1));
+	cprintf(C_GREY, "Master-slave delay:   ");
+	cprintf(C_WHITE, "%s ps\n", print64(s->delta_ms, 1));
 
-	cprintf(C_GREY, "Master PHY delays:       ");
-	cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
+	cprintf(C_GREY, "Master PHY delays:           ");
+	cprintf(C_WHITE, "TX: %9d ps, RX: %9d ps\n",
 		(int32_t) s->delta_tx_m,
 		(int32_t) s->delta_rx_m);
 
-	cprintf(C_GREY, "Slave PHY delays:        ");
-	cprintf(C_WHITE, "TX: %d ps, RX: %d ps\n",
+	cprintf(C_GREY, "Slave PHY delays:            ");
+	cprintf(C_WHITE, "TX: %9d ps, RX: %9d ps\n",
 		(int32_t) s->delta_tx_s,
 		(int32_t) s->delta_rx_s);
 	total_asymmetry = s->picos_mu - 2LL * s->delta_ms;
-	cprintf(C_GREY, "Total link asymmetry:    ");
-	cprintf(C_WHITE, "%9d ps\n", (int32_t) (total_asymmetry));
+	cprintf(C_GREY, "Total link asymmetry:");
+	cprintf(C_WHITE, "%21d ps\n", (int32_t) (total_asymmetry));
 
 	crtt = s->picos_mu - s->delta_tx_m - s->delta_rx_m
 		- s->delta_tx_s - s->delta_rx_s;
-	cprintf(C_GREY, "Cable rtt delay:         ");
-	cprintf(C_WHITE, "%s ps\n", print64(crtt));
+	cprintf(C_GREY, "Cable rtt delay:      ");
+	cprintf(C_WHITE, "%s ps\n", print64(crtt, 1));
 
-	cprintf(C_GREY, "Clock offset:            ");
-	cprintf(C_WHITE, "%9d ps\n", (int32_t) (s->offset));
+	cprintf(C_GREY, "Clock offset:");
+	cprintf(C_WHITE, "%29d ps\n", (int32_t) (s->offset));
 
-	cprintf(C_GREY, "Phase setpoint:          ");
-	cprintf(C_WHITE, "%9d ps\n", (s->cur_setpoint));
+	cprintf(C_GREY, "Phase setpoint:");
+	cprintf(C_WHITE, "%27d ps\n", (s->cur_setpoint));
 
-	cprintf(C_GREY, "Skew:                    ");
-	cprintf(C_WHITE, "%9d ps\n", (int32_t) (s->skew));
+	cprintf(C_GREY, "Skew:     ");
+	/* precision is limited to 32 */
+	cprintf(C_WHITE, "%32d ps\n", (int32_t) (s->skew));
 
-	cprintf(C_GREY, "Update counter:          ");
-	cprintf(C_WHITE, "%9d\n", (int32_t) (s->update_count));
+	cprintf(C_GREY, "Update counter:");
+	cprintf(C_WHITE, "%27d\n", (int32_t) (s->update_count));
 
 	return 1;
 }
@@ -326,8 +334,8 @@ static int wrc_log_stats(void)
 	/* fixme: clock is not always 125 MHz */
 	pp_printf("sec:%d nsec:%d ", (uint32_t) sec, nsec);
 	if(ptp_mode == WRC_MODE_SLAVE) {
-		pp_printf("mu:%s ", print64(s->picos_mu));
-		pp_printf("dms:%s ", print64(s->delta_ms));
+		pp_printf("mu:%s ", print64(s->picos_mu, 0));
+		pp_printf("dms:%s ", print64(s->delta_ms, 0));
 		pp_printf("dtxm:%d drxm:%d ", (int32_t) s->delta_tx_m,
 			(int32_t) s->delta_rx_m);
 		pp_printf("dtxs:%d drxs:%d ", (int32_t) s->delta_tx_s,
@@ -339,7 +347,7 @@ static int wrc_log_stats(void)
 					s->delta_tx_m -
 					s->delta_rx_m -
 					s->delta_tx_s -
-					s->delta_rx_s));
+					s->delta_rx_s, 0));
 		pp_printf("cko:%d ", (int32_t) (s->offset));
 		pp_printf("setp:%d ", (int32_t) (s->cur_setpoint));
 		pp_printf("ucnt:%d ", (int32_t) s->update_count);
