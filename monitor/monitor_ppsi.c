@@ -23,6 +23,7 @@
 #include "hal_exports.h"
 #include "lib/ipv4.h"
 #include "shell.h"
+#include "revision.h"
 
 extern struct pp_servo servo;
 extern struct pp_instance ppi_static;
@@ -112,7 +113,7 @@ int wrc_mon_gui(void)
 
 	term_clear();
 
-	cprintf(C_BLUE, "WR PTP Core Sync Monitor v 1.0");
+	cprintf(C_BLUE, "WR PTP Core Sync Monitor %s", build_revision);
 	cprintf(C_GREY, "\nEsc = exit");
 
 	shw_pps_gen_get_time(&sec, &nsec);
