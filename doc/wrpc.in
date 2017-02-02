@@ -1523,8 +1523,10 @@ message is only generated one time.
 
 @item @code{ptp start} @tab starts @sc{wr ptp} daemon
 @item @code{ptp stop} @tab stops @sc{wr ptp} daemon
+@item @code{ptp e2e} @tab select end-to-end PTP mechanism. If configured you can set @t{p2p} mode, and @t{delay}/@t{pdelay} as aliases.
+@item @code{ptp master} @tab force working as master. Alternatives are @t{slave} and @t{gm} (grandmaster).
+@item @code{ptp <cmd> <cmd> ...} @tab You can concatenate several of the above sbcommands in a single @t{ptp} command. With no arguments, the command reports the current values.
 
-@item @code{mode} @tab prints the current @sc{wr ptp} mode
 @item @code{mode gm|master|slave} @tab sets @sc{wrpc} to operate as Grandmaster
 clock (requires external 10MHz and 1-PPS reference), Master or Slave. After
 setting the mode, @t{ptp start} must be re-issued
@@ -1560,9 +1562,9 @@ initialization script
 @item @code{init boot} @tab executes the script stored in Flash/EEPROM (the same action is done automatically when @sc{wrpc} starts after resetting @sc{lm32})
 
 @item @code{mac get} @tab prints @sc{wrpc}'s @sc{mac} address
-@item @code{mac getp} @tab reads the @sc{mac} address stored in Flash/EEPROM
+@item @code{mac getp} @tab reads the persistent @sc{mac} address stored in Flash/EEPROM
 @item @code{mac set <mac>} @tab sets the @sc{mac} address of @sc{wrpc}
-@item @code{mac setp <mac>} @tab stores the @sc{mac} address in Flash/EEPROM
+@item @code{mac setp <mac>} @tab stores the persistent @sc{mac} address in Flash/EEPROM
 
 @item @code{sdb} @tab prints devices connected to the Wishbone bus inside @sc{wrpc}
 
@@ -1572,9 +1574,30 @@ initialization script
 @item @code{vlan}
 @item @code{vlan set <n>} @tab reorts or sets the active vlan used for sending/receiving network frames. The command exists only if @t{CONFIG_VLAN} is set.
 
+@item @code{w1} @tab List onewire devices on the bus
 @item @code{w1w <offset> <byte> [<byte> ...]}
 @item @code{w1r <offset> <len>} @tab If @t{CONFIG_W1} is set and a OneWire @sc{eeprom} exists, write and read data. For writing, @t{byte} values are decimal
 
+@item @code{delays}
+@item @code{delays <tx> <rx>} @tab Get or set the constant delays in frame transmission, only available if @t{CONFIG_CMD_LL}. Delays are expressed in picoseconds.
+
+@item @code{devmem <addr>}
+@item @code{devmem <addr> <value>} @tab Read or write a 32-bit word from memory and/or FPGA registers. Only available if @t{CONFIG_CMD_LL}.
+
+@item @code{diag ...} @tab diagnostics for auxiliary clocks. Only available if @t{CONFIG_AUX_DIAG}.
+
+@item @code{temp} @tab Report current temperatures.
+
+@item @code{faketemp}
+@item @code{faketemp <T1> <T2> <T3>}  @tab Read or set the three fake temperatures, used to test the temperature/syslog mechanism. Available if @t{CONFIG_FAKE_TEMPERATURES}.
+
+@item @code{ltest}
+@item @code{ltest <secs> <msecs>} @tab Read or set the latency-test sending interval. See @ref{Latency Test}.
+
+@item @code{syslog off}
+@item @code{syslog <ipaddr> <macaddr>} @tab Disable or set your @i{syslog} server. See @ref{Syslog}.
+
+@c FIXME still missing: ptrack  sleep 
 @end multitable
 
 
