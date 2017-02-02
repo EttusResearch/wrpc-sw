@@ -1125,7 +1125,83 @@ responder}.
 @node Syslog
 @subsection Syslog
 
-To be written
+The node can act as a @i{syslog} client, though only on the UDP protocol.
+To activate it, you must build with @t{CONFIG_SYSLOG} and pass proper
+parameters at run time.
+
+To configure @i{syslog} you can run the @t{syslog} shell command, which
+receives two parameters (@t{ipaddr} and @t{macaddr}), or the
+single @t{off} subcommand.
+
+When deploying a network of nodes, you can choose to put the @t{syslog
+<ip> <mac>} command in the build-time init command. To this aim you
+must activate @t{CONFIG_BUILD_INIT} and then pass your command string
+as @t{CONFIG_INIT_COMMAND}.  In that context, you can use ``@t{;}'' as
+a command separator, as no newlines are permitted in @t{Kconfig}
+strings.
+
+The strings that a WR node sends to the @i{syslog} server are always
+using the format:  ``@t{<}@i{level}@t{>} @i{Jan 01 00:00:00 192.168.1.1 msg}''
+where @i{level} is usually 14 (type ``user'', priority ``info'')
+and @i{msg} is a free-format message strings.
+
+The @i{syslog} client sends strings to the server in the following
+situations:
+
+@table @i
+
+@item Boot time
+
+	The node sends ``@t{(ma:ca:dd:rr:ee:ss) Node up since} @i{X}
+        @t{seconds}'' as soon as the network link is up and the @i{syslog}
+        server is configured with the shell command or init script.
+        The message is re-sent, with an updated uptime value, if you change
+        the @i{syslog} server parameters.
+
+@item Link up after link down
+
+	The message is ``@t{"Link up after} @i{2.345} @t{s}''. The
+        time printed is the duration of the link-down interval just
+        passed -- no lost-by-design message is sent at link-down time. The
+        message is not sent the first time the link goes up, because
+        the boot message is already there.
+
+@item Synchronization, first time
+
+	When the node reaches WR synchronization (i.e. ``track phase''
+        state), it sends ``@t{Tracking after} @i{5..678} @t{s}''.
+        The reported time is the lapse since power-on.
+
+@item Synchronization lost
+
+	Whenever WR looses @i{track-phase} status, the node reports
+        @t{Lost track}.
+
+@item Synchronization recovered
+
+	When the WR servo is in @i{track phase} state after loosing
+        synchronization, the node sends ``@i{45}@t{-th re-track after}
+        @i{23.456} @t{s}''. The time reported is the amount of time
+        during which the node has not been synchronized. The seconth and
+        thirth re-sync are reported as @t{2-th} and @t{3-th}, to make you
+        smile. At the @t{4-th} you should stop smiling and be concerned.
+
+@item Temperature over threshold
+
+	The node monitors the various thermometers every few seconds.
+        If @t{CONFIG_TEMP_POLL_INTERVAL} and related parameters are
+        set, any over-temperature event is reported to @i{syslog}.
+        If any temperature in the collected set is over threshold,
+        the message is ``@t{Temperature high:}'' followed by the list of
+        all collected temperatures.  The message is repeated every
+        few seconds (@t{CONFIG_TEMP_HIGH_RAPPEL}, default 60)
+        until all temperatures are under-threshold. When temperature
+        is recovered the node sends ``@t{Temperature ok:}'' followed by
+        the current list of temperatures.
+
+@end table
+
+@c FIXME: syslog examples
 
 @c --------------------------------------------------------------------------
 @node Latency Test
