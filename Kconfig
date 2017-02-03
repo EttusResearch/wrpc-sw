@@ -503,6 +503,19 @@ config LATENCY_SYSLOG
 	bool "Report latency problems to syslog"
 	default y
 
+config WR_NODE_SIM
+	depends on WR_NODE
+	boolean "Build simple software for test of WR PTP Core in simulatin"
+	default n
+	help
+	  This option builds binary that is meant to be used in testbench
+	  simulations. It initializes only simulation-needed essentials.
+	  All the initialization that is time-consuming and unnecessery
+	  is avoided. The main function sends min-size frames to PTP
+	  MAC address destination and expects the simulation to return
+	  these frames.
+
+
 # This is needed to size the pp_instance data strucuture. Instead of
 # including the ppsi autoconf.h, with duplicate definitions, define it
 # here, as we know what the value is

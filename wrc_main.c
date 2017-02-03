@@ -231,7 +231,7 @@ static void account_task(struct wrc_task *t, int done_sth)
 }
 
 /* Run a task with profiling */
-static void wrc_run_task(struct wrc_task *t)
+void wrc_run_task(struct wrc_task *t)
 {
 	int done_sth = 0;
 
@@ -245,6 +245,7 @@ static void wrc_run_task(struct wrc_task *t)
 	account_task(t, done_sth);
 }
 
+int main(void) __attribute__ ((weak));
 int main(void)
 {
 	struct wrc_task *t;
