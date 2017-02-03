@@ -130,6 +130,10 @@ static int icmp_poll(void)
 	if (ip_status == IP_TRAINING)
 		return 0;
 
+	/* check the destination IP */
+	if (check_dest_ip(buf))
+		return 0;
+
 	if ((len = process_icmp(buf, len)) > 0)
 		ptpd_netif_sendto(icmp_socket, &addr, buf, len, 0);
 	return 1;
@@ -146,6 +150,10 @@ static int rdate_poll(void)
 	len = ptpd_netif_recvfrom(rdate_socket, &addr,
 				  buf, sizeof(buf), NULL);
 	if (len <= 0)
+		return 0;
+
+	/* check the destination IP */
+	if (check_dest_ip(buf))
 		return 0;
 
 	shw_pps_gen_get_time(&secs, NULL);
