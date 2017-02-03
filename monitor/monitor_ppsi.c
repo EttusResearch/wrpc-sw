@@ -102,6 +102,7 @@ int wrc_mon_gui(void)
 	int64_t crtt;
 	int64_t total_asymmetry;
 	char buf[20];
+	int n_out, i;
 
 	if (!last_jiffies)
 		last_jiffies = timer_get_tics() - 1 -  wrc_ui_refperiod;
@@ -200,16 +201,22 @@ int wrc_mon_gui(void)
 	/* sync source not implemented */
 	/*cprintf(C_GREY, "Synchronization source:    ");
 	cprintf(C_WHITE, "%s\n", cur_servo_state.sync_source);*/
-	cprintf(C_GREY, "Aux clock status:          ");
 
-	aux_stat = spll_get_aux_status(0);
+	spll_get_num_channels(NULL, &n_out);
 
-	if (aux_stat & SPLL_AUX_ENABLED)
-		cprintf(C_GREEN, "enabled");
+	for(i = 0; i < n_out; i++) {
+		cprintf(C_GREY, "Aux clock %d status:        ", i);
 
-	if (aux_stat & SPLL_AUX_LOCKED)
-		cprintf(C_GREEN, ", locked");
-	pp_printf("\n");
+		aux_stat = spll_get_aux_status(i);
+
+		if (aux_stat & SPLL_AUX_ENABLED)
+			cprintf(C_GREEN, "enabled");
+
+		if (aux_stat & SPLL_AUX_LOCKED)
+			cprintf(C_GREEN, ", locked");
+		pp_printf("\n");
+
+	}
 
 	cprintf(C_BLUE, "\nTiming parameters:\n");
 
@@ -304,6 +311,8 @@ static int wrc_log_stats(void)
 	struct wr_servo_state *s =
 			&((struct wr_data *)ppi->ext_data)->servo_state;
 	static uint32_t last_jiffies;
+	int n_out;
+	int i;
 
 	if (!wrc_stat_running)
 		return 0;
@@ -330,8 +339,14 @@ static int wrc_log_stats(void)
 		pp_printf("sv:%d ", (s->flags & WR_FLAG_VALID) ? 1 : 0);
 		pp_printf("ss:'%s' ", s->servo_state_name);
 	}
-	aux_stat = spll_get_aux_status(0);
-	pp_printf("aux:%x ", aux_stat);
+
+	spll_get_num_channels(NULL, &n_out);
+
+	for(i = 0; i < n_out; i++) {
+		aux_stat = spll_get_aux_status(i);
+		pp_printf("aux%d:%x ", i, aux_stat);
+	}
+	
 	/* fixme: clock is not always 125 MHz */
 	pp_printf("sec:%d nsec:%d ", (uint32_t) sec, nsec);
 	if(ptp_mode == WRC_MODE_SLAVE) {
