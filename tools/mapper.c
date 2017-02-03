@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <errno.h>
+#include <stdint.h>
+#include <arpa/inet.h>
 
 int main(int argc, char **argv)
 {
@@ -19,6 +21,7 @@ int main(int argc, char **argv)
 	unsigned int len, len_pg, len_off;
 	void *address;
 	char *rest;
+	int i;
 
 	if (argc !=4
 	    || sscanf(argv[2],"%i", &pos) != 1
@@ -60,9 +63,9 @@ int main(int argc, char **argv)
 	fprintf(stderr, "mapped \"%s\" from %i to %i (0x%x to 0x%x) \n",
 		fname, pos, pos+len, pos_pg, pos_pg+len_pg);
 
-	if (fwrite(address+pos_off, 1, len, stdout) != len) {
-		fprintf(stderr, "%s: write(): %s\n", argv[0], strerror(errno));
-		exit(1);
+	for (i = 0; i < (len + 3) / 4; i++) {
+		write(fileno(stdout), address + pos_off + i * 4, 4);
 	}
+
 	return 0;
 }

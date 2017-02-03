@@ -1274,6 +1274,10 @@ The @i{mapper} tool used above, and part of @i{wrpc-sw}, reads a file
 using @i{mmap()}. The kernel doesn't allow plain @i{read()} from a
 resource file.
 
+@b{Note:} Data read by @t{mapper} may look like has wrong endianness comparing
+to the file used for programming lm32 by @t{spec-cl}, but @t{spec-cl} is the
+one which change the endianness of the binary data during the programming.
+
 With @i{etherbone}, you can get a snapshot for @i{wrpc} memory using
 @t{eb-get} and the proper address (the size is always 128kB)
 
