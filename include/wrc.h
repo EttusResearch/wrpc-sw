@@ -42,6 +42,12 @@
 #  define is_wr_node 1
 #endif
 
+#ifdef CONFIG_WR_NODE_SIM
+#  define IS_WR_NODE_SIM 1
+#else
+#  define IS_WR_NODE_SIM 0
+#endif
+
 extern int wrc_vlan_number;
 
 int wrc_mon_gui(void);

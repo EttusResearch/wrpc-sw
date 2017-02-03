@@ -75,8 +75,10 @@ void ep_init(uint8_t mac_addr[])
 	set_mac_addr(mac_addr);
 	ep_sfp_enable(1);
 
-	*(unsigned int *)(0x62000) = 0x2;	// reset network stuff (cleanup required!)
-	*(unsigned int *)(0x62000) = 0;
+	if (!IS_WR_NODE_SIM){
+		*(unsigned int *)(0x62000) = 0x2;	// reset network stuff (cleanup required!)
+		*(unsigned int *)(0x62000) = 0;
+	}
 
 	EP->ECR = 0;		/* disable Endpoint */
 	EP->VCR0 = EP_VCR0_QMODE_W(3);	/* disable VLAN unit - not used by WRPC */
@@ -101,7 +103,8 @@ int ep_enable(int enabled, int autoneg)
 /* Disable the endpoint */
 	EP->ECR = 0;
 
-	pp_printf("ID: %x\n", EP->IDCODE);
+	if (!IS_WR_NODE_SIM)
+		pp_printf("ID: %x\n", EP->IDCODE);
 
 /* Load default packet classifier rules - see ep_pfilter.c for details */
 	pfilter_init_default();
@@ -114,7 +117,8 @@ int ep_enable(int enabled, int autoneg)
 /* Reset the GTP Transceiver - it's important to do the GTP phase alignment every time
    we start up the software, otherwise the calibration RX/TX deltas may not be correct */
 	pcs_write(MDIO_REG_MCR, MDIO_MCR_PDOWN);	/* reset the PHY */
-	timer_delay_ms(200);
+	if (!IS_WR_NODE_SIM)
+		timer_delay_ms(200);
 	pcs_write(MDIO_REG_MCR, MDIO_MCR_RESET);	/* reset the PHY */
 	pcs_write(MDIO_REG_MCR, 0);	/* reset the PHY */
 
