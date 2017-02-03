@@ -55,6 +55,10 @@
 #define TD_GOT_TRANSITION	1
 #define TD_DONE			2
 
+/* Timeout for rxts_calibration_update */
+#define CALIB_TIMEOUT_MS 5000
+
+
 /* state of transition detector */
 struct trans_detect_state {
 	int prev_val;
@@ -228,10 +232,16 @@ static int calib_t24p_slave(uint32_t *value)
 {
 	int rv;
 	uint32_t prev;
+	int timeout = 0;
 
 	rxts_calibration_start();
-	while (!(rv = rxts_calibration_update(value)))
-		/* FIXME: timeout */;
+
+	while (!(rv = rxts_calibration_update(value))) {
+		if (timeout > CALIB_TIMEOUT_MS || ep_link_up(NULL) == LINK_DOWN)
+			return -1;
+		timer_delay_ms(1);
+		timeout++;
+	}
 	if (rv < 0) {
 		/* Fall back on master == eeprom-or-error */
 		return calib_t24p_master(value);
