@@ -1,5 +1,6 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 -include $(CURDIR)/.config
+.PHONY: $(CURDIR)/.config
 
 CROSS_COMPILE ?= lm32-elf-
 

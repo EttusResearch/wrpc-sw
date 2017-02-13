@@ -30,7 +30,7 @@ rm -rf $size_info_file
 
 for c in $configs; do
     echo "##### Building with '$c'"
-    make -s clean; rm ppsi/.config; touch ppsi/.config
+    make -s clean; rm -f ppsi/.config
     if ! make $c 2>&1 >> $T; then
 	echo "Error in configuration (see $T)"
 	exit 1
