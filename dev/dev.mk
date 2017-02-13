@@ -37,9 +37,5 @@ obj-y += $(pfilter-y:.bin=.o)
 rules-%.o: rules-%.bin
 	$(OBJCOPY) -I binary  $(OBJCOPY-TARGET-y) $< $@
 
-$(pfilter-y): tools/pfilter-builder
-	$^
-
-tools/pfilter-builder:
-	$(MAKE) -C tools pfilter-builder
-
+$(pfilter-y): tools
+	tools/pfilter-builder
