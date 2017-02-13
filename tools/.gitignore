@@ -10,3 +10,4 @@ flash-read
 flash-write
 pfilter-builder
 wrpc-dump
+mapper
