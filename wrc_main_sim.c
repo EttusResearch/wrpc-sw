@@ -147,6 +147,7 @@ int wrpc_test_1(void)
 		if (ret == 0)
 			code = 0xE0; /* Error: returned zero value */
 		else if (ret > 0) {
+			pl_cnt = 0xFFFF & ((tx_payload[0] << 8) | tx_payload[1]);
 			if (pl_cnt == rx_cnt) {
 				rx_cnt++;
 				code = 0xBB; /* OK */
