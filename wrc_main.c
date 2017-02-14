@@ -231,7 +231,7 @@ static void account_task(struct wrc_task *t, int done_sth)
 }
 
 /* Run a task with profiling */
-void wrc_run_task(struct wrc_task *t)
+static void wrc_run_task(struct wrc_task *t)
 {
 	int done_sth = 0;
 
