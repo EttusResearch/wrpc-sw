@@ -10,9 +10,9 @@
  * ****************************************************************************
  * Description:
  * This file provides the main() function that replaces the main function of
- * wrc_main.c file when WRPC is compiled for testbench. This is done by 
+ * wrc_main.c file when WRPC is compiled for testbench. This is done by
  * configuring WRPC using make menuconfig:
- * a) by using the default wrpc_sim_defconfig, i.e. "make wrpc_sim_defconfig", or
+ * a) by using the default wrpc_sim_defconfig, i.e. "make wrpc_sim_defconfig",or
  * b) by chosing in make menuconfig the following opton:
  *    "Build simple software for test of WR PTP Core in simulatin"
  *
@@ -32,60 +32,62 @@
 #include "softpll_ng.h"
 #include <wrpc.h> /*needed for htons()*/
 
-void wrc_run_task(struct wrc_task *t);
+int wrpc_test_1(void);
 
 /*
- * This is a variable that is meant to be set by testbench through memory-manipulation.
+ * This is a variable that is meant to be set by testbench through
+ * memory-manipulation.
  *
  * To allow this, there are still some elements missing:
- * - the test_number variable needs to be at a known address, this is already done
- *   for other variables (for VLANs?), so the same needs to be done for this
+ * - the test_number variable needs to be at a known address, this is already
+ *   done for other variables (for VLANs?), so the same needs to be done for
+ *   this
  * - testbench needs to be modified appropriately
  *
- * The idea behind is that different tests for different testbenches are compiled in 
- * this file, and the proper test is loaded based on this variable. Each testbench
- * sets the proper testbench number at th startup
+ * The idea behind is that different tests for different testbenches are
+ * compiled in this file, and the proper test is loaded based on this variable.
+ * Each testbench sets the proper testbench number at th startup
  */
-static int test_number = 0;
+static int test_number;
 
 /*
  * Basic initialization required for simulation
  */
 static void wrc_sim_initialize(void)
 {
-  uint8_t mac_addr[6];
+	uint8_t mac_addr[6];
 
-  sdb_find_devices();
-  timer_init(1);
+	sdb_find_devices();
+	timer_init(1);
 
-  //Source MAC used by WRPC's Endpoint
-  mac_addr[0] = 0xDE;
-  mac_addr[1] = 0xAD;
-  mac_addr[2] = 0xBE;
-  mac_addr[3] = 0xEF;
-  mac_addr[4] = 0xBA;
-  mac_addr[5] = 0xBE;
+	/* Source MAC used by WRPC's Endpoint */
+	mac_addr[0] = 0xDE;
+	mac_addr[1] = 0xAD;
+	mac_addr[2] = 0xBE;
+	mac_addr[3] = 0xEF;
+	mac_addr[4] = 0xBA;
+	mac_addr[5] = 0xBE;
 
-  ep_init(mac_addr);
-  ep_enable(1, 1);
+	ep_init(mac_addr);
+	ep_enable(1, 1);
 
-  minic_init();
-  shw_pps_gen_init();
-  spll_very_init();
+	minic_init();
+	shw_pps_gen_init();
+	spll_very_init();
 }
 /*
  * This is a test used by:
- * - WRPC testbench located in "testbench/wrc_core" folder of the wr-cores repository
- *   (git://ohwr.org/hdl-core-lib/wr-cores.git)
+ * - WRPC testbench located in "testbench/wrc_core" folder of the wr-cores
+ *   repository (git://ohwr.org/hdl-core-lib/wr-cores.git)
  *
  * This test:
- * - sends min-size frames of PTP EtherType (0x88f7) and Dst MAC (01:1B:19:00:00:00)
- *   with embedded sequence number and flags providing information about the previously
- *   received frame
- * - checkes whether the transmitted frames are successfully received back in a proper 
- *   sequence (it is supposed that the testbench loops back the frames)
- * - embeds in the next frame flag and return value regarding the previously received 
- *   frames, i.e.:
+ * - sends min-size frames of PTP EtherType (0x88f7) and Dst MAC
+ *   (01:1B:19:00:00:00) with embedded sequence number and flags providing
+ *   information about the previously received frame
+ * - checkes whether the transmitted frames are successfully received back in a
+ *   proper sequence (it is supposed that the testbench loops back the frames)
+ * - embeds in the next frame flag and return value regarding the previously
+ *   received frames, i.e.:
  *   # the flags say:
  *     0xAA: this is the first frame (no previous frames)
  *     0xBB: previous frame was successfully received
@@ -95,80 +97,79 @@ static void wrc_sim_initialize(void)
  */
 int wrpc_test_1(void)
 {
-  struct hw_timestamp hwts;
-  struct wr_ethhdr_vlan tx_hdr;
-  struct wr_ethhdr rx_hdr;
-  int recvd, i, q_required;
-  int j;
-  uint8_t tx_payload[NET_MAX_SKBUF_SIZE - 32];
-  uint8_t rx_payload[NET_MAX_SKBUF_SIZE - 32];
-  int ret;
-  int tx_cnt=0, rx_cnt=0, pl_cnt;
-  // error code:
-  // 0xAA - first
-  // 0xBB - normal
-  // 0xE* - error code:
-  //    0 - Error: returned zero value
-  //    1 - Error: wrong seqID
-  //    2 - Error: error of rx
-  int code=0xAA;
+	struct hw_timestamp hwts;
+	struct wr_ethhdr_vlan tx_hdr;
+	struct wr_ethhdr rx_hdr;
+	int j;
+	uint8_t tx_payload[NET_MAX_SKBUF_SIZE - 32];
+	uint8_t rx_payload[NET_MAX_SKBUF_SIZE - 32];
+	int ret = 0;
+	int tx_cnt = 0, rx_cnt = 0, pl_cnt;
+	/* error code:
+	 * 0xAA - first
+	 * 0xBB - normal
+	 * 0xE* - error code:
+	 *    0 - Error: returned zero value
+	 *    1 - Error: wrong seqID
+	 *    2 - Error: error of rx */
+	int code = 0xAA;
 
-  /// prepare dummy frame
-  //payload
-  for(j=0; j<80; ++j) {
-    tx_payload[j] = 0xC7;//j;
-  }
-  //MAC address and EtherType of PTP
-  memcpy(tx_hdr.dstmac, "\x01\x1B\x19\x00\x00\x00", 6);
-  tx_hdr.ethtype = htons(0x88f7);
+	/** prepare dummy frame */
+	/* payload */
+	for (j = 0; j < 80; ++j)
+		tx_payload[j] = 0xC7;/* j; */
 
-  /// main loop, send test frames
-  for (;;)
-  {
-    // seqID
-    tx_payload[0] = 0xFF & (tx_cnt >> 8);
-    tx_payload[1] = 0xFF & tx_cnt;
+	/* MAC address and EtherType of PTP */
+	memcpy(tx_hdr.dstmac, "\x01\x1B\x19\x00\x00\x00", 6);
+	tx_hdr.ethtype = htons(0x88f7);
 
-    tx_payload[2] = 0xFF & (code >> 8);
-    tx_payload[3] = 0xFF & code;
+	/** main loop, send test frames */
+	for (;;) {
+		/* seqID */
+		tx_payload[0] = 0xFF & (tx_cnt >> 8);
+		tx_payload[1] = 0xFF & tx_cnt;
 
-    // rx return value
-    tx_payload[4] = 0xFF & (ret >> 8);
-    tx_payload[5] = 0xFF & ret;
+		tx_payload[2] = 0xFF & (code >> 8);
+		tx_payload[3] = 0xFF & code;
 
-    /* A frame is sent out with sequenceID (firt octet) and awaited reception. */
-    minic_tx_frame(&tx_hdr, tx_payload, 62, &hwts);
-    tx_cnt++;
-    ret=minic_rx_frame(&rx_hdr, rx_payload, NET_MAX_SKBUF_SIZE, &hwts);
+		/* rx return value */
+		tx_payload[4] = 0xFF & (ret >> 8);
+		tx_payload[5] = 0xFF & ret;
 
-    /// check whether the received value is OK
-    if(ret == 0)
-      code = 0xE0; // Error: returned zero value
-    else if(ret > 0 ) {
-      if(pl_cnt == rx_cnt)
-      {
-          rx_cnt++;
-          code = 0xBB; // OK
-      }
-      else {
-          rx_cnt = pl_cnt+1;
-          code = 0xE1; // Error: wrong seqID
-      }
-    }
-    else
-          code = 0xE2; // Error: error of rx
-  }
+		/* A frame is sent out with sequenceID (firt octet) and awaited
+		 * reception. */
+		minic_tx_frame(&tx_hdr, tx_payload, 62, &hwts);
+		tx_cnt++;
+		ret = minic_rx_frame(&rx_hdr, rx_payload, NET_MAX_SKBUF_SIZE,
+				&hwts);
+
+		/** check whether the received value is OK */
+		if (ret == 0)
+			code = 0xE0; /* Error: returned zero value */
+		else if (ret > 0) {
+			if (pl_cnt == rx_cnt) {
+				rx_cnt++;
+				code = 0xBB; /* OK */
+			} else {
+				rx_cnt = pl_cnt+1;
+				code = 0xE1; /* Error: wrong seqID */
+			}
+		} else
+			code = 0xE2; /* Error: error of rx */
+	}
 
 }
-int main(void)
-{
-  wrc_sim_initialize();
 
-  switch (test_number) {
-    case 0:
-      wrpc_test_1();
-      break;
-    default:
-      while(1);
-  }
+void main(void)
+{
+	wrc_sim_initialize();
+
+	switch (test_number) {
+	case 0:
+		wrpc_test_1();
+		break;
+	default:
+		while (1)
+			;
+	}
 }
