@@ -60,5 +60,5 @@ dump-info-host.o: ../dump-info.o
 ../dump-info.o: ../dump-info.c
 	$(MAKE) -C .. dump-info.o
 clean:
-	rm -f $(ALL) *.o *~
+	rm -f $(ALL) *.o *~ dump-info-host.bin
 

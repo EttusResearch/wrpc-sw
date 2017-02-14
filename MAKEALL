@@ -1,6 +1,6 @@
 #!/bin/sh
 # A trivial script to build with all known configurations
-# (please add a file in confifs/ to test your special case)
+# (please add a file in configs/*_defconfig to test your special case)
 
 T=$(mktemp /tmp/wrpc-config.XXXXXX)
 TW=$(mktemp /tmp/save-dotconfig-wrpc.XXXXXX)
@@ -30,7 +30,12 @@ rm -rf $size_info_file
 
 for c in $configs; do
     echo "##### Building with '$c'"
-    make -s clean; rm -f ppsi/.config
+    if ! make -s clean; then
+	echo "Error while cleaning (see $T)"
+	exit 1
+    fi
+    rm -f ppsi/.config
+
     if ! make $c 2>&1 >> $T; then
 	echo "Error in configuration (see $T)"
 	exit 1

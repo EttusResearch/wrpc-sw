@@ -187,8 +187,11 @@ config.o: .config
 $(AUTOCONF): silentoldconfig
 
 clean:
-	rm -f $(OBJS) $(OUTPUT).elf $(OUTPUT).bin $(OUTPUT).bram \
-		$(LDS)  rules-*.bin
+	rm -f $(OBJS) $(OUTPUT).o config.o revision.o $(OUTPUT).elf $(LDS) \
+		$(OUTPUT).bin rules-*.bin \
+		$(OUTPUT).bram $(OUTPUT).vhd $(OUTPUT).mif $(OUTPUT)_disasm.S
+	rm -rf include/config
+	rm -rf include/generated
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean

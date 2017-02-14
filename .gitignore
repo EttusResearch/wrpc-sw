@@ -8,7 +8,6 @@
 *~
 *_disasm.S
 *.vhd
-
 *.cmd
 *.o
 .tmp_*
