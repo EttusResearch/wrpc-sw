@@ -21,6 +21,9 @@ AUTOCONF = $(CURDIR)/include/generated/autoconf.h
 
 PPSI = ppsi
 
+# list of file extensions to be copied for MAKEALL script
+MAKEALL_COPY_LIST=.bin .elf
+
 # we miss CONFIG_ARCH_LM32 as we have no other archs by now
 obj-$(CONFIG_LM32) = arch/lm32/crt0.o arch/lm32/irq.o
 LDS-$(CONFIG_WR_NODE)   = arch/lm32/ram.ld
@@ -196,6 +199,9 @@ clean:
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
 
+cleanall: clean
+	rm -f $(addprefix *,$(MAKEALL_COPY_LIST))
+
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
@@ -229,3 +235,9 @@ defconfig:
 # (we depend on .config and not on include/generated/autoconf.h
 # because the latter is touched by silentoldconfig at each build)
 $(obj-y): .config $(wildcard include/*.h)
+
+# copy compiled files for MAKEALL script
+$(DEFCONFIG_NAME).%:
+	@cp -f $(OUTPUT)$(suffix $@) $@
+
+makeall_copy: $(addprefix $(DEFCONFIG_NAME),$(MAKEALL_COPY_LIST))

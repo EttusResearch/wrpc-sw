@@ -28,6 +28,9 @@ export size_info_file
 
 rm -rf $size_info_file
 
+# remove files from the previous compilations first
+make cleanall -s
+
 for c in $configs; do
     echo "##### Building with '$c'"
     if ! make -s clean; then
@@ -44,6 +47,7 @@ for c in $configs; do
     export DEFCONFIG_NAME
     # Remove "# configuration written to .config" from output
     make -s | grep -v '^#'
+    make makeall_copy
 done
 make -s clean
 
