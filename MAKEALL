@@ -35,8 +35,8 @@ for c in $configs; do
 	echo "Error in configuration (see $T)"
 	exit 1
     fi
-    CONFIG_NAME=$c
-    export CONFIG_NAME
+    DEFCONFIG_NAME=$c
+    export DEFCONFIG_NAME
     # Remove "# configuration written to .config" from output
     make -s | grep -v '^#'
 done

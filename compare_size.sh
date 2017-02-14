@@ -45,18 +45,18 @@ if [ "$GIT_HASH_CUR" = "$GIT_HASH_MASTER" ]; then
 fi
 
 #echo "Read size info file"
-while read git_hash config_name text data bss dec hex filename
+while read git_hash defconfig_name text data bss dec hex filename
 do
     if [ "$git_hash" = "$GIT_HASH_CUR" ]; then
-	curr_size_array[$config_name]=$dec
+	curr_size_array[$defconfig_name]=$dec
     fi
 done < "$size_info_file"
 
 #echo "Read size db file"
-while read git_hash config_name text data bss dec hex filename
+while read git_hash defconfig_name text data bss dec hex filename
 do
-    #echo "$git_hash $config_name $dec"
-    size_db_array["$git_hash"_"$config_name"]="$dec"
+    #echo "$git_hash $defconfig_name $dec"
+    size_db_array["$git_hash"_"$defconfig_name"]="$dec"
 done < "$size_db_file"
 
 #print header
