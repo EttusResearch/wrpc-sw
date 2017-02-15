@@ -45,7 +45,8 @@ sdb-wrpc.bin: sdbfs
 wrpc-dump: wrpc-dump.c dump-info-host.o
 	$(CC) $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include \
 	-I ../softpll \
-	$^ -o $@
+	$^ -o $@ \
+	-D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
 
 pfilter-builder: pfilter-builder.c
 	$(CC) $(CFLAGS)  -include ../include/generated/autoconf.h \

@@ -217,7 +217,11 @@ unsigned long wrpc_get_pointer(void *base, char *s_name, char *f_name)
 	return 0;
 }
 
-
+void print_version(void)
+{
+	fprintf(stderr, "Built in wrpc-sw repo ver:%s, by %s on %s %s\n",
+		__GIT_VER__, __GIT_USR__, __TIME__, __DATE__);
+}
 /* all of these are 0 by default */
 unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off;
 
@@ -237,7 +241,8 @@ int main(int argc, char **argv)
 		fprintf(stderr,
 			"\"name\" is one of pll, fifo, ppg, ppi, servo_state"
 			" or ds for data-sets. \"ds\" gets a ppg offset\n");
-		fprintf(stderr, "But with a new binary, just pass <file>\n");
+		fprintf(stderr, "But with a new binary, just pass <file>\n\n");
+		print_version();
 		exit(1);
 	}
 
