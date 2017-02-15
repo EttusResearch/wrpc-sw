@@ -88,14 +88,6 @@ struct dump_info  dump_info[] = {
 	DUMP_FIELD(Integer32, delta_rx_s),
 	DUMP_FIELD(Integer32, fiber_fix_alpha),
 	DUMP_FIELD(Integer32, clock_period_ps),
-	DUMP_FIELD(pp_time, t1),
-	DUMP_FIELD(pp_time, t2),
-	DUMP_FIELD(pp_time, t3),
-	DUMP_FIELD(pp_time, t4),
-	DUMP_FIELD(pp_time, t5),
-	DUMP_FIELD(pp_time, t6),
-	DUMP_FIELD(Integer64, delta_ms_prev),
-	DUMP_FIELD(int, missed_iters),
 	DUMP_FIELD(pp_time, mu),		/* half of the RTT */
 	DUMP_FIELD(Integer64, picos_mu),
 	DUMP_FIELD(Integer32, cur_setpoint),
@@ -109,6 +101,14 @@ struct dump_info  dump_info[] = {
 	DUMP_FIELD(UInteger32, n_err_offset),
 	DUMP_FIELD(UInteger32, n_err_delta_rtt),
 	DUMP_FIELD(pp_time, update_time),
+	DUMP_FIELD(pp_time, t1),
+	DUMP_FIELD(pp_time, t2),
+	DUMP_FIELD(pp_time, t3),
+	DUMP_FIELD(pp_time, t4),
+	DUMP_FIELD(pp_time, t5),
+	DUMP_FIELD(pp_time, t6),
+	DUMP_FIELD(Integer64, delta_ms_prev),
+	DUMP_FIELD(int, missed_iters),
 
 #undef DUMP_STRUCT
 #define DUMP_STRUCT struct pp_instance
