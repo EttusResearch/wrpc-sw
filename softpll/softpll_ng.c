@@ -59,6 +59,22 @@ static volatile int ptracker_mask = 0;
  * switch modes (and we won't like messing around with ptrackers
  * there) */
 
+static inline int aux_locking_enabled(int channel)
+{
+	uint32_t occr_aux_en = SPLL_OCCR_OUT_EN_R(SPLL->OCCR);
+	
+	return occr_aux_en & (1 << channel);
+}
+
+static inline void set_channel_status(int channel, int locked)
+{
+	if(!locked)
+		SPLL->OCCR &= ~(SPLL_OCCR_OUT_LOCK_W((1 << channel)));
+	else
+		SPLL->OCCR |= (SPLL_OCCR_OUT_LOCK_W((1 << channel)));
+}
+
+
 static inline void start_ptrackers(struct softpll_state *s)
 {
 	int i;
@@ -133,6 +149,7 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 			if (external_locked(&s->ext)) {
 				start_ptrackers(s);
 				s->seq_state = SEQ_READY;
+				set_channel_status(s->mpll.id_ref, 1);
 			}
 			break;
 		}
@@ -155,6 +172,7 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 				} else {
 					start_ptrackers(s);
 					s->seq_state = SEQ_READY;	
+					set_channel_status(s->mpll.id_ref, 1);
 				}
 			}
 			break;
@@ -173,6 +191,7 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 			{
 				start_ptrackers(s);
 				s->seq_state = SEQ_READY;
+				set_channel_status(s->mpll.id_ref, 1);
 			}
 			break;
 		}
@@ -182,12 +201,15 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 			if (s->mode == SPLL_MODE_GRAND_MASTER && !external_locked(&s->ext)) {
 				s->delock_count++;
 				s->seq_state = SEQ_CLEAR_DACS;
+				set_channel_status(s->mpll.id_ref, 0);
 			} else if (!s->helper.ld.locked) {
 				s->delock_count++;
 				s->seq_state = SEQ_CLEAR_DACS;
+				set_channel_status(s->mpll.id_ref, 0);
 			} else if (s->mode == SPLL_MODE_SLAVE && !s->mpll.ld.locked) {
 				s->delock_count++;
 				s->seq_state = SEQ_CLEAR_DACS;
+				set_channel_status(s->mpll.id_ref, 0);
 			}
 			break;
 		}
@@ -196,7 +218,7 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 
 static inline void update_loops(struct softpll_state *s, int tag_value, int tag_source)
 {
-	
+
 	helper_update(&s->helper, tag_value, tag_source);
 
 	if(s->helper.ld.locked)
@@ -500,21 +522,6 @@ int spll_get_delock_count()
 	return softpll.delock_count;
 }
 
-static inline int aux_locking_enabled(int channel)
-{
-	uint32_t occr_aux_en = SPLL_OCCR_OUT_EN_R(SPLL->OCCR);
-	
-	return occr_aux_en & (1 << channel);
-}
-
-static inline void aux_set_channel_status(int channel, int locked)
-{
-	if(!locked)
-		SPLL->OCCR &= ~(SPLL_OCCR_OUT_LOCK_W((1 << channel)));
-	else
-		SPLL->OCCR |= (SPLL_OCCR_OUT_LOCK_W((1 << channel)));
-}
-
 static int spll_update_aux_clocks(void)
 {
 	int ch;
@@ -528,7 +535,7 @@ static int spll_update_aux_clocks(void)
 		{
 			pll_verbose("softpll: disabled aux channel %d\n", ch);
 			spll_stop_channel(ch);
-			aux_set_channel_status(ch, 0);
+			set_channel_status(ch, 0);
 			s->seq_state = AUX_DISABLED;
 			done_sth++;
 		}
@@ -555,7 +562,7 @@ static int spll_update_aux_clocks(void)
 			case AUX_ALIGN_PHASE:
 				if (!mpll_shifter_busy(&s->pll.dmtd)) {
 					pll_verbose("softpll: channel %d phase aligned\n", ch);
-					aux_set_channel_status(ch, 1);
+					set_channel_status(ch, 1);
 					s->seq_state = AUX_READY;
 					done_sth++;
 				}
@@ -564,7 +571,7 @@ static int spll_update_aux_clocks(void)
 			case AUX_READY:
 				if (!softpll.mpll.ld.locked || !s->pll.dmtd.ld.locked) {
 					pll_verbose("softpll: aux channel %d or mpll lost lock\n", ch);
-					aux_set_channel_status(ch, 0); 
+					set_channel_status(ch, 0); 
 					s->seq_state = AUX_DISABLED;
 					done_sth++;
 				}
