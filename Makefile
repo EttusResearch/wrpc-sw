@@ -173,10 +173,9 @@ OBJCOPY-TARGET-$(CONFIG_LM32) = -O elf32-lm32 -B lm32
 OBJCOPY-TARGET-$(CONFIG_HOST_PROCESS) = -O elf64-x86-64 -B i386
 
 config.o: .config
-	sed '1,3d' .config > .config.bin
+	grep CONFIG .config > .config.bin
 	dd bs=1 count=1 if=/dev/zero 2> /dev/null >> .config.bin
-	$(OBJCOPY) -I binary $(OBJCOPY-TARGET-y) \
-		--rename-section .data=.data.config  .config.bin $@
+	$(OBJCOPY) -I binary $(OBJCOPY-TARGET-y) .config.bin $@
 	rm -f .config.bin
 
 %.bin: %.elf
