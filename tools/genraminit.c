@@ -37,8 +37,6 @@ int main(int argc, char *argv[])
 
 	ram_size = (ram_size+3)/4;
 
-	fprintf(stderr, "filesize=%d\n", ram_size);
-
 	while (fread(&tmp, 1, 4, f)) {
 		printf("%s\n", byte_to_binary(htonl(tmp)));
 		++i;
