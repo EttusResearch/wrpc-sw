@@ -25,6 +25,7 @@
  * clamped to this value. */
 #define HELPER_ERROR_CLAMP 150000
 
+/* NOTE: Please increment WRPC_SHMEM_VERSION if you change this structure */
 struct spll_helper_state {
 	int p_adder;		/* anti wrap-around adder */
 	int p_setpoint, tag_d0;

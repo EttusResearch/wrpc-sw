@@ -74,7 +74,9 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
+#define __ASSEMBLY__
+#include "include/revision.h"
+#include "ppsi/proto-ext-whiterabbit/wr-api.h"
 /* From include/sys/signal.h */  
 #define SIGINT  2   /* interrupt */
 #define SIGTRAP 5   /* trace trap */
@@ -114,7 +116,16 @@ _reset_handler:
 .global uptime_sec
 uptime_sec:
 	.word 0
-	
+
+.org 0xa4
+.global version_wrpc
+version_wrpc:
+	.byte WRPC_SHMEM_VERSION
+
+.global version_ppsi
+version_ppsi:
+	.byte WRS_PPSI_SHMEM_VERSION
+
 .extern _irq_entry
 .org 0xc0
         .global _interrupt_handler

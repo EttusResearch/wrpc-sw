@@ -12,6 +12,7 @@
 #ifndef __SPLL_PTRACKER_H
 #define __SPLL_PTRACKER_H
 
+/* NOTE: Please increment WRPC_SHMEM_VERSION if you change this structure */
 struct spll_ptracker_state {
 	int enabled, id;
 	int n_avg, acc, avg_count, preserve_sign;
