@@ -13,6 +13,8 @@
 
 #include <ppsi/ppsi.h>
 #include <softpll_ng.h>
+#include <revision.h>
+#include <arch/lm32/crt0.h>
 
 #include <dump-info.h>
 /* We have a problem: ppsi is built for wrpc, so it has ntoh[sl] wrong */
@@ -281,7 +283,7 @@ int main(int argc, char **argv)
 	}
 
 	/* In case we have a "new" binary file, use such information */
-	if (!strncmp(mapaddr + 0x80, "CPRW", 4))
+	if (!strncmp(mapaddr + WRPC_MARK, "CPRW", 4))
 		setenv("WRPC_SPEC", "yes", 1);
 
 	/* If the dump file needs "spec" byte order, fix it all */
@@ -298,12 +300,12 @@ int main(int argc, char **argv)
 
 	/* If we have a new binary file, pick the pointers
 	 * Magic numbers are taken from crt0.S or disassembly of wrc.bin */
-	if (!strncmp(mapaddr + 0x80, "WRPC----", 8)) {
+	if (!strncmp(mapaddr + WRPC_MARK, "WRPC----", 8)) {
 
-		spll_off = wrpc_get_l32(mapaddr + 0x90);
-		fifo_off = wrpc_get_l32(mapaddr + 0x94);
-		ppi_off = wrpc_get_l32(mapaddr + 0x98);
-		stats_off = wrpc_get_l32(mapaddr + 0x9c);
+		spll_off = wrpc_get_l32(mapaddr + SOFTPLL_PADDR);
+		fifo_off = wrpc_get_l32(mapaddr + FIFO_LOG_PADDR);
+		ppi_off = wrpc_get_l32(mapaddr + PPI_STATIC_PADDR);
+		stats_off = wrpc_get_l32(mapaddr + STATS_PADDR);
 		if (ppi_off) { /* This is 0 for wrs */
 			ppg_off = wrpc_get_pointer(mapaddr + ppi_off,
 				   "pp_instance", "glbs");

@@ -77,6 +77,7 @@
 #define __ASSEMBLY__
 #include "include/revision.h"
 #include "ppsi/proto-ext-whiterabbit/wr-api.h"
+#include "arch/lm32/crt0.h"
 /* From include/sys/signal.h */  
 #define SIGINT  2   /* interrupt */
 #define SIGTRAP 5   /* trace trap */
@@ -104,24 +105,32 @@ _reset_handler:
     nop
         .size	_reset_handler, .-_reset_handler
 
-.org 0x80
+.org WRPC_MARK
 /* Used by the dumping tool to identify byte ordering */	
 .ascii	"WRPC----"
 .int	0x01234567
 .short	0x89ab, 0xcdef
 /* Pointer to structures, for the dumping tool */
-.word	softpll, fifo_log, ppi_static, stats
+.org SOFTPLL_PADDR
+	.word softpll
+.org FIFO_LOG_PADDR
+	.word fifo_log
+.org PPI_STATIC_PADDR
+	.word ppi_static
+.org STATS_PADDR
+	.word stats
 
-.org 0xa0
+.org UPTIME_SEC_ADDR
 .global uptime_sec
 uptime_sec:
 	.word 0
 
-.org 0xa4
+.org VERSION_WRPC_ADDR
 .global version_wrpc
 version_wrpc:
 	.byte WRPC_SHMEM_VERSION
 
+.org VERSION_PPSI_ADDR
 .global version_ppsi
 version_ppsi:
 	.byte WRS_PPSI_SHMEM_VERSION
