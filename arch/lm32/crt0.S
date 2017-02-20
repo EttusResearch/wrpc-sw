@@ -83,7 +83,6 @@
 
 //#define MICO32_FULL_CONTEXT_SAVE_RESTORE
 
-
 /* Exception handlers - Must be 32 bytes long. */
         .section    .boot, "ax", @progbits
 	
@@ -109,7 +108,7 @@ _reset_handler:
 .int	0x01234567
 .short	0x89ab, 0xcdef
 /* Pointer to structures, for the dumping tool */
-.word	softpll, fifo_log, ppi_static, 0
+.word	softpll, fifo_log, ppi_static, stats
 
 .org 0xa0
 .global uptime_sec

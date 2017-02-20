@@ -224,7 +224,8 @@ void print_version(void)
 		__GIT_VER__, __GIT_USR__, __TIME__, __DATE__);
 }
 /* all of these are 0 by default */
-unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off;
+unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off,
+	      stats_off;
 
 /* Use:  wrs_dump_memory <file> <hex-offset> <name> */
 int main(int argc, char **argv)
@@ -295,12 +296,14 @@ int main(int argc, char **argv)
 	if (argc == 4)
 		dumpname = argv[3];
 
-	/* If we have a new binary file, pick the pointers */
+	/* If we have a new binary file, pick the pointers
+	 * Magic numbers are taken from crt0.S or disassembly of wrc.bin */
 	if (!strncmp(mapaddr + 0x80, "WRPC----", 8)) {
 
 		spll_off = wrpc_get_l32(mapaddr + 0x90);
 		fifo_off = wrpc_get_l32(mapaddr + 0x94);
 		ppi_off = wrpc_get_l32(mapaddr + 0x98);
+		stats_off = wrpc_get_l32(mapaddr + 0x9c);
 		if (ppi_off) { /* This is 0 for wrs */
 			ppg_off = wrpc_get_pointer(mapaddr + ppi_off,
 				   "pp_instance", "glbs");
@@ -376,6 +379,12 @@ int main(int argc, char **argv)
 		dump_many_fields(mapaddr + newoffset, "DSTimeProperties");
 	}
 
+	if (!strcmp(dumpname, "stats"))
+		stats_off = offset;
+	if (stats_off) {
+		printf("stats at 0x%lx\n", stats_off);
+		dump_many_fields(mapaddr + stats_off, "stats");
+	}
 
 	exit(0);
 }

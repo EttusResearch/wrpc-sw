@@ -247,6 +247,28 @@ struct dump_info  dump_info[] = {
 	DUMP_FIELD(uint16_t, tag_count),
 	/* FIXME: aux_state and ptracker_state -- variable-len arrays */
 
+#undef DUMP_STRUCT
+#define DUMP_STRUCT struct spll_stats
+
+	DUMP_HEADER("stats"),
+	DUMP_FIELD(uint32_t, magic),
+	DUMP_FIELD(int, ver),
+	DUMP_FIELD(int, sequence),
+	DUMP_FIELD(int, mode),
+	DUMP_FIELD(int, irq_cnt),
+	DUMP_FIELD(int, seq_state),
+	DUMP_FIELD(int, align_state),
+	DUMP_FIELD(int, H_lock),
+	DUMP_FIELD(int, M_lock),
+	DUMP_FIELD(int, H_y),
+	DUMP_FIELD(int, M_y),
+	DUMP_FIELD(int, del_cnt),
+	DUMP_FIELD(int, start_cnt),
+	DUMP_FIELD_SIZE(char, commit_id, 32),
+	DUMP_FIELD_SIZE(char, build_date, 16),
+	DUMP_FIELD_SIZE(char, build_time, 16),
+	DUMP_FIELD_SIZE(char, build_by, 32),
+
 	DUMP_HEADER("end"),
 
 };
