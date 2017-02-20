@@ -53,10 +53,12 @@ static long wrpc_get_l32(void *p)
 		return *p32;
 	return __bswap_32(*p32);
 }
+
 static int wrpc_get_i32(void *p)
 {
 	return wrpc_get_l32(p);
 }
+
 static int wrpc_get_16(void *p)
 {
 	uint16_t *p16 = p;
@@ -66,6 +68,12 @@ static int wrpc_get_16(void *p)
 	return __bswap_16(*p16);
 }
 
+static uint8_t wrpc_get_8(void *p)
+{
+	uint8_t *p8 = p;
+
+	return *p8;
+}
 
 void dump_one_field(void *addr, struct dump_info *info)
 {
@@ -224,6 +232,10 @@ void print_version(void)
 {
 	fprintf(stderr, "Built in wrpc-sw repo ver:%s, by %s on %s %s\n",
 		__GIT_VER__, __GIT_USR__, __TIME__, __DATE__);
+	fprintf(stderr, "Supported WRPC structures version %d\n",
+		WRPC_SHMEM_VERSION);
+	fprintf(stderr, "Supported PPSI structures version %d\n",
+		WRS_PPSI_SHMEM_VERSION);
 }
 /* all of these are 0 by default */
 unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off,
@@ -238,6 +250,7 @@ int main(int argc, char **argv)
 	struct stat st;
 	char *dumpname = "";
 	char c;
+	uint8_t version_wrpc, version_ppsi;
 
 	if (argc != 4 && argc != 2) {
 		fprintf(stderr, "%s: use \"%s <file> <offset> <name>\n",
@@ -313,6 +326,20 @@ int main(int argc, char **argv)
 				    "pp_globals", "global_ext_data");
 			ds_off = ppg_off;
 		}
+	}
+
+	/* Check the version of wrpc and ppsi structures */
+	version_wrpc = wrpc_get_8(mapaddr + VERSION_WRPC_ADDR);
+	version_ppsi = wrpc_get_8(mapaddr + VERSION_PPSI_ADDR);
+	if (version_wrpc != WRPC_SHMEM_VERSION) {
+		printf("Unsupported version of WRPC structures! Expected %d, "
+		       "but read %d\n", WRPC_SHMEM_VERSION, version_wrpc);
+		exit(1);
+	}
+	if (version_ppsi != WRS_PPSI_SHMEM_VERSION) {
+		printf("Unsupported version of PPSI structures! Expected %d, "
+		       "but read %d\n", WRS_PPSI_SHMEM_VERSION, version_ppsi);
+		exit(1);
 	}
 
 	#define ARRAY_AND_SIZE(x) (x), ARRAY_SIZE(x)
