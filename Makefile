@@ -159,9 +159,9 @@ $(obj-ppsi): gitmodules
 sdb-lib/libsdbfs.a:
 	$(MAKE) -C sdb-lib
 
-$(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o
+$(OUTPUT).elf: $(LDS-y) $(AUTOCONF) gitmodules $(OUTPUT).o config.o pconfig.o
 	$(CC) $(CFLAGS) -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\"" -c revision.c
-	${CC} -o $@ revision.o config.o $(OUTPUT).o $(LDFLAGS)
+	${CC} -o $@ revision.o config.o pconfig.o $(OUTPUT).o $(LDFLAGS)
 	${OBJDUMP} -d $(OUTPUT).elf > $(OUTPUT)_disasm.S
 	$(SIZE) $@
 	./save_size.sh $(SIZE) $@
@@ -172,11 +172,19 @@ $(OUTPUT).o: $(OBJS)
 OBJCOPY-TARGET-$(CONFIG_LM32) = -O elf32-lm32 -B lm32
 OBJCOPY-TARGET-$(CONFIG_HOST_PROCESS) = -O elf64-x86-64 -B i386
 
-config.o: .config
+config.o: .config $(AUTOCONF)
 	grep CONFIG .config > .config.bin
 	dd bs=1 count=1 if=/dev/zero 2> /dev/null >> .config.bin
 	$(OBJCOPY) -I binary $(OBJCOPY-TARGET-y) .config.bin $@
 	rm -f .config.bin
+
+ppsi/.config: $(obj-ppsi)
+
+pconfig.o: ppsi/.config
+	grep CONFIG ppsi/.config > .ppsiconfig.bin
+	dd bs=1 count=1 if=/dev/zero 2> /dev/null >> .ppsiconfig.bin
+	$(OBJCOPY) -I binary $(OBJCOPY-TARGET-y) .ppsiconfig.bin $@
+	rm -f .ppsiconfig.bin
 
 %.bin: %.elf
 	${OBJCOPY} -O binary $^ $@
@@ -193,7 +201,8 @@ config.o: .config
 $(AUTOCONF): silentoldconfig gitmodules
 
 clean:
-	rm -f $(OBJS) $(OUTPUT).o config.o revision.o $(OUTPUT).elf $(LDS) \
+	rm -f $(OBJS) $(OUTPUT).o config.o pconfig.o revision.o $(OUTPUT).elf \
+		$(LDS) \
 		$(OUTPUT).bin rules-*.bin \
 		$(OUTPUT).bram $(OUTPUT).vhd $(OUTPUT).mif $(OUTPUT)_disasm.S
 	$(MAKE) -C $(PPSI) clean

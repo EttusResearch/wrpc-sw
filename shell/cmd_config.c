@@ -12,11 +12,14 @@
 #include <shell.h>
 
 extern char _binary__config_bin_start[];
+extern char _binary__ppsiconfig_bin_start[];
 
 static int cmd_config(const char *args[])
 {
 	pp_printf("  Current WRPC-SW configuration:\n");
 	puts(_binary__config_bin_start);
+	pp_printf("  Current PPSi configuration:\n");
+	puts(_binary__ppsiconfig_bin_start);
 	return 0;
 }
 
