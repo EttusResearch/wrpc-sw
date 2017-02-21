@@ -21,6 +21,15 @@ config PRINT_BUFSIZE
 	int
 	default 128
 
+config ASSERT
+	bool "Build assertion checks in the code"
+	default y
+	  help
+	    Build assertions in the code, to catch unexpected situations.
+	    When an assertion fails the code loops over repeating the
+	    error message every second. OTOH, panic() is always built,
+	    with no Kconfig -- and it does the same, unconditionally.
+  
 config RAMSIZE
 	int
 	default 65536 if WR_SWITCH
