@@ -4,189 +4,20 @@
 \usepackage{fullpage}
 \usepackage{pgf}
 \usepackage{tikz}
-% % New line height: 1.05 * 1.2 = 1.26
-% \renewcommand{\baselinestretch}{1.05}
-% 
-% % To be able to use '\-/' in place of '-' inside \code{}
-% % so that long function names containing hyphens
-% % can be broken up after the hyphen:
-% \usepackage[shortcuts]{extdash}
-% 
-% % So that file names with multiple dots don't confuse
-% % graphicx package when using \includegraphics command:
-% \usepackage[multidot]{grffile}
-% \usepackage{graphicx}
-% 
-% \usepackage[usenames,dvipsnames,x11names]{xcolor}
-% \usepackage{amsmath}
-% 
-% % Workaround to fix mismatched left and right math delimiters. Taken from:
-% % http://tex.stackexchange.com/questions/63410/parentheses-differ-xelatex-fontspec-newtxmath-libertine
-% \DeclareSymbolFont{parenthesis}{T1}{fxl}{m}{n}
-% \DeclareMathDelimiter{(}{\mathopen}{parenthesis}{"28}{largesymbols}{"00}
-% \DeclareMathDelimiter{)}{\mathclose}{parenthesis}{"29}{largesymbols}{"01}
-% \DeclareMathDelimiter{[}{\mathopen}{parenthesis}{"5B}{largesymbols}{"02}
-% \DeclareMathDelimiter{]}{\mathclose}{parenthesis}{"5D}{largesymbols}{"03}
-% \DeclareMathDelimiter{\lbrace}{\mathopen}{parenthesis}{"7B}{largesymbols}{"08}
-% \DeclareMathDelimiter{\rbrace}{\mathclose}{parenthesis}{"7D}{largesymbols}{"09}
-% 
-% \usepackage{fancyvrb}
-% \usepackage{fancyhdr}
-% \pagestyle{plain}
-% \usepackage[final]{pdfpages} % inserts pages from a pdf file
-% 
-% \usepackage{titlesec}  % to change the appearance of section titles
-% \usepackage{listings}  % for syntax highlighted code listings
-% \usepackage{verbatim}  % for simple verbatim and comment environments
-% \usepackage{enumerate} % allows customized labels in enumerations
 \usepackage{hyperref}  % makes cross references and URLs clickable
-% \definecolor{LinkRed}{HTML}{80171F}
-% \hypersetup{
-%   pdfauthor={Harold Abelson, Gerald Jay Sussman, Julie Sussman},
-%   pdftitle={Structure and Interpretation of Computer Programs, 2nd ed.},
-%   pdfsubject={computer science, programming, abstraction},
-%   colorlinks=true,
-%   linkcolor=LinkRed,
-%   urlcolor=LinkRed,
-% }
-% 
-% % Document colors
-% \definecolor{SchemeLight}   {HTML} {686868}
-% \definecolor{SchemeSteel}   {HTML} {888888}
-% \definecolor{SchemeDark}    {HTML} {262626}
-% \definecolor{SchemeBlue}    {HTML} {4172A3}
-% \definecolor{SchemeGreen}   {HTML} {487818}
-% \definecolor{SchemeBrown}   {HTML} {A07040}
-% \definecolor{SchemeRed}     {HTML} {AD4D3A}
-% \definecolor{SchemeViolet}  {HTML} {7040A0}
-% \definecolor{DropCapGray}   {HTML} {B8B8B8}
-% \definecolor{ChapterGray}   {HTML} {C8C8C8}
-% \definecolor{ChapterViolet} {HTML} {AEAECE}
-% \definecolor{DropCapViolet} {HTML} {9090C0}
-% 
-% \usepackage{lettrine}  % adds commands that make drop capitals
-% \renewcommand{\LettrineFontHook}{\rmfamily\mdseries\color{DropCapViolet}}
-% \renewcommand{\DefaultLraise}{0.00}
-% \renewcommand{\DefaultLoversize}{0.02}
-% \renewcommand{\DefaultLhang}{0.12}
-% \setlength{\DefaultFindent}{1pt}
-% \setlength{\DefaultNindent}{0em}
-% 
-% \lstset{%
-%   % Scheme syntax highlighter
-%     columns=fixed,
-%     extendedchars=true,
-%     upquote=true,
-%     showstringspaces=false,
-%     sensitive=false,
-%     mathescape=true,
-%     escapechar=~,
-%     alsodigit={>,<,/,-,=,!,?,*},
-%     alsoletter=',
-%     morestring=[b]",
-%     morecomment=[l];,
-%     % Keyword list taken form functional.py in Pygments package:
-%     morekeywords={lambda, define, if, else, cond, and, or, case,%
-%       let, let*, letrec, begin, do, delay, set!, =>, quote,%
-%       quasiquote, unquote, unquote-splicing, define-syntax, let-syntax,%
-%       letrec-syntax, syntax-rules},
-%     % If keywords are quoted, they must not be highlighted:
-%     emph={'lambda, 'define, 'if, 'else, 'cond, 'and, 'or, 'case,%
-%       'let, 'let*, 'letrec, 'begin, 'do, 'delay, 'set!, '=>, 'quote,%
-%       'quasiquote, 'unquote, 'unquote-splicing, 'define-syntax, 'let-syntax,%
-%       'letrec-syntax, 'syntax-rules},
-%     emphstyle=\color{SchemeDark},
-%     % Paint error red:
-%     emph={[2]error},emphstyle=[2]\color{SchemeRed},%
-%     % Builtins taken from functional.py:
-%     emph={[3]*, +, -, /, <, <=, =, >, >=, abs, acos, angle,
-%         append, apply, asin, assoc, assq, assv, atan,
-%         boolean?, caaaar, caaadr, caaar, caadar, caaddr, caadr,
-%         caar, cadaar, cadadr, cadar, caddar, cadddr, caddr,
-%         cadr, call-with-current-continuation, call-with-input-file,
-%         call-with-output-file, call-with-values, call/cc, car,
-%         cdaaar, cdaadr, cdaar, cdadar, cdaddr, cdadr, cdar,
-%         cddaar, cddadr, cddar, cdddar, cddddr, cdddr, cddr,
-%         cdr, ceiling, char->integer, char-alphabetic?, char-ci<=?,
-%         char-ci<?, char-ci=?, char-ci>=?, char-ci>?, char-downcase,
-%         char-lower-case?, char-numeric?, char-ready?, char-upcase,
-%         char-upper-case?, char-whitespace?, char<=?, char<?, char=?,
-%         char>=?, char>?, char?, close-input-port, close-output-port,
-%         complex?, cons, cos, current-input-port, current-output-port,
-%         denominator, display, dynamic-wind, eof-object?, eq?,
-%         equal?, eqv?, eval, even?, exact->inexact, exact?, exp,
-%         expt, floor, for-each, force, gcd, imag-part,
-%         inexact->exact, inexact?, input-port?, integer->char,
-%         integer?, interaction-environment, lcm, length, list,
-%         list->string, list->vector, list-ref, list-tail, list?,
-%         load, log, magnitude, make-polar, make-rectangular,
-%         make-string, make-vector, map, max, member, memq, memv,
-%         min, modulo, negative?, newline, not, null-environment,
-%         null?, number->string, number?, numerator, odd?,
-%         open-input-file, open-output-file, output-port?, pair?,
-%         peek-char, port?, positive?, procedure?, quotient,
-%         rational?, rationalize, read, read-char, real-part, real?,
-%         remainder, reverse, round, scheme-report-environment,
-%         set-car!, set-cdr!, sin, sqrt, string, string->list,
-%         string->number, string->symbol, string-append, string-ci<=?,
-%         string-ci<?, string-ci=?, string-ci>=?, string-ci>?,
-%         string-copy, string-fill!, string-length, string-ref,
-%         string-set!, string<=?, string<?, string=?, string>=?,
-%         string>?, string?, substring, symbol->string, symbol?,
-%         tan, transcript-off, transcript-on, truncate, values,
-%         vector, vector->list, vector-fill!, vector-length,
-%         vector-ref, vector-set!, vector?, with-input-from-file,
-%         with-output-to-file, write, write-char, zero?},
-%     emphstyle=[3]\color{SchemeViolet},%
-%     %
-%     basicstyle=\color{SchemeLight}\ttfamily,
-%     keywordstyle=\color{SchemeBlue}\bfseries,
-%     identifierstyle=\color{SchemeDark},
-%     stringstyle=\color{SchemeGreen},
-%     commentstyle=\color{SchemeLight}\itshape,
-% }
-% 
-% \newcommand{\acronym}[1]{\textsc{\fontspec[Numbers={OldStyle}]{Linux Libertine O}\MakeLowercase{#1}}}
-% \newcommand{\uppersc}[1]{{\fontspec[Letters=UppercaseSmallCaps]{Linux Libertine O}#1}}
-% \newcommand{\newterm}[1]{\index{#1}\emph{#1}}
-% \newcommand{\strong}[1]{\textbf{#1}}
-% \newcommand{\var}[1]{\textsl{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\link}[1]{\hyperref[#1]{#1}}
-% \newcommand{\link}[1]{\textit{#1}}
-% \newcommand{\heading}[1]{{\sffamily\bfseries #1}}
-% \newcommand{\dark}{\color{SchemeDark}}
-% \newcommand{\mono}[1]{\hbox{\ttfamily\scriptsize #1}}
-% \newcommand{\monoit}[1]{\hbox{\ttfamily\itshape\scriptsize #1}}
-% 
-% \newenvironment{example}%
-%   {\verbatim\small}%
-%   {\endverbatim}
-% 
-% \newenvironment{smallexample}%
-%   {\verbatim\footnotesize}%
-%   {\endverbatim}
-% 
-% \lstnewenvironment{scheme}[1][]
-% {\lstset{basicstyle=\ttfamily\small\color{SchemeLight},#1}}
-% {}
-% 
-% \lstnewenvironment{smallscheme}[1][]
-% {\lstset{basicstyle=\ttfamily\footnotesize\color{SchemeLight},#1}}
-% {}
-% 
-% \makeindex
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% new stuff
+\newcommand{\link}[1]{\hyperref[#1]{#1}} % links to sections
 \usepackage[overload]{textcase}
 \newcommand{\codeHook}[1]{\mbox{\ttfamily\MakeTextUppercase{#1}}}
 \usepackage{listings}
 \usepackage{color}
 \definecolor{light-gray}{gray}{0.95}
 \usepackage{textcomp}
+% set listings as in other WR-doc(s)
 \lstset{upquote=true,  frame=single, captionpos=b, caption=, basicstyle=\scriptsize, backgroundcolor=\color{light-gray}, label=lst:init_src}
-
 \usepackage{longtable} % table over many pages
+\usepackage[document]{ragged2e} %texta djustment
+\usepackage{mdwlist} % to have tight itemization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -195,15 +26,26 @@
 \title{White Rabbit PTP Core User's Manual}
 \author{Grzegorz Daniluk\\ CERN BE-CO-HT}
 
+\raggedright
+{\LARGE {\bf White Rabbit PTP Core User's Manual}}\\[0.2 cm]
+\hrule height 4pt \vspace{0.1cm}
+\raggedleft
+{\large \today ~ ( \input{version})}\\
+{\large Building and Running}\\
+\vspace*{\fill}
+\raggedright
+{\large Grzegorz Daniluk (CERN BE-CO-HT)}\\
+\hrule height 2pt
+\justify
 
-\begin{center}
-	{\huge {\bf White Rabbit PTP Core User's Manual}}\\[0.2 cm]
-	{\large CERN BE-CO-HT}\\[0.1 cm]
-\end{center}
+\newpage
 
+\tableofcontents
 
+\newpage
 
-\abstract
+{\noindent \LARGE {\bf Introduction}}\\
+
 
 This is the user manual for the White Rabbit PTP Core, part of the White
 Rabbit project. It describes the building and running process. If you don't
@@ -212,7 +54,7 @@ want to get your hands dirty and prefer to use the binaries available at
 \link{Building the Core} and move forward directly to
 \link{Running and Configuring}.
 
-\newpage
+
 
 % ##########################################################################
 \label{Software and hardware requirements}
@@ -222,13 +64,12 @@ want to get your hands dirty and prefer to use the binaries available at
 \label{Repositories and Releases}
 \subsection{Repositories and Releases}
 
-This manual is about the official \textcolor{red}{TODO: release} stable release of the White
+This manual is about the official \input{version} stable release of the White
 Rabbit PTP Core (\codeHook{WRPC}).
-
 The code and documentation for the project is distributed in the
 following places:
 
-\begin{itemize}
+\begin{itemize*}
 
 \item \url{http://www.ohwr.org/projects/wr-cores/documents}
 
@@ -247,11 +88,11 @@ following places:
 
   read-only repository with the \codeHook{WRPC} \codeHook{LM32} software
 
-\end{itemize}
+\end{itemize*}
 Other tools useful for building and running the \codeHook{WRPC} can be downloaded from
 the following locations:
 
-\begin{itemize}
+\begin{itemize*}
 
 \item \url{git://ohwr.org/misc/hdl-make.git}
 
@@ -262,7 +103,7 @@ on the set of Manifest files.
 
   \codeHook{LM32} toolchain used to compile the \codeHook{WRPC} software
 
-\end{itemize}
+\end{itemize*}
 Repositories containing the \codeHook{WRPC} gateware and software (\textit{wr-cores},
 \textit{wrpc-sw}) are tagged with \codeHook{wrpc-v3.0} tag. Other tools
 used to build the core and load it into \codeHook{SPEC} board should be used in their
@@ -279,13 +120,13 @@ Linux and a Simple PCIe \codeHook{fmc} Carrier
 recommended to use also the \codeHook{dio} \codeHook{fmc} card (\url{http://www.ohwr.org/projects/fmc-dio-5chttla})
 to be able to feed 1-PPS and 10MHz from external clock and output 1-PPS aligned
 to the WR time. To test the White Rabbit synchronization, you will also need:
-\begin{itemize}
+\begin{itemize*}
 \item another \codeHook{spec} board with a \codeHook{dio} \codeHook{fmc} or a White Rabbit Switch;
 \item pair of \codeHook{wr}-supported \codeHook{sfp} transceivers (the list of supported
 \codeHook{sfp}s can be found on our wiki page \url{http://www.ohwr.org/projects/white-rabbit/wiki/SFP})
 \item a roll of G652, single mode fiber to connect your \codeHook{spec}s or \codeHook{spec}
 with a \codeHook{wr} Switch.
-\end{itemize}
+\end{itemize*}
 
 % ##########################################################################
 \label{Building the Core}
@@ -328,7 +169,7 @@ This (provided that the installation path for \textit{ISE} is /opt/Xilinx/<versi
 should be the following:
 
 \begin{lstlisting}
-# export XILINX=/opt/Xilinx/<version>/ISE_DS
+$ export XILINX=/opt/Xilinx/<version>/ISE_DS
 \end{lstlisting}
 
 \textbf{Note:} the Xilinx project file included in the \codeHook{wrpc} sources was created
@@ -342,12 +183,12 @@ synthesis Makefile and ISE project file based on a set of Manifest.py files
 deployed among the directories inside the \textit{wr-cores} repository.
 
 First, please clone the \textit{hdlmake} repository from its location given in
-\link{Repositories and Releases}:
+\link{Repositories and Releases}:\newpage
 \begin{lstlisting}
-# wget http://www.ohwr.org/attachments/download/2070/hdlmake-v1.0
-# git clone git://ohwr.org/misc/hdl-make.git <your_location>/hdl-make
-# cd <your_location>/hdl-make
-# git checkout 9d303ee
+$ wget http://www.ohwr.org/attachments/download/2070/hdlmake-v1.0
+$ git clone git://ohwr.org/misc/hdl-make.git <your_location>/hdl-make
+$ cd <your_location>/hdl-make
+$ git checkout 9d303ee
 \end{lstlisting}
 
 Then, using your favorite editor, you should create an \textit{hdlmake} script in
@@ -368,15 +209,15 @@ Having Xilinx ISE software and \textit{hdlmake} in place, you can clone the main
 \codeHook{wr ptp core} git repository and start building the FPGA bitstream.
 First, please create a local copy of the \textit{wr-cores}:
 \begin{lstlisting}
-# git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_location>/wr-cores
-# cd <your_location>/wr-cores
+$ git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_location>/wr-cores
+$ cd <your_location>/wr-cores
 \end{lstlisting}
 
 To build the gateware using sources of a stable release wrpc-v3.0, you
 have to checkout the proper git tag:
 
 \begin{lstlisting}
-# git checkout wrpc-v3.0
+$ git checkout wrpc-v3.0
 \end{lstlisting}
 
 If you use \textit{wr-cores} within another project (like \textit{wr-nic}), you may need
@@ -387,8 +228,8 @@ build.
 You also need to fetch other git repositories containing modules instantiated
 inside the \codeHook{wr ptp core} HDL. They are configured as git submodules:
 \begin{lstlisting}
-# git submodule init
-# git submodule update
+$ git submodule init
+$ git submodule update
 \end{lstlisting}
 
 The local copies of the submodules are stored to:
@@ -402,20 +243,20 @@ The subdirectory which contains the main synthesis Manifest.py for \codeHook{spe
 and in which you should perform the whole process is:
 
 \begin{lstlisting}
-# cd <your_location>/wr-cores/syn/spec_1_1/wr_core_demo/
+$ cd <your_location>/wr-cores/syn/spec_1_1/wr_core_demo/
 \end{lstlisting}
 
 First, please call \textit{hdlmake} to create synthesis Makefile for Xilinx
 ISE:
 
 \begin{lstlisting}
-# hdlmake
+$ hdlmake
 \end{lstlisting}
 
 After that, the actual synthesis is just the matter of executing:
 
 \begin{lstlisting}
-# make
+$ make
 \end{lstlisting}
 
 This takes (depending on your computer speed) about 15 minutes and should create
@@ -427,10 +268,10 @@ former can be downloaded to FPGA with Xilinx Platform Cable using e.g.
 \vspace{1em}
 If, on the other hand, you would like to clean-up the repository and rebuild
 everything from scratch you can use the following commands:
-\begin{itemize}
-\item \textit{\# make clean} - removes all synthesis reports and log files;
-\item \textit{\# make mrproper} - removes spec\_top.bin and spec\_top.bit files;
-\end{itemize}
+\begin{itemize*}
+\item \textit{\$ make clean} - removes all synthesis reports and log files;
+\item \textit{\$ make mrproper} - removes spec\_top.bin and spec\_top.bit files;
+\end{itemize*}
 
 % ==========================================================================
 \label{LM32 software compilation}
@@ -448,15 +289,15 @@ need to download and unpack the \codeHook{lm32} toolchain from the location ment
 in \link{Repositories and Releases}:
 
 \begin{lstlisting}
-# wget http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
-# tar xJf lm32.tar.xz -C <your_lm32_location>
+$ wget http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
+$ tar xJf lm32.tar.xz -C <your_lm32_location>
 \end{lstlisting}
 
 Then you need to set a \texttt{CROSS\_COMPILE} variable in order
 to compile the software for the \codeHook{lm32} processor:
 
 \begin{lstlisting}
-# export CROSS_COMPILE="<your_lm32_location>/lm32/bin/lm32-elf-"
+$ export CROSS_COMPILE="<your_lm32_location>/lm32/bin/lm32-elf-"
 \end{lstlisting}
 
 To get the sources of the \codeHook{wrpc} software please clone the \textit{wrpc-sw} git
@@ -465,9 +306,9 @@ project, you may need to checkout a different tag or a specific commit. If this
 applies, please refer to a documentation for this project.
 
 \begin{lstlisting}
-# git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_location>/wrpc-sw
-# cd <your_location>/wrpc-sw
-# git checkout wrpc-v3.0   # or "git checkout master"
+$ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_location>/wrpc-sw
+$ cd <your_location>/wrpc-sw
+$ git checkout wrpc-v3.0   # or "git checkout master"
 \end{lstlisting}
 
 Before you can compile \textit{wrpc-sw} you need to make a few configuration choices.
@@ -476,9 +317,9 @@ following commnads (the first is text-mode, the second uses a KDE GUI
 and the third uses a Gnome GUI):
 
 \begin{lstlisting}
-# make menuconfig
-# make xconfig
-# make gconfig
+$ make menuconfig
+$ make xconfig
+$ make gconfig
 \end{lstlisting}
 
 Other \textit{Kconfig} target applies, like \code{config}, \code{oldconfig}
@@ -486,7 +327,7 @@ and so on.  A few default known-good configurations are found in
 \texttt{./configs} and you choose one by \textit{make}ing it by name:
 
 \begin{lstlisting}
-# make spec_defconfig
+$ make spec_defconfig
 \end{lstlisting}
 
 The most important configuration choice at this point in time is
@@ -498,7 +339,7 @@ After the package is configured, just run \code{make} without
 parameters to build your binary file:
 
 \begin{lstlisting}
-# make
+$ make
 \end{lstlisting}
 
 The first time you build, the \textit{Makefile} automatically downloads
@@ -535,20 +376,20 @@ up-to-date documentation can always be found in \textit{doc/} subdirectory of
 First, please clone the git repository of \codeHook{spec-sw} package and build it:
 
 \begin{lstlisting}
-# git clone git://ohwr.org/fmc-projects/spec/spec-sw.git <your_specsw_location>
-# cd <your_specsw_location>
-# git checkout c0e18a7
-# make
+$ git clone git://ohwr.org/fmc-projects/spec/spec-sw.git <your_specsw_location>
+$ cd <your_specsw_location>
+$ git checkout c0e18a7
+$ make
 \end{lstlisting}
 
 Then you should copy your \textit{spec\_top.bin} generated in \link{HDL synthesis} or
 downloaded from the \textit{ohwr} to /lib/firmware/fmc/. changing its
 name:
 
-\textbf{Note:} the commands below have to be executed with superuser rights
+\noindent\textbf{Note:} the commands below have to be executed with superuser rights
 
 \begin{lstlisting}
-# sudo cp <your_location>/wr-cores/syn/spec_1_1/wr_core_demo/spec_top.bin \
+$ sudo cp <your_location>/wr-cores/syn/spec_1_1/wr_core_demo/spec_top.bin \
      /lib/firmware/fmc/spec-3.0.bin
 \end{lstlisting}
 
@@ -556,15 +397,15 @@ You have to download also the "golden" firmware for \codeHook{spec} card. It is 
 the drivers to recognize the hardware:
 
 \begin{lstlisting}
-# wget http://www.ohwr.org/attachments/download/4057/spec-init.bin-2015-09-18
-# sudo mv spec-init.bin-2015-09-18 /lib/firmware/fmc/spec-init.bin
+$ wget http://www.ohwr.org/attachments/download/4057/spec-init.bin-2015-09-18
+$ sudo mv spec-init.bin-2015-09-18 /lib/firmware/fmc/spec-init.bin
 \end{lstlisting}
 
 Now you can load the drivers necessary to access \codeHook{spec} board from your
 system:
 \begin{lstlisting}
-# sudo insmod fmc-bus/kernel/fmc.ko
-# sudo insmod kernel/spec.ko
+$ sudo insmod fmc-bus/kernel/fmc.ko
+$ sudo insmod kernel/spec.ko
 \end{lstlisting}
 
 By default, when loading the \textit{spec.ko} driver FPGA gets programmed with
@@ -576,25 +417,25 @@ starting from v3.0 you have to write the \codeHook{sdbfs} filesystem image to th
 flash before running the \codeHook{wr ptp core}. You can download the image from our
 project page:
 \begin{lstlisting}
-# wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
+$ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
 \end{lstlisting}
 It contains all the files required by the \codeHook{wr ptp core}. They are empty, but
 have to exist in the \codeHook{sdbfs} structure to be written later as described in
 \link{Writing configuration}. To store the filesystem image in flash, please
 execute the following command:
 \begin{lstlisting}
-# sudo tools/flash-write -b 0x20 -c 0x0 0 1507712 < \
+$ sudo tools/flash-write -b 0x20 -c 0x0 0 1507712 < \
      <your_location>/sdbfs-flash.bin
 \end{lstlisting}
 
-\textbf{Note:} The \code{-b} parameter takes the PCI bus address of the SPEC. This
+\noindent\textbf{Note:} The \code{-b} parameter takes the PCI bus address of the SPEC. This
 can be found either in the list of the PCI devices installed in the system
 (\code{lspci}) or in the kernel messages (\code{dmesg}) when inserting the
 spec.ko module. See the example below on loading the FPGA code. We see that the
 second number in the colon/dotted notation provides the argument in the example
 above.
 
-\textbf{Note:} Please refer to \link{Writing SDBFS image in standalone configuration}
+\noindent\textbf{Note:} Please refer to \link{Writing SDBFS image in standalone configuration}
 for instructions on how to write the \codeHook{sdbfs} image to a standalone \codeHook{spec}
 or custom hardware.
 
@@ -602,7 +443,7 @@ or custom hardware.
 Now, you are ready to load the last driver, which downloads the actual
 \codeHook{wr ptp core} bitstream to the Spartan 6 FPGA:
 \begin{lstlisting}
-# sudo insmod fmc-bus/kernel/fmc-trivial.ko gateware=fmc/spec-3.0.bin
+$ sudo insmod fmc-bus/kernel/fmc-trivial.ko gateware=fmc/spec-3.0.bin
 \end{lstlisting}
 
 You can use the \textit{dmesg} Linux command to verify if the FPGA firmware file was
@@ -630,7 +471,7 @@ bitstream with a default \codeHook{lm32} software. If you want to load your own
 tool:
 
 \begin{lstlisting}
-# sudo tools/spec-cl <your_location>/wrpc-sw/wrc.bin
+$ sudo tools/spec-cl <your_location>/wrpc-sw/wrc.bin
 \end{lstlisting}
 
 \vspace{1em}
@@ -639,7 +480,7 @@ Now you should be able to start a Virtual-UART tool (also part of the
 shell:
 
 \begin{lstlisting}
-# sudo tools/spec-vuart
+$ sudo tools/spec-vuart
 \end{lstlisting}
 
 If you are able to see the \codeHook{wrpc} Shell prompt \textit{wrc\#} this means the Core
@@ -653,7 +494,7 @@ is up and running on your \codeHook{spec}. Congratulations !
 First, you should perform a few configuration steps through the \codeHook{wrpc} shell
 before using the core.
 
-\textbf{Note:} the examples below describe only a subset of the \codeHook{wrpc} Shell
+\noindent\textbf{Note:} the examples below describe only a subset of the \codeHook{wrpc} Shell
 commands. The full list of supported commands can be found in
 \link{WRPC Shell commands}.
 
@@ -700,7 +541,7 @@ wrc# sfp add AXGE-3454-0531 180625 148451 -73685416
 To check the content of the \codeHook{sfp} database you can execute the \textit{sfp show} shell
 command.
 
-\textbf{Note:} The deltaTx and deltaRx parameters above are the defaults for
+\noindent\textbf{Note:} The deltaTx and deltaRx parameters above are the defaults for
 wrpc-v3.0 release bitstream available on \textit{ohwr.org}, running on
 \codeHook{spec} v4 board and calibrated to port 1 of a \codeHook{wr} Switch v3.3. These
 values as well as the parameters for the \codeHook{wr} Switch are available on the
@@ -728,7 +569,7 @@ daemon manually:
 wrc# ptp start
 \end{lstlisting}
 
-\textbf{Note:} For running the GrandMaster mode, you need to provide 1-PPS and 10MHz
+\noindent\textbf{Note:} For running the GrandMaster mode, you need to provide 1-PPS and 10MHz
 signal from an external source (e.g. GPS receiver or Cesium clock). Please
 connect 1-PPS signal to the LEMO connector No.4 and 10MHz to the LEMO connector
 No.5 on the \codeHook{fmc} \codeHook{dio} mezzanine board.
@@ -806,7 +647,7 @@ defaults to 1 second and can be changed using the \textit{refresh} command. To e
 this console mode press <Esc>. A full description of the information reported
 by gui is provided in \link{WRPC GUI elements}.
 
-\textbf{Note:} the \textit{Synchronization status} and \textit{Timing parameters} in \textit{gui}
+\noindent\textbf{Note:} the \textit{Synchronization status} and \textit{Timing parameters} in \textit{gui}
 are available only in the \codeHook{wr} Slave mode. When running as \codeHook{wr} Master, you
 would be able to see only the current date and time, link status, Tx and Rx
 packet counters, lock and calibration status.
@@ -867,46 +708,43 @@ a port connected to the \textit{Write Rabbit} network.
 
 The configuration file of \codeHook{wrpc} contains the following
 SNMP-related options:
-\begin{itemize}
+\begin{itemize*}
 \item \texttt{CONFIG\_SNMP} -- include the \textit{Mini SNMP responder} into \codeHook{wrpc}
 \item \texttt{CONFIG\_SNMP\_SET} -- enable the support of SNMP \textit{SET} packets
 \item \texttt{CONFIG\_SNMP\_VERBOSE} -- enable verbose output from the \textit{Mini SNMP
       responder} on the \codeHook{wrpc}'s console
-\end{itemize}
+\end{itemize*}
 
 The MIB file describing \codeHook{wrpc}'s OIDs can be found in the \texttt{lib} directory
 of the \texttt{wrpc-sw} repo.
-
 So far, the \textit{Mini SNMP responder} supports version 1 and a subset of version
 2c of the SNMP protocol.
-
 The following types of requests are supported:
-\begin{itemize}
+\begin{itemize*}
    \item GET -- get value of a given OID
    \item GETNEXT -- get value of a next OID after the given OID (this is used
          for \texttt{snmpwalk}s)
    \item SET -- change the value of a given OID (so far used only for adding
          SFP's to the database and PTP restarts)
-\end{itemize}
-
+\end{itemize*}
 The \textit{Mini SNMP responder} does not support:
-\begin{itemize}
+\begin{itemize*}
    \item bulk requests packets (GETBULK)
    \item more than one OID in the request packet
    \item \texttt{trap} and \texttt{inform} packets
    \item encryption
    \item authentication
    \item SNMPv2c return error types; all returned error types follows SNMPv1
-\end{itemize}
-
+\end{itemize*}
 To make examples more readable, listings below use \texttt{SNMP\_OPT} environment
 variable. Make sure you set it properly in your shell.
 \begin{lstlisting}
- # SNMP_OPT="-c public -v 2c -m WR-WRPC-MIB -M +/var/lib/mibs/ietf:lib \
+ $ SNMP_OPT="-c public -v 2c -m WR-WRPC-MIB -M +/var/lib/mibs/ietf:lib \
    192.168.1.20"
 \end{lstlisting}
 where:
-\begin{itemize}
+\begin{sloppypar} % to prevent \texttt{} from going to the margine
+\begin{itemize*}
    \item \texttt{-c public} -- sets SNMP community as "\textit{public}"
    \item \texttt{-v 2c} -- specifies SNMP version
    \item \texttt{-m WR-WRPC-MIB} -- specifies MIBs to be loaded
@@ -916,16 +754,14 @@ where:
          \texttt{download-mibs} command (package \texttt{snmp-mibs-downloader}); on
          CentOS and RedHat MIBs are included in the \texttt{libsmi} package
    \item \texttt{192.168.1.20} -- the IP address of the target board
-\end{itemize}
-
+\end{itemize*}\end{sloppypar}\noindent
 For example, to get the system uptime please execute the \texttt{snmpget} command:
 \begin{lstlisting}
- # snmpget #SNMP_OPT wrpcTimeSystemUptime.0
+ $ snmpget $SNMP_OPT wrpcTimeSystemUptime.0
 \end{lstlisting}
-
 To get dump of all available OIDs please execute the \texttt{snmpwalk} command:
 \begin{lstlisting}
- # snmpwalk #SNMP_OPT wrpcCore
+ $ snmpwalk $SNMP_OPT wrpcCore
 \end{lstlisting}
 Part of the \texttt{snmpwalk}'s output:
 \begin{lstlisting}
@@ -967,12 +803,11 @@ the \codeHook{wrpc}'s console:
  1: PN:AXGE-1254-0531   dTx:   180625 dRx:   148451 alpha: 72169888
  2: PN:AXGE-3454-0531   dTx:   180625 dRx:   148451 alpha: -73685416
 \end{lstlisting}
-
 The same data is exported by the \textit{Mini SNMP responder} via the table
 \texttt{wrpcSfpTable}:
 
 \begin{lstlisting}
- # snmpwalk #SNMP_OPT wrpcSfpTable
+ $ snmpwalk $SNMP_OPT wrpcSfpTable
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
  WR-WRPC-MIB::wrpcSfpPn.2 = STRING: AXGE-3454-0531
  WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180625
@@ -983,10 +818,10 @@ The same data is exported by the \textit{Mini SNMP responder} via the table
  WR-WRPC-MIB::wrpcSfpAlpha.2 = INTEGER: -73685416
  End of MIB
 \end{lstlisting}
-
 When the SET support is compiled into the \textit{Mini SNMP responder}, it is
 possible to erase or add/replace SFP entires to the SFPs database via SNMP.
 
+\begin{sloppypar} % to prevent \texttt{} from going to the margine
 Addition (or modification) of one SFP to the database can done by a row of
 SNMP SETs. Firstly, please set the delta Tx (\texttt{wrpcPtpConfigDeltaTx.0}), the
 delta Rx (\texttt{wrpcPtpConfigDeltaRx.0}) and the alpha (\texttt{wrpcPtpConfigAlpha.0})
@@ -994,6 +829,7 @@ with new values.
 Then, to commit the change to the SFP database, perform the SNMP SET on
 the \texttt{wrpcPtpConfigApply.0} with the value \texttt{writeToFlashCurrentSfp}. It will
 add/update values for the currently plugged SFP.
+\end{sloppypar}
 
 To add/update entries for different SFPs, please set deltas and alpha like
 above, then set PN of an SFP to the \texttt{wrpcPtpConfigSfpPn.0} and commit
@@ -1021,15 +857,15 @@ file.
 Commands below add an SFP with PN as "\texttt{NEW-SFP}", delta Tx "\texttt{1111}",
 delta Rx "\texttt{2222}" and alpha "\texttt{3333}".
 \begin{lstlisting}
- # snmpset #SNMP_OPT wrpcPtpConfigDeltaTx.0 = 1111
+ $ snmpset $SNMP_OPT wrpcPtpConfigDeltaTx.0 = 1111
  WR-WRPC-MIB::wrpcPtpConfigDeltaTx.0 = INTEGER: 1111
- # snmpset #SNMP_OPT wrpcPtpConfigDeltaRx.0 = 2222
+ $ snmpset $SNMP_OPT wrpcPtpConfigDeltaRx.0 = 2222
  WR-WRPC-MIB::wrpcPtpConfigDeltaRx.0 = INTEGER: 2222
- # snmpset #SNMP_OPT wrpcPtpConfigAlpha.0 = 3333
+ $ snmpset $SNMP_OPT wrpcPtpConfigAlpha.0 = 3333
  WR-WRPC-MIB::wrpcPtpConfigAlpha.0 = INTEGER: 3333
- # snmpset #SNMP_OPT wrpcPtpConfigSfpPn.0 = NEW-SFP
+ $ snmpset $SNMP_OPT wrpcPtpConfigSfpPn.0 = NEW-SFP
  WR-WRPC-MIB::wrpcPtpConfigSfpPn.0 = STRING: "NEW-SFP"
- # snmpset #SNMP_OPT wrpcPtpConfigApply.0 = writeToFlashGivenSfp
+ $ snmpset $SNMP_OPT wrpcPtpConfigApply.0 = writeToFlashGivenSfp
  WR-WRPC-MIB::wrpcPtpConfigApply.0 = INTEGER: applySuccessful(100)
 \end{lstlisting}
 
@@ -1038,7 +874,7 @@ In case the SFP database does not contain the currently plugged SFP, the last
 
 Optionally restart the PTP:
 \begin{lstlisting}
- # snmpset #SNMP_OPT wrpcPtpConfigRestart.0 = restartPtp
+ $ snmpset $SNMP_OPT wrpcPtpConfigRestart.0 = restartPtp
  WR-WRPC-MIB::wrpcPtpConfigRestart.0 = INTEGER: restartPtpSuccessful(100)
 \end{lstlisting}
 
@@ -1060,7 +896,7 @@ the \codeHook{wrpc}'s console:
 
 Verify the result via SNMP:
 \begin{lstlisting}
- # snmpwalk #SNMP_OPT wrpcSfpTable
+ $ snmpwalk $SNMP_OPT wrpcSfpTable
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
  WR-WRPC-MIB::wrpcSfpPn.2 = STRING: AXGE-3454-0531
  WR-WRPC-MIB::wrpcSfpPn.3 = STRING: NEW-SFP
@@ -1079,7 +915,7 @@ Verify the result via SNMP:
 It is also possible to erase the SFPs database via SNMP (equivalent of
 the \texttt{sfp erase} command):
 \begin{lstlisting}
- # snmpset #SNMP_OPT wrpcPtpConfigApply.0 = eraseFlash
+ $ snmpset $SNMP_OPT wrpcPtpConfigApply.0 = eraseFlash
  WR-WRPC-MIB::wrpcPtpConfigApply.0 = INTEGER: applySuccessful(100)
 \end{lstlisting}
 
@@ -1108,13 +944,15 @@ When the \textit{limb} part is matched then the corresponding function from
 the structure \texttt{oid\_limb\_array} is called to try to match the second part of
 OID (the \textit{twig} part).
 
+\begin{sloppypar} % to prevent \texttt{} from going to the margine
 The example below adds to the \textit{Mini SNMP responder} an \texttt{int32\_t} variable
 (\texttt{example\_i32var}) with OID \texttt{1.3.6.1.4.1.96.102.1.1.0} and a string
 (\texttt{example\_string}) with OID \texttt{1.3.6.1.4.1.96.102.1.2.0}.
 Before assigning new OIDs in your projects please contact the maintainer of
 \texttt{wrpc-sw} repo to avoid conflicts.
+\end{sloppypar}
 
-\begin{itemize}
+\begin{itemize*}
 \item First declare \texttt{example\_i32var} and \texttt{example\_string}:
 \begin{lstlisting}
  static int32_t example_i32var;
@@ -1138,15 +976,14 @@ Before assigning new OIDs in your projects please contact the maintainer of
 OID_LIMB_FIELD(oid_wrpcExampleGroup, func_group, oid_array_wrpcExampleGroup),
 \end{lstlisting}
 The macro \texttt{OID\_LIMB\_FIELD} takes the following arguments:
-\begin{itemize}
+\begin{itemize*}
    \item \texttt{oid\_wrpcExampleGroup} -- an array with the \textit{limb} part of the
          OID
    \item \texttt{func\_group} -- a function to be called when the \textit{limb} part of
          the OID is matched; this function will try to match the \textit{twig} part
          of the OID within a table or a group.
    \item \texttt{oid\_array\_wrpcExampleGroup} -- an array of \textit{twig} parts of OIDs
-\end{itemize}
-
+\end{itemize*}
 \item Declare a previously used \texttt{oid\_wrpcExampleGroup}. Please note that
       this structure has to be sorted by ascending \textit{twig} part of OIDs.
 \begin{lstlisting}
@@ -1156,9 +993,8 @@ The macro \texttt{OID\_LIMB\_FIELD} takes the following arguments:
    { 0, }
  };
 \end{lstlisting}
-
 The macro \texttt{OID\_FIELD\_VAR} takes the following arguments:
-\begin{itemize}
+\begin{itemize*}
    \item \texttt{oid\_wrpcExampleV1} -- an array with \textit{twig} part of the OID
    \item \texttt{get\_p} (or \texttt{get\_pp)} -- a function to be called when \textit{twig}
          part of the OID is matched for SNMP GET requests;
@@ -1169,8 +1005,7 @@ The macro \texttt{OID\_FIELD\_VAR} takes the following arguments:
          check the source for other possible types
    \item \texttt{\&example\_i32var, \&example\_string} -- addresses to the data in
          memory
-\end{itemize}
-
+\end{itemize*}
 In case the address of variables is not known at boot, it is possible to define
 a pointer to the variable which will be initialized (e.g. in the \texttt{snmp\_init}
 the function) at the boot time. In that case function \texttt{get\_pp} (\texttt{set\_pp}) has
@@ -1186,39 +1021,34 @@ a constant number to the custom function instead of an address. For example:
                SERVO_UPDATE_TIME),
 \end{lstlisting}
 
-\end{itemize}
-
+\end{itemize*}
 Perform a \texttt{snmpwalk} to get new OIDs:
 \begin{lstlisting}
- # snmpwalk -On #SNMP_OPT 1.3.6.1.4.1.96.102.1
+ $ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
  .1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 123432
  .1.3.6.1.4.1.96.102.1.2.0 = STRING: "test string"
  End of MIB
 \end{lstlisting}
-
 Trying to set too long string into the \texttt{example\_string} results in an error:
 \begin{lstlisting}
- # snmpset -On #SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new long string"
+ $ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new long string"
  Error in packet.
  Reason: (badValue) The value given has the wrong type or length.
  Failed object: .1.3.6.1.4.1.96.102.1.2.0
 \end{lstlisting}
-
 A short enough (not longer than defined \texttt{"test string"}) value succeeds:
 \begin{lstlisting}
- # snmpset -On #SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new value12"
+ $ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new value12"
  .1.3.6.1.4.1.96.102.1.2.0 = STRING: "new value12"
 \end{lstlisting}
-
 Set 999 to the \texttt{example\_i32var}:
 \begin{lstlisting}
-# snmpset -On #SNMP_OPT 1.3.6.1.4.1.96.102.1.1.0 i 999
+$ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.1.0 i 999
 .1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 999
 \end{lstlisting}
-
 Perform \texttt{snmpwalk} to verify changes:
 \begin{lstlisting}
-# snmpwalk -On #SNMP_OPT 1.3.6.1.4.1.96.102.1
+$ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
 .1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 999
 .1.3.6.1.4.1.96.102.1.2.0 = STRING: "new value12"
 End of MIB
@@ -1237,7 +1067,7 @@ To run these tests, please go to \texttt{test/snmp} directory, then set
 \texttt{TARGET\_IP} environment varaible to the IP of your target board, then type
 \texttt{make}. For example:
 \begin{lstlisting}
- # TARGET_IP=192.168.1.20 make
+ $ TARGET_IP=192.168.1.20 make
  bats/libexec/bats snmp_tests_*.bats
    Host up 192.168.1.20
    Check the presence of snmpget
@@ -1270,6 +1100,7 @@ responder}.
 \label{Syslog}
 \subsubsection{Syslog}
 
+\begin{sloppypar} % to prevent \texttt{} from going to the margine
 The node can act as a \textit{syslog} client, though only on the UDP protocol.
 To activate it, you must build with \texttt{CONFIG\_SYSLOG} and pass proper
 parameters at run time.
@@ -1289,49 +1120,47 @@ The strings that a WR node sends to the \textit{syslog} server are always
 using the format:  ``\texttt{<}\textit{level}\texttt{>} \textit{Jan 01 00:00:00 192.168.1.1 msg}''
 where \textit{level} is usually 14 (type ``user'', priority ``info'')
 and \textit{msg} is a free-format message strings.
-
 The \textit{syslog} client sends strings to the server in the following
 situations:
+\begin{longtable}{  p{6.5cm}  p{9cm} }
 
-@table @i
-
-\item Boot time
+\textit{ Boot time } &
 
 	The node sends ``\texttt{(ma:ca:dd:rr:ee:ss) Node up since} \textit{X}
         \texttt{seconds}'' as soon as the network link is up and the \textit{syslog}
         server is configured with the shell command or init script.
         The message is re-sent, with an updated uptime value, if you change
-        the \textit{syslog} server parameters.
-
-\item Link up after link down
+        the \textit{syslog} server parameters. \\
+& \\
+\textit{ Link up after link down } &
 
 	The message is ``\texttt{"Link up after} \textit{2.345} \texttt{s}''. The
         time printed is the duration of the link-down interval just
         passed -- no lost-by-design message is sent at link-down time. The
         message is not sent the first time the link goes up, because
-        the boot message is already there.
-
-\item Synchronization, first time
+        the boot message is already there.\\
+& \\
+\textit{ Synchronization, first time } &
 
 	When the node reaches WR synchronization (i.e. ``track phase''
         state), it sends ``\texttt{Tracking after} \textit{5..678} \texttt{s}''.
-        The reported time is the lapse since power-on.
-
-\item Synchronization lost
+        The reported time is the lapse since power-on.\\
+& \\
+\textit{ Synchronization lost } &
 
 	Whenever WR looses \textit{track-phase} status, the node reports
-        \texttt{Lost track}.
-
-\item Synchronization recovered
+        \texttt{Lost track}.\\
+& \\
+\textit{ Synchronization recovered } &
 
 	When the WR servo is in \textit{track phase} state after loosing
         synchronization, the node sends ``\textit{45}\texttt{-th re-track after}
         \textit{23.456} \texttt{s}''. The time reported is the amount of time
         during which the node has not been synchronized. The seconth and
         thirth re-sync are reported as \texttt{2-th} and \texttt{3-th}, to make you
-        smile. At the \texttt{4-th} you should stop smiling and be concerned.
-
-\item Temperature over threshold
+        smile. At the \texttt{4-th} you should stop smiling and be concerned.\\
+& \\
+\textit{ Temperature over threshold } &
 
 	The node monitors the various thermometers every few seconds.
         If \texttt{CONFIG\_TEMP\_POLL\_INTERVAL} and related parameters are
@@ -1342,9 +1171,10 @@ situations:
         few seconds (\texttt{CONFIG\_TEMP\_HIGH\_RAPPEL}, default 60)
         until all temperatures are under-threshold. When temperature
         is recovered the node sends ``\texttt{Temperature ok:}'' followed by
-        the current list of temperatures.
+        the current list of temperatures.\\
 
-@end table
+\end{longtable}
+\end{sloppypar}
 
 % FIXME: syslog examples
 
@@ -1352,6 +1182,7 @@ situations:
 \label{Latency Test}
 \subsubsection{Latency Test}
 
+\begin{sloppypar} % to prevent \texttt{} from going to the margine
 The configuration choice \texttt{CONFIG\_LATENCY\_PROBE} activates a
 mechanism for \textit{wr} nodes to measure network latency, base on the same
 hardware timestamps that are used for synchronization -- the mechanism
@@ -1388,6 +1219,7 @@ Any lost frames are reported both to the console and to \textit{syslog}.
 You can use \textit{ltest} without \texttt{CONFIG\_SYSLOG}. In that case the
 receiver nodes print the exact latency (picosecond resolution) for
 every received event.
+\end{sloppypar}
 
 % --------------------------------------------------------------------------
 \label{wrpc-dump}
@@ -1409,9 +1241,9 @@ analysis. The following command line show both uses:
    # Look for "resource0" in /sys/devices/pci, choose your bus number.
    FILE=/sys/devices/pci0000:00/0000:00:04.0/0000:04:00.0/resource0
 
-   sudo ./tools/wrpc-dump #FILE
+   sudo ./tools/wrpc-dump $FILE
 
-   sudo tools/mapper #FILE 0 0x20000 > wrpc-memory-image
+   sudo tools/mapper $FILE 0 0x20000 > wrpc-memory-image
    ./tools/wrpc-dump wrpc-memory-image
 \end{lstlisting}
 
@@ -1514,27 +1346,27 @@ whenever you change the MAC address or \textit{vlan} choice.
 If built with \texttt{CONFIG\_IP=y}, \textit{wrpc-sw} implements the following
 udp-based network services, in addition to \textit{ptp}:
 
-@table @i
+\begin{longtable}{  p{6.5cm}  p{9cm} }
 
-\item bootp
+\textit{ bootp } &
 
 	The node will get an IPV4 address by making \textit{bootp} queries
         once per second, until it gets a reply from a server. As an
         alternative, the address can be set using the shell command,
         and in this case the node won't send \textit{bootp} queries, or will
-        stop sending them.
-
-\item rdate
+        stop sending them.\\
+& \\
+\textit{ rdate } &
 
 	The node can be queried using \texttt{rdate -u}, once it has an IP
-        address.
-
-\item syslog
+        address.\\
+& \\
+\textit{ syslog } &
 
 	If \texttt{CONFIG\_SYSLOG} is set, the node is a syslog client.
-        See \link{Syslog} for details.
+        See \link{Syslog} for details.\\
 
-@end table
+\end{longtable}
 
 % ==========================================================================
 \label{VLAN Support}
@@ -1549,36 +1381,36 @@ to receive frames in several \textit{vlan}s, all set at configuration time.
 At run time you can use \texttt{vlan off} in the shell to turn off all \textit{vlan}
 processing and get back to the ``standard'' packet-filter rules.
 
-@table @code
+\begin{longtable}{  p{6.5cm}  p{9cm} }
 
-\item CONFIG\_VLAN
+\textit{ CONFIG\_VLAN } &
 
 	This is the top-level choice. It can be enabled or disabled.
         If disabled, the following values default to 0 and the
-        packet filter will discard all tagged frames.
-
-\item CONFIG\_VLAN\_NR
+        packet filter will discard all tagged frames.\\
+& \\
+\textit{ CONFIG\_VLAN\_NR } &
 
 	The default \textit{vlan} number for the CPU.  All network traffic
         directed to (and originating from)the \textit{lm32} processor will
         belong to this \textit{vlan}.  The value can be changed at run time
-        using the \texttt{vlan} shell command.
-
-\item CONFIG\_VLAN\_1\_FOR\_CLASS7
-@itemx CONFIG\_VLAN\_2\_FOR\_CLASS7
+        using the \texttt{vlan} shell command.\\
+& \\
+\textit{ CONFIG\_VLAN\_1\_FOR\_CLASS7 } & \\
+\textit{ CONFIG\_VLAN\_2\_FOR\_CLASS7 } &
 
 	The packet-filter rules are setup to deliver frames belonging
         to two specific \textit{vlans} to class 7, usually \textit{etherbone}.
         To deliver one \textit{vlan} only, set the two options to the same
-        number.
-
-\item CONFIG\_VLAN\_FOR\_CLASS6
+        number.\\
+& \\
+\textit{ CONFIG\_VLAN\_FOR\_CLASS6 } &
 
 	The packet-filter rules are setup to deliver frames belonging
         to one specific \textit{vlan} to class 6, usually routed to the
-        \textit{streamer} or \textit{nic} logic blocks.
+        \textit{streamer} or \textit{nic} logic blocks.\\
 
-@end table
+\end{longtable}
 
 % ##########################################################################
 \label{Troubleshooting}
@@ -1596,10 +1428,10 @@ message.}
 
 Please check if you have the Xilinx ISE-related system variables set correctly
 (\textit{settings64.sh} script provided by Xilinx sets them) and make sure you have
-overwritten the \textit{\#XILINX} variable to:
+overwritten the \textit{\$XILINX} variable to:
 
 \begin{lstlisting}
-# export XILINX=/opt/Xilinx/<version>/ISE_DS
+$ export XILINX=/opt/Xilinx/<version>/ISE_DS
 \end{lstlisting}
 
 or similar, if your installation folder differs from default.
@@ -1633,7 +1465,7 @@ of the tools used to build and run it, you can write to our mailing list
 \section{WRPC Shell Commands}
 
 \footnotesize
-\begin{longtable}{  p{8cm}  p{6cm} }
+\begin{longtable}{  p{7.5cm}  p{7cm} }
 
   \code{help} & lists available commands in this instance of the \codeHook{wrpc} \\
  & \\
@@ -1656,26 +1488,26 @@ see how the \codeHook{ptp} system is working) \\
  & \\
   \code{pll init <mode> <ref\_channel> <align\_pps>} & manually runs
 spll\_init() function to initialize SoftPll \\
- & \\
+
   \code{pll cl <channel>} & checks if SoftPLL is locked for the channel\\
- & \\
+
   \code{pll sps <channel> <picoseconds>} & sets phase shift for the channel\\
- & \\
+
   \code{pll gps <channel>} & gets current and target phase shift for the channel\\
- & \\
+
   \code{pll start <channel>} & starts SoftPLL for the channel\\
- & \\
+
   \code{pll stop <channel>} & stops SoftPLL for the channel\\
- & \\
+
   \code{pll sdac <index> <val>} & sets the dac\\
- & \\
+
   \code{pll gdac <index>} & gets dac's value\\
  & \\
   \code{gui} & starts GUI \codeHook{wrpc} monitor\\
  & \\
   \code{stat} & toggles reporting of loggable statistics. You can pass
 \texttt{1} or \texttt{0} as argument as an alternative to toggling\\
- & \\
+
   \code{stat bts} & prints bitslide value for established \codeHook{wr} Link,
 needed by the calibration procedure\\
  & \\
@@ -1684,13 +1516,13 @@ commands. Default period is 1 second. If you set the period to 0, the log
 message is only generated one time.\\
  & \\
   \code{ptp start} & starts \codeHook{wr ptp} daemon\\
- & \\
+
   \code{ptp stop} & stops \codeHook{wr ptp} daemon\\
- & \\
+
   \code{ptp e2e} & select end-to-end PTP mechanism. If configured you can set \texttt{p2p} mode, and \texttt{delay}/\texttt{pdelay} as aliases.\\
- & \\
+
   \code{ptp master} & force working as master. Alternatives are \texttt{slave} and \texttt{gm} (grandmaster).\\
- & \\
+
   \code{ptp <cmd> <cmd> ...} & You can concatenate several of the above sbcommands in a single \texttt{ptp} command. With no arguments, the command reports the current values.\\
  & \\
   \code{mode gm|master|slave} & sets \codeHook{wrpc} to operate as Grandmaster
@@ -1703,66 +1535,66 @@ calibration procedure and stores its result to the Flash/EEPROM (in \codeHook{wr
 Slave mode)\\
  & \\
   \code{time} & prints current time from \codeHook{wrpc}\\
- & \\
+
   \code{time raw} &  prints current time in a raw format (seconds, nanoseconds)\\
- & \\
+
   \code{time set <sec> <nsec>} & sets \codeHook{wrpc} time\\
- & \\
+
   \code{time setsec <sec>} & sets only seconds of the \codeHook{wrpc} time
 (useful for setting time in GrandMaster mode, when nanoseconds counter is
 aligned to external 1-PPS and 10 MHz)\\
- & \\
+
   \code{time setnsec <nsec>} & sets only nanoseconds of the \codeHook{wrpc} time\\
  & \\
   \code{sfp erase} & erases the \codeHook{sfp} database stored in the Flash/EEPROM\\
- & \\
+
   \code{sfp add <PN> <deltaTx> <deltaRx> <alpha>} & stores calibration
 parameters for \codeHook{sfp} to a file in Flash/EEPROM\\
- & \\
+
   \code{sfp show} & prints all \codeHook{sfp} transceivers stored in database\\
- & \\
+
   \code{sfp match} & prints the ID of a currently used \codeHook{sfp}
 transceiver and tries to load the calibration parameters for it\\
  & \\
   \code{init erase} & erases the initialization script in Flash/EEPROM \\
- & \\
+
   \code{init add <cmd>} & adds shell command at the end of the
 initialization script\\
- & \\
+
   \code{init show} & prints all commands from the script stored in Flash/EEPROM\\
- & \\
+
   \code{init boot} & executes the script stored in Flash/EEPROM (the same action is done automatically when \codeHook{wrpc} starts after resetting \codeHook{lm32})\\
  & \\
   \code{mac get} & prints \codeHook{wrpc}'s \codeHook{mac} address\\
- & \\
+
   \code{mac getp} & reads the persistent \codeHook{mac} address stored in Flash/EEPROM\\
- & \\
+
   \code{mac set <mac>} & sets the \codeHook{mac} address of \codeHook{wrpc}\\
- & \\
+
   \code{mac setp <mac>} & stores the persistent \codeHook{mac} address in Flash/EEPROM\\
  & \\
   \code{sdb} & prints devices connected to the Wishbone bus inside \codeHook{wrpc}\\
  & \\
   \code{ip get} & \\
- & \\
+
   \code{ip set <ip>} & reports or sets the IPv4 address of the \codeHook{wrpc} (only available if \texttt{CONFIG\_IP} is set at build time\\
  & \\
   \code{vlan} & \\
- & \\
+
   \code{vlan set <n>} & reorts or sets the active vlan used for sending/receiving network frames. The command exists only if \texttt{CONFIG\_VLAN} is set.\\
  & \\
   \code{w1} & List onewire devices on the bus\\
  & \\
   \code{w1w <offset> <byte> [<byte> ...]}& \\
- & \\
+
   \code{w1r <offset> <len>} & If \texttt{CONFIG\_W1} is set and a OneWire \codeHook{eeprom} exists, write and read data. For writing, \texttt{byte} values are decimal\\
  & \\
   \code{delays}&\\
- & \\
+
   \code{delays <tx> <rx>} & Get or set the constant delays in frame transmission, only available if \texttt{CONFIG\_CMD\_LL}. Delays are expressed in picoseconds.\\
  & \\
   \code{devmem <addr>} & \\
- & \\
+
   \code{devmem <addr> <value>} & Read or write a 32-bit word from memory and/or FPGA registers. Only available if \texttt{CONFIG\_CMD\_LL}.\\
  & \\
   \code{diag ...} & diagnostics for auxiliary clocks. Only available if \texttt{CONFIG\_AUX\_DIAG}.\\
@@ -1770,15 +1602,15 @@ initialization script\\
   \code{temp} & Report current temperatures.\\
  & \\
   \code{faketemp} & \\
- & \\
+
   \code{faketemp <T1> <T2> <T3>}  & Read or set the three fake temperatures, used to test the temperature/syslog mechanism. Available if \texttt{CONFIG\_FAKE\_TEMPERATURES}.\\
  & \\
   \code{ltest} & \\
- & \\
+
   \code{ltest <secs> <msecs>} & Read or set the latency-test sending interval. See \link{Latency Test}.\\
  & \\
   \code{syslog off} & \\
- & \\
+
   \code{syslog <ipaddr> <macaddr>} & Disable or set your \textit{syslog} server. See \link{Syslog}.\\
 
 \end{longtable}
@@ -1791,14 +1623,14 @@ initialization script\\
 \section{WRPC GUI elements}
 
 \footnotesize
-\begin{longtable}{  p{8cm}  p{6cm} }
+\begin{longtable}{  p{4.5cm}  p{10cm} }
 
   \code{TAI Time:} & current state of device's local clock \\
- & \\
+
   \code{RX:} / \code{TX:} & Rx/Tx packets counters\\
- & \\
+
   \code{mode:} & operation mode of the \codeHook{wr ptp core} - \code{<WR Master, WR Slave>}\\
- & \\
+
   \code{< Locked, NoLock >} & SoftPLL lock state\\
  & \\
 
@@ -1808,7 +1640,7 @@ initialization script\\
 
   \code{Phase tracking:} & is phase tracking enabled when \codeHook{wr} Slave is
 synchronized to \codeHook{wr} Master - \code{<ON, OFF>}\\
- & \\
+
   \code{Synchronization source:} & network interface name from which \codeHook{wr}
 daemon gets synchronization - \code{<wru1>}\\
  & \\
@@ -1873,14 +1705,15 @@ This \textit{mcs} file already includes both \codeHook{sdbfs} image and FPGA bit
 In case of a custom gateware or hardware, you can download a standalone
 \codeHook{sdbfs} image:
 \begin{lstlisting}
-# wget http://www.ohwr.org/attachments/download/4144/sdbfs-standalone.bin
+$ wget http://www.ohwr.org/attachments/download/4144/sdbfs-standalone.bin
 \end{lstlisting}
 and generate a custom \textit{*.mcs} file with your own FPGA bitstream. You should
 use the following layout:
-\begin{longtable}{  p{3cm}  p{6cm} }
+\begin{longtable}{  l  l }
 \code{0x000000} & your FPGA bitstream \\
 \code{0x170000} & \codeHook{sdbfs} image\\
 \end{longtable}
+
 For example, to generate the \textit{*.mcs} file for M25P32 Flash on \codeHook{spec}, the
 following \textit{promgen} parameters should be used:
 \begin{lstlisting}
@@ -1890,7 +1723,7 @@ promgen -w -spi -p mcs -c FF -s 32768 -u 0 <your_bitstream>.bit \
 
 After that, you can use the Xilinx JTAG cable and Xilinx ISE Impact tool to
 write your \textit{output.mcs} file to the Flash memory.
-
+\newpage
 % ##########################################################################
 \label{wrpc-dump with Older WRPC Binaries}
 \section{wrpc-dump with Older WRPC Binaries}
@@ -1903,11 +1736,10 @@ supports the names \textit{pll}, \textit{fifo} (the circular log described
 above), \textit{ppg}, \textit{ppi}, \textit{servo\_state}, and \textit{ds}. The last name
 refers to the PTP data sets, and for this the pointer needed is
 \texttt{ppg} (ppsi global data).
-
 This is an example:
 
 \begin{lstlisting}
-   # ./tools/wrpc-dump dump-file 00015798 servo_state
+   $ ./tools/wrpc-dump dump-file 00015798 servo_state
 
    servo_state at 0x15798
            if_name:                   ""
@@ -1934,17 +1766,13 @@ it needs a special endian conversion. With current \textit{wrpc} it is
 autodetected, but if you dump an older binary you'll need to set the
 \texttt{WRPC\_SPEC} environment variable (to any value you like) to properly
 access the PCI memory or a dump taken from PCI:
-
 \begin{lstlisting}
-   # export WRPC_SPEC=y
+   $ export WRPC_SPEC=y
 \end{lstlisting}
-
 or
-
 \begin{lstlisting}
-   # WRPC_SPEC=y ./tools/wrpc-dump dump-file 00015798 servo_state
+   $ WRPC_SPEC=y ./tools/wrpc-dump dump-file 00015798 servo_state
 \end{lstlisting}
-
 This is not needed if the dump is retrieved using Etherbone.
 
 % ##########################################################################
