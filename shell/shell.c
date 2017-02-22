@@ -216,7 +216,7 @@ const char *fromhex(const char *hex, int *v)
 {
 	int o = 0;
 
-	for (; *hex; ++hex) {
+	for (; hex && *hex; ++hex) {
 		if (*hex >= '0' && *hex <= '9') {
 			o = (o << 4) + (*hex - '0');
 		} else if (*hex >= 'A' && *hex <= 'F') {
@@ -236,7 +236,7 @@ const char *fromdec(const char *dec, int *v)
 {
 	int o = 0;
 
-	for (; *dec; ++dec) {
+	for (; dec && *dec; ++dec) {
 		if (*dec >= '0' && *dec <= '9') {
 			o = (o * 10) + (*dec - '0');
 		} else {
