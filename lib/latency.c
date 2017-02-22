@@ -26,6 +26,8 @@ static int lat_verbose = 1;
 
 static unsigned long prios[] = {7, 6, 0}; /* the prio for the 3 frames */
 
+static int ltest_fake_delay_ns;
+
 /* latency probe: we need to enqueue 3 short frames: 64*3+overhead = 256 */
 static uint8_t __latency_queue[256];
 static struct wrpc_socket *latency_socket, __static_latency_socket = {
@@ -213,7 +215,10 @@ static int latency_poll_tx(void)
 	static uint32_t sequence;
 	static uint32_t lasts;
 
-	/* Send three frames -- lazily in native byte order */
+	/*
+	 * Send three frames -- lazily in native byte order. Possibly
+	 * subtract a fake delay, to trigger reporting.
+	 */
 	memset(&frame, 0, sizeof(frame));
 	frame.sequence = sequence++;
 
@@ -221,16 +226,27 @@ static int latency_poll_tx(void)
 	latency_socket->prio = prios[0];
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  frame.ts + 0);
+	frame.ts[0].nsec -= ltest_fake_delay_ns;
+	if (frame.ts[0].nsec < 0) {
+		frame.ts[0].nsec += 1000 * 1000 * 1000;
+		frame.ts[0].sec --;
+	}
 
 	frame.type = 2;
 	latency_socket->prio = prios[1];
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  frame.ts + 1);
+	frame.ts[1].nsec -= ltest_fake_delay_ns;
+	if (frame.ts[1].nsec < 0) {
+		frame.ts[1].nsec += 1000 * 1000 * 1000;
+		frame.ts[1].sec --;
+	}
 
 	frame.type = 3;
 	latency_socket->prio = prios[2];
 	ptpd_netif_sendto(latency_socket, &latency_addr, &frame, sizeof(frame),
 			  NULL);
+	ltest_fake_delay_ns = 0;
 
 	/* Every 10s remind we are sending ltest */
 	if (!lasts) {
@@ -277,6 +293,8 @@ static int cmd_ltest(const char *args[])
 			lat_verbose = 1;
 		else if (HAS_SYSLOG && !strcmp(args[0], "quiet"))
 			lat_verbose = 0;
+		else if (!strcmp(args[0], "fake"))
+			fromdec(args[1], &ltest_fake_delay_ns);
 		else {
 			fromdec(args[0], &v);
 			latency_period_ms = v * 1000 + v1;
