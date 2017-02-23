@@ -1,6 +1,5 @@
 # Tomasz Wlostowski for CERN, 2011,2012
 -include $(CURDIR)/.config
-.PHONY: $(CURDIR)/.config
 
 CROSS_COMPILE ?= lm32-elf-
 
@@ -223,7 +222,7 @@ silentoldconfig:
 scripts_basic config:
 	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
-%config:
+%_defconfig %_config:
 	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 defconfig:
