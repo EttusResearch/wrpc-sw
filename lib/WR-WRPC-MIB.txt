@@ -661,7 +661,7 @@ wrpcPortInternalTx             OBJECT-TYPE
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
-            "RX ptp packets"
+            "Total TX packets on a port"
     ::= { wrpcPortGroup 4 }
 
 wrpcPortInternalRx             OBJECT-TYPE
@@ -669,7 +669,7 @@ wrpcPortInternalRx             OBJECT-TYPE
     MAX-ACCESS                 read-only
     STATUS                     current
     DESCRIPTION
-            "TX ptp packets"
+            "Total RX packets on a port"
     ::= { wrpcPortGroup 5 }
 
 -- ****************************************************************************
