@@ -236,8 +236,13 @@ defconfig:
 # because the latter is touched by silentoldconfig at each build)
 $(obj-y): .config $(wildcard include/*.h)
 
+# if DEFCONFIG_NAME is not defined assign anything to it.
+# It will limit matching of the target below
+DEFCONFIG_NAME?="some_unique_dummy_name"
+
 # copy compiled files for MAKEALL script
-$(DEFCONFIG_NAME).%:
+# files like $(DEFCONFIG_NAME).[elf|bin] etc.
+$(addprefix $(DEFCONFIG_NAME),$(MAKEALL_COPY_LIST)):
 	@cp -f $(OUTPUT)$(suffix $@) $@
 
 makeall_copy: $(addprefix $(DEFCONFIG_NAME),$(MAKEALL_COPY_LIST))
