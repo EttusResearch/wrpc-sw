@@ -218,6 +218,10 @@ gitmodules:
 	@test -d ppsi/arch-wrpc || echo "Checking out submodules"
 	@test -d ppsi/arch-wrpc || git submodule update --init
 
+# Explicit rule for $(CURDIR)/.config
+# needed since -include XXX triggers build for XXX
+$(CURDIR)/.config:
+	@# Keep this dummy comment
 
 # following targets from Makefile.kconfig
 silentoldconfig:
@@ -227,7 +231,7 @@ silentoldconfig:
 scripts_basic config:
 	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
-%_defconfig %_config:
+%config:
 	$(MAKE) quiet=quiet_ -f Makefile.kconfig $@
 
 defconfig:
