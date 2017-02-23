@@ -4,6 +4,7 @@
  * Copyright (C) 2017 CERN (www.cern.ch)
  * Author: Grzegorz Daniluk <grzegorz.daniluk@cern.ch>
  * Author: Maciej Lipinski <maciej.lipinski@cern.ch>
+ * Author: Adam Wujek <adam.wujek@cern.ch>
  *
  * Released according to the GNU GPL, version 2 or any later version.
  *
@@ -32,23 +33,40 @@
 #include "softpll_ng.h"
 #include <wrpc.h> /*needed for htons()*/
 
-int wrpc_test_1(void);
+#define TESTBENCH_MAGIC 0x4d433ebc
+#define TESTBENCH_VERSION 1
+#define TESTBENCH_RET_OK 1
+#define TESTBENCH_RET_ERROR 2
 
 /*
- * This is a variable that is meant to be set by testbench through
+ * This is a structure to pass information from the testbench to lm32's
+ * software. hdl_testbench structure is meant to be set by testbench through
  * memory-manipulation.
  *
- * To allow this, there are still some elements missing:
- * - the test_number variable needs to be at a known address, this is already
- *   done for other variables (for VLANs?), so the same needs to be done for
- *   this
- * - testbench needs to be modified appropriately
+ * At the address HDL_TESTBENCH_PADDR is a pointer to hdl_testbench structure.
+ * hdl_testbench_t structure can be expanded to carry information with any
+ * size.
  *
  * The idea behind is that different tests for different testbenches are
- * compiled in this file, and the proper test is loaded based on this variable.
- * Each testbench sets the proper testbench number at th startup
+ * compiled in this file, and the proper test is loaded based on variable 
+ * hdl_testbench.test_num.
+ * Each HDL testbench sets the proper testbench number at the startup.
  */
-static int test_number;
+
+struct hdl_testbench_t {
+	uint32_t magic;
+	uint32_t version;
+	uint32_t test_num;
+	uint32_t return_val;
+};
+
+struct hdl_testbench_t hdl_testbench = {
+	.magic = TESTBENCH_MAGIC,
+	.version = TESTBENCH_VERSION,
+	.test_num = 0,
+};
+
+int wrpc_test_1(void);
 
 /*
  * Basic initialization required for simulation
@@ -123,6 +141,7 @@ int wrpc_test_1(void)
 	memcpy(tx_hdr.dstmac, "\x01\x1B\x19\x00\x00\x00", 6);
 	tx_hdr.ethtype = htons(0x88f7);
 
+	hdl_testbench.return_val = TESTBENCH_RET_OK;
 	/** main loop, send test frames */
 	for (;;) {
 		/* seqID */
@@ -165,11 +184,20 @@ void main(void)
 {
 	wrc_sim_initialize();
 
-	switch (test_number) {
-	case 0:
+	if (hdl_testbench.magic != TESTBENCH_MAGIC
+	    || hdl_testbench.magic != TESTBENCH_VERSION) {
+		/* Wrong testbench structure */
+		hdl_testbench.return_val = TESTBENCH_RET_ERROR;
+		while (1)
+			;
+	}
+	switch (hdl_testbench.test_num) {
+	case 1:
 		wrpc_test_1();
 		break;
 	default:
+		/* Wrong test number */
+		hdl_testbench.return_val = TESTBENCH_RET_ERROR;
 		while (1)
 			;
 	}

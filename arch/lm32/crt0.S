@@ -78,6 +78,7 @@
 #include "include/revision.h"
 #include "ppsi/proto-ext-whiterabbit/wr-api.h"
 #include "arch/lm32/crt0.h"
+#include "include/generated/autoconf.h"
 /* From include/sys/signal.h */  
 #define SIGINT  2   /* interrupt */
 #define SIGTRAP 5   /* trace trap */
@@ -135,6 +136,16 @@ version_wrpc:
 version_ppsi:
 	.byte WRS_PPSI_SHMEM_VERSION
 
+/* Pointer to a structure used by testbenches, use only when
+ * CONFIG_WR_NODE_SIM is set */
+.org HDL_TESTBENCH_PADDR
+.global hdl_testbench_p
+hdl_testbench_p:
+#ifdef CONFIG_WR_NODE_SIM
+	.word hdl_testbench
+#else
+	.word 0
+#endif
 .extern _irq_entry
 .org 0xc0
         .global _interrupt_handler
