@@ -257,7 +257,7 @@ static int calib_t24p_slave(uint32_t *value)
 		pp_printf("Wrote new t24p value: %d ps (%s)\n", *value,
 			  rv < 0 ? "Failed" : "Success");
 	}
-	return rv;
+	return 0;
 }
 
 int calib_t24p(int mode, uint32_t *value)
