@@ -29,7 +29,7 @@ export size_info_file
 rm -rf $size_info_file
 
 # remove files from the previous compilations first
-make cleanall -s
+make distclean -s
 
 for c in $configs; do
     echo "##### Building with '$c'"

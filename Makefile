@@ -192,14 +192,15 @@ clean:
 	rm -f $(OBJS) $(OUTPUT).o config.o revision.o $(OUTPUT).elf $(LDS) \
 		$(OUTPUT).bin rules-*.bin \
 		$(OUTPUT).bram $(OUTPUT).vhd $(OUTPUT).mif $(OUTPUT)_disasm.S
-	rm -rf include/config
-	rm -rf include/generated
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
 
-cleanall: clean
+distclean: clean
+	rm -rf include/config
+	rm -rf include/generated
 	rm -f $(addprefix *,$(MAKEALL_COPY_LIST))
+	$(MAKE) -C $(PPSI) distclean
 
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
