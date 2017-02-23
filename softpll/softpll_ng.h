@@ -116,6 +116,7 @@ void check_vco_frequencies(void);
  * Aux and main state:
  * used to be in .c file, but we need it here for memory dumping
  */
+/* NOTE: Please increment WRPC_SHMEM_VERSION if you change this structure */
 struct spll_aux_state {
 	int seq_state;
 	int32_t phase_target;
@@ -125,7 +126,7 @@ struct spll_aux_state {
 	} pll;
 };
 
-
+/* NOTE: Please increment WRPC_SHMEM_VERSION if you change this structure */
 struct softpll_state {
 	int mode;
 	int seq_state;
@@ -142,6 +143,7 @@ struct softpll_state {
 	struct spll_ptracker_state ptrackers[MAX_PTRACKERS];
 };
 
+/* NOTE: Please increment WRPC_SHMEM_VERSION if you change this structure */
 struct spll_fifo_log {
 	uint32_t trr;
 	uint32_t tstamp;

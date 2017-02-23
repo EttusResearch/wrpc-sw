@@ -15,6 +15,7 @@
 
 #include "softpll_ng.h"
 
+/* NOTE: Please increment WRPC_SHMEM_VERSION if you change this structure */
 struct spll_external_state {
 	struct spll_helper_state *helper;
 	struct spll_main_state *main;

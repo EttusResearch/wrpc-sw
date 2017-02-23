@@ -101,6 +101,8 @@ CFLAGS = $(cflags-y) -Wall -Wstrict-prototypes \
 	-ffunction-sections -fdata-sections -Os -Wmissing-prototypes \
 	-include include/wrc.h -ggdb
 
+ASFLAGS = -I.
+
 LDFLAGS = $(ldflags-y) \
 	-Wl,--gc-sections -Os -lgcc -lc
 
@@ -114,6 +116,8 @@ OUTPUT := $(OUTPUT-y)
 
 GIT_VER = $(shell git describe --always --dirty | sed  's;^wr-switch-sw-;;')
 GIT_USR = $(shell git config --get-all user.name)
+export GIT_VER
+export GIT_USR
 
 # if user.name is not available from git use user@hostname
 ifeq ($(GIT_USR),)

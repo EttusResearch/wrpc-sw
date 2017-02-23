@@ -15,6 +15,7 @@ enum dump_type {
 	dump_type_char, /* for zero-terminated strings */
 	dump_type_bina, /* for binary stull in MAC format */
 	/* normal types follow */
+	dump_type_uint8_t,
 	dump_type_uint32_t,
 	dump_type_uint16_t,
 	dump_type_int,

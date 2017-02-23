@@ -13,6 +13,8 @@
 
 #include <ppsi/ppsi.h>
 #include <softpll_ng.h>
+#include <revision.h>
+#include <arch/lm32/crt0.h>
 
 #include <dump-info.h>
 /* We have a problem: ppsi is built for wrpc, so it has ntoh[sl] wrong */
@@ -51,10 +53,12 @@ static long wrpc_get_l32(void *p)
 		return *p32;
 	return __bswap_32(*p32);
 }
+
 static int wrpc_get_i32(void *p)
 {
 	return wrpc_get_l32(p);
 }
+
 static int wrpc_get_16(void *p)
 {
 	uint16_t *p16 = p;
@@ -64,6 +68,12 @@ static int wrpc_get_16(void *p)
 	return __bswap_16(*p16);
 }
 
+static uint8_t wrpc_get_8(void *p)
+{
+	uint8_t *p8 = p;
+
+	return *p8;
+}
 
 void dump_one_field(void *addr, struct dump_info *info)
 {
@@ -112,6 +122,7 @@ void dump_one_field(void *addr, struct dump_info *info)
 	case dump_type_Integer8:
 	case dump_type_Enumeration8:
 	case dump_type_Boolean:
+	case dump_type_uint8_t:
 		printf("%i\n", *(unsigned char *)p);
 		break;
 	case dump_type_UInteger16:
@@ -217,9 +228,18 @@ unsigned long wrpc_get_pointer(void *base, char *s_name, char *f_name)
 	return 0;
 }
 
-
+void print_version(void)
+{
+	fprintf(stderr, "Built in wrpc-sw repo ver:%s, by %s on %s %s\n",
+		__GIT_VER__, __GIT_USR__, __TIME__, __DATE__);
+	fprintf(stderr, "Supported WRPC structures version %d\n",
+		WRPC_SHMEM_VERSION);
+	fprintf(stderr, "Supported PPSI structures version %d\n",
+		WRS_PPSI_SHMEM_VERSION);
+}
 /* all of these are 0 by default */
-unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off;
+unsigned long spll_off, fifo_off, ppi_off, ppg_off, servo_off, ds_off,
+	      stats_off;
 
 /* Use:  wrs_dump_memory <file> <hex-offset> <name> */
 int main(int argc, char **argv)
@@ -230,6 +250,7 @@ int main(int argc, char **argv)
 	struct stat st;
 	char *dumpname = "";
 	char c;
+	uint8_t version_wrpc, version_ppsi;
 
 	if (argc != 4 && argc != 2) {
 		fprintf(stderr, "%s: use \"%s <file> <offset> <name>\n",
@@ -237,7 +258,8 @@ int main(int argc, char **argv)
 		fprintf(stderr,
 			"\"name\" is one of pll, fifo, ppg, ppi, servo_state"
 			" or ds for data-sets. \"ds\" gets a ppg offset\n");
-		fprintf(stderr, "But with a new binary, just pass <file>\n");
+		fprintf(stderr, "But with a new binary, just pass <file>\n\n");
+		print_version();
 		exit(1);
 	}
 
@@ -274,7 +296,7 @@ int main(int argc, char **argv)
 	}
 
 	/* In case we have a "new" binary file, use such information */
-	if (!strncmp(mapaddr + 0x80, "CPRW", 4))
+	if (!strncmp(mapaddr + WRPC_MARK, "CPRW", 4))
 		setenv("WRPC_SPEC", "yes", 1);
 
 	/* If the dump file needs "spec" byte order, fix it all */
@@ -289,12 +311,14 @@ int main(int argc, char **argv)
 	if (argc == 4)
 		dumpname = argv[3];
 
-	/* If we have a new binary file, pick the pointers */
-	if (!strncmp(mapaddr + 0x80, "WRPC----", 8)) {
+	/* If we have a new binary file, pick the pointers
+	 * Magic numbers are taken from crt0.S or disassembly of wrc.bin */
+	if (!strncmp(mapaddr + WRPC_MARK, "WRPC----", 8)) {
 
-		spll_off = wrpc_get_l32(mapaddr + 0x90);
-		fifo_off = wrpc_get_l32(mapaddr + 0x94);
-		ppi_off = wrpc_get_l32(mapaddr + 0x98);
+		spll_off = wrpc_get_l32(mapaddr + SOFTPLL_PADDR);
+		fifo_off = wrpc_get_l32(mapaddr + FIFO_LOG_PADDR);
+		ppi_off = wrpc_get_l32(mapaddr + PPI_STATIC_PADDR);
+		stats_off = wrpc_get_l32(mapaddr + STATS_PADDR);
 		if (ppi_off) { /* This is 0 for wrs */
 			ppg_off = wrpc_get_pointer(mapaddr + ppi_off,
 				   "pp_instance", "glbs");
@@ -302,6 +326,20 @@ int main(int argc, char **argv)
 				    "pp_globals", "global_ext_data");
 			ds_off = ppg_off;
 		}
+	}
+
+	/* Check the version of wrpc and ppsi structures */
+	version_wrpc = wrpc_get_8(mapaddr + VERSION_WRPC_ADDR);
+	version_ppsi = wrpc_get_8(mapaddr + VERSION_PPSI_ADDR);
+	if (version_wrpc != WRPC_SHMEM_VERSION) {
+		printf("Unsupported version of WRPC structures! Expected %d, "
+		       "but read %d\n", WRPC_SHMEM_VERSION, version_wrpc);
+		exit(1);
+	}
+	if (version_ppsi != WRS_PPSI_SHMEM_VERSION) {
+		printf("Unsupported version of PPSI structures! Expected %d, "
+		       "but read %d\n", WRS_PPSI_SHMEM_VERSION, version_ppsi);
+		exit(1);
 	}
 
 	#define ARRAY_AND_SIZE(x) (x), ARRAY_SIZE(x)
@@ -370,6 +408,12 @@ int main(int argc, char **argv)
 		dump_many_fields(mapaddr + newoffset, "DSTimeProperties");
 	}
 
+	if (!strcmp(dumpname, "stats"))
+		stats_off = offset;
+	if (stats_off) {
+		printf("stats at 0x%lx\n", stats_off);
+		dump_many_fields(mapaddr + stats_off, "stats");
+	}
 
 	exit(0);
 }
