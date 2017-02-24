@@ -166,19 +166,25 @@ int wrpc_test_1(void)
 				&hwts);
 
 		/** check whether the received value is OK */
-		if (ret == 0)
+		if (ret == 0) {
 			code = 0xE0; /* Error: returned zero value */
+			hdl_testbench.return_val = TESTBENCH_RET_ERROR;
+		}
 		else if (ret > 0) {
 			pl_cnt = 0xFFFF & ((tx_payload[0] << 8) | tx_payload[1]);
 			if (pl_cnt == rx_cnt) {
 				rx_cnt++;
 				code = 0xBB; /* OK */
+				hdl_testbench.return_val = TESTBENCH_RET_OK;
 			} else {
 				rx_cnt = pl_cnt+1;
 				code = 0xE1; /* Error: wrong seqID */
+				hdl_testbench.return_val = TESTBENCH_RET_ERROR;
 			}
-		} else
+		} else {
 			code = 0xE2; /* Error: error of rx */
+			hdl_testbench.return_val = TESTBENCH_RET_ERROR;
+		}
 	}
 
 }
