@@ -92,6 +92,7 @@ static void wrc_sim_initialize(void)
 	minic_init();
 	shw_pps_gen_init();
 	spll_very_init();
+	shw_pps_gen_enable_output(1);
 }
 /*
  * This is a test used by:
