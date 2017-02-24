@@ -35,8 +35,10 @@
 
 #define TESTBENCH_MAGIC 0x4d433ebc
 #define TESTBENCH_VERSION 1
+#define TESTBENCH_RET_NO_TEST 0
 #define TESTBENCH_RET_OK 1
 #define TESTBENCH_RET_ERROR 2
+
 
 /*
  * This is a structure to pass information from the testbench to lm32's
@@ -193,6 +195,11 @@ void main(void)
 			;
 	}
 	switch (hdl_testbench.test_num) {
+	case 0:
+		/* for simulations that just need link-up */
+		hdl_testbench.return_val = TESTBENCH_RET_NO_TEST;
+		while (1)
+			;
 	case 1:
 		wrpc_test_1();
 		break;
