@@ -134,3 +134,15 @@ int shw_pps_gen_enable_output(int enable)
 
 	return 0;
 }
+
+/* Masks/unmasks PPS output when link is down (useful in master mode) */
+int shw_pps_gen_unmask_output(int unmask)
+{
+	uint32_t escr = ppsg_read(ESCR);
+	if (unmask)
+		ppsg_write(ESCR, escr | PPSG_ESCR_PPS_UNMASK);
+	else
+		ppsg_write(ESCR, escr & ~PPSG_ESCR_PPS_UNMASK);
+
+	return 0;
+}

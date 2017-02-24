@@ -26,6 +26,9 @@ int shw_pps_gen_busy(void);
 /* Enables/disables PPS Generator PPS output */
 int shw_pps_gen_enable_output(int enable);
 
+/* Masks/unmasks PPS output when link is down (useful in master mode) */
+int shw_pps_gen_unmask_output(int unmask);
+
 /* Reads the current time and stores at <seconds,nanoseconds>. */
 void shw_pps_gen_get_time(uint64_t * seconds, uint32_t * nanoseconds);
 
