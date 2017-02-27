@@ -49,20 +49,19 @@
 
 This is the user manual for the White Rabbit PTP Core, part of the White
 Rabbit project. It describes the building and running process. If you don't
-want to get your hands dirty and prefer to use the binaries available at
-\url{http://www.ohwr.org/projects/wr-cores/files} please skip
-\link{Building the Core} and move forward directly to
-\link{Running and Configuring}.
-
+want to get your hands dirty and prefer to start with the demo binaries
+available at \url{http://www.ohwr.org/projects/wr-cores/files} please skip
+section \ref{Building the Core} and move forward directly to section
+\ref{Running and Configuring}.
 
 
 % ##########################################################################
-\label{Software and hardware requirements}
 \section{Software and hardware requirements}
+\label{Software and hardware requirements}
 
 % ==========================================================================
-\label{Repositories and Releases}
 \subsection{Repositories and Releases}
+\label{Repositories and Releases}
 
 This manual is about the official \input{version} stable release of the White
 Rabbit PTP Core (\codeHook{WRPC}).
@@ -111,8 +110,8 @@ newest stable releases.
 
 
 % ==========================================================================
-\label{Required hardware}
 \subsection{Required hardware}
+\label{Required hardware}
 
 The absolute minimum to run the \codeHook{wr ptp core} is a PC computer with
 Linux and a Simple PCIe \codeHook{fmc} Carrier
@@ -129,8 +128,8 @@ with a \codeHook{wr} Switch.
 \end{itemize*}
 
 % ##########################################################################
-\label{Building the Core}
 \section{Building the Core}
+\label{Building the Core}
 
 \textbf{Note:} you can skip this chapter if you want to use the release binaries
 available from \textit{ohwr.org}.
@@ -143,8 +142,8 @@ modify the \codeHook{lm32} software, you can skip the compilation stage since
 synthesized gateware already embeds the default software for the release.
 
 % ==========================================================================
-\label{HDL synthesis}
 \subsection{HDL synthesis}
+\label{HDL synthesis}
 
 Before running the synthesis process you have to make sure your environment is
 set up correctly. You need a Xilinx ISE software with at least a WebPack
@@ -183,7 +182,7 @@ synthesis Makefile and ISE project file based on a set of Manifest.py files
 deployed among the directories inside the \textit{wr-cores} repository.
 
 First, please clone the \textit{hdlmake} repository from its location given in
-\link{Repositories and Releases}:\newpage
+section \ref{Repositories and Releases}:\newpage
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/2070/hdlmake-v1.0
 $ git clone git://ohwr.org/misc/hdl-make.git <your_location>/hdl-make
@@ -263,7 +262,8 @@ This takes (depending on your computer speed) about 15 minutes and should create
 two files with FPGA firmware: \textit{spec\_top.bit} and \textit{spec\_top.bin}. The
 former can be downloaded to FPGA with Xilinx Platform Cable using e.g.
 \textit{Xilinx Impact}. The latter can be used with kernel drivers from the
-\textit{spec-sw} repository (check example in \link{Running and Configuring}).
+\textit{spec-sw} repository (check example in section \ref{Running and
+Configuring}).
 
 \vspace{1em}
 If, on the other hand, you would like to clean-up the repository and rebuild
@@ -274,8 +274,8 @@ everything from scratch you can use the following commands:
 \end{itemize*}
 
 % ==========================================================================
-\label{LM32 software compilation}
 \subsection{LM32 software compilation}
+\label{LM32 software compilation}
 
 \textbf{Note:} By default, the \codeHook{lm32} software for a stable release is embedded
 inside the FPGA bitstream you've downloaded from \textit{ohwr.org} or synthesized in
@@ -286,7 +286,7 @@ some changes required by your application.
 \vspace{1em}
 To compile the \codeHook{lm32} software for the White Rabbit \codeHook{ptp} Core you will
 need to download and unpack the \codeHook{lm32} toolchain from the location mentioned
-in \link{Repositories and Releases}:
+in section \ref{Repositories and Releases}:
 
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
@@ -349,15 +349,15 @@ from the network.
 
 The resulting binary \textit{wrc.bin} can be then used with the loader from
 \textit{spec-sw} software package to program the \codeHook{lm32} inside the White Rabbit \codeHook{ptp}
-Core (\link{Running and Configuring}).
+Core (section \ref{Running and Configuring}).
 
 % ##########################################################################
-\label{Running and Configuring}
 \section{Running and Configuring}
+\label{Running and Configuring}
 
 % ==========================================================================
-\label{Downloading firmware to SPEC}
 \subsection{Downloading firmware to SPEC}
+\label{Downloading firmware to SPEC}
 
 For this step you will need a \codeHook{spec} board software support package
 (\codeHook{spec-sw}) from \textit{ohwr.org}. It is a set of Linux kernel drivers and
@@ -382,8 +382,8 @@ $ git checkout c0e18a7
 $ make
 \end{lstlisting}
 
-Then you should copy your \textit{spec\_top.bin} generated in \link{HDL synthesis} or
-downloaded from the \textit{ohwr} to /lib/firmware/fmc/. changing its
+Then you should copy your \textit{spec\_top.bin} generated in \ref{HDL synthesis} or
+downloaded from the \textit{ohwr} to /lib/firmware/fmc changing its
 name:
 
 \noindent\textbf{Note:} the commands below have to be executed with superuser rights
@@ -420,9 +420,9 @@ project page:
 $ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
 \end{lstlisting}
 It contains all the files required by the \codeHook{wr ptp core}. They are empty, but
-have to exist in the \codeHook{sdbfs} structure to be written later as described in
-\link{Writing configuration}. To store the filesystem image in flash, please
-execute the following command:
+have to exist in the \codeHook{sdbfs} structure to be written later as described
+in section \ref{Writing configuration}. To store the filesystem image in flash,
+please execute the following command:
 \begin{lstlisting}
 $ sudo tools/flash-write -b 0x20 -c 0x0 0 1507712 < \
      <your_location>/sdbfs-flash.bin
@@ -435,9 +435,9 @@ spec.ko module. See the example below on loading the FPGA code. We see that the
 second number in the colon/dotted notation provides the argument in the example
 above.
 
-\noindent\textbf{Note:} Please refer to \link{Writing SDBFS image in standalone configuration}
-for instructions on how to write the \codeHook{sdbfs} image to a standalone \codeHook{spec}
-or custom hardware.
+\noindent\textbf{Note:} Please refer to section \ref{Writing SDBFS image in
+standalone configuration} for instructions on how to write the \codeHook{sdbfs}
+image to a standalone \codeHook{spec} or custom hardware.
 
 \vspace{1em}
 Now, you are ready to load the last driver, which downloads the actual
@@ -488,15 +488,15 @@ is up and running on your \codeHook{spec}. Congratulations !
 
 
 % ==========================================================================
-\label{Writing configuration}
 \subsection{Writing configuration}
+\label{Writing configuration}
 
 First, you should perform a few configuration steps through the \codeHook{wrpc} shell
 before using the core.
 
 \noindent\textbf{Note:} the examples below describe only a subset of the \codeHook{wrpc} Shell
-commands. The full list of supported commands can be found in
-\link{WRPC Shell commands}.
+commands. The full list of supported commands can be found in appendix
+\ref{WRPC Shell commands}.
 
 \vspace{1em}
 Before making the configuration changes, it is good to stop the \codeHook{ptp} daemon.
@@ -596,10 +596,10 @@ or Master mode. The only difference would be changing the
 \textit{init add mode master}.
 
 % ==========================================================================
-\label{Running the Core}
 \subsection{Running the Core}
+\label{Running the Core}
 
-Having the \codeHook{sfp} database, and the init script created in \link{Writing
+Having the \codeHook{sfp} database, and the init script created in \ref{Writing
 configuration} you can restart the \codeHook{wr ptp core} by reprogramming the
 \codeHook{lm32} software (with \textit{spec-cl} tool) or by typing the shell command:
 
@@ -645,7 +645,7 @@ information is refreshed at every WR iteration or periodically if
 nothing else happens (so you see an up-to-date timestamp). The period
 defaults to 1 second and can be changed using the \textit{refresh} command. To exit from
 this console mode press <Esc>. A full description of the information reported
-by gui is provided in \link{WRPC GUI elements}.
+by gui is provided in appendix \ref{WRPC GUI elements}.
 
 \noindent\textbf{Note:} the \textit{Synchronization status} and \textit{Timing parameters} in \textit{gui}
 are available only in the \codeHook{wr} Slave mode. When running as \codeHook{wr} Master, you
@@ -694,8 +694,8 @@ difference into account in your measurements.
 
 
 % ==========================================================================
-\label{Diagnostics via SNMP}
 \subsection{Diagnostics via SNMP}
+\label{Diagnostics via SNMP}
 
 Up to the version 3.1 of \codeHook{wrpc} the only way to perform diagnostics
 of the \texttt{wrpc-sw} was to use serial console with tools like \textit{gui}, \textit{stat},
@@ -793,8 +793,8 @@ supported. This makes it impossible to read some \codeHook{wrpc}'s objects with
 SNMPv1.
 
 % --------------------------------------------------------------------------
-\label{Managing SFP database via SNMP}
 \subsubsection{Managing SFP database via SNMP}
+\label{Managing SFP database via SNMP}
 
 The SFPs database can be displayed using the \texttt{sfp show} command from
 the \codeHook{wrpc}'s console:
@@ -926,8 +926,8 @@ To verify that database is empty:
 \end{lstlisting}
 
 % --------------------------------------------------------------------------
-\label{Adding new objects to the SNMP}
 \subsubsection{Adding new objects to the SNMP}
+\label{Adding new objects to the SNMP}
 
 The \textit{Mini SNMP responder} can be easily expanded to export new objects.
 Values of new objects can come from \codeHook{wrpc}'s variables or other HDL modules
@@ -1055,8 +1055,8 @@ End of MIB
 \end{lstlisting}
 
 % --------------------------------------------------------------------------
-\label{Mini SNMP responder's tests}
 \subsubsection{Mini SNMP responder's tests}
+\label{Mini SNMP responder's tests}
 
 In the \texttt{wrpc-sw} repo, automatic tests are available to validate the \textit{Mini
 SNMP responder} implementation. These tests are placed in the \texttt{test/snmp}
@@ -1093,12 +1093,12 @@ These tests have to be executed after any changes are made to the \textit{Mini S
 responder}.
 
 % ==========================================================================
-\label{Other Diagnostic Tools}
 \subsection{Other Diagnostic Tools}
+\label{Other Diagnostic Tools}
 
 % --------------------------------------------------------------------------
-\label{Syslog}
 \subsubsection{Syslog}
+\label{Syslog}
 
 \begin{sloppypar} % to prevent \texttt{} from going to the margine
 The node can act as a \textit{syslog} client, though only on the UDP protocol.
@@ -1179,8 +1179,8 @@ situations:
 % FIXME: syslog examples
 
 % --------------------------------------------------------------------------
-\label{Latency Test}
 \subsubsection{Latency Test}
+\label{Latency Test}
 
 \begin{sloppypar} % to prevent \texttt{} from going to the margine
 The configuration choice \texttt{CONFIG\_LATENCY\_PROBE} activates a
@@ -1222,8 +1222,8 @@ every received event.
 \end{sloppypar}
 
 % --------------------------------------------------------------------------
-\label{wrpc-dump}
 \subsubsection{wrpc-dump}
+\label{wrpc-dump}
 
 When trying to diagnose software issues, especially lockup situations,
 it may be useful to look at the current values or critical variables
@@ -1267,8 +1267,8 @@ We won't show the 180 output lines here, to save some paper, but they
 are readable dumps of the data structures, including the PTP timestamps.
 
 % --------------------------------------------------------------------------
-\label{spll Softpll Timing}
 \subsubsection{Softpll Timing}
+\label{spll Softpll Timing}
 
 To help understanding the CPU time spent in the \textit{softpll}, you can
 set \texttt{CONFIG\_SPLL\_FIFO\_LOG} in the configuration. The option
@@ -1291,8 +1291,8 @@ and \texttt{duration} fields come from reading the \texttt{PPSG} nanosecond coun
 \end{lstlisting}
 
 % --------------------------------------------------------------------------
-\label{Uptime Counter}
 \subsubsection{Uptime Counter}
+\label{Uptime Counter}
 
 \textit{Wrpc-sw} now maintains an ``uptime'' counter, in seconds. It lives
 at binary address 0xa0. It can be queried by \textit{etherbone}, or
@@ -1304,8 +1304,8 @@ running when a node is not active on the network. Neither of this even
 happens in production, but the tool is useful during development.
 
 % --------------------------------------------------------------------------
-\label{Profiling}
 \subsubsection{Profiling}
+\label{Profiling}
 
 The node now has a \textit{ps} command, that shows the number of iterations
 and time spent in each \textit{task}. Each task reports when it did
@@ -1331,8 +1331,8 @@ By using ``\texttt{ps reset}'' you can zero all counters to start a new
 test run.
 
 % --------------------------------------------------------------------------
-\label{Pfilter rules}
 \subsubsection{Pfilter rules}
+\label{Pfilter rules}
 
 By setting \texttt{CONFIG\_PFILTER\_VERBOSE}, which depends on
 \texttt{CONFIG\_DEVELOPER}, you can get a dump of packet-filter rules
@@ -1340,8 +1340,8 @@ whenever they are activated.  This happens at initialization time and
 whenever you change the MAC address or \textit{vlan} choice.
 
 % ==========================================================================
-\label{Network Services}
 \subsection{Network Services}
+\label{Network Services}
 
 If built with \texttt{CONFIG\_IP=y}, \textit{wrpc-sw} implements the following
 udp-based network services, in addition to \textit{ptp}:
@@ -1364,13 +1364,13 @@ udp-based network services, in addition to \textit{ptp}:
 \textit{ syslog } &
 
 	If \texttt{CONFIG\_SYSLOG} is set, the node is a syslog client.
-        See \link{Syslog} for details.\\
+        See section \ref{Syslog} for details.\\
 
 \end{longtable}
 
 % ==========================================================================
-\label{VLAN Support}
 \subsection{VLAN Support}
+\label{VLAN Support}
 
 The White Rabbit node can be configured to be vlan-aware, by setting
 \texttt{CONFIG\_VLAN} in \textit{Kconfig}.  The setting depends on \texttt{CONFIG\_DEVELOPER}.
@@ -1413,8 +1413,8 @@ processing and get back to the ``standard'' packet-filter rules.
 \end{longtable}
 
 % ##########################################################################
-\label{Troubleshooting}
 \section{Troubleshooting}
+\label{Troubleshooting}
 
 \textbf{My computer hangs on loading spec.ko or fmc-trivial.ko driver.}
 
@@ -1448,8 +1448,8 @@ measurements).
 
 
 % ##########################################################################
-\label{Questions}
 \section{Questions, reporting bugs}
+\label{Questions}
 
 If you have found a bug, you have problems with the \codeHook{wr ptp core} or one
 of the tools used to build and run it, you can write to our mailing list
@@ -1461,8 +1461,8 @@ of the tools used to build and run it, you can write to our mailing list
 
 \appendix
 \clearpage
-\label{WRPC Shell commands}
 \section{WRPC Shell Commands}
+\label{WRPC Shell commands}
 
 \footnotesize
 \begin{longtable}{  p{7.5cm}  p{7cm} }
@@ -1607,11 +1607,11 @@ initialization script\\
  & \\
   \code{ltest} & \\
 
-  \code{ltest <secs> <msecs>} & Read or set the latency-test sending interval. See \link{Latency Test}.\\
+  \code{ltest <secs> <msecs>} & Read or set the latency-test sending interval. See \ref{Latency Test}.\\
  & \\
   \code{syslog off} & \\
 
-  \code{syslog <ipaddr> <macaddr>} & Disable or set your \textit{syslog} server. See \link{Syslog}.\\
+  \code{syslog <ipaddr> <macaddr>} & Disable or set your \textit{syslog} server. See \ref{Syslog}.\\
 
 \end{longtable}
 
@@ -1619,8 +1619,8 @@ initialization script\\
 
 % ##########################################################################
 \clearpage
-\label{WRPC GUI elements}
 \section{WRPC GUI elements}
+\label{WRPC GUI elements}
 
 \footnotesize
 \begin{longtable}{  p{4.5cm}  p{10cm} }
@@ -1689,8 +1689,8 @@ the \codeHook{wr} servo is updated\\
 
 % ##########################################################################
 \clearpage
-\label{Writing SDBFS image in standalone configuration}
 \section{Writing SDBFS image in standalone configuration}
+\label{Writing SDBFS image in standalone configuration}
 
 If you use \codeHook{spec} board in a host-less environment, or you use custom
 hardware and \codeHook{spec} drivers and tools cannot be used, there is still a
@@ -1725,8 +1725,8 @@ After that, you can use the Xilinx JTAG cable and Xilinx ISE Impact tool to
 write your \textit{output.mcs} file to the Flash memory.
 \newpage
 % ##########################################################################
-\label{wrpc-dump with Older WRPC Binaries}
 \section{wrpc-dump with Older WRPC Binaries}
+\label{wrpc-dump with Older WRPC Binaries}
 
 The tool has another working mode, that you can use with older
 \textit{wrpc} builds, where the special table is missing (but please be
