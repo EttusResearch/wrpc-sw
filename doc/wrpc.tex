@@ -52,7 +52,7 @@ Rabbit project. It describes the building and running process. If you don't
 want to get your hands dirty and prefer to start with the demo binaries
 available at \url{http://www.ohwr.org/projects/wr-cores/files} for officially
 supported boards, please skip section \ref{Building the Core} and move forward
-directly to section \ref{Running and Configuring}.
+directly to section \ref{Programming FPGA}.
 
 
 % ##########################################################################
@@ -281,7 +281,7 @@ programming method:
 \begin{itemize}
   \item \textbf{*.bin} files to program the Xilinx FPGA on SPEC or SVEC board
     using the official software support package (\textit{spec-sw},
-    \textit{svec-sw}). See section \ref{Running and Configuring} for more
+    \textit{svec-sw}). See section \ref{Programming FPGA} for more
     information.
   \item \textbf{*.bit} files to program the Xilinx FPGA with Xilinx USB Platform
     Cable (using e.g. Xilinx Impact tool)
@@ -364,107 +364,48 @@ from the network.
 
 The resulting binary \textit{wrc.bin} can be then used with the loader from
 \textit{spec-sw} or \textit{svec-sw} software package to program the LM32 inside
-the White Rabbit PTP Core (see section \ref{Running and Configuring} for details).
+the White Rabbit PTP Core (see section \ref{Programming FPGA} for details).
 
 % ##########################################################################
-\section{Running and Configuring}
-\label{Running and Configuring}
+\section{Programming FPGA with WRPC firmware}
+\label{Programming FPGA}
 
 % ==========================================================================
-\subsection{Downloading firmware to SPEC}
-\label{Downloading firmware to SPEC}
+\subsection{Programming FPGA on SPEC}
+\label{Programming FPGA on SPEC}
 
-For this step you will need a \codeHook{spec} board software support package
-(\codeHook{spec-sw}) from \textit{ohwr.org}. It is a set of Linux kernel drivers and
-userspace tools, that interact with a \codeHook{spec} board plugged into PCI-Express
-slot.
+\textbf{Note:} If you use a more recent version of the \texttt{spec-sw} than the
+one described in this manual, the up-to-date documentation can always be found
+in \textit{doc/} subdirectory of the \texttt{spec-sw} git repository.\\
 
-Instructions in this section are based on a development version of \codeHook{spec-sw}
-so if a stable release more recent than \textit{2014-02} is available, you should
-use it instead. 
-
-If there is a more recent version of the \codeHook{spec} software support, the
-up-to-date documentation can always be found in \textit{doc/} subdirectory of
-\codeHook{spec-sw} git repository.
-
-\vspace{1em}
-First, please clone the git repository of \codeHook{spec-sw} package and build it:
+First you need to clone the SPEC board software support package
+(\textit{spec-sw}) from \textit{ohwr.org}. It is a set of Linux kernel drivers and
+userspace tools, that interact with a SPEC board plugged into a PCI-Express
+slot.\\
 
 \begin{lstlisting}
-$ git clone git://ohwr.org/fmc-projects/spec/spec-sw.git <your_specsw_location>
-$ cd <your_specsw_location>
-$ git checkout c0e18a7
+$ git clone git://ohwr.org/fmc-projects/spec/spec-sw.git <your_location>/spec-sw
+$ cd <your_location>/spec-sw
+$ git checkout aff79eb
 $ make
 \end{lstlisting}
 
-Then you should copy your \textit{spec\_top.bin} generated in \ref{HDL synthesis} or
-downloaded from the \textit{ohwr} to /lib/firmware/fmc changing its
-name:
-
-\noindent\textbf{Note:} the commands below have to be executed with superuser rights
-
-\begin{lstlisting}
-$ sudo cp <your_location>/wr-cores/syn/spec_1_1/wr_core_demo/spec_top.bin \
-     /lib/firmware/fmc/spec-3.0.bin
-\end{lstlisting}
-
-You have to download also the "golden" firmware for \codeHook{spec} card. It is used by
+You have to download also the "golden" firmware for SPEC card. It is used by
 the drivers to recognize the hardware:
-
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/4057/spec-init.bin-2015-09-18
 $ sudo mv spec-init.bin-2015-09-18 /lib/firmware/fmc/spec-init.bin
 \end{lstlisting}
 
-Now you can load the drivers necessary to access \codeHook{spec} board from your
+Now you can load the drivers necessary to access the SPEC board from your
 system:
 \begin{lstlisting}
 $ sudo insmod fmc-bus/kernel/fmc.ko
 $ sudo insmod kernel/spec.ko
 \end{lstlisting}
 
-By default, when loading the \textit{spec.ko} driver FPGA gets programmed with
-the "golden" bitstream. Starting from version 3.0, \codeHook{wr ptp core} uses a flash
-memory chip on the carrier as a default place for storing the calibration
-parameters and the init script. Also the storage format of this information is
-now better organised in the files of the \codeHook{sdbfs} filesystem. Therefore,
-starting from v3.0 you have to write the \codeHook{sdbfs} filesystem image to the
-flash before running the \codeHook{wr ptp core}. You can download the image from our
-project page:
-\begin{lstlisting}
-$ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
-\end{lstlisting}
-It contains all the files required by the \codeHook{wr ptp core}. They are empty, but
-have to exist in the \codeHook{sdbfs} structure to be written later as described
-in section \ref{Writing configuration}. To store the filesystem image in flash,
-please execute the following command:
-\begin{lstlisting}
-$ sudo tools/flash-write -b 0x20 -c 0x0 0 1507712 < \
-     <your_location>/sdbfs-flash.bin
-\end{lstlisting}
-
-\noindent\textbf{Note:} The \code{-b} parameter takes the PCI bus address of the SPEC. This
-can be found either in the list of the PCI devices installed in the system
-(\code{lspci}) or in the kernel messages (\code{dmesg}) when inserting the
-spec.ko module. See the example below on loading the FPGA code. We see that the
-second number in the colon/dotted notation provides the argument in the example
-above.
-
-\noindent\textbf{Note:} Please refer to section \ref{Writing SDBFS image in
-standalone configuration} for instructions on how to write the \codeHook{sdbfs}
-image to a standalone \codeHook{spec} or custom hardware.
-
-\vspace{1em}
-Now, you are ready to load the last driver, which downloads the actual
-\codeHook{wr ptp core} bitstream to the Spartan 6 FPGA:
-\begin{lstlisting}
-$ sudo insmod fmc-bus/kernel/fmc-trivial.ko gateware=fmc/spec-3.0.bin
-\end{lstlisting}
-
-You can use the \textit{dmesg} Linux command to verify if the FPGA firmware file was
-loaded into the FPGA. Among plenty of messages you should be able to find
-something very similar to:
-
+You can use the \textit{dmesg} Linux command to verify if this step succeeded.
+Among plenty of messages you should be able to find something very similar to:
 \begin{lstlisting}[basicstyle=\tiny]
 [1275526.738895] spec 0000:20:00.0:  probe for device 0020:0000
 [1275526.738906] spec 0000:20:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
@@ -474,35 +415,71 @@ something very similar to:
 [1275527.296754] spec 0000:20:00.0: mezzanine 0
 [1275527.296756]       Manufacturer: CERN
 [1275527.296757]       Product name: FmcDio5cha
+\end{lstlisting}
 
-[1275593.973147] fmc FmcDio5cha-2000: Driver has no ID: matches all
-[1275593.973177] spec 0000:20:00.0: reprogramming with fmc/spec-3.0.bin
-[1275594.168249] spec 0000:20:00.0: FPGA programming successful
+
+By default, when loading the \textit{spec.ko} driver, FPGA gets programmed with
+the "golden" bitstream. Starting from version 3.0, WR PTP Core uses a flash
+memory chip on the carrier as a default place for storing the calibration
+parameters and the init script. Also the storage format of this information is
+now better organized in the files of the SDBFS filesystem. Therefore, starting
+from v3.0 you have to write the \codeHook{sdbfs} filesystem image to the flash
+before running the WRPC. You can download the image from \textit{ohwr.org}:
+\begin{lstlisting}
+$ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
+\end{lstlisting}
+
+It contains all the files required by the core. They are empty, but have to
+exist in the SDBFS structure to be written later as described in section
+\ref{Writing configuration}. To write the filesystem image to flash, please
+execute the following command:
+\begin{lstlisting}
+$ sudo tools/flash-write -c 0x0 0 1507712 < <your_location>/sdbfs-flash.bin
+\end{lstlisting}
+
+\noindent\textbf{Note:} If you have more than one SPEC board in your computer,
+you can use \code{-b} parameter which takes the PCI bus address of the card you
+want to program. This can be found in the list of the PCI devices installed in
+the system (\code{lspci}).
+
+\noindent\textbf{Note:} Please refer to section \ref{Writing SDBFS image in
+standalone configuration} for instructions on how to write the SDBFS image to a
+standalone SPEC or custom hardware.\\
+
+Now, you are ready to program the FPGA with your synthesized bitstream from
+\texttt{<your\_location>/wr-cores/syn/spec\_ref\_design/spec\_wr\_ref\_top.bin}
+\begin{lstlisting}
+$ sudo tools/spec-fwloader \
+<your_location>/wr-cores/syn/spec_ref_design/spec_wr_ref_top.bin
 \end{lstlisting}
 
 If everything went right up to this moment you have your board running the FPGA 
-bitstream with a default \codeHook{lm32} software. If you want to load your own
-\textit{wrc.bin} built from the \textit{wrpc-sw} repository you can use the \textit{spec-cl}
-tool:
-
+bitstream with the WR PTP Core. If you need to load your own \texttt{wrc.bin}
+compiled in section \ref{LM32 software compilation}, you can use the
+\texttt{spec-cl} tool:
 \begin{lstlisting}
 $ sudo tools/spec-cl <your_location>/wrpc-sw/wrc.bin
 \end{lstlisting}
 
-\vspace{1em}
-Now you should be able to start a Virtual-UART tool (also part of the
-\codeHook{spec-sw} package) that will be used to interact with the \codeHook{wr ptp core}
-shell:
-
+After all these steps, you should be able to start a Virtual-UART tool (also
+part of the \textit{spec-sw} package) that will be used to interact with the
+WRPC shell:
 \begin{lstlisting}
 $ sudo tools/spec-vuart
 \end{lstlisting}
 
-If you are able to see the \codeHook{wrpc} Shell prompt \textit{wrc\#} this means the Core
-is up and running on your \codeHook{spec}. Congratulations !
-
+If you are able to see the shell prompt \textit{wrc\#} this means the Core
+is up and running on your SPEC card. Congratulations !
 
 % ==========================================================================
+\subsection{Programming FPGA on SVEC}
+
+% ==========================================================================
+\subsection{Programming FPGA on VFC-HD}
+
+% ==========================================================================
+\section{Using WRPC shell}
+
 \subsection{Writing configuration}
 \label{Writing configuration}
 
