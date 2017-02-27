@@ -145,7 +145,7 @@ PPSI-CFG-$(CONFIG_P2P) = wrpc_pdelay_defconfig
 PPSI-CFG-$(CONFIG_HOST_PROCESS) = unix_defconfig
 PPSI-FLAGS-$(CONFIG_LM32) = CONFIG_NO_PRINTF=y
 
-$(obj-ppsi):
+$(obj-ppsi): gitmodules
 	test -s $(PPSI)/.config || $(MAKE) -C $(PPSI) $(PPSI-CFG-y)
 	@if [ "$(CONFIG_PPSI_FORCE_CONFIG)" = "y" ]; then \
 		$(MAKE) -C $(PPSI) $(PPSI-CFG-y); \
@@ -191,7 +191,7 @@ config.o: .config
 %.mif: tools %.bin
 	./tools/genrammif $*.bin $(CONFIG_RAMSIZE) > $@
 
-$(AUTOCONF): silentoldconfig
+$(AUTOCONF): silentoldconfig gitmodules
 
 clean:
 	rm -f $(OBJS) $(OUTPUT).o config.o revision.o $(OUTPUT).elf $(LDS) \
@@ -210,7 +210,7 @@ distclean: clean
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
-tools: .config
+tools: .config gitmodules
 	$(MAKE) -C tools
 
 # if needed, check out the submodules (first time only), so users
