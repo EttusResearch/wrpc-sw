@@ -206,8 +206,10 @@ section \ref{Repositories and Releases}:
 \begin{lstlisting}
 $ git clone git://ohwr.org/misc/hdl-make.git <your_location>/hdl-make
 $ cd <your_location>/hdl-make
-$ git checkout 9d303ee TODO: update commit id
+$ git checkout c4789c4
 \end{lstlisting}
+This checks out \textit{hdlmake} version 2.1 patched with the Arria V FPGA
+support (VFC-HD board).
 
 Then, using your favorite editor, you should create an \textit{hdlmake} script in
 /usr/bin to be able to call it from any directory. The script should have the
@@ -298,67 +300,59 @@ scratch you can use the following commands:
 \subsection{LM32 software compilation}
 \label{LM32 software compilation}
 
-\textbf{Note:} By default, the \codeHook{lm32} software for a stable release is embedded
-inside the FPGA bitstream you've downloaded from \textit{ohwr.org} or synthesized in
-the previous step. This means you don't have to do a manual compilation of the
-\codeHook{lm32} software unless you want to use a development version or you've made
-some changes required by your application.
+\textbf{Note:} By default, the LM32 software for a stable release is embedded
+inside the FPGA bitstream you've downloaded from \textit{ohwr.org} or
+synthesized in section \ref{HDL synthesis}. You can skip this section, unless
+you need to make some custom changes to the LM32 software and compile it
+yourself.\\
 
-\vspace{1em}
-To compile the \codeHook{lm32} software for the White Rabbit \codeHook{ptp} Core you will
-need to download and unpack the \codeHook{lm32} toolchain from the location mentioned
-in section \ref{Repositories and Releases}:
-
+First, you need to download and unpack the LM32 toolchain from the location
+mentioned in section \ref{Repositories and Releases}:
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
-$ tar xJf lm32.tar.xz -C <your_lm32_location>
+$ tar xJf lm32.tar.xz -C <your_location>
 \end{lstlisting}
 
-Then you need to set a \texttt{CROSS\_COMPILE} variable in order
-to compile the software for the \codeHook{lm32} processor:
-
+Then you need to set a \texttt{CROSS\_COMPILE} environment variable in order
+to compile the software for the LM32 processor:
 \begin{lstlisting}
-$ export CROSS_COMPILE="<your_lm32_location>/lm32/bin/lm32-elf-"
+$ export CROSS_COMPILE="<your_location>/lm32/bin/lm32-elf-"
 \end{lstlisting}
 
-To get the sources of the \codeHook{wrpc} software please clone the \textit{wrpc-sw} git
-repository tagged with wrpc-v3.0 tag. If you use \codeHook{wrpc} within another
-project, you may need to checkout a different tag or a specific commit. If this
-applies, please refer to a documentation for this project.
-
+To get the sources of the WRPC software, please clone the \textit{wrpc-sw} git
+repository tagged with \texttt{wrpc-v3.1} tag. The commands in the listing below
+do that together with submodules needed for this software.\\
 \begin{lstlisting}
-$ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git <your_location>/wrpc-sw
+$ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git \
+<your_location>/wrpc-sw
 $ cd <your_location>/wrpc-sw
-$ git checkout wrpc-v3.0   # or "git checkout master"
+$ git checkout wrpc-v3.1
 \end{lstlisting}
 
-Before you can compile \textit{wrpc-sw} you need to make a few configuration choices.
-The package uses \textit{Kconfig} as a configuration engine, so you may run one of the
-following commnads (the first is text-mode, the second uses a KDE GUI
-and the third uses a Gnome GUI):
+\textbf{Note:} If you use WRPC within another project, you may need to checkout
+a different tag or a specific commit. If this applies, please refer to a
+documentation for this project.\\
 
+Before you can compile \textit{wrpc-sw}, you can make some configuration
+choices. The package uses \textit{Kconfig} as a configuration engine, so you may
+run one of the following commands (the first is text-mode, the second uses a KDE
+GUI and the third uses a Gnome GUI):
 \begin{lstlisting}
 $ make menuconfig
 $ make xconfig
 $ make gconfig
 \end{lstlisting}
 
-Other \textit{Kconfig} target applies, like \code{config}, \code{oldconfig}
-and so on.  A few default known-good configurations are found in
-\texttt{./configs} and you choose one by \textit{make}ing it by name:
-
+Other \code{Kconfig} target applies, like \code{config}, \code{oldconfig}
+and so on. A few default known-good configurations are found in
+\texttt{./configs} and you choose one by \code{make}ing it by name. For all
+three boards mentioned in this manual \code{spec\_defconfig} can be used.
 \begin{lstlisting}
 $ make spec_defconfig
 \end{lstlisting}
 
-The most important configuration choice at this point in time is
-whether to enable Etherbone or not. It is disabled by default in
-\code{spec\_defconfig} and enabled by default in
-\code{etherbone\_defconfig}.
-
-After the package is configured, just run \code{make} without
-parameters to build your binary file:
-
+After the package is configured, just run \code{make} without parameters to
+build your binary file:
 \begin{lstlisting}
 $ make
 \end{lstlisting}
@@ -369,8 +363,8 @@ by hand. The second and later build won't download anything
 from the network.
 
 The resulting binary \textit{wrc.bin} can be then used with the loader from
-\textit{spec-sw} software package to program the \codeHook{lm32} inside the White Rabbit \codeHook{ptp}
-Core (section \ref{Running and Configuring}).
+\textit{spec-sw} or \textit{svec-sw} software package to program the LM32 inside
+the White Rabbit PTP Core (see section \ref{Running and Configuring} for details).
 
 % ##########################################################################
 \section{Running and Configuring}
