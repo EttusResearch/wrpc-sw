@@ -1,0 +1,44 @@
+\subsection{Generic parameters}
+\label{sec:adv:generics}
+
+\begin{center}
+  \begin{tabular}{|p{3.7cm}|p{3.3cm}|p{2.2cm}|p{5cm}|}
+    \hline {\bf name} & {\bf type} & {\bf default value} & {\bf description} \\
+    \hline
+    \hline
+    \texttt{g\_phys\_uart} & boolean & \texttt{true} & enable physical UART interface\\
+    \hline
+    \texttt{g\_virtual\_uart} & boolean & \texttt{false} & enable virtual UART interface\\
+    \hline
+    \texttt{g\_aux\_clks} & integer & \texttt{1} & number of aux clocks syntonized by WRPC to WR
+    timebase\\
+    \hline
+    \texttt{g\_rx\_buffer\_size} & integer & \texttt{1024} & size of Rx buffer in WRPC MAC module,
+    default value is 1024 and should not be changed\\
+    \hline
+    \texttt{g\_dpram\_initf} & string & \texttt{""} & filename of compiled WRPC software, to be
+    stored in WRPC memory during the synthesis (default is \emph{wrc.ram}
+    created by compiling WRPC software from \emph{wrpc-sw} git repository)\\
+    \hline
+    \texttt{g\_dpram\_initv} & t\_xwb\_dpram\_init &
+    \texttt{c\_xwb\_ \linebreak dpram\_init \linebreak \_nothing} & VHDL array to initialize WRPC
+    internal memory\\
+    \hline
+    \texttt{g\_dpram\_size} & integer & \texttt{22528} & size of RAM used by WRPC software (in 32-bit
+    words), default value is 22528 and should not be changed\\
+    \hline
+    \texttt{g\_interface\_ \linebreak mode} & t\_wishbone\_ \linebreak interface\_mode &
+    \texttt{PIPELINED} & external Wishbone Slave interface mode
+    [PIPELINED/CLASSIC]\\
+    \hline
+    \texttt{g\_address\_ \linebreak granularity} & t\_wishbone\_ \linebreak
+    address\_granularity & \texttt{WORD} & granularity of address bus in
+    external Wishbone Slave interface [BYTE/WORD]\\
+    \hline
+    \texttt{g\_aux\_sdb} & t\_sdb\_device & \texttt{c\_wrc\_ \linebreak
+    periph3\_ \linebreak sdb} & structure providing SDB Wishbone description of
+    WRPC, when connected to SDB Wishbone Crossbar, this parameter is optional
+    and can be unassigned\\
+    \hline
+  \end{tabular}
+\end{center}

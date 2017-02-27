@@ -1,0 +1,142 @@
+%
+% wrpc_hdl.tex
+%
+% White Rabbit PTP Core HDL.
+%
+\def\us{\char`\_}
+
+\documentclass[a4paper, 12pt]{article}
+%\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata,shapes}
+\usepackage{multirow}
+\usepackage{color}
+\usepackage[latin1]{inputenc}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{times,mathptmx}
+\usepackage{chngcntr}
+\usepackage{hyperref}
+\usepackage[none]{hyphenat}
+%\usepackage{draftwatermark}
+
+%%%%%5% used in Tomeks %%%%%%%
+\usepackage{listings}
+\definecolor{light-gray}{gray}{0.95}
+\usepackage{cancel}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    fig/tomeksDrawings
+%\usepackage{morefloats}
+
+%\usepackage{amsfonts}
+%\usepackage{amssymb}
+%\usepackage{graphicx} 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% creating subsubsubsection notation
+% src: http://www.latex-community.org/forum/viewtopic.php?f=5&t=791
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{secnumdepth}{6}
+\renewcommand\theparagraph{\Alph{paragraph}}
+
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {0.0001pt \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\renewcommand\subparagraph{\@startsection{subparagraph}{5}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {0.0001pt \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+%\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+%\renewcommand{\thefootnote}{\alph{footnote}}
+
+\counterwithin{paragraph}{subsubsection}
+\counterwithin{subparagraph}{paragraph}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\eqoffset}[1]{%
+  {\ensuremath{%
+      {\text{offset}}_{#1}}%
+  }%
+}
+\newcommand{\eqdelay}[1]{{\text{delay}}_{#1}}
+\newcommand{\eqasymm}{{\text{asymmetry}}}
+
+\begin{document}
+
+\title{White Rabbit PTP Core \\ HDL specification\\\normalsize
+{version 1.0}\\\small{(01-03-2013)}}
+\author{Grzegorz Daniluk\\ CERN BE-CO-HT}
+
+\date{March 2013}
+\maketitle
+\thispagestyle{empty}
+
+\begin{figure}[ht!]
+  \centering
+  \vspace{1.3cm}
+  %\includegraphics[width=0.50\textwidth]{fig/wr_logo.png}
+  \label{fig:wr_logo}
+\end{figure}
+
+\newpage
+
+%\setcounter{page}{1}
+%\begin{center}
+%\large Revision History Table 
+%\end{center} 
+%
+%\begin{table}[ht!]
+%%\begin{table}[tbp]
+%%\caption{White Rabbit Specification Revision History Table } 
+%\centering
+%\begin{tabular}{| c |  c | c | p{8cm}    |}          \hline
+%\textbf{Version} & \textbf{Date} & \textbf{Authors} & \textbf{Description}  \\ 
+% & &  &\\ \hline
+%0.01 & 06/11/2012 & G.D.   & First draft for comments.  \\ \hline
+%\end{tabular}
+%\label{tab:revHist}
+%\end{table}
+
+\newpage
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\input{intro.tex}
+\newpage
+\section{Standard configuration}
+\input{generics.tex}
+\input{clk_rst.tex}
+\input{phyif.tex}
+\input{fabric.tex}
+\input{timecode.tex}
+\input{periph.tex}
+
+\newpage
+\appendix
+\section{Appendix: Advanced options}
+{\color{red} {\bf Information presented in this part should be used only
+    by users with expert knowledge of the White Rabbit Protocol and on their own
+responsibility}}
+\input{generics_adv.tex}
+\input{clk_rst_adv.tex}
+\input{fabric_adv.tex}
+\input{wb.tex}
+\input{txts.tex}
+
+\newpage
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+%\newpage
+%\input{app.tex}
+
+\end{document}
