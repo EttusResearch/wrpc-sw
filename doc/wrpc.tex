@@ -5,7 +5,6 @@
 \usepackage{tikz}
 \usepackage{hyperref}  % makes cross references and URLs clickable
 \newcommand{\code}[1]{\texttt{#1}}
-\newcommand{\link}[1]{\hyperref[#1]{#1}} % links to sections
 \usepackage[overload]{textcase}
 \newcommand{\codeHook}[1]{\mbox{\ttfamily\MakeTextUppercase{#1}}}
 \usepackage{listings}
@@ -13,7 +12,8 @@
 \definecolor{light-gray}{gray}{0.95}
 \usepackage{textcomp}
 % set listings as in other WR-doc(s)
-\lstset{columns=flexible, upquote=true,  frame=single, captionpos=b, caption=, basicstyle=\scriptsize, backgroundcolor=\color{light-gray}, label=lst:init_src}
+\lstset{columns=flexible, upquote=true, frame=single,
+basicstyle=\small\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_src}
 \usepackage{longtable} % table over many pages
 \usepackage[document]{ragged2e} %texta djustment
 \usepackage{mdwlist} % to have tight itemization
@@ -50,9 +50,9 @@
 This is the user manual for the White Rabbit PTP Core, part of the White
 Rabbit project. It describes the building and running process. If you don't
 want to get your hands dirty and prefer to start with the demo binaries
-available at \url{http://www.ohwr.org/projects/wr-cores/files} please skip
-section \ref{Building the Core} and move forward directly to section
-\ref{Running and Configuring}.
+available at \url{http://www.ohwr.org/projects/wr-cores/files} for officially
+supported boards, please skip section \ref{Building the Core} and move forward
+directly to section \ref{Running and Configuring}.
 
 
 % ##########################################################################
@@ -64,9 +64,8 @@ section \ref{Building the Core} and move forward directly to section
 \label{Repositories and Releases}
 
 This manual is about the official \input{version} stable release of the White
-Rabbit PTP Core (\codeHook{WRPC}).
-The code and documentation for the project is distributed in the
-following places:
+Rabbit PTP Core (WRPC).  The code and documentation for the project is
+distributed in the following places:
 
 \begin{itemize*}
 
@@ -76,58 +75,75 @@ following places:
 
 \item \url{http://www.ohwr.org/projects/wr-cores/files}
 
-	place where you can find a synthesized bitstream, ready to be downloaded to
-  SPEC, for every stable release
+	place where you can find already synthesized demo bitstreams, ready to be
+  downloaded to one of the officially supported boards
 
 \item \url{git://ohwr.org/hdl-core-lib/wr-cores.git}
 
-	read-only repository with complete HDL sources of the \codeHook{WRPC}
+	repository with the complete HDL sources of the WRPC
 
 \item \url{git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git}
 
-  read-only repository with the \codeHook{WRPC} \codeHook{LM32} software
+  repository with the LM32 software running inside the WRPC
 
 \end{itemize*}
-Other tools useful for building and running the \codeHook{WRPC} can be downloaded from
-the following locations:
+Other tools useful for building and running the WRPC can be downloaded from the
+following locations:
 
 \begin{itemize*}
 
 \item \url{git://ohwr.org/misc/hdl-make.git}
 
-  \textit{hdlmake} is used in the HDL synthesis process to create a Makefile based
-on the set of Manifest files.
+  \textit{hdlmake} is used in the HDL synthesis process to create a Makefile and
+  Xilinx ISE / Altera Quartus project file
 
 \item \url{http://www.ohwr.org/attachments/download/1133/lm32.tar.xz}
 
-  \codeHook{LM32} toolchain used to compile the \codeHook{WRPC} software
+  LM32 toolchain used to compile the LM32 software running inside the WRPC
 
 \end{itemize*}
-Repositories containing the \codeHook{WRPC} gateware and software (\textit{wr-cores},
-\textit{wrpc-sw}) are tagged with \codeHook{wrpc-v3.0} tag. Other tools
-used to build the core and load it into \codeHook{SPEC} board should be used in their
-newest stable releases.
-
+Repositories containing the WRPC gateware and software (\textit{wr-cores},
+\textit{wrpc-sw}) are tagged with \texttt{wrpc-v3.0} tag. Other tools used to
+build the core and load it into the FPGA should be used in their newest stable
+releases, unless otherwise stated.
 
 % ==========================================================================
 \subsection{Required hardware}
 \label{Required hardware}
 
-The absolute minimum to run the \codeHook{wr ptp core} is a PC computer with
-Linux and a Simple PCIe \codeHook{fmc} Carrier
-(\codeHook{spec}) - \url{http://www.ohwr.org/projects/spec}. However, it is highly
-recommended to use also the \codeHook{dio} \codeHook{fmc} card (\url{http://www.ohwr.org/projects/fmc-dio-5chttla})
-to be able to feed 1-PPS and 10MHz from external clock and output 1-PPS aligned
-to the WR time. To test the White Rabbit synchronization, you will also need:
-\begin{itemize*}
-\item another \codeHook{spec} board with a \codeHook{dio} \codeHook{fmc} or a White Rabbit Switch;
-\item pair of \codeHook{wr}-supported \codeHook{sfp} transceivers (the list of supported
-\codeHook{sfp}s can be found on our wiki page \url{http://www.ohwr.org/projects/white-rabbit/wiki/SFP})
-\item a roll of G652, single mode fiber to connect your \codeHook{spec}s or \codeHook{spec}
-with a \codeHook{wr} Switch.
-\end{itemize*}
+The minimum hardware set required to run the WR PTP Core reference firmware
+depends on the hardware platform you want to use. One of the following setups
+can be chosen:
+\begin{itemize}
+  \item {\bf SPEC} PCIe board\footnote{SPEC project page
+    \url{http://www.ohwr.org/projects/spec}} + FMC DIO card\footnote{FMC DIO
+    project page \url{http://www.ohwr.org/projects/fmc-dio-5chttla}} + PC
+    computer running Linux
+  
+  \item  {\bf SVEC} VME board\footnote{SVEC project page
+    \url{http://www.ohwr.org/projects/svec}} + VME crate with a single board
+    computer running Linux\footnote{\label{note_a20}In our test setup we used MEN A20 board}
+
+  \item {\bf VFC-HD} VME board\footnote{VFC-HD project page
+    \url{http://www.ohwr.org/projects/vfc-hd}} + VME crate with a single board
+  computer running Linux\footref{note_a20}
+
+\end{itemize}
+
+To be able to test White Rabbit synchronization you would also need
+additional components regardless of the reference platfrom chosen from the list
+above:
+\begin{itemize}
+  \item another WR node (e.g. one of the reference boards listed above or a
+    White Rabbit Switch)
+  \item a pair of WR-supported SFP transceivers\footnote{The list of supported
+    SFPs can be found on our wiki page
+    \url{http://www.ohwr.org/projects/white-rabbit/wiki/SFP}}
+  \item a roll of G652, single mode fiber to connect your WR devices
+\end{itemize}
 
 % ##########################################################################
+\newpage
 \section{Building the Core}
 \label{Building the Core}
 
@@ -135,59 +151,62 @@ with a \codeHook{wr} Switch.
 available from \textit{ohwr.org}.
 
 \vspace{1em}
-Building the core is a two step process. First you have to
-synthesize the FPGA firmware (gateware) and then compile the software which
-will be executed by the \codeHook{lm32} soft-core processor. If you don't need to
-modify the \codeHook{lm32} software, you can skip the compilation stage since
-synthesized gateware already embeds the default software for the release.
+Depending on your needs, building the WRPC can be a one- or two-step process.
+In most of the cases you only need to synthesize the FPGA firmware (section
+\ref{HDL synthesis}). This way, you get a working WRPC with the default, release
+LM32 software running inside the core. If, for some reasons, you need to modify
+the LM32 software, please check also section \ref{LM32 software compilation}
+which contains a description of the software compilation process.
 
 % ==========================================================================
 \subsection{HDL synthesis}
 \label{HDL synthesis}
 
 Before running the synthesis process you have to make sure your environment is
-set up correctly. You need a Xilinx ISE software with at least a WebPack
-license. \textit{ISE} provides a set of scripts: \textit{settings32.sh},
-\textit{settings32.csh}, \textit{settings64.sh} and \textit{settings64.csh} that configure all
-the system variables required by the Xilinx software. Depending on a shell you
-use and whether your Linux is 32 or 64-bits you should execute one of them
-before the other tools are used. For 64-bit system and BASH shell you should
-call:
+set up correctly. You will need a synthesis software from your FPGA vendor.
+Depending if you want to run the WRPC on Xilinx (e.g. SPEC, SVEC boards) or
+Altera/Intel (e.g. VFC-HD) FPGA, you should install either Xilinx ISE or Quartus
+Prime software.
+
+\subsubsection{Setting up Xilinx ISE}
+To synthesize the FPGA firmware containing the WRPC, Xilinx ISE with free of
+charge WebPack license is enough. ISE provides a set of scripts:
+\texttt{settings32.sh}, \texttt{settings32.csh}, \texttt{settings64.sh} and
+\texttt{settings64.csh} that configure all the system variables to let you
+easily run the software. Depending on a shell you use and whether your Linux is
+32 or 64-bits you should execute one of them before the other tools are used.
+For 64-bit system and BASH shell you should call (assuming that ISE is installed
+in the default \textit{/opt} directory):
 \begin{lstlisting}
-/opt/Xilinx/<version>/ISE_DS/settings64.sh
+$ /opt/Xilinx/<version>/ISE_DS/settings64.sh
 \end{lstlisting}
 
-The easiest way to ensure that \textit{ISE}-related variables are always set in your
-shell is adding the execution of the script to your \textit{bash.rc} file. You can
-check if the shell is configured correctly by verifying if the \textit{\$XILINX}
-variable contains path to your \textit{ISE} installation directory.
+You can check if the shell is configured correctly by verifying if the
+\texttt{\$XILINX} variable contains path to your ISE installation directory.
 
-\textbf{Note:} current version of \textit{hdlmake} tool developed at CERN requires
-modification of \textit{\$XILINX} variable after \textit{settings} script execution.
-This (provided that the installation path for \textit{ISE} is /opt/Xilinx/<version>)
-should be the following:
-
+\subsubsection{Setting up Quartus Prime}
+To be able to synthesize the WRPC for Arria V FPGA (which is used on the VFC-HD
+board) you need at least a license for the Quartus Prime Standard Edition with
+the support of Arria V family. To set up the software after it is installed, you
+should add the location of its binaries to your \texttt{\$PATH} environment
+variable. Assuming you have installed the software in \textit{/opt/altera}, the
+following command should be executed:
 \begin{lstlisting}
-$ export XILINX=/opt/Xilinx/<version>/ISE_DS
+$ export PATH=/opt/altera/16.0/quartus/bin:$PATH
 \end{lstlisting}
 
-\textbf{Note:} the Xilinx project file included in the \codeHook{wrpc} sources was created
-with Xilinx ISE 14.5. It is however recommended to use the newest available
-version of the ISE software.
-
-\vspace{1em}
-HDL sources for the \codeHook{wr ptp core} could be synthesized using Xilinx ISE without
-any additional tools, but using \textit{hdlmake} is more convenient. It creates a
-synthesis Makefile and ISE project file based on a set of Manifest.py files
-deployed among the directories inside the \textit{wr-cores} repository.
+\subsubsection{Downloading the sources and running the synthesis}
+Thanks to the \textit{hdlmake} tool, the synthesis process for the reference
+designs does not differ between Xilinx and Intel based boards. The tool creates
+synthesis Makefile as well as ISE/Quartus project file based on a set of
+Manifest.py files that you will find in the \textit{wr-cores} repository.\\
 
 First, please clone the \textit{hdlmake} repository from its location given in
-section \ref{Repositories and Releases}:\newpage
+section \ref{Repositories and Releases}:
 \begin{lstlisting}
-$ wget http://www.ohwr.org/attachments/download/2070/hdlmake-v1.0
 $ git clone git://ohwr.org/misc/hdl-make.git <your_location>/hdl-make
 $ cd <your_location>/hdl-make
-$ git checkout 9d303ee
+$ git checkout 9d303ee TODO: update commit id
 \end{lstlisting}
 
 Then, using your favorite editor, you should create an \textit{hdlmake} script in
@@ -195,82 +214,84 @@ Then, using your favorite editor, you should create an \textit{hdlmake} script i
 following content:
 \begin{lstlisting}
 #!/usr/bin/env bash
-python2.7 /path_to_hdlmake_sources/hdl-make/hdlmake/__main__.py #@
+python2.7 <path_to_hdlmake_sources>/hdl-make/hdlmake/__main__.py #@
 \end{lstlisting}
 
-After that, you should make your script executable:
+Please, make your script executable:
 \begin{lstlisting}
-chmod a+x /usr/bin/hdlmake
+$ chmod a+x /usr/bin/hdlmake
 \end{lstlisting}
 
-\vspace{1em}
-Having Xilinx ISE software and \textit{hdlmake} in place, you can clone the main
-\codeHook{wr ptp core} git repository and start building the FPGA bitstream.
-First, please create a local copy of the \textit{wr-cores}:
+Having all the tools in place, you can now clone the main WR PTP Core git
+repository for the v3.1 release. The set of command below does that, checks out
+the release tag, and downloads other HDL repositories (submodules) needed to
+synthesize the core:
 \begin{lstlisting}
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_location>/wr-cores
 $ cd <your_location>/wr-cores
-\end{lstlisting}
-
-To build the gateware using sources of a stable release wrpc-v3.0, you
-have to checkout the proper git tag:
-
-\begin{lstlisting}
-$ git checkout wrpc-v3.0
-\end{lstlisting}
-
-If you use \textit{wr-cores} within another project (like \textit{wr-nic}), you may need
-to check out another release tag for this repository. Please refer to the
-project's documentation to find out which version of this package you need to
-build.
-
-You also need to fetch other git repositories containing modules instantiated
-inside the \codeHook{wr ptp core} HDL. They are configured as git submodules:
-\begin{lstlisting}
+$ git checkout wrpc-v3.1
 $ git submodule init
 $ git submodule update
 \end{lstlisting}
 
-The local copies of the submodules are stored to:
-
-\begin{lstlisting}
-<your_location>/wr-cores/ip_cores
-\end{lstlisting}
+The local copies of the submodules are stored to
+\texttt{<your\_location>/wr-cores/ip\_cores}.
 
 \vspace{1em}
-The subdirectory which contains the main synthesis Manifest.py for \codeHook{spec} board
+\textbf{Note:} If you use the WRPC within another project (like
+\textit{wr-nic}), you may need to checkout another release tag for this
+repository. Please refer to the project's documentation to find out which
+version of this package you need to build.
+
+\vspace{1em}
+The subdirectory you should enter to run the synthesis depends on the hardware
+platform you use:
+\begin{itemize*}
+  \item \textbf{SPEC}: \texttt{<your\_location>/wr-cores/syn/spec\_ref\_design}
+  \item \textbf{SVEC}: \texttt{<your\_location>/wr-cores/syn/svec\_ref\_design}
+  \item \textbf{VFC-HD}: \texttt{<your\_location>/wr-cores/syn/vfchd\_ref\_design}
+\end{itemize*}
+contains the main synthesis Manifest.py for \codeHook{spec} board
 and in which you should perform the whole process is:
 
-\begin{lstlisting}
-$ cd <your_location>/wr-cores/syn/spec_1_1/wr_core_demo/
-\end{lstlisting}
-
-First, please call \textit{hdlmake} to create synthesis Makefile for Xilinx
-ISE:
-
+After selecting a proper location from the list above, please call
+\textit{hdlmake} without any arguments to create the Makefile and project file:
 \begin{lstlisting}
 $ hdlmake
 \end{lstlisting}
 
 After that, the actual synthesis is just the matter of executing:
-
 \begin{lstlisting}
 $ make
 \end{lstlisting}
 
-This takes (depending on your computer speed) about 15 minutes and should create
-two files with FPGA firmware: \textit{spec\_top.bit} and \textit{spec\_top.bin}. The
-former can be downloaded to FPGA with Xilinx Platform Cable using e.g.
-\textit{Xilinx Impact}. The latter can be used with kernel drivers from the
-\textit{spec-sw} repository (check example in section \ref{Running and
-Configuring}).
-
-\vspace{1em}
-If, on the other hand, you would like to clean-up the repository and rebuild
-everything from scratch you can use the following commands:
+This takes (depending on your computer) about 10 minutes and should generate
+bitstream files in various formats depending on your selected reference
+hardware:
 \begin{itemize*}
-\item \textit{\$ make clean} - removes all synthesis reports and log files;
-\item \textit{\$ make mrproper} - removes spec\_top.bin and spec\_top.bit files;
+  \item \textbf{SPEC}: \texttt{spec\_wr\_ref\_top.bin}, \texttt{spec\_wr\_ref\_top.bit}
+  \item \textbf{SVEC}: \texttt{svec\_wr\_ref\_top.bin}, \texttt{svec\_wr\_ref\_top.bit}
+  \item \textbf{VFC-HD}: \texttt{vfchd\_wr\_ref.sof}
+\end{itemize*}
+
+You can select the bitstream format to be downloaded to FPGA depending on the
+programming method:
+\begin{itemize}
+  \item \textbf{*.bin} files to program the Xilinx FPGA on SPEC or SVEC board
+    using the official software support package (\textit{spec-sw},
+    \textit{svec-sw}). See section \ref{Running and Configuring} for more
+    information.
+  \item \textbf{*.bit} files to program the Xilinx FPGA with Xilinx USB Platform
+    Cable (using e.g. Xilinx Impact tool)
+  \item \textbf{*.sof} file to program the Intel FPGA (VFC-HD board) using using
+    the Altera / Intel JTAG cable
+\end{itemize}
+
+If, you would like to clean-up the repository to start building everything from
+scratch you can use the following commands:
+\begin{itemize*}
+\item \texttt{\$ make clean} - removes all synthesis reports and log files;
+\item \texttt{\$ make mrproper} - removes spec\_top.bin and spec\_top.bit files;
 \end{itemize*}
 
 % ==========================================================================
