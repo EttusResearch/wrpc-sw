@@ -55,8 +55,9 @@
 #define TD_GOT_TRANSITION	1
 #define TD_DONE			2
 
-/* Timeout for rxts_calibration_update */
-#define CALIB_TIMEOUT_MS 5000
+/* Number of retries for rxts_calibration_update
+ * value found experimentally */
+#define CALIB_RETRIES 1000
 
 
 /* state of transition detector */
@@ -232,15 +233,12 @@ static int calib_t24p_slave(uint32_t *value)
 {
 	int rv;
 	uint32_t prev;
-	int timeout = 0;
-
-	rxts_calibration_start();
+	int retries = 0;
 
 	while (!(rv = rxts_calibration_update(value))) {
-		if (timeout > CALIB_TIMEOUT_MS || ep_link_up(NULL) == LINK_DOWN)
+		if (retries > CALIB_RETRIES || ep_link_up(NULL) == LINK_DOWN)
 			return -1;
-		timer_delay_ms(1);
-		timeout++;
+ 		retries++;
 	}
 	if (rv < 0) {
 		/* Fall back on master == eeprom-or-error */
@@ -270,6 +268,7 @@ int calib_t24p(int mode, uint32_t *value)
 		ret = calib_t24p_master(value);
 
 	//update phtrans value in socket struct
-	ptpd_netif_set_phase_transition(*value);
+	if (ret >= 0)
+		ptpd_netif_set_phase_transition(*value);
 	return ret;
 }
