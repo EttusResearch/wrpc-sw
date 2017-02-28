@@ -212,6 +212,19 @@ config AUX_DIAG
 	  This option adds support for read/write of aux diag registers and
 	  the diag command.
 
+config SDB_STORAGE
+	depends on WR_NODE
+	default y
+	boolean "Use SDB to manage storage (instead of legacy eeprom code)"
+	help
+	  Use SDB to manage flash and eeproms (both W1 and I2C). If not, legacy code
+	  (eeprom only) will be selected.
+
+config LEGACY_EEPROM
+	depends on WR_NODE
+	boolean
+	default !SDB_STORAGE
+
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.
@@ -351,29 +364,6 @@ config PRINTF_IS_NONE
 	  but not suited for wrpc-sw. See pp_printf/README for details.
 endchoice
 
-config PRINTF_XINT
-	boolean
-	default PRINTF_IS_XINT if (DEVELOPER && WR_NODE)
-	default y
-
-config PRINTF_FULL
-       boolean
-       default PRINTF_IS_FULL
-
-config PRINTF_MINI
-       boolean
-       default PRINTF_IS_MINI
-
-config PRINTF_NONE
-       boolean
-       default PRINTF_IS_NONE
-
-config PPSI
-	depends on WR_NODE
-	boolean
-	help
-	  Select this option for the ppsi engine (now only option)
-
 config ASSERT_ENA
 	bool "Build assertion checks in the code"
 	depends on DEVELOPER
@@ -476,18 +466,6 @@ config VLAN_FOR_CLASS6
 	depends on VLAN
 	int "Route this VLAN too to fabric class 6 (Streamer/NIC)"
 
-config SDB_STORAGE
-	depends on WR_NODE
-	default y
-	boolean "Use SDB to manage storage (instead of legacy eeprom code)"
-	help
-	  Use SDB to manage flash and eeproms (both W1 and I2C). If not, legacy code
-	  (eeprom only) will be selected.
-
-config LEGACY_EEPROM
-	depends on WR_NODE
-	boolean
-	default !SDB_STORAGE
 
 config LATENCY_PROBE
 	depends on DEVELOPER
@@ -535,6 +513,29 @@ config VLAN_ARRAY_SIZE
 
 # CONFIG_WR_NODE
 
+################# helper configuration items #############
+config PRINTF_XINT
+	boolean
+	default PRINTF_IS_XINT if (DEVELOPER && WR_NODE)
+	default y
+
+config PRINTF_FULL
+       boolean
+       default PRINTF_IS_FULL
+
+config PRINTF_MINI
+       boolean
+       default PRINTF_IS_MINI
+
+config PRINTF_NONE
+       boolean
+       default PRINTF_IS_NONE
+
+config PPSI
+	depends on WR_NODE
+	boolean
+	help
+	  Select this option for the ppsi engine (now only option)
 
 config ASSERT
 	bool
