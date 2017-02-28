@@ -21,15 +21,6 @@ config PRINT_BUFSIZE
 	int
 	default 128
 
-config ASSERT
-	bool "Build assertion checks in the code"
-	default y
-	  help
-	    Build assertions in the code, to catch unexpected situations.
-	    When an assertion fails the code loops over repeating the
-	    error message every second. OTOH, panic() is always built,
-	    with no Kconfig -- and it does the same, unconditionally.
-  
 config RAMSIZE
 	int
 	default 65536 if WR_SWITCH
@@ -383,6 +374,16 @@ config PPSI
 	help
 	  Select this option for the ppsi engine (now only option)
 
+config ASSERT_ENA
+	bool "Build assertion checks in the code"
+	depends on DEVELOPER
+	default y
+	  help
+	    Build assertions in the code, to catch unexpected situations.
+	    When an assertion fails the code loops over repeating the
+	    error message every second. OTOH, panic() is always built,
+	    with no Kconfig -- and it does the same, unconditionally.
+
 config DETERMINISTIC_BINARY
 	depends on DEVELOPER && EMBEDDED_NODE
 	boolean "Build a binary that is the same every time"
@@ -533,3 +534,9 @@ config VLAN_ARRAY_SIZE
 	default 1
 
 # CONFIG_WR_NODE
+
+
+config ASSERT
+	bool
+	default n if DEVELOPER && !ASSERT_ENA
+	default y
