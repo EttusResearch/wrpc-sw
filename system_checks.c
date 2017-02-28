@@ -7,6 +7,7 @@
  * Released according to the GNU GPL, version 2 or any later version.
  */
 #include <wrc.h>
+#include <assert.h>
 
 #include "system_checks.h"
 
@@ -14,11 +15,7 @@ extern void _reset_handler(void); /* user to reset again */
 
 void check_stack(void)
 {
-	/* print "Stack overflow!" forever if stack corrupted */
-	while (_endram != ENDRAM_MAGIC) {
-		pp_printf("Stack overflow!\n");
-		timer_delay_ms(1000);
-	}
+	assert(_endram == ENDRAM_MAGIC, "Stack overflow! (%x)\n", _endram);
 }
 
 #ifdef CONFIG_CHECK_RESET

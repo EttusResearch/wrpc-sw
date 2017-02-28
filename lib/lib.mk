@@ -1,4 +1,5 @@
 obj-y += lib/util.o
+obj-y += lib/assert.o
 
 obj-$(CONFIG_LM32) += \
 	lib/atoi.o \
