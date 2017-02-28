@@ -272,7 +272,7 @@ int minic_tx_frame(struct wr_ethhdr_vlan *hdr, uint8_t *payload, uint32_t size,
 
 	/* Start sending the frame, and while we read mcr check for fifo full */
 	mcr = minic_readl(MINIC_REG_MCR);
-	assert((mcr & MINIC_MCR_TX_FULL) == 0, "Minic tx fifo full");
+	assert_warn((mcr & MINIC_MCR_TX_FULL) == 0, "Minic tx fifo full");
 	minic_writel(MINIC_REG_MCR, mcr | MINIC_MCR_TX_START);
 
 	/* wait for the DMA to finish */
