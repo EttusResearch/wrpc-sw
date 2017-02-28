@@ -83,8 +83,8 @@ config WR_NODE_PCS16
 	boolean "Compile for 16-bit PCS"
 	default n
 	help
-		This allows to compile the WR PTP Core software for 16-bit PCS platforms
-		(e.g. Kintex-7).
+	  This allows to compile the WR PTP Core software for 16-bit PCS platforms
+	  (e.g. Kintex-7).
 
 config STACKSIZE
 	depends on WR_NODE
@@ -151,23 +151,23 @@ config SYSLOG
 	  to enable it.  The special "off" ipaddr disables syslog.
 
 config SNMP
-       depends on IP
-       default y
-       boolean "Mini SNMP responder"
+	depends on IP
+	default y
+	boolean "Mini SNMP responder"
 
 config SNMP_SET
-       depends on SNMP
-       default y
-       boolean "Add SET support to the Mini SNMP responder"
-       help
+	depends on SNMP
+	default y
+	boolean "Add SET support to the Mini SNMP responder"
+	help
 	  This option enables support for SET requests for Mini SNMP responder
 
 config SNMP_AUX_DIAG
-       depends on SNMP && AUX_DIAG
-       default y if AUX_DIAG
-       default n
-       boolean "Adds support of auxiliary diagnostics registers to SNMP"
-       help
+	depends on SNMP && AUX_DIAG
+	default y if AUX_DIAG
+	default n
+	boolean "Adds support of auxiliary diagnostics registers to SNMP"
+	help
 	  This option adds branch wrpcAuxDiag to the SNMP
 
 config SNMP_HW_TYPE
@@ -201,14 +201,14 @@ config HAS_FLASH_INIT
 	default 0
 
 config FLASH_INIT
-  boolean
-  default y if EMBEDDED_NODE
-  default n
+	boolean
+	default y if EMBEDDED_NODE
+	default n
 
 config AUX_DIAG
-       default n
-       boolean "Add support for auxiliary diagnostics registers"
-       help
+	default n
+	boolean "Add support for auxiliary diagnostics registers"
+	help
 	  This option adds support for read/write of aux diag registers and
 	  the diag command.
 
@@ -368,11 +368,11 @@ config ASSERT_ENA
 	bool "Build assertion checks in the code"
 	depends on DEVELOPER
 	default y
-	  help
-	    Build assertions in the code, to catch unexpected situations.
-	    When an assertion fails the code loops over repeating the
-	    error message every second. OTOH, panic() is always built,
-	    with no Kconfig -- and it does the same, unconditionally.
+	help
+	  Build assertions in the code, to catch unexpected situations.
+	  When an assertion fails the code loops over repeating the
+	  error message every second. OTOH, panic() is always built,
+	  with no Kconfig -- and it does the same, unconditionally.
 
 config DETERMINISTIC_BINARY
 	depends on DEVELOPER && EMBEDDED_NODE
@@ -520,16 +520,16 @@ config PRINTF_XINT
 	default y
 
 config PRINTF_FULL
-       boolean
-       default PRINTF_IS_FULL
+	boolean
+	default PRINTF_IS_FULL
 
 config PRINTF_MINI
-       boolean
-       default PRINTF_IS_MINI
+	boolean
+	default PRINTF_IS_MINI
 
 config PRINTF_NONE
-       boolean
-       default PRINTF_IS_NONE
+	boolean
+	default PRINTF_IS_NONE
 
 config PPSI
 	depends on WR_NODE
