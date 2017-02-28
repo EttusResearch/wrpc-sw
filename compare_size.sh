@@ -119,7 +119,9 @@ echo $git_current_commit
 # print info abous previous commits
 # pick ! as the separator
 # tformat to get the newline after the last entry
-git log --format=tformat:"!%H!%s" origin/master~1...HEAD~1 --graph | while IFS="!" read -r git_graph git_hash git_title
+git log --format=tformat:"!%H!%s" origin/master~1...HEAD --graph \
+| tail -n +2 \
+| while IFS="!" read -r git_graph git_hash git_title
 do
     for i in "${!curr_size_array[@]}"
     do
