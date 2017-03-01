@@ -1,12 +1,13 @@
 EB    ?= no
 SDBFS ?= no
 
-CFLAGS = -Wall -ggdb -I../include
-LDFLAGS = -lutil
+CFLAGS = -Wall -ggdb -I../include -I../liblinux
+LDFLAGS = -lutil -L../liblinux -lwhiterabbit
 ALL    = genraminit genramvhd genrammif
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder
 ALL   += wrpc-dump mapper
+ALL   += wrpc-vuart
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
@@ -47,6 +48,9 @@ wrpc-dump: wrpc-dump.c dump-info-host.o
 	-I ../softpll \
 	$^ -o $@ \
 	-D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
+
+wrpc-vuart: wrpc-vuart.c
+	$(CC) $(CFLAGS) -Werror  $^ $(LDFLAGS) -o $@
 
 pfilter-builder: pfilter-builder.c
 	$(CC) $(CFLAGS)  -include ../include/generated/autoconf.h \
