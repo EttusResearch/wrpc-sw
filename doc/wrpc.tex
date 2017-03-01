@@ -100,8 +100,15 @@ following locations:
 \item \url{http://www.ohwr.org/attachments/download/1133/lm32.tar.xz}
 
   LM32 toolchain used to compile the LM32 software running inside the WRPC
+  This is a 32-bit version of a toolchain. If you encounter problems running
+  this toolchain on modern 64bit machines, try 64 version described below.
 
-\end{itemize*}
+\item \url{http://www.ohwr.org/attachments/download/3868/lm32_host_64bit.tar.xz}
+
+  LM32 toolchain used to compile the LM32 software running inside the WRPC
+  (64-bit version of toolchain).
+
+  \end{itemize*}
 Repositories containing the WRPC gateware and software (\textit{wr-cores},
 \textit{wrpc-sw}) are tagged with \texttt{wrpc-v3.0} tag. Other tools used to
 build the core and load it into the FPGA should be used in their newest stable
@@ -308,7 +315,9 @@ you need to make some custom changes to the LM32 software and compile it
 yourself.\\
 
 First, you need to download and unpack the LM32 toolchain from the location
-mentioned in section \ref{Repositories and Releases}:
+mentioned in section \ref{Repositories and Releases}. The following example
+uses 32bit version of a toolchain. If you encounter problems running it, please
+use 64bit version.
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/1133/lm32.tar.xz
 $ tar xJf lm32.tar.xz -C <your_location>
