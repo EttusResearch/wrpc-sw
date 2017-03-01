@@ -13,7 +13,7 @@
 \usepackage{textcomp}
 % set listings as in other WR-doc(s)
 \lstset{columns=flexible, upquote=true, frame=single,
-basicstyle=\small\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_src}
+basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_src}
 \usepackage{longtable} % table over many pages
 \usepackage[document]{ragged2e} %texta djustment
 \usepackage{mdwlist} % to have tight itemization
@@ -416,7 +416,7 @@ $ sudo insmod kernel/spec.ko
 
 You can use the \textit{dmesg} Linux command to verify if this step succeeded.
 Among plenty of messages you should be able to find something very similar to:
-\begin{lstlisting}[basicstyle=\tiny]
+\begin{lstlisting}[basicstyle=\scriptsize\ttfamily]
 [1275526.738895] spec 0000:20:00.0:  probe for device 0020:0000
 [1275526.738906] spec 0000:20:00.0: PCI INT A -> GSI 16 (level, low) -> IRQ 16
 [1275526.738913] spec 0000:20:00.0: setting latency timer to 64
