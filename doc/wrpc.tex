@@ -22,7 +22,7 @@ basicstyle=\small\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_s
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{document}
-
+\input{version.tex}
 \title{White Rabbit PTP Core User's Manual}
 \author{Grzegorz Daniluk\\ CERN BE-CO-HT}
 
@@ -30,7 +30,7 @@ basicstyle=\small\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_s
 {\LARGE {\bf White Rabbit PTP Core User's Manual}}\\[0.2 cm]
 \hrule height 4pt \vspace{0.1cm}
 \raggedleft
-{\large \today ~ ( \input{version})}\\
+{\large \today ~ (\gitrevinfo)}\\
 {\large Building and Running}\\
 \vspace*{\fill}
 \raggedright
@@ -63,7 +63,7 @@ directly to section \ref{Programming FPGA}.
 \subsection{Repositories and Releases}
 \label{Repositories and Releases}
 
-This manual is about the official \input{version} stable release of the White
+This manual is about the official \gitrevinfo{} stable release of the White
 Rabbit PTP Core (WRPC).  The code and documentation for the project is
 distributed in the following places:
 

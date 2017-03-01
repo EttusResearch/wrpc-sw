@@ -7,7 +7,7 @@ all : wrpc.pdf
 .PHONY : all clean
 
 wrpc.pdf : wrpc.tex
-	echo $(RELEASE) > version.tex
+	@echo '\\newcommand{\\gitrevinfo}{'$(RELEASE)'}' > version.tex
 	pdflatex -dPDFSETTINGS=/prepress -dSubsetFonts=true -dEmbedAllFonts=true -dMaxSubsetPct=100 -dCompatibilityLevel=1.4 $^
 	pdflatex -dPDFSETTINGS=/prepress -dSubsetFonts=true -dEmbedAllFonts=true -dMaxSubsetPct=100 -dCompatibilityLevel=1.4 $^
 
