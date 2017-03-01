@@ -116,17 +116,18 @@ depends on the hardware platform you want to use. One of the following setups
 can be chosen:
 \begin{itemize}
   \item {\bf SPEC} PCIe board\footnote{SPEC project page
-    \url{http://www.ohwr.org/projects/spec}} + FMC DIO card\footnote{FMC DIO
-    project page \url{http://www.ohwr.org/projects/fmc-dio-5chttla}} + PC
-    computer running Linux
+    \url{http://www.ohwr.org/projects/spec}} + FMC DIO
+    card\footnote{\label{note_dio}FMC DIO project page
+    \url{http://www.ohwr.org/projects/fmc-dio-5chttla}} + PC computer running
+    Linux
   
   \item  {\bf SVEC} VME board\footnote{SVEC project page
     \url{http://www.ohwr.org/projects/svec}} + VME crate with a single board
     computer running Linux\footnote{\label{note_a20}In our test setup we used MEN A20 board}
 
   \item {\bf VFC-HD} VME board\footnote{VFC-HD project page
-    \url{http://www.ohwr.org/projects/vfc-hd}} + VME crate with a single board
-  computer running Linux\footref{note_a20}
+    \url{http://www.ohwr.org/projects/vfc-hd}} + FMC DIO card\footref{note_dio}
+    + VME crate with s single board computer running Linux\footref{note_a20}
 
 \end{itemize}
 
@@ -487,46 +488,45 @@ use one of these boards, please contact us.
 \subsection{Writing configuration}
 \label{Writing configuration}
 
-First, you should perform a few configuration steps through the \codeHook{wrpc} shell
+First, you should perform a few configuration steps through the WRPC shell
 before using the core.
 
-\noindent\textbf{Note:} the examples below describe only a subset of the \codeHook{wrpc} Shell
-commands. The full list of supported commands can be found in appendix
-\ref{WRPC Shell commands}.
+\noindent\textbf{Note:} the examples below describe only a subset of the WRPC
+Shell commands. The full list of supported commands can be found in appendix
+\ref{WRPC Shell commands}.\\
 
-\vspace{1em}
-Before making the configuration changes, it is good to stop the \codeHook{ptp} daemon.
-Then, debug messages from the daemon will not show up to the console while you
-interact with the shell.
+Before making any configuration changes, it is recommended to stop the
+PTP daemon.  Then, the messages from the daemon will not show up to the
+console while you interact with the shell.
 
 \begin{lstlisting}
 wrc# ptp stop
 \end{lstlisting}
 
-\vspace{1em}
-First you should make sure your board has a proper \codeHook{mac} address assigned:
+\noindent First you should make sure your board has a proper MAC address
+assigned:
 \begin{lstlisting}
 wrc# mac get
 \end{lstlisting}
-If the result of above command is \texttt{MAC-address: 22:33:ww:xx:yy:zz}, this means
-\codeHook{mac} was not yet configured and stored in the Flash/EEPROM. The value is
-based on thermometer serial number as is unique among SPEC devices,
-globally accepted as ``locally assigned'', but you might want to assign your own address. A value \texttt{22:33:44:55:66:77} is the final fallback if no
-thermometer is found (very unlikely). You should get
-the \codeHook{mac} for your board from its manufacturer. To configure the address and
-store it into the Flash/EEPROM (so that it's automatically loaded every time the
-\codeHook{wrpc} starts) you should type two commands in the \codeHook{wrpc} shell:
+If the result of above command is \texttt{MAC-address: 22:33:ww:xx:yy:zz}, this
+means MAC was not yet configured and stored in the Flash/EEPROM. The value is
+based on thermometer serial number as is unique among SPEC devices. This is
+globally accepted as ``locally assigned'', but you might want to assign your own
+address. A value \texttt{22:33:44:55:66:77} is the final fallback if no
+thermometer is found.
+
+You should get the MAC for your board from its manufacturer. To configure the
+address and store it into the Flash/EEPROM (so that it's automatically loaded
+every time the WRPC starts) you should type two commands in the shell:
 \begin{lstlisting}
 wrc# mac set xx:xx:xx:xx:xx:xx
 wrc# mac setp xx:xx:xx:xx:xx:xx
 \end{lstlisting}
-where \texttt{xx:xx:xx:xx:xx:xx} is the \codeHook{mac} address of your board.
+where \texttt{xx:xx:xx:xx:xx:xx} is the MAC address of your board.\\
 
-\vspace{1em}
-Next you should create a calibration database with fixed delays values and
-alpha parameters. The example below presents the \codeHook{wrpc} Shell commands that
-clear all previous entries and add two Axcen transceivers with deltaTx, deltaRx
-and alpha parameters associated with them.
+Next you should input calibration fixed delays values and alpha parameters. The
+example below clears any existing entries and adds two Axcen transceivers with
+$\Delta_{TX}$, $\Delta_{RX}$ and $\alpha$ parameters associated with them.
 
 \begin{lstlisting}
 wrc# sfp erase
@@ -534,21 +534,20 @@ wrc# sfp add AXGE-1254-0531 180625 148451 72169888
 wrc# sfp add AXGE-3454-0531 180625 148451 -73685416
 \end{lstlisting}
 
-To check the content of the \codeHook{sfp} database you can execute the \textit{sfp show} shell
-command.
+To check the content of the SFP database you can execute the \textit{sfp show}
+shell command.\\
 
-\noindent\textbf{Note:} The deltaTx and deltaRx parameters above are the defaults for
-wrpc-v3.0 release bitstream available on \textit{ohwr.org}, running on
-\codeHook{spec} v4 board and calibrated to port 1 of a \codeHook{wr} Switch v3.3. These
-values as well as the parameters for the \codeHook{wr} Switch are available on the
-calibration wiki page
-(\textit{http://www.ohwr.org/projects/white-rabbit/wiki/Calibration}). However, if
-you re-synthesize the firmware or want to have the most accurate estimation of
-the fixed delays and alpha for your fiber, you should read and perform the
-\codeHook{wr} Calibration procedure (\textit{http://www.ohwr.org/documents/213}).
+\noindent\textbf{Note:} The $\Delta_{TX}$ and $\Delta_{RX}$ parameters above are
+the defaults for wrpc-v3.1 release bitstream available on \textit{ohwr.org},
+running on the \codeHook{spec} v4 board and calibrated to port 1 of a WR Switch
+v3.3. These values as well as the default parameters for other boards are
+available on the calibration wiki page
+(\url{http://www.ohwr.org/projects/white-rabbit/wiki/Calibration}). If you
+re-synthesize the firmware or want to use the most accurate estimation of
+the fixed delays and alpha for your fiber, you should read and perform the WR
+Calibration procedure (\url{http://www.ohwr.org/documents/213}).\\
 
-\vspace{1em}
-The \codeHook{wr ptp core} mode of operation (GrandMaster/Master/Slave) can be set
+The WRPC  mode of operation (GrandMaster/Master/Slave) can be set
 using the \textit{mode} command:
 
 \begin{lstlisting}
@@ -557,26 +556,31 @@ wrc# mode master   # for Master mode
 wrc# mode slave    # for Slave mode
 \end{lstlisting}
 
-This stops the \codeHook{ptp} daemon, changes the mode of operation, but does not
-start it automatically. Therefore, after calling it, you need to restart the
-daemon manually:
+This stops the PTP daemon, changes the mode of operation, but does not start it
+automatically. Therefore, after calling it, you need to start the daemon
+manually:
 
 \begin{lstlisting}
 wrc# ptp start
 \end{lstlisting}
 
-\noindent\textbf{Note:} For running the GrandMaster mode, you need to provide 1-PPS and 10MHz
-signal from an external source (e.g. GPS receiver or Cesium clock). Please
-connect 1-PPS signal to the LEMO connector No.4 and 10MHz to the LEMO connector
-No.5 on the \codeHook{fmc} \codeHook{dio} mezzanine board.
+\noindent\textbf{Note:} For running the GrandMaster mode, you need have
+\texttt{g\_with\_external\_clock\_input} generic enabled in your FPGA firmware
+and provide 1-PPS and 10MHz signal from an external source (e.g. GPS receiver or
+Cesium clock). Depending on your board you should connect:
+\begin{itemize*}
+  \item \textbf{SPEC}: DIO mezzanine LEMO No.4 for 1-PPS, LEMO No.5 for 10MHz
+  \item \textbf{SVEC}: SVEC LEMO No.4 for 1-PPS, LEMO No.3 for 10MHz
+  \item \textbf{VFC-HD}: DIO mezzanine LEMO No.4 for 1-PPS, LEMO No.5 for 10MHz
+\end{itemize*}
 
 \vspace{1em}
-One option is to type all the commands to initialize the \codeHook{wrpc} software to
-the required state every time the Core starts. However, you can also write your
+One option is to type all the commands to initialize the WRPC software to
+the required state every time the core starts. However, you can also write your
 own initialization script to the Flash/EEPROM. It will be executed every time
-the \codeHook{wrpc} software starts. A simple script that loads the calibration
-parameters, configures the \codeHook{wr} mode to Slave and starts the \codeHook{ptp} daemon
-is presented below:
+the WRPC software starts. A simple script, that loads the calibration
+parameters, configures the WR mode to Slave and starts the PTP daemon and sets
+the IP address is presented below:
 
 \begin{lstlisting}
 wrc# init erase
@@ -584,20 +588,20 @@ wrc# init add ptp stop
 wrc# init add sfp match
 wrc# init add mode slave
 wrc# init add ptp start
+wrc# init add ip set 192.168.1.5
 \end{lstlisting}
 
-Almost exactly the same one can be used for running \codeHook{wrpc} in the GrandMaster
+Almost exactly the same one can be used for running WRPC in the GrandMaster
 or Master mode. The only difference would be changing the
-\textit{init add mode slave} line to \textit{init add mode gm} or
-\textit{init add mode master}.
+\texttt{init add mode slave} line to \texttt{init add mode gm} or
+\texttt{init add mode master}.
 
 % ==========================================================================
 \subsection{Running the Core}
 \label{Running the Core}
 
-Having the \codeHook{sfp} database, and the init script created in \ref{Writing
-configuration} you can restart the \codeHook{wr ptp core} by reprogramming the
-\codeHook{lm32} software (with \textit{spec-cl} tool) or by typing the shell command:
+Having the SFP calibration database, and the init script created in \ref{Writing
+configuration} you can now restart the WRPC by typing the shell command:
 
 \begin{lstlisting}
 wrc# init boot
@@ -618,19 +622,22 @@ Locking PLL
 executing: ptp start
 PTP start
 Slave Only, clock class set to 255
+executing: ip set 192.168.1.5
+IP-address: 192.168.1.5 (static assignment)
 \end{lstlisting}
 
-Now you should have the \codeHook{wr ptp core} running in \codeHook{wr} Slave mode.
-\codeHook{wrpc} needs to make a calibration of t24p phase transition value. It has to
-be done only once for a new bitstream and is performed automatically when
-\codeHook{wrpc} runs in the Slave mode. That is why it is very important, even if
-\codeHook{wrpc} is meant to run in the Master mode, to configure it to Slave for a
-moment and connect to any \codeHook{wr} Master. This has to be repeated every time
-a new bitstream (gateware) is deployed. The measured value is automatically
-stored to Flash/EEPROM and used later in the Master or GrandMaster mode.
+Now you should have the WR PTP Core running in WR Slave mode.\\
+
+\textbf{Important!!!} WRPC needs to make a calibration of t24p phase transition
+value. It has to be done only once for a new bitstream and is performed
+automatically when WRPC runs in the Slave mode. That is why it is very
+important, even if WRPC is meant to run in the Master mode, to configure it to
+Slave for a moment and connect to any WR Master. This has to be repeated every
+time a new bitstream (gateware) is deployed. The measured value is automatically
+stored to Flash/EEPROM and used later in the Master or GrandMaster mode.\\
 
 The Shell also contains a monitoring function which you can use to check the
-\codeHook{wr} synchronization status:
+WR synchronization status:
 
 \begin{lstlisting}
 wrc# gui
@@ -639,55 +646,56 @@ wrc# gui
 The information is presented in a clear, auto-refreshing screen. The
 information is refreshed at every WR iteration or periodically if
 nothing else happens (so you see an up-to-date timestamp). The period
-defaults to 1 second and can be changed using the \textit{refresh} command. To exit from
-this console mode press <Esc>. A full description of the information reported
-by gui is provided in appendix \ref{WRPC GUI elements}.
+defaults to 1 second and can be changed using the \texttt{refresh} command. To
+exit from this console mode press <Esc>. A full description of the information
+reporter by \textit{gui} is provied in appendix \ref{WRPC GUI elements}.
 
-\noindent\textbf{Note:} the \textit{Synchronization status} and \textit{Timing parameters} in \textit{gui}
-are available only in the \codeHook{wr} Slave mode. When running as \codeHook{wr} Master, you
-would be able to see only the current date and time, link status, Tx and Rx
-packet counters, lock and calibration status.
+\noindent\textbf{Note:} the \textit{Synchronization status} and \textit{Timing
+parameters} in \texttt{gui} are available only in the WR Slave mode. When
+running as WR Master, you would be able to see only the current date and time,
+link status, Tx and Rx packet counters, IP, lock and calibration status.
 
 \vspace{1em}
 \includegraphics[width=12cm]{wrpc_mon.png}
 \vspace{1em}
 
-If you want to log statistics from the \codeHook{wrpc} operation, it's probably
-better to use the \textit{stat} shell command. It reports the same information as GUI
-but in a single long line, a form which is easier to parse and analyze:
+If you want to log statistics from the WRPC operation, it is better to use a
+\texttt{stat} shell command. It reports the same information as \texttt{gui},
+but in a single line, which is easier to parse and analyze:
 
 \begin{lstlisting}
 wrc# stat
-lnk:1 rx:416 tx:118 lock:1 sv:1 ss:'TRACK_PHASE' aux:0 sec:94197 \
-nsec:793068184 mu:836241 dms:400556 dtxm:10 drxm:163610 dtxs:0 drxs:128400 \
-asym:35129 crtt:544221 cko:-5 setp:7667 hd:61479 md:37221 ad:65000 ucnt:101 \
-temp: 45.6875 C
-lnk:1 rx:417 tx:119 lock:1 sv:1 ss:'TRACK_PHASE' aux:0 sec:94198 \
-nsec:293076296 mu:836253 dms:400562 dtxm:10 drxm:163610 dtxs:0 drxs:128400 \
-asym:35129 crtt:544233 cko:-4 setp:7663 hd:61485 md:37259 ad:65000 ucnt:102 \
-temp: 45.6875 C
+lnk:1 rx:172338 tx:151811 lock:1 ptp:slave sv:1 ss:'TRACK_PHASE' aux0:1 \
+sec:6047 nsec:828412744 mu:836453 dms:398530 dtxm:224455 drxm:232479 \
+dtxs:180625 drxs:149251 asym:39393 crtt:49643 cko:1 setp:5082 ucnt:270 \
+hd:31734 md:46228 ad:0 temp: 52.6875 C
+lnk:1 rx:172392 tx:151860 lock:1 ptp:slave sv:1 ss:'TRACK_PHASE' aux0:1 \
+sec:6049 nsec:399776360 mu:836452 dms:398530 dtxm:224455 drxm:232479 \
+dtxs:180625 drxs:149251 asym:39392 crtt:49642 cko:2 setp:5082 ucnt:271 \
+hd:31730 md:46211 ad:0 temp: 52.6875 C
 (...)
 \end{lstlisting}
 
 \vspace{1em}
-Unlike \textit{gui}, the \textit{stat} command runs asynchronously: you can still
-issue shell commands while stats are running (this is different from
-earlier \texttt{wrpc-sw} releases).  You can stop statistics by running \textit{stat} again.
-As an alternative to the toggling action of \textit{stat} alone, you can
-use ``\textit{stat 1}'' or ``\textit{stat 0}''.
+Unlike \texttt{gui}, the \texttt{stat} command runs asynchronously: you can still
+issue shell commands while stats are running. You can stop statistics by running
+\texttt{stat} again. As an alternative to the toggling action of \texttt{stat}
+alone, you can use ``\texttt{stat 1}'' or ``\texttt{stat 0}''.
 
 Statistics are printed every time the WR servo runs; thus no statistics
 are reported when the node is running in master mode, nor when your node
-is running as slave and the master disappeared.
+is running as slave and the master disappeared.\\
 
-\vspace{1em}
-If you have a \codeHook{dio} mezzanine board plugged to your \codeHook{spec}, you can verify
-the synchronization performance by observing the offset between 1-PPS signals
-from the \codeHook{wr} Master and \codeHook{wr} Slave. The \codeHook{wr ptp core} generates 1-PPS
-signal on the LEMO connector No. 1. Please remember to use oscilloscope cables
-of the same length and type (with the same delay), or take their delay
-difference into account in your measurements.
-
+You can verify the synchronization performance by observing the offset between
+1-PPS signals from the WR Master and your WRPC running in the Slave mode. Please
+remember to use oscilloscope cables of the same length and type (with the same
+delay), or take their delay difference into account in your measurements.
+Depending on your board, 1-PPS output is produced on:
+\begin{itemize*}
+  \item \textbf{SPEC}: DIO mezzanine LEMO No.1
+  \item \textbf{SVEC}: SVEC LEMO No.1
+  \item \textbf{VFC-HD}: ???
+\end{itemize*}
 
 % ==========================================================================
 \subsection{Diagnostics via SNMP}
