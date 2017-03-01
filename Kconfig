@@ -21,15 +21,6 @@ config PRINT_BUFSIZE
 	int
 	default 128
 
-config ASSERT
-	bool "Build assertion checks in the code"
-	default y
-	  help
-	    Build assertions in the code, to catch unexpected situations.
-	    When an assertion fails the code loops over repeating the
-	    error message every second. OTOH, panic() is always built,
-	    with no Kconfig -- and it does the same, unconditionally.
-  
 config RAMSIZE
 	int
 	default 65536 if WR_SWITCH
@@ -92,8 +83,8 @@ config WR_NODE_PCS16
 	boolean "Compile for 16-bit PCS"
 	default n
 	help
-		This allows to compile the WR PTP Core software for 16-bit PCS platforms
-		(e.g. Kintex-7).
+	  This allows to compile the WR PTP Core software for 16-bit PCS platforms
+	  (e.g. Kintex-7).
 
 config STACKSIZE
 	depends on WR_NODE
@@ -160,23 +151,23 @@ config SYSLOG
 	  to enable it.  The special "off" ipaddr disables syslog.
 
 config SNMP
-       depends on IP
-       default y
-       boolean "Mini SNMP responder"
+	depends on IP
+	default y
+	boolean "Mini SNMP responder"
 
 config SNMP_SET
-       depends on SNMP
-       default y
-       boolean "Add SET support to the Mini SNMP responder"
-       help
+	depends on SNMP
+	default y
+	boolean "Add SET support to the Mini SNMP responder"
+	help
 	  This option enables support for SET requests for Mini SNMP responder
 
 config SNMP_AUX_DIAG
-       depends on SNMP && AUX_DIAG
-       default y if AUX_DIAG
-       default n
-       boolean "Adds support of auxiliary diagnostics registers to SNMP"
-       help
+	depends on SNMP && AUX_DIAG
+	default y if AUX_DIAG
+	default n
+	boolean "Adds support of auxiliary diagnostics registers to SNMP"
+	help
 	  This option adds branch wrpcAuxDiag to the SNMP
 
 config SNMP_HW_TYPE
@@ -210,16 +201,29 @@ config HAS_FLASH_INIT
 	default 0
 
 config FLASH_INIT
-  boolean
-  default y if EMBEDDED_NODE
-  default n
+	boolean
+	default y if EMBEDDED_NODE
+	default n
 
 config AUX_DIAG
-       default n
-       boolean "Add support for auxiliary diagnostics registers"
-       help
+	default n
+	boolean "Add support for auxiliary diagnostics registers"
+	help
 	  This option adds support for read/write of aux diag registers and
 	  the diag command.
+
+config SDB_STORAGE
+	depends on WR_NODE
+	default y
+	boolean "Use SDB to manage storage (instead of legacy eeprom code)"
+	help
+	  Use SDB to manage flash and eeproms (both W1 and I2C). If not, legacy code
+	  (eeprom only) will be selected.
+
+config LEGACY_EEPROM
+	depends on WR_NODE
+	boolean
+	default !SDB_STORAGE
 
 #
 # This is a set of configuration options that should not be changed by
@@ -360,28 +364,15 @@ config PRINTF_IS_NONE
 	  but not suited for wrpc-sw. See pp_printf/README for details.
 endchoice
 
-config PRINTF_XINT
-	boolean
-	default PRINTF_IS_XINT if (DEVELOPER && WR_NODE)
+config ASSERT_ENA
+	bool "Build assertion checks in the code"
+	depends on DEVELOPER
 	default y
-
-config PRINTF_FULL
-       boolean
-       default PRINTF_IS_FULL
-
-config PRINTF_MINI
-       boolean
-       default PRINTF_IS_MINI
-
-config PRINTF_NONE
-       boolean
-       default PRINTF_IS_NONE
-
-config PPSI
-	depends on WR_NODE
-	boolean
 	help
-	  Select this option for the ppsi engine (now only option)
+	  Build assertions in the code, to catch unexpected situations.
+	  When an assertion fails the code loops over repeating the
+	  error message every second. OTOH, panic() is always built,
+	  with no Kconfig -- and it does the same, unconditionally.
 
 config DETERMINISTIC_BINARY
 	depends on DEVELOPER && EMBEDDED_NODE
@@ -475,18 +466,6 @@ config VLAN_FOR_CLASS6
 	depends on VLAN
 	int "Route this VLAN too to fabric class 6 (Streamer/NIC)"
 
-config SDB_STORAGE
-	depends on WR_NODE
-	default y
-	boolean "Use SDB to manage storage (instead of legacy eeprom code)"
-	help
-	  Use SDB to manage flash and eeproms (both W1 and I2C). If not, legacy code
-	  (eeprom only) will be selected.
-
-config LEGACY_EEPROM
-	depends on WR_NODE
-	boolean
-	default !SDB_STORAGE
 
 config LATENCY_PROBE
 	depends on DEVELOPER
@@ -533,3 +512,32 @@ config VLAN_ARRAY_SIZE
 	default 1
 
 # CONFIG_WR_NODE
+
+################# helper configuration items #############
+config PRINTF_XINT
+	boolean
+	default PRINTF_IS_XINT if (DEVELOPER && WR_NODE)
+	default y
+
+config PRINTF_FULL
+	boolean
+	default PRINTF_IS_FULL
+
+config PRINTF_MINI
+	boolean
+	default PRINTF_IS_MINI
+
+config PRINTF_NONE
+	boolean
+	default PRINTF_IS_NONE
+
+config PPSI
+	depends on WR_NODE
+	boolean
+	help
+	  Select this option for the ppsi engine (now only option)
+
+config ASSERT
+	bool
+	default n if DEVELOPER && !ASSERT_ENA
+	default y
