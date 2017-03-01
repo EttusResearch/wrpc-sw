@@ -6,7 +6,7 @@
 LIB = libwhiterabbit.a
 LOBJ := vuart.o
 
-CFLAGS = -Wall -ggdb -O2 -fPIC -I./
+CFLAGS = -Wall -ggdb -O2 -fPIC -Werror -I./ -I../include
 LDFLAGS = -L. -lwhiterabbit
 
 %: %.c $(LIB)

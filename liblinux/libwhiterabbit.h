@@ -7,8 +7,8 @@
 
 struct wr_vuart {
 	int fd;
-	unsigned int offset;
-	void *vuart_mmap;
+	void *mmap;
+	volatile struct UART_WB *base;
 };
 
 /**
