@@ -261,8 +261,6 @@ platform you use:
   \item \textbf{SVEC}: \texttt{<your\_location>/wr-cores/syn/svec\_ref\_design}
   \item \textbf{VFC-HD}: \texttt{<your\_location>/wr-cores/syn/vfchd\_ref\_design}
 \end{itemize*}
-contains the main synthesis Manifest.py for \codeHook{spec} board
-and in which you should perform the whole process is:
 
 After selecting a proper location from the list above, please call
 \textit{hdlmake} without any arguments to create the Makefile and project file:
@@ -301,7 +299,8 @@ If, you would like to clean-up the repository to start building everything from
 scratch you can use the following commands:
 \begin{itemize*}
 \item \texttt{\$ make clean} - removes all synthesis reports and log files;
-\item \texttt{\$ make mrproper} - removes spec\_top.bin and spec\_top.bit files;
+\item \texttt{\$ make mrproper} - removes \texttt{*.bin}, \texttt{*.bit} and
+  \texttt{*.sof} files;
 \end{itemize*}
 
 % ==========================================================================
@@ -345,10 +344,11 @@ documentation for this project.\\
 
 Before you can compile \textit{wrpc-sw}, you can make some configuration
 choices. The package uses \textit{Kconfig} as a configuration engine, so you may
-run one of the following commands (the first is text-mode, the second uses a KDE
-GUI and the third uses a Gnome GUI):
+run one of the following commands (the first two are text-mode, the third uses
+a KDE GUI and the fourth uses a Gnome GUI):
 \begin{lstlisting}
 $ make menuconfig
+$ make nonfig
 $ make xconfig
 $ make gconfig
 \end{lstlisting}
@@ -533,7 +533,7 @@ wrc# mac setp xx:xx:xx:xx:xx:xx
 \end{lstlisting}
 where \texttt{xx:xx:xx:xx:xx:xx} is the MAC address of your board.\\
 
-Next you should input calibration fixed delays values and alpha parameters. The
+Next, you should input calibration fixed delays values and alpha parameters. The
 example below clears any existing entries and adds two Axcen transceivers with
 $\Delta_{TX}$, $\Delta_{RX}$ and $\alpha$ parameters associated with them.
 
@@ -548,7 +548,7 @@ shell command.\\
 
 \noindent\textbf{Note:} The $\Delta_{TX}$ and $\Delta_{RX}$ parameters above are
 the defaults for wrpc-v3.1 release bitstream available on \textit{ohwr.org},
-running on the \codeHook{spec} v4 board and calibrated to port 1 of a WR Switch
+running on the \codeHook{spec} v4 board and calibrated to port 1 of a~WR Switch
 v3.3. These values as well as the default parameters for other boards are
 available on the calibration wiki page
 (\url{http://www.ohwr.org/projects/white-rabbit/wiki/Calibration}). If you
@@ -587,7 +587,7 @@ Cesium clock). Depending on your board you should connect:
 One option is to type all the commands to initialize the WRPC software to
 the required state every time the core starts. However, you can also write your
 own initialization script to the Flash/EEPROM. It will be executed every time
-the WRPC software starts. A simple script, that loads the calibration
+the WRPC software starts. A~simple script, that loads the calibration
 parameters, configures the WR mode to Slave and starts the PTP daemon and sets
 the IP address is presented below:
 
@@ -674,14 +674,12 @@ but in a single line, which is easier to parse and analyze:
 
 \begin{lstlisting}
 wrc# stat
-lnk:1 rx:172338 tx:151811 lock:1 ptp:slave sv:1 ss:'TRACK_PHASE' aux0:1 \
-sec:6047 nsec:828412744 mu:836453 dms:398530 dtxm:224455 drxm:232479 \
-dtxs:180625 drxs:149251 asym:39393 crtt:49643 cko:1 setp:5082 ucnt:270 \
-hd:31734 md:46228 ad:0 temp: 52.6875 C
-lnk:1 rx:172392 tx:151860 lock:1 ptp:slave sv:1 ss:'TRACK_PHASE' aux0:1 \
-sec:6049 nsec:399776360 mu:836452 dms:398530 dtxm:224455 drxm:232479 \
-dtxs:180625 drxs:149251 asym:39392 crtt:49642 cko:2 setp:5082 ucnt:271 \
-hd:31730 md:46211 ad:0 temp: 52.6875 C
+lnk:1 rx:172338 tx:151811 lock:1 ptp:slave sv:1 ss:'TRACK_PHASE' aux0:1 sec:6047 \
+nsec:828412744 mu:836453 dms:398530 dtxm:224455 drxm:232479 dtxs:180625 drxs:149251 \
+asym:39393 crtt:49643 cko:1 setp:5082 ucnt:270 hd:31734 md:46228 ad:0 temp: 52.6875 C
+lnk:1 rx:172392 tx:151860 lock:1 ptp:slave sv:1 ss:'TRACK_PHASE' aux0:1 sec:6049 \
+nsec:399776360 mu:836452 dms:398530 dtxm:224455 drxm:232479 dtxs:180625 drxs:149251 \
+asym:39392 crtt:49642 cko:2 setp:5082 ucnt:271 hd:31730 md:46211 ad:0 temp: 52.6875 C
 (...)
 \end{lstlisting}
 
@@ -689,7 +687,7 @@ hd:31730 md:46211 ad:0 temp: 52.6875 C
 Unlike \texttt{gui}, the \texttt{stat} command runs asynchronously: you can still
 issue shell commands while stats are running. You can stop statistics by running
 \texttt{stat} again. As an alternative to the toggling action of \texttt{stat}
-alone, you can use ``\texttt{stat 1}'' or ``\texttt{stat 0}''.
+alone, you can use ``\texttt{stat on}'' or ``\texttt{stat off}''.
 
 Statistics are printed every time the WR servo runs; thus no statistics
 are reported when the node is running in master mode, nor when your node
@@ -752,8 +750,7 @@ The \textit{Mini SNMP responder} does not support:
 To make examples more readable, listings below use \texttt{SNMP\_OPT} environment
 variable. Make sure you set it properly in your shell.
 \begin{lstlisting}
- $ SNMP_OPT="-c public -v 2c -m WR-WRPC-MIB -M +/var/lib/mibs/ietf:lib \
-   192.168.1.20"
+ $ SNMP_OPT="-c public -v 2c -m WR-WRPC-MIB -M +/var/lib/mibs/ietf:lib 192.168.1.20"
 \end{lstlisting}
 where:
 \begin{sloppypar} % to prevent \texttt{} from going to the margine
@@ -772,7 +769,8 @@ For example, to get the system uptime please execute the \texttt{snmpget} comman
 \begin{lstlisting}
  $ snmpget $SNMP_OPT wrpcTimeSystemUptime.0
 \end{lstlisting}
-To get dump of all available OIDs please execute the \texttt{snmpwalk} command:
+To get a dump of all available OIDs please execute the \texttt{snmpwalk}
+command:
 \begin{lstlisting}
  $ snmpwalk $SNMP_OPT wrpcCore
 \end{lstlisting}
@@ -800,9 +798,9 @@ Part of the \texttt{snmpwalk}'s output:
  End of MIB
 \end{lstlisting}
 
-It is recommended to use SNMP v2c for communication with the \codeHook{wrpc}.
+It is recommended to use SNMP v2c for communication with a \codeHook{wrpc}.
 Please note that when the version 1 of SNMP is used, 64 bit counters are not
-supported. This makes it impossible to read some \codeHook{wrpc}'s objects with
+supported. This makes impossible to read some \codeHook{wrpc}'s objects with
 SNMPv1.
 
 % --------------------------------------------------------------------------
