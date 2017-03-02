@@ -6,7 +6,6 @@
 \usepackage{hyperref}  % makes cross references and URLs clickable
 \newcommand{\code}[1]{\texttt{#1}}
 \usepackage[overload]{textcase}
-\newcommand{\codeHook}[1]{\mbox{\ttfamily\MakeTextUppercase{#1}}}
 \usepackage{listings}
 \usepackage{color}
 \definecolor{light-gray}{gray}{0.95}
@@ -435,7 +434,7 @@ the "golden" bitstream. Starting from version 3.0, WR PTP Core uses a flash
 memory chip on the carrier as a default place for storing the calibration
 parameters and the init script. Also the storage format of this information is
 now better organized in the files of the SDBFS filesystem. Therefore, starting
-from v3.0 you have to write the \codeHook{sdbfs} filesystem image to the flash
+from v3.0 you have to write the SDBFS filesystem image to the flash
 before running the WRPC. You can download the image from \textit{ohwr.org}:
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
@@ -550,7 +549,7 @@ shell command.\\
 
 \noindent\textbf{Note:} The $\Delta_{TX}$ and $\Delta_{RX}$ parameters above are
 the defaults for wrpc-v4.0 release bitstream available on \textit{ohwr.org},
-running on the \codeHook{spec} v4 board and calibrated to port 1 of a~WR Switch
+running on the SPEC v4 board and calibrated to port 1 of a~WR Switch
 v3.3. These values as well as the default parameters for other boards are
 available on the calibration wiki page
 (\url{http://www.ohwr.org/projects/white-rabbit/wiki/Calibration}). If you
@@ -710,25 +709,25 @@ Depending on your board, 1-PPS output is produced on:
 \subsection{Diagnostics via SNMP}
 \label{Diagnostics via SNMP}
 
-Up to the version 4.0 of \codeHook{wrpc} the only way to perform diagnostics
+Up to the version 4.0 of WRPC the only way to perform diagnostics
 of the \texttt{wrpc-sw} was to use serial console with tools like \textit{gui}, \textit{stat},
 etc. For some set-ups, like standalone node, it is very inconvenient to use
 external console for diagnostics.
 
-From the version 4.0 of \codeHook{wrpc} it is possible to include the \textit{Mini
+From the version 4.0 of WRPC it is possible to include the \textit{Mini
 SNMP responder}, which allows to perform remote diagnostics using \textit{SNMP} via
 a port connected to the \textit{Write Rabbit} network.
 
-The configuration file of \codeHook{wrpc} contains the following
+The configuration file of WRPC contains the following
 SNMP-related options:
 \begin{itemize*}
-\item \texttt{CONFIG\_SNMP} -- include the \textit{Mini SNMP responder} into \codeHook{wrpc}
+\item \texttt{CONFIG\_SNMP} -- include the \textit{Mini SNMP responder} into WRPC
 \item \texttt{CONFIG\_SNMP\_SET} -- enable the support of SNMP \textit{SET} packets
 \item \texttt{CONFIG\_SNMP\_VERBOSE} -- enable verbose output from the \textit{Mini SNMP
-      responder} on the \codeHook{wrpc}'s console
+      responder} on the WRPC's console
 \end{itemize*}
 
-The MIB file describing \codeHook{wrpc}'s OIDs can be found in the \texttt{lib} directory
+The MIB file describing WRPC's OIDs can be found in the \texttt{lib} directory
 of the \texttt{wrpc-sw} repo.
 So far, the \textit{Mini SNMP responder} supports version 1 and a subset of version
 2c of the SNMP protocol.
@@ -800,9 +799,9 @@ Part of the \texttt{snmpwalk}'s output:
  End of MIB
 \end{lstlisting}
 
-It is recommended to use SNMP v2c for communication with a \codeHook{wrpc}.
+It is recommended to use SNMP v2c for communication with a WRPC.
 Please note that when the version 1 of SNMP is used, 64 bit counters are not
-supported. This makes impossible to read some \codeHook{wrpc}'s objects with
+supported. This makes impossible to read some WRPC's objects with
 SNMPv1.
 
 % --------------------------------------------------------------------------
@@ -810,7 +809,7 @@ SNMPv1.
 \label{Managing SFP database via SNMP}
 
 The SFPs database can be displayed using the \texttt{sfp show} command from
-the \codeHook{wrpc}'s console:
+the WRPC's console:
 \begin{lstlisting}
  wrc# sfp show
  1: PN:AXGE-1254-0531   dTx:   180625 dRx:   148451 alpha: 72169888
@@ -853,7 +852,7 @@ For that, please set delta Tx, delta Rx and alpha as described above,
 then set \texttt{writeToMemoryCurrentSfp} to the \texttt{wrpcPtpConfigApply.0}
 
 Please be aware that these changes will be lost after a power cycle of a board,
-soft reset of \codeHook{wrpc} or unplug/plug of a fiber/SFP.
+soft reset of WRPC or unplug/plug of a fiber/SFP.
 
 Currently, after the update of SFP values in the memory, PTP is restarted.
 Such restart is necessary because PTP does not support on-the-fly changes of
@@ -900,7 +899,7 @@ Simple verification of performed actions:
 \end{lstlisting}
 
 The same add can also be achieved by performing \texttt{sfp add} command in
-the \codeHook{wrpc}'s console:
+the WRPC's console:
 \begin{lstlisting}
  wrc# sfp add NEW-SFP 1111 2222 3333
  Update existing SFP entry
@@ -943,8 +942,8 @@ To verify that database is empty:
 \label{Adding new objects to the SNMP}
 
 The \textit{Mini SNMP responder} can be easily expanded to export new objects.
-Values of new objects can come from \codeHook{wrpc}'s variables or other HDL modules
-as long as there is a proper interface to the \codeHook{wrpc} to read these values.
+Values of new objects can come from WRPC's variables or other HDL modules
+as long as there is a proper interface to the WRPC to read these values.
 
 This section contains the instruction how to export new objects with
 the given variables' content.
@@ -1476,12 +1475,12 @@ tools used to build and run it, you can write to our mailing list
 \footnotesize
 \begin{longtable}{  p{7.5cm}  p{7cm} }
 
-  \code{help} & lists available commands in this instance of the \codeHook{wrpc} \\
+  \code{help} & lists available commands in this instance of the WRPC \\
  & \\
   \code{ver} & prints which version of wrpc is running \\
  & \\
   \code{config} & prints the Kconfig file used to build this instance of
-\codeHook{wrpc}. It is an optional command, enabled at build time by
+WRPC. It is an optional command, enabled at build time by
 \texttt{CONFIG\_CMD\_CONFIG} \\
  & \\
   \code{ps} & prints the list of running tasks (processes) in the CPU.
@@ -1493,7 +1492,7 @@ the \code{ps} command\\
  & \\
   \code{verbose <digits>} & sets PPSi verbosity. See the PPSi manual
 about the meaning of the digits (hint: \texttt{verbose 1111} is a good first bet to
-see how the \codeHook{ptp} system is working) \\
+see how the PTP system is working) \\
  & \\
   \code{pll init <mode> <ref\_channel> <align\_pps>} & manually runs
 spll\_init() function to initialize SoftPll \\
@@ -1512,21 +1511,21 @@ spll\_init() function to initialize SoftPll \\
 
   \code{pll gdac <index>} & gets dac's value\\
  & \\
-  \code{gui} & starts GUI \codeHook{wrpc} monitor\\
+  \code{gui} & starts GUI WRPC monitor\\
  & \\
   \code{stat} & toggles reporting of loggable statistics. You can pass
 \texttt{1} or \texttt{0} as argument as an alternative to toggling\\
 
-  \code{stat bts} & prints bitslide value for established \codeHook{wr} Link,
+  \code{stat bts} & prints bitslide value for established WR Link,
 needed by the calibration procedure\\
  & \\
   \code{refresh} & changes the update time period of the gui and stat
 commands. Default period is 1 second. If you set the period to 0, the log
 message is only generated one time.\\
  & \\
-  \code{ptp start} & starts \codeHook{wr ptp} daemon\\
+  \code{ptp start} & starts WR PTP daemon\\
 
-  \code{ptp stop} & stops \codeHook{wr ptp} daemon\\
+  \code{ptp stop} & stops WR PTP daemon\\
 
   \code{ptp e2e} & select end-to-end PTP mechanism. If configured you can set \texttt{p2p} mode, and \texttt{delay}/\texttt{pdelay} as aliases.\\
 
@@ -1534,35 +1533,35 @@ message is only generated one time.\\
 
   \code{ptp <cmd> <cmd> ...} & You can concatenate several of the above sbcommands in a single \texttt{ptp} command. With no arguments, the command reports the current values.\\
  & \\
-  \code{mode gm|master|slave} & sets \codeHook{wrpc} to operate as Grandmaster
+  \code{mode gm|master|slave} & sets WRPC to operate as Grandmaster
 clock (requires external 10MHz and 1-PPS reference), Master or Slave. After
 setting the mode, \texttt{ptp start} must be re-issued\\
  & \\
   \code{calibration} & tries to read t2/4 phase transition value from the
-Flash/EEPROM (in \codeHook{wr} Master or GrandMaster mode), or executes the t24p
-calibration procedure and stores its result to the Flash/EEPROM (in \codeHook{wr}
+Flash/EEPROM (in WR Master or GrandMaster mode), or executes the t24p
+calibration procedure and stores its result to the Flash/EEPROM (in WR 
 Slave mode)\\
  & \\
-  \code{time} & prints current time from \codeHook{wrpc}\\
+  \code{time} & prints current time from WRPC\\
 
   \code{time raw} &  prints current time in a raw format (seconds, nanoseconds)\\
 
-  \code{time set <sec> <nsec>} & sets \codeHook{wrpc} time\\
+  \code{time set <sec> <nsec>} & sets WRPC time\\
 
-  \code{time setsec <sec>} & sets only seconds of the \codeHook{wrpc} time
+  \code{time setsec <sec>} & sets only seconds of the WRPC time
 (useful for setting time in GrandMaster mode, when nanoseconds counter is
 aligned to external 1-PPS and 10 MHz)\\
 
-  \code{time setnsec <nsec>} & sets only nanoseconds of the \codeHook{wrpc} time\\
+  \code{time setnsec <nsec>} & sets only nanoseconds of the WRPC time\\
  & \\
-  \code{sfp erase} & erases the \codeHook{sfp} database stored in the Flash/EEPROM\\
+  \code{sfp erase} & erases the SFP database stored in the Flash/EEPROM\\
 
   \code{sfp add <PN> <deltaTx> <deltaRx> <alpha>} & stores calibration
-parameters for \codeHook{sfp} to a file in Flash/EEPROM\\
+parameters for SFP to a file in Flash/EEPROM\\
 
-  \code{sfp show} & prints all \codeHook{sfp} transceivers stored in database\\
+  \code{sfp show} & prints all SFP transceivers stored in database\\
 
-  \code{sfp match} & prints the ID of a currently used \codeHook{sfp}
+  \code{sfp match} & prints the ID of a currently used SFP
 transceiver and tries to load the calibration parameters for it\\
  & \\
   \code{init erase} & erases the initialization script in Flash/EEPROM \\
@@ -1572,21 +1571,22 @@ initialization script\\
 
   \code{init show} & prints all commands from the script stored in Flash/EEPROM\\
 
-  \code{init boot} & executes the script stored in Flash/EEPROM (the same action is done automatically when \codeHook{wrpc} starts after resetting \codeHook{lm32})\\
+  \code{init boot} & executes the script stored in Flash/EEPROM (the same action
+is done automatically when WRPC starts after resetting LM32)\\
  & \\
-  \code{mac get} & prints \codeHook{wrpc}'s \codeHook{mac} address\\
+  \code{mac get} & prints WRPC's MAC address\\
 
-  \code{mac getp} & reads the persistent \codeHook{mac} address stored in Flash/EEPROM\\
+  \code{mac getp} & reads the persistent MAC address stored in Flash/EEPROM\\
 
-  \code{mac set <mac>} & sets the \codeHook{mac} address of \codeHook{wrpc}\\
+  \code{mac set <mac>} & sets the MAC address of WRPC\\
 
-  \code{mac setp <mac>} & stores the persistent \codeHook{mac} address in Flash/EEPROM\\
+  \code{mac setp <mac>} & stores the persistent MAC address in Flash/EEPROM\\
  & \\
-  \code{sdb} & prints devices connected to the Wishbone bus inside \codeHook{wrpc}\\
+  \code{sdb} & prints devices connected to the Wishbone bus inside WRPC\\
  & \\
   \code{ip get} & \\
 
-  \code{ip set <ip>} & reports or sets the IPv4 address of the \codeHook{wrpc} (only available if \texttt{CONFIG\_IP} is set at build time\\
+  \code{ip set <ip>} & reports or sets the IPv4 address of the WRPC (only available if \texttt{CONFIG\_IP} is set at build time\\
  & \\
   \code{vlan} & \\
 
@@ -1596,7 +1596,7 @@ initialization script\\
  & \\
   \code{w1w <offset> <byte> [<byte> ...]}& \\
 
-  \code{w1r <offset> <len>} & If \texttt{CONFIG\_W1} is set and a OneWire \codeHook{eeprom} exists, write and read data. For writing, \texttt{byte} values are decimal\\
+  \code{w1r <offset> <len>} & If \texttt{CONFIG\_W1} is set and a OneWire EEPROM exists, write and read data. For writing, \texttt{byte} values are decimal\\
  & \\
   \code{delays}&\\
 
@@ -1638,19 +1638,19 @@ initialization script\\
 
   \code{RX:} / \code{TX:} & Rx/Tx packets counters\\
 
-  \code{mode:} & operation mode of the \codeHook{wr ptp core} - \code{<WR Master, WR Slave>}\\
+  \code{mode:} & operation mode of the WR PTP Core - \code{<WR Master, WR Slave>}\\
 
   \code{< Locked, NoLock >} & SoftPLL lock state\\
  & \\
 
-  \code{Servo state:} & current state of \codeHook{wr} servo state machine -
+  \code{Servo state:} & current state of WR servo state machine -
 \code{<Uninitialized, SYNC\_SEC, SYNC\_NSEC, SYNC\_PHASE, TRACK\_PHASE>}\\
  & \\
 
-  \code{Phase tracking:} & is phase tracking enabled when \codeHook{wr} Slave is
-synchronized to \codeHook{wr} Master - \code{<ON, OFF>}\\
+  \code{Phase tracking:} & is phase tracking enabled when WR Slave is
+synchronized to WR Master - \code{<ON, OFF>}\\
 
-  \code{Synchronization source:} & network interface name from which \codeHook{wr}
+  \code{Synchronization source:} & network interface name from which WR
 daemon gets synchronization - \code{<wru1>}\\
  & \\
 
@@ -1662,22 +1662,22 @@ daemon gets synchronization - \code{<wru1>}\\
 delay (\( delay_{MS} \))\\
  & \\
 
-  \code{Master PHY delays:} & transmission/reception delays of \codeHook{wr}
+  \code{Master PHY delays:} & transmission/reception delays of WR 
 Master's hardware (\( \Delta_{TXM}, \Delta_{RXM} \))\\
  & \\
 
-  \code{Slave PHY delays:} & transmission/reception delays of \codeHook{wr} Slave's
+  \code{Slave PHY delays:} & transmission/reception delays of WR Slave's
 hardware (\( \Delta_{TXS}, \Delta_{RXS} \))\\
  & \\
 
-  \code{Total link asymmetry:} & \codeHook{wr} link asymmetry calculated as
+  \code{Total link asymmetry:} & WR link asymmetry calculated as
 \( delay_{MM} - 2 \cdot delay_{MS} \)\\
  & \\
 
   \code{Cable rtt delay:} & round-trip fiber latency\\
  & \\
 
-  \code{Clock offset:} & Slave to Master offset calculated by \codeHook{ptp} daemon
+  \code{Clock offset:} & Slave to Master offset calculated by PTP daemon
 (\( offset_{MS} \))\\
  & \\
 
@@ -1689,7 +1689,7 @@ one-way link delay\\
  & \\
 
   \code{Update counter:} & the state of counter incremented every time
-the \codeHook{wr} servo is updated\\
+the WR servo is updated\\
  & \\
 
 \end{longtable}
@@ -1701,18 +1701,18 @@ the \codeHook{wr} servo is updated\\
 \section{Writing SDBFS image in standalone configuration}
 \label{Writing SDBFS image in standalone configuration}
 
-If you use \codeHook{spec} board in a host-less environment, or you use custom
-hardware and \codeHook{spec} drivers and tools cannot be used, there is still a
-possibility of writing \codeHook{sdbfs} through Xilinx JTAG.
+If you use SPEC board in a host-less environment, or you use custom
+hardware and SPEC drivers and tools cannot be used, there is still a
+possibility of writing SDBFS through Xilinx JTAG.
 
 \vspace{1em}
-In case of \codeHook{spec} running a reference bitstream provided with a stable
-\codeHook{wrpc} release, you can simply program your Flash with \textit{spec\_top.mcs}
+In case of SPEC running a reference bitstream provided with a stable
+WRPC release, you can simply program your Flash with \textit{spec\_top.mcs}
 provided with the release binaries using for example Xilinx ISE Impact tool.
-This \textit{mcs} file already includes both \codeHook{sdbfs} image and FPGA bitstream.
+This \textit{mcs} file already includes both SDBFS image and FPGA bitstream.
 
 In case of a custom gateware or hardware, you can download a standalone
-\codeHook{sdbfs} image:
+SDBFS image:
 \begin{lstlisting}
 $ wget http://www.ohwr.org/attachments/download/4144/sdbfs-standalone.bin
 \end{lstlisting}
@@ -1720,10 +1720,10 @@ and generate a custom \textit{*.mcs} file with your own FPGA bitstream. You shou
 use the following layout:
 \begin{longtable}{  l  l }
 \code{0x000000} & your FPGA bitstream \\
-\code{0x170000} & \codeHook{sdbfs} image\\
+\code{0x170000} & SDBFS image\\
 \end{longtable}
 
-For example, to generate the \textit{*.mcs} file for M25P32 Flash on \codeHook{spec}, the
+For example, to generate the \textit{*.mcs} file for M25P32 Flash on SPEC, the
 following \textit{promgen} parameters should be used:
 \begin{lstlisting}
 promgen -w -spi -p mcs -c FF -s 32768 -u 0 <your_bitstream>.bit \
