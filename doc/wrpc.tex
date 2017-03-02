@@ -1018,7 +1018,7 @@ The macro \texttt{OID\_FIELD\_VAR} takes the following arguments:
    \item \texttt{\&example\_i32var, \&example\_string} -- addresses to the data in
          memory
 \end{itemize*}
-In case the address of variables is not known at boot, it is possible to define
+In case the address of variable is not known at boot, it is possible to define
 a pointer to the variable which will be initialized (e.g. in the \texttt{snmp\_init}
 the function) at the boot time. In that case function \texttt{get\_pp} (\texttt{set\_pp}) has
 to be used instead of \texttt{get\_p} (\texttt{set\_p}). For variables that are a part of
@@ -1222,7 +1222,7 @@ sending every 100ms use ``\texttt{ltest 0 100}'', to stop sending use
 \texttt{ltest 0}.
 
 In the sender node, a reminder is sent to the console very 10s
-reporting the node is currently sendin \textit{ltest} frames.  All
+reporting the node is currently sending \textit{ltest} frames.  All
 non-sending nodes report every minute to \textit{syslog}. The
 report message includes the number of samples received as well
 as the minimum, average and maximum latency, in nanoseconds.
@@ -1242,11 +1242,11 @@ it may be useful to look at the current values or critical variables
 within \textit{wrpc-sw}/\textit{ppsi}.
 
 To this aim, you can pass a memory image of \textit{wrpc} to \texttt{tools/wrpc-dump}.
-The tools will print information for softpll, ppsi data structures
-and ptp data sets.
+The tools will print information for softpll, ppsi data structures,
+ptp data sets and version information.
 
 For example, for a \textit{spec} device, you can use the resource file in
-\textit{syfs} to look at a live system, or copy the file for off-line
+\textit{sysfs} to look at a live system, or copy the file for off-line
 analysis. The following command line show both uses:
 
 \begin{lstlisting}
@@ -1261,7 +1261,8 @@ analysis. The following command line show both uses:
 
 The \textit{mapper} tool used above, and part of \textit{wrpc-sw}, reads a file
 using \textit{mmap()}. The kernel doesn't allow plain \textit{read()} from a
-resource file.
+resource file. If you encounter problem using \texttt{wrpc\_dump} directly,
+please use \texttt{mapper} then \texttt{wrpc\_dump}.
 
 \textbf{Note:} Data read by \texttt{mapper} may look like has wrong endianness comparing
 to the file used for programming lm32 by \texttt{spec-cl}, but \texttt{spec-cl} is the
@@ -1377,6 +1378,11 @@ udp-based network services, in addition to \textit{ptp}:
 
 	If \texttt{CONFIG\_SYSLOG} is set, the node is a syslog client.
         See section \ref{Syslog} for details.\\
+& \\
+\textit{ snmp } &
+
+	If \texttt{CONFIG\_SNMP} is set, the node is a snmp agent.
+        See section \ref{Diagnostics via SNMP} for details.\\
 
 \end{longtable}
 
@@ -1395,28 +1401,28 @@ processing and get back to the ``standard'' packet-filter rules.
 
 \begin{longtable}{  p{6.5cm}  p{9cm} }
 
-\textit{ CONFIG\_VLAN } &
+\small{\textit{CONFIG\_VLAN}} &
 
 	This is the top-level choice. It can be enabled or disabled.
         If disabled, the following values default to 0 and the
         packet filter will discard all tagged frames.\\
 & \\
-\textit{ CONFIG\_VLAN\_NR } &
+\small{\textit{CONFIG\_VLAN\_NR}} &
 
 	The default \textit{vlan} number for the CPU.  All network traffic
-        directed to (and originating from)the \textit{lm32} processor will
-        belong to this \textit{vlan}.  The value can be changed at run time
+        directed to (and originating from) the \textit{lm32} processor will
+        belong to this \textit{vlan}.  The~value can be changed at run time
         using the \texttt{vlan} shell command.\\
 & \\
-\textit{ CONFIG\_VLAN\_1\_FOR\_CLASS7 } & \\
-\textit{ CONFIG\_VLAN\_2\_FOR\_CLASS7 } &
+\small{\textit{CONFIG\_VLAN\_1\_FOR\_CLASS7}} & \\
+\small{\textit{CONFIG\_VLAN\_2\_FOR\_CLASS7}} &
 
 	The packet-filter rules are setup to deliver frames belonging
         to two specific \textit{vlans} to class 7, usually \textit{etherbone}.
         To deliver one \textit{vlan} only, set the two options to the same
         number.\\
 & \\
-\textit{ CONFIG\_VLAN\_FOR\_CLASS6 } &
+\small{\textit{CONFIG\_VLAN\_FOR\_CLASS6}} &
 
 	The packet-filter rules are setup to deliver frames belonging
         to one specific \textit{vlan} to class 6, usually routed to the
