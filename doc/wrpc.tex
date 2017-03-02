@@ -110,7 +110,7 @@ following locations:
 
   \end{itemize*}
 Repositories containing the WRPC gateware and software (\textit{wr-cores},
-\textit{wrpc-sw}) are tagged with \texttt{wrpc-v3.0} tag. Other tools used to
+\textit{wrpc-sw}) are tagged with \texttt{wrpc-v4.0} tag. Other tools used to
 build the core and load it into the FPGA should be used in their newest stable
 releases, unless otherwise stated.
 
@@ -233,13 +233,13 @@ $ chmod a+x /usr/bin/hdlmake
 \end{lstlisting}
 
 Having all the tools in place, you can now clone the main WR PTP Core git
-repository for the v3.1 release. The set of command below does that, checks out
+repository for the v4.0 release. The set of command below does that, checks out
 the release tag, and downloads other HDL repositories (submodules) needed to
 synthesize the core:
 \begin{lstlisting}
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_location>/wr-cores
 $ cd <your_location>/wr-cores
-$ git checkout wrpc-v3.1
+$ git checkout wrpc-v4.0
 $ git submodule init
 $ git submodule update
 \end{lstlisting}
@@ -329,13 +329,13 @@ $ export CROSS_COMPILE="<your_location>/lm32/bin/lm32-elf-"
 \end{lstlisting}
 
 To get the sources of the WRPC software, please clone the \textit{wrpc-sw} git
-repository tagged with \texttt{wrpc-v3.1} tag. The commands in the listing below
+repository tagged with \texttt{wrpc-v4.0} tag. The commands in the listing below
 do that together with submodules needed for this software.\\
 \begin{lstlisting}
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git \
 <your_location>/wrpc-sw
 $ cd <your_location>/wrpc-sw
-$ git checkout wrpc-v3.1
+$ git checkout wrpc-v4.0
 \end{lstlisting}
 
 \textbf{Note:} If you use WRPC within another project, you may need to checkout
@@ -547,7 +547,7 @@ To check the content of the SFP database you can execute the \textit{sfp show}
 shell command.\\
 
 \noindent\textbf{Note:} The $\Delta_{TX}$ and $\Delta_{RX}$ parameters above are
-the defaults for wrpc-v3.1 release bitstream available on \textit{ohwr.org},
+the defaults for wrpc-v4.0 release bitstream available on \textit{ohwr.org},
 running on the \codeHook{spec} v4 board and calibrated to port 1 of a~WR Switch
 v3.3. These values as well as the default parameters for other boards are
 available on the calibration wiki page
@@ -708,12 +708,12 @@ Depending on your board, 1-PPS output is produced on:
 \subsection{Diagnostics via SNMP}
 \label{Diagnostics via SNMP}
 
-Up to the version 3.1 of \codeHook{wrpc} the only way to perform diagnostics
+Up to the version 4.0 of \codeHook{wrpc} the only way to perform diagnostics
 of the \texttt{wrpc-sw} was to use serial console with tools like \textit{gui}, \textit{stat},
 etc. For some set-ups, like standalone node, it is very inconvenient to use
 external console for diagnostics.
 
-From the version 3.1 of \codeHook{wrpc} it is possible to include the \textit{Mini
+From the version 4.0 of \codeHook{wrpc} it is possible to include the \textit{Mini
 SNMP responder}, which allows to perform remote diagnostics using \textit{SNMP} via
 a port connected to the \textit{Write Rabbit} network.
 
