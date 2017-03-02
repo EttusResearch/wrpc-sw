@@ -8,19 +8,28 @@ TP=$(mktemp /tmp/save-dotconfig-ppsi.XXXXXX)
 test -f .config && cp .config $TW
 test -f ppsi/.config && cp ppsi/.config $TP
 
+# check whether we want to compare sizes of binaries to older builds
+if [ $# -ne 0 ] && [ x"$1" = x"-c" ]; then
+    compare_mode=y
+    shift;
+fi
+
+
 configs=$(cd configs; echo *_defconfig)
 if [ $# -ne 0 ]; then
     configs="$*"
 fi
 
-if ! [ -n "$size_db_file" ]; then
-    size_db_file=size_db.txt
-    echo "No file with size DB specified! Using default ($size_db_file)"
-fi
+if [ x"$compare_mode" = x"y" ]; then
+    if ! [ -n "$size_db_file" ]; then
+	size_db_file=size_db.txt
+	echo "No file with size DB specified! Using default ($size_db_file)"
+    fi
 
-if ! [ -n "$size_info_file" ]; then
-    size_info_file=size_info.txt
-    echo "No file with size info specified! Using default ($size_info_file)"
+    if ! [ -n "$size_info_file" ]; then
+	size_info_file=size_info.txt
+	echo "No file with size info specified! Using default ($size_info_file)"
+    fi
 fi
 
 export size_db_file
@@ -47,7 +56,9 @@ for c in $configs; do
     export DEFCONFIG_NAME
     # Remove "# configuration written to .config" from output
     make -s | grep -v '^#'
-    make makeall_copy
+    if [ x"$compare_mode" = x"y" ]; then
+	make makeall_copy
+    fi
 done
 make -s clean
 
@@ -57,10 +68,12 @@ cp $TP ppsi/.config; rm $TP
 
 rm $T
 
-./compare_size.sh
-GIT_HASH=`git log --format=format:%H -1`
-if [ -f "$size_db_file" ]; then
-    cat "$size_db_file" | grep -v $GIT_HASH > "$size_db_file".tmp
-    mv "$size_db_file".tmp "$size_db_file"
+if [ x"$compare_mode" = x"y" ]; then
+    ./compare_size.sh 1>&2
+    GIT_HASH=`git log --format=format:%H -1`
+    if [ -f "$size_db_file" ]; then
+	cat "$size_db_file" | grep -v $GIT_HASH > "$size_db_file".tmp
+	mv "$size_db_file".tmp "$size_db_file"
+    fi
+    cat "$size_info_file" >> "$size_db_file"
 fi
-cat "$size_info_file" >> "$size_db_file"
