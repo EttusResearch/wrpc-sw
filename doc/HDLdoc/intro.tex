@@ -1,61 +1,48 @@
 \section{Introduction}
-The White Rabbit PTP Core is an Ethernet MAC implementation capable of providing
-precise timing. It can be used for sending and receiving regular Ethernet
-frames between user-defined HDL modules and a physical medium. It also
-implements the White Rabbit protocol to provide sub-nanosecond time
-synchronization.
+This section describes the various options available to the users for instantiating and
+parametrising the WRPC in their designs.
 
-The White Rabbit PTP Core can operate in one of the following modes:
-\begin{itemize}
-  \item GrandMaster: WR Master synchronized to an external 1-PPS and 10 MHz clock
-    signal, propagates precise timing to other WR-compliant devices
-  \item Master: WR Master with free-running oscillator, propagates precise
-    timing to other WR-compliant devices
-  \item Slave: synchronizes its internal oscillator to another WR Master device
-\end{itemize}
-By default it starts as \emph{Slave} but its mode can be changed in anytime
-using the \emph{mode} command of WRPC Shell (please check the \emph{White
-Rabbit PTP Core User's Manual - Building and Running} \cite{wrpc_man}  for full
-description of the WRPC Shell).\\
-
-
-This documentation describes the input and output ports of the WRPC IP-core and
-VHDL generic parameters that can be used to personalize the core. The manual is
-divided into two parts:
-\begin{itemize}
-  \item {\bf Part I: Standard configuration}: describes only generics and ports
-    that have to be connected to use WRPC as the precise time source and be able
-    to send and receive Ethernet frames through it.
-  \item {\bf Part II: Advanced options}: all the generics and input/output ports
-    that are beyond WRPC's basic usage. They can be used by people with expert
-    knowledge of the White Rabbit and {\bf on their own responsibility} (the WRPC
-    instantiated with those parameters modified won't be supported).
-\end{itemize}
-
-Figure \ref{intro:fig:wrpc_top} is an example on how to instantiate the WRPC
-component inside the VHDL project. It contains few additional modules besides
-the WRPC:
-\begin{itemize}
-  \item \emph{wr\_gtp\_phy\_spartan6}: module wrapping Xilinx GTP SerDes to
-    improve its determinism
-  \item \emph{PLL\_BASE}: Xilinx Spartan6 PLL primitive \cite{pll_base}, used to
-    produce 62.5 MHz system clock from 125 MHz local reference clock and to
-    produce the DMTD offset clock from a local 20 MHz oscillator
-  \item \emph{spec\_serial\_dac\_arb}: converts DACs tuning values to serial
-    interface and arbitrates access to two DACs used for reference and DMTD
-    clock tuning.
-\end{itemize}
-
-%Very similar example can be found in the WRPC
-%reference design for PCI-Express SPEC board:
-%\emph{top/spec\_1\_1/wr\_core\_demo/spec\_top.vhd} inside \emph{wr-cores} git
-%repository.
-
-\begin{figure}[hbp]
+\begin{figure}
   \begin{center}
-    \includegraphics[width=.9\textheight, angle=270]{fig/basic_top.pdf}
-    \label{intro:fig:wrpc_top}
-    \caption{Simple top design with WRPC}
+    \includegraphics[width=.6\textwidth]{fig/wrpc_board.pdf}
+    \label{fig:wrpc_board}
+    \caption{WRPC HDL abstraction hierarchy}
   \end{center}
 \end{figure}
+
+The WRPC provides several levels of abstractions and VHDL modules, depending on the target
+system. These are presented in Figure~\ref{fig:wrpc_board}. At the highest level of abstraction, the
+WRPC provides Board Support Packages (BSPs), available for all officially supported boards. All BSP
+modules share a common part (the ``board-common'' module) which encapsulates the WRPC core itself,
+together with a selection of interfaces for connecting the core the the user FPGA
+logic. Furthermore, each BSP also makes use of a Platform Support Package (PSP), which groups
+together and instantiates all the FPGA-specific parts (typically hard IP provided by the FPGA
+vendor), such as PHY, PLLs and clock buffers.
+
+Thus, depending on the users' systems and needs, several scenarios might be available for
+instantiating the WRPC into their designs.
+
+\begin{description}
+  \item[Option 1: Supported board.] In this simplest of scenarios, it will be enough to just
+    instantiate the provided BSP into the users' designs and configure it via the provided generics.
+  \item[Option 2: Supported FPGA platform.] The users could draw inspiration from an existing BSP
+    based on the same platform, reusing the board-common module and PSP, while adapting the parts
+    that are unique to their designs.
+  \item[Option 3: Unsupported FPGA platform.] There is significant work involved in this
+    scenario. In addition to providing the details for their board (just like for option 2), users
+    also have to write their own PSP. It should be possible though to reuse the board-common
+    module. Furthermore, if the unsupported platform is related to a supported one, it could be that
+    the PHY and/or PLLs will also be reused, perhaps with minor adjustments.
+\end{description}
+
+When writing a new BSP or PSP, it's worth discussing it first in the
+\href{http://www.ohwr.org/mailing_list/show?project_id=white-rabbit}{white-rabbit-dev} mailing
+list. Perhaps there is already some preliminary support underway. It's also worth considering
+sharing your work so that it can be merged with the project and added to the list of supported
+platforms/boards.
+
+The rest of this section describes the various modules in more detail. The WRPC module is presented
+in Section~\ref{sec:hdl_wrpc}. The platform support modules are presented in
+Section~\ref{sec:hdl_platform}, while the board support modules are presented in
+Section~\ref{sec:hdl_board}.
 

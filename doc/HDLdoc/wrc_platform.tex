@@ -1,0 +1,212 @@
+\section{Platform Support Packages}
+\label{sec:hdl_platform}
+
+The White Rabbit (WR) PTP core project provides platform support packages (PSPs) for Altera and
+Xilinx FPGAs.
+
+By using these modules, users gain the benefit of instantiating all the platform-specific support
+components for the WR PTP core (PHY, PLLs, etc.) in one go, without having to delve into the
+implementation details, using a setup that has been tested and is known to work well on the
+supported FPGAs.
+
+\subsection{Common}
+\label{sec:hdl_platform_common}
+
+This section describes the generic parameters and ports which are common to all provided PSPs.
+
+\subsubsection{Generic parameters}
+
+\begin{hdlparamtable}
+  g\_with\_external\_clock\_input & boolean & false & Select whether to
+  include the external 10MHz reference clock input (used in WR Grandmaster mode)\\
+  \hline
+  g\_use\_default\_plls & boolean & true & Set to FALSE if you want to
+  instantiate your own PLLs\\
+\end{hdlparamtable}
+
+Each PSP provides two generic parameters of boolean type , which allow the users to configure the
+PLLs in their designs. As such, four different PLL setups can be achieved by changing the values of
+these parameters.
+
+\begin{description}
+\item[PLL setup 1:] Use default PLLs, no external reference clock. In this setup, the PSP expects
+  one 20MHz and one 125MHz clock, and it will instantiate all the required PLLs internally. This is
+  the default mode.
+\item[PLL setup 2:] Use default PLLs, with external reference clock. This is the same as PLL setup
+  1, with the addition of the external 10MHz reference clock input, which will be multiplied
+  internally by the PSP to 125MHz.
+\item[PLL setup 3:] Use custom PLLs, no external reference clock. In this setup, the PSP will not
+  instantiate any PLLs internally. It is up to the user to provide the 62.5MHz system clock, the
+  125MHz reference clock and the 62.5MHz DMTD clock.
+\item[PLL setup 4:] Use custom PLLs, with external reference clock. This is the same as PLL setup 3,
+  with the addition of the external reference clock input, which should be provided as is (10MHz)
+  and also multiplied to 125MHz.
+\end{description}
+
+\subsubsection{Ports}
+
+\begin{hdlporttable}
+  areset\_n\_i & in & 1 & asynchronous reset (active low)\\
+  \hline
+  clk\_10m\_ext\_i & in & 1 & 10MHz external reference clock input
+  (used when \tts{g\_with\_external\_clock\_input = true})\\
+  \hline
+  \hdltablesection{Clock inputs for default PLLs (used when
+    \tts{g\_use\_default\_plls = true})}\\
+  \hline
+  clk\_20m\_vcxo\_i & in & 1 & 20MHz VCXO clock\\
+  \hline
+  clk\_125m\_pllref\_i & in & 1 & 125MHz PLL reference\\
+  \hline
+  \hdltablesection{Interface with custom PLLs (used when
+    \tts{g\_use\_default\_plls = false})}\\
+  \hline
+  clk\_62m5\_dmtd\_i & in & 1 &  \multirowpar{2}{62.5MHz DMTD offset
+    clock and lock status}\\
+  \cline{1-3}
+  clk\_dmtd\_locked\_i & in & 1 & \\
+  \hline
+  clk\_62m5\_sys\_i & in & 1 & \multirowpar{2}{62.5MHz Main system
+    clock and lock status}\\
+  \cline{1-3}
+  clk\_sys\_locked\_i & in & 1 & \\
+  \hline
+  clk\_125m\_ref\_i & in & 1 & 125MHz Reference clock\\
+  \hline
+  clk\_125m\_ext\_i & in & 1 & \multirowpar{4}{125MHz derived
+      from 10MHz external reference, locked/stopped status inputs and reset output (used when
+      \tts{g\_with\_external\_clock\_input = true})}\\
+  \cline{1-3}
+  clk\_ext\_locked\_i & in & 1 & \\
+  \cline{1-3}
+  clk\_ext\_stopped\_i & in & 1 & \\
+  \cline{1-3}
+  clk\_ext\_rst\_o & out & 1 &\\
+  \hline
+  \hdltablesection{Interface with SFP}\\
+  \hline
+  sfp\_tx\_fault\_i & in & 1 & TX fault indicator\\
+  \hline
+  sfp\_los\_i & in & 1 & Loss Of Signal indicator\\
+  \hline
+  sfp\_tx\_disable\_o & out & 1 & TX disable control\\
+  \hline
+  \hdltablesection{Interface with WRPC}\\
+  \hline
+  clk\_62m5\_sys\_o & out & 1 & 62.5MHz system clock output\\
+  \hline
+  clk\_125m\_ref\_o & out & 1 & 125MHz reference clock output\\
+  \hline
+  clk\_62m5\_dmtd\_o & out & 1 & 62.5MHz DMTD clock output\\
+  \hline
+  pll\_locked\_o & out & 1 & logic AND of system and DMTD PLL lock\\
+  \hline
+  clk\_10m\_ext\_o & out & 1 & 10MHz external reference clock output\\
+  \hline
+  phy8\_o & out & rec & \multirowpar{2}{input/output records for PHY signals
+    when \tts{g\_pcs\_16bit = false}}\\
+  \cline{1-3}
+  phy8\_i & in & rec & \\
+  \hline
+  phy16\_o & out & rec & \multirowpar{2}{input/output records for PHY signals
+    when \tts{g\_pcs\_16bit = true}}\\
+  \cline{1-3}
+  phy16\_i & in & rec & \\
+  \hline
+  ext\_ref\_mul\_o & out & 1 & \multirowpar{4}{125MHz derived from
+    10MHz external reference, locked/stopped status outputs and reset input}\\
+  \cline{1-3}
+  ext\_ref\_mul\_locked\_o & out & 1 & \\
+  \cline{1-3}
+  ext\_ref\_mul\_stopped\_o & out & 1 & \\
+  \cline{1-3}
+  ext\_ref\_rst\_i & in & 1 & \\
+\end{hdlporttable}
+
+\subsection{Altera}
+\label{sec:hdl_platform_altera}
+
+The Altera PSP currently supports the Arria V family of FPGAs.
+
+The top-level VHDL module is located under:\\\hrefwrpc{platform/altera/xwrc\_platform\_altera.vhd}
+
+A VHDL package with the definition of the module can be found
+under:\\\hrefwrpc{platform/wr\_altera\_pkg.vhd}
+
+An example (VHDL) instantiation of this module can be found in the VFC-HD board support package (see
+also Section~\ref{sec:hdl_board_vfchd}):\\\hrefwrpc{board/vfchd/xwrc\_board\_vfchd.vhd}
+
+This section describes the generic parameters and ports which are specific to the Altera
+PSP. Parameters and ports common to all PSPs are described in Section~\ref{sec:hdl_platform_common}.
+
+\subsubsection{Generic parameters}
+
+\begin{hdlparamtable}
+  g\_fpga\_family & string & arria5 & Defines the family/model of Altera
+  FPGA. Recognized values are "arria5" (more will be added)\\
+  \hline
+  g\_pcs16\_bit & boolean & false & Some FPGA families provide the possibility
+  to configure the PCS of the PHY as either 8bit or 16bit. The default is to use the 8bit PCS,
+  but this generic can be used to override it\\
+\end{hdlparamtable}
+
+\subsubsection{Ports}
+
+\begin{hdlporttable}
+  \hdltablesection{Interface with SFP}\\
+  \hline
+  \linebreak sfp\_tx\_o\linebreak & out & 1 & \multirowpar{2}{PHY TX and RX. These
+    are single ended and should be mapped to the positive half of each differential signal.
+    Altera tools will infer both the negative half and the differential receiver}\\
+  \cline{1-3}
+  \linebreak sfp\_rx\_i\linebreak & in & 1 &\\
+\end{hdlporttable}
+
+\subsection{Xilinx}
+\label{sec:hdl_platform_xilinx}
+
+The Xilinx PSP currently supports the Spartan 6 family of FPGAs.
+
+The top-level VHDL module is located under:\\ \hrefwrpc{platform/xilinx/xwrc\_platform\_xilinx.vhd}
+
+A VHDL package with the definition of the module can be found
+under:\\ \hrefwrpc{platform/wr\_xilinx\_pkg.vhd}
+
+Examples of (VHDL) instantiation of this module can be found in the SPEC and SVEC board support
+packages (see also Sections~\ref{sec:hdl_board_spec}
+and~\ref{sec:hdl_board_svec}):\\
+\hrefwrpc{board/spec/xwrc\_board\_spec.vhd}\\
+\hrefwrpc{board/svec/xwrc\_board\_svec.vhd}
+
+This section describes the generic parameters and ports which are
+specific to the Xilinx PSP. Parameters and ports common to all PSPs
+are described in Section~\ref{sec:hdl_platform_common}.
+
+\subsubsection{Generic parameters}
+
+\begin{hdlparamtable}
+  g\_fpga\_family & string & spartan6 & Defines the family/model of Xilinx
+  FPGA. Recognized values are "spartan6" (more will be added)\\
+  \hline
+  g\_simulation & integer & 0 & setting to '1' speeds up the simulation, must
+  be set to '0' for synthesis\\
+\end{hdlparamtable}
+
+\subsubsection{Ports}
+
+\begin{hdlporttable}
+  clk\_125m\_gtp\_p\_i & in & 1 & \multirowpar{2}{125MHz GTP
+    reference differential clock input}\\
+  \cline{1-3}
+  clk\_125m\_gtp\_n\_i & in & 1 & \\
+  \hline
+  \hdltablesection{Interface with SFP}\\
+  \hline
+  sfp\_txn\_o & out & 1 & \multirowpar{2}{differential pair for PHY TX}\\
+  \cline{1-3}
+  sfp\_txp\_o & out & 1 & \\
+  \hline
+  sfp\_rxn\_i & in & 1 & \multirowpar{2}{differential pair for PHY RX}\\
+  \cline{1-3}
+  sfp\_rxp\_i & in & 1 & \\
+\end{hdlporttable}

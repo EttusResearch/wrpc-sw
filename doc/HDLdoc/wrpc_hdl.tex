@@ -3,36 +3,21 @@
 %
 % White Rabbit PTP Core HDL.
 %
-\def\us{\char`\_}
 
-\documentclass[a4paper, 12pt]{article}
-%\documentclass{article}
+\documentclass[a4paper]{article}
 
 \usepackage{fullpage}
-\usepackage{pgf}
-\usepackage{tikz}
-\usetikzlibrary{arrows,automata,shapes}
+\usepackage{graphicx}
 \usepackage{multirow}
 \usepackage{color}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{longtable}
 \usepackage[latin1]{inputenc}
-\usepackage{verbatim}
 \usepackage{amsmath}
 \usepackage{times,mathptmx}
 \usepackage{chngcntr}
 \usepackage{hyperref}
-\usepackage[none]{hyphenat}
-%\usepackage{draftwatermark}
-
-%%%%%5% used in Tomeks %%%%%%%
-\usepackage{listings}
-\definecolor{light-gray}{gray}{0.95}
-\usepackage{cancel}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    fig/tomeksDrawings
-%\usepackage{morefloats}
-
-%\usepackage{amsfonts}
-%\usepackage{amssymb}
-%\usepackage{graphicx} 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % creating subsubsubsection notation
@@ -50,21 +35,77 @@
                                      {-3.25ex\@plus -1ex \@minus -.2ex}%
                                      {0.0001pt \@plus .2ex}%
                                      {\normalfont\normalsize\bfseries}}
+
 %\renewcommand{\thefootnote}{\fnsymbol{footnote}}
 %\renewcommand{\thefootnote}{\alph{footnote}}
 
 \counterwithin{paragraph}{subsubsection}
 \counterwithin{subparagraph}{paragraph}
 \makeatother
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\newcommand{\eqoffset}[1]{%
-  {\ensuremath{%
-      {\text{offset}}_{#1}}%
-  }%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\definecolor{wrlblue}{RGB}{165,195,210}
+\definecolor{wrlgray}{RGB}{209,211,212}
+
+\newcommand{\multirowpar}[2]{
+  \multirow{#1}{\hsize}{\parbox{\hsize}{\strut\raggedright#2\strut}}
 }
-\newcommand{\eqdelay}[1]{{\text{delay}}_{#1}}
-\newcommand{\eqasymm}{{\text{asymmetry}}}
+
+\newcommand{\hdltablesection}[1]{
+  \multicolumn{4}{|c|}{\bf\small#1}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{M}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}\ttsmall}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{D}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}\ttsmall}m{#1}}
+  
+\newenvironment{hdlparamtable}{
+  \let\underscore\_
+  \renewcommand{\_}{\underscore\allowbreak}
+  \setlength{\extrarowheight}{1pt}
+  \begin{center}
+    \begin{longtable}{|M{.2\textwidth}|C{.09\textwidth}|D{.11\textwidth}|L{.5\textwidth}|}
+      \firsthline
+      \rowcolor{wrlblue}
+      \bf{name} & \bf{type} & \bf{default} & \bf{description}\\
+      \hline
+      \endhead
+}{
+  \lasthline
+    \end{longtable}
+  \end{center}
+}
+
+\newenvironment{hdlporttable}{
+  \let\underscore\_
+  \renewcommand{\_}{\underscore\allowbreak}
+  \setlength{\extrarowheight}{1pt}
+  \begin{center}
+    \begin{longtable}{|M{.25\textwidth}|C{.05\textwidth}|D{.05\textwidth}|L{.55\textwidth}|}
+      \firsthline
+      \rowcolor{wrlblue}
+      \bf{name} & \bf{dir} & \bf{size} & \bf{description}\\
+      \hline
+      \endhead
+}{
+  \lasthline
+    \end{longtable}
+  \end{center}
+}
+
+\def \wrpcrelease {for-tests}
+%\def \wrpcrelease {wrpc-v4.0}
+
+\newcommand{\tts}[1]{
+  \texttt{\small{#1}}}
+
+% same as \tts{}, without argument
+\newcommand{\ttsmall}{\ttfamily\small}
+
+\newcommand{\hrefwrpc}[1]{
+  \tts{\href{http://www.ohwr.org/projects/wr-cores/repository/entry/#1?rev=\wrpcrelease}{#1}}}
 
 \begin{document}
 
@@ -72,37 +113,9 @@
 {version 1.0}\\\small{(01-03-2013)}}
 \author{Grzegorz Daniluk\\ CERN BE-CO-HT}
 
-\date{March 2013}
+\date{March 2017}
 \maketitle
 \thispagestyle{empty}
-
-\begin{figure}[ht!]
-  \centering
-  \vspace{1.3cm}
-  %\includegraphics[width=0.50\textwidth]{fig/wr_logo.png}
-  \label{fig:wr_logo}
-\end{figure}
-
-\newpage
-
-%\setcounter{page}{1}
-%\begin{center}
-%\large Revision History Table 
-%\end{center} 
-%
-%\begin{table}[ht!]
-%%\begin{table}[tbp]
-%%\caption{White Rabbit Specification Revision History Table } 
-%\centering
-%\begin{tabular}{| c |  c | c | p{8cm}    |}          \hline
-%\textbf{Version} & \textbf{Date} & \textbf{Authors} & \textbf{Description}  \\ 
-% & &  &\\ \hline
-%0.01 & 06/11/2012 & G.D.   & First draft for comments.  \\ \hline
-%\end{tabular}
-%\label{tab:revHist}
-%\end{table}
-
-\newpage
 
 \newpage
 
@@ -110,33 +123,13 @@
 
 \newpage
 
-\input{intro.tex}
-\newpage
-\section{Standard configuration}
-\input{generics.tex}
-\input{clk_rst.tex}
-\input{phyif.tex}
-\input{fabric.tex}
-\input{timecode.tex}
-\input{periph.tex}
+\include{intro}
+\include{wrc_core}
+\include{wrc_platform}
+\include{wrc_board}
 
-\newpage
 \appendix
-\section{Appendix: Advanced options}
-{\color{red} {\bf Information presented in this part should be used only
-    by users with expert knowledge of the White Rabbit Protocol and on their own
-responsibility}}
-\input{generics_adv.tex}
-\input{clk_rst_adv.tex}
-\input{fabric_adv.tex}
-\input{wb.tex}
-\input{txts.tex}
-
-\newpage
 \bibliographystyle{unsrt}
 \bibliography{references}
-
-%\newpage
-%\input{app.tex}
 
 \end{document}

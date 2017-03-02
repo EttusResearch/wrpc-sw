@@ -1,0 +1,517 @@
+\section{Board Support Packages}
+\label{sec:hdl_board}
+
+The White Rabbit (WR) PTP core project provides board support packages (BSPs) for the following
+boards:
+\begin{itemize}
+\item \href{http://www.ohwr.org/projects/spec}{SPEC}, a PCIe single FMC carrier board based on a
+  Xilinx Spartan 6 FPGA.
+\item \href{http://www.ohwr.org/projects/svec}{SVEC}, a VME dual FMC carrier board based on a Xilinx
+  Spartan 6 FPGA.
+\item \href{http://www.ohwr.org/projects/vfc-hd}{VFC-HD}, a VME single FMC carrier board based on an
+  Altera Arria V FPGA.
+\end{itemize}
+
+By using these modules, users gain the benefit of instantiating all the necessary components of the
+WR PTP core (including the core itself, the PHY, PLLs, etc.) in one go, without having to delve into
+the implementation details, using a setup that has been tested and is known to work well on the
+supported boards.
+
+Each BSP is split in two modules: the common module, which is shared across all BSPs, and the
+board-specific module. The common module instantiates the WRPC itself, together with a selection of
+interfaces for connecting the core the the user FPGA logic. The board-specific module instantiates
+all the FPGA- and system-specific parts (related to WR), such as hard IP provided by the FPGA
+vendor, interfaces to DACs, reset inputs, etc.
+
+The BSPs make use internally of the appropriate FPGA family platform support packages (PSPs, see also
+Section~\ref{sec:hdl_platform}). For users who need more control and flexibility over their designs,
+it is suggested to use the BSP as a reference, and to consider instantiating directly the respective
+PSP for their FPGA family.
+
+\subsection{Common}
+\label{sec:hdl_board_common}
+
+Most of the generic parameters and ports of the board-common module map directly to those of the
+WRPC. One notable exception to this rule is that of the parameters and ports related to the selected
+interface for connecting the core to the user FPGA logic.
+
+The board-common module provides the \tts{g\_fabric\_iface} generic parameter, an enumeration
+type with three possible values:
+
+\begin{description}
+\item[PLAIN:] No additional module is instantiated and the ``raw'' WRPC fabric interface (see also
+  Section~\ref{sec:wrpc_fabric}) is provided on the board's ports.
+\item[STREAMERS:] A set of \href{http://www.ohwr.org/projects/wr-cores/wiki/WR_Streamers}{TX/RX
+  streamers} is attached to the WRPC fabric interface.
+\item[ETHERBONE:] An \href{http://www.ohwr.org/projects/etherbone-core/wiki}{Etherbone} slave node
+  is attached to the WRPC fabric interface.
+\end{description}
+
+Sections~\ref{sec:hdl_board_common_param} and~\ref{sec:hdl_board_common_ports} list the generic
+parameters and ports of the board-common module which are shared across the BSPs.
+
+\textbf{Note:} the board-common module defines more parameters and ports than the ones mentioned in
+the following sections. Those that are not exposed by any of the BSPs have been left out to keep the
+tables short and to the point. Users interested in studying the board-common module and/or writing
+their own BSP, can find the board-common module under:
+\\\hrefwrpc{board/common/xwrc\_board\_common.vhd}
+
+\subsubsection{Generic parameters}
+\label{sec:hdl_board_common_param}
+
+\begin{hdlparamtable}
+  g\_simulation & integer & 0 & \multirowpar{11}{These map directly to generic parameters with the
+    same name in the WRPC module (see Section~\ref{sec:wrc_generics})}\\
+  \cline{1-3}
+  g\_with\_external\_clock\_input & boolean & true & \\
+  \cline{1-3}
+  g\_aux\_clks & integer & 0 & \\
+  \cline{1-3}
+  g\_dpram\_initf & string & "" & \\
+  \cline{1-3}
+  g\_diag\_id & integer & 0 & \\
+  \cline{1-3}
+  g\_diag\_ver & integer & 0 & \\
+  \cline{1-3}
+  g\_diag\_ro\_size & integer & 0 & \\
+  \cline{1-3}
+  g\_diag\_rw\_size & integer & 0 & \\
+  \hline
+  g\_tx\_streamer\_width & integer & 32 & \multirowpar{2}{TX/RX
+    data width when \tts{g\_fabric\_iface = STREAMERS} (otherwise ignored)}\\
+  \cline{1-3}
+  g\_rx\_streamer\_width & integer & 32 & \\
+  \hline
+  g\_fabric\_iface & enum & PLAIN & optional module to be attached to the
+  fabric interface of WRPC \tts{[PLAIN/STREAMERS/ETHERBONE]}\\
+\end{hdlparamtable}
+
+\subsubsection{Ports}
+\label{sec:hdl_board_common_ports}
+
+\begin{hdlporttable}
+  \hdltablesection{Clocks and resets}\\
+  \hline
+  clk\_aux\_i & in & var & [optional] vector of auxiliary
+  clocks that will be disciplined to WR timebase. Size is equal to \tts{g\_aux\_clks}\\
+  \hline
+  clk\_ext\_i & in & 1 & 10MHz external reference clock input
+  (used when \tts{g\_with\_external\_clock\_input = true})\\
+  \hline
+  pps\_ext\_i & in & 1 & external 1-PPS input (used when
+  \tts{g\_with\_external\_clock\_input = true})\\
+  \hline
+  clk\_sys\_62m5\_o & out & 1 & 62.5MHz system clock output\\
+  \hline
+  clk\_ref\_125m\_o & out & 1 & 125MHz reference clock output\\
+  \hline
+  rst\_62m5\_n\_o & out & 1 & Active low reset output, synchronous to \tts{clk\_sys\_62m5\_o}\\
+  \hline
+  rst\_125m\_n\_o & out & 1 & Active low reset output, synchronous to \tts{clk\_ref\_125m\_o}\\
+  \hline
+  \hdltablesection{Interface with SFP}\\
+  \hline
+  sfp\_tx\_fault\_i & in & 1 & TX fault indicator\\
+  \hline
+  sfp\_los\_i & in & 1 & Loss Of Signal indicator\\
+  \hline
+  sfp\_tx\_disable\_o & out & 1 & TX disable control\\
+  \hline
+  \hdltablesection{I2C EEPROM interface}\\
+  \hline
+  eeprom\_sda\_i & in  & 1 & \multirowpar{2}{EEPROM I2C SDA}\\
+  \cline{1-3}
+  eeprom\_sda\_o & out & 1 & \\
+  \hline
+  eeprom\_scl\_i & in  & 1 & \multirowpar{2}{EEPROM I2C SCL}\\
+  \cline{1-3}
+  eeprom\_scl\_o & out & 1 & \\
+  \hline
+  \hdltablesection{Onewire interface (UID and temperature)}\\
+  \hline
+  onewire\_i & in  & 1 & OneWire data input\\
+  \hline
+  onewire\_oen\_o & out & 1 & OneWire data output enable (when asserted,
+  OneWire tri-state output buffer should be enabled and driven to ground)\\
+  \hline
+  \hdltablesection{External WishBone interface}\\
+  \hline
+  wb\_slave\_o & out & rec & \multirowpar{2}{Mapped to WRPC external WB slave
+    interface (see also Section~\ref{sec:wrpc_wb})}\\
+  \cline{1-3}
+  wb\_slave\_i & in & rec & \\
+  \hline
+  \hdltablesection{WR fabric interface (when \tts{g\_fabric\_iface = plain})}\\
+  \hline
+  wrf\_src\_o & out & rec & \multirowpar{4}{Mapped to WRPC fabric interface
+    (see also Section~\ref{sec:wrpc_fabric})}\\
+  \cline{1-3}
+  wrf\_src\_i & in &  rec & \\
+  \cline{1-3}
+  wrf\_snk\_o & out & rec & \\
+  \cline{1-3}
+  wrf\_snk\_i & in &  rec & \\
+  \hline
+  \hdltablesection{WR streamers (when \tts{g\_fabric\_iface = streamers})}\\
+  \hline
+  wrs\_tx\_data\_i & in &  var & Data to be sent. Size is equal to \tts{g\_tx\_streamer\_width}\\
+  \hline
+  wrs\_tx\_valid\_i & in & 1 & Indicates whether \tts{wrs\_tx\_data\_i} contains valid data\\
+  \hline
+  wrs\_tx\_dreq\_o & out & 1 & When active, the user may send a data word in the
+  following clock cycle\\
+  \hline
+  wrs\_tx\_last\_i & in &  1 & Can be used to indicate the last data word in a
+  larger block of samples\\
+  \hline
+  wrs\_tx\_flush\_i & in &  1 & When asserted, the streamer will immediatly send
+  out all the data that is stored in its TX buffer\\
+  \hline
+  wrs\_rx\_first\_o & out & 1 & Indicates the first word of the data block on \tts{wrs\_rx\_data\_o}\\
+  \hline
+  wrs\_rx\_last\_o & out & 1 & Indicates the last word of the data block on \tts{wrs\_rx\_data\_o}\\
+  \hline
+  wrs\_rx\_data\_o & out & var & Received data. Size is equal to \tts{g\_rx\_streamer\_width}\\
+  \hline
+  wrs\_rx\_valid\_o & out & 1 & Indicates that \tts{wrs\_rx\_data\_o} contains valid data\\
+  \hline
+  wrs\_rx\_dreq\_i & in &  1 & When asserted, the streamer may output another data word in the
+  subsequent clock cycle\\
+  \hline
+  \hdltablesection{Etherbone WB master interface (when \tts{g\_fabric\_iface = etherbone})}\\
+  \hline
+  \linebreak wb\_eth\_master\_o\linebreak & out & rec & \multirowpar{2}{WB master interface for the
+    Etherbone core. Normally this is attached to a slave port of the primary WB crossbar in the design,
+    in order to provide access to all WB peripherals over Etherbone}\\
+  \cline{1-3}
+  \linebreak wb\_eth\_master\_i\linebreak & in & rec & \\
+  \hline
+  \hdltablesection{Generic diagnostics interface}\\
+  \hline
+  \linebreak aux\_diag\_i\linebreak & in & var & \multirowpar{2}{Arrays of 32~bit vectors, to be
+    accessed from WRPC via SNMP or uart console. Input array contains \tts{g\_diag\_ro\_size},
+    while output array contains \tts{g\_diag\_rw\_size} elements.}\\
+  \cline{1-3}
+  \linebreak aux\_diag\_o\linebreak & out & var & \\
+  \hline
+  \hdltablesection{Auxiliary clocks control}\\
+  \hline
+  tm\_dac\_value\_o & out & 24 & DAC value for tuning auxiliary clock
+  (\emph{clk\_aux\_i})\\
+  \hline
+  tm\_dac\_wr\_o & out & var & validates auxiliary DAC value. Size is equal
+  to \tts{g\_aux\_clks}\\
+  \hline
+  tm\_clk\_aux\_lock\_en\_i & in & var & enable locking auxiliary clock to
+  internal WR clock. Size is equal to \tts{g\_aux\_clks}\\
+  \hline
+  tm\_clk\_aux\_locked\_o & out & var & auxiliary clock locked to internal WR
+  clock. Size is equal to \tts{g\_aux\_clks}\\
+  \hline  
+  \hdltablesection{External TX timestamp interface}\\
+  \hline
+  timestamps\_o & out & rec & Record-based output ports for
+  the TX timestamp interface (see also Section~\ref{sec:txts})\\
+  \hline
+  txtsu\_ack\_i & in & 1 & acknowledge, indicating that user-defined module
+  has received the timestamp\\
+  \hline 
+  \hdltablesection{Pause frame control}\\
+  \hline
+  fc\_tx\_pause\_req\_i   & in  &  1 & \\
+  \hline
+  fc\_tx\_pause\_delay\_i & in  & 16 & \\
+  \hline
+  fc\_tx\_pause\_ready\_o & out &  1 & \\
+  \hline
+  \hdltablesection{WRPC timecode interface}\\
+  \hline
+  tm\_link\_up\_o & out & 1 & state of Ethernet link (up/down), \emph{1}
+  means Ethernet link is up\\
+  \hline
+  tm\_time\_valid\_o & out & 1 & if \emph{1}, the timecode generated by the
+  WRPC is valid\\
+  \hline
+  tm\_tai\_o & out & 40 & TAI part of the timecode (full seconds)\\
+  \hline
+  tm\_cycles\_o & out & 28 & fractional part of each second represented by
+  the state of counter clocked with the frequency 125 MHz (values from 0 to
+  124999999, each count is 8 ns)\\
+  \hline
+  \hdltablesection{Buttons, LEDs and PPS output}\\
+  \hline
+  led\_act\_o & out & 1 & signal for driving Ethernet activity LED\\
+  \hline
+  led\_link\_o & out & 1 & signal for driving Ethernet link LED\\
+  \hline
+  btn1\_i & in & 1 & \multirowpar{2}{two microswitch inputs, active low, currently not
+    used in official WRPC software}\\
+  \cline{1-3}
+  btn2\_i & in & 1 & \\
+  \hline
+  pps\_p\_o & out & 1 & 1-PPS signal generated in \tts{clk\_ref\_i} clock
+  domain and aligned to WR time, pulse generated when the cycle counter is 0
+  (beginning of each full TAI second)\\
+  \hline
+  pps\_led\_o & out & 1 & 1-PPS signal with extended pulse width to drive a LED\\
+  \hline
+  link\_ok\_o & out & 1 & Link status indicator\\
+\end{hdlporttable}
+
+\subsection{SPEC}
+\label{sec:hdl_board_spec}
+
+The SPEC BSP provides a ready-to-use WRPC wrapper for the
+\href{http://www.ohwr.org/projects/spec}{SPEC carrier board}.
+
+The top-level VHDL module is located under: \\\hrefwrpc{board/spec/xwrc\_board\_spec.vhd}
+
+An alternative top-level VHDL module which only makes use of standard logic for ports and integers
+and strings for generic parameters (ideal for instantiation in Verilog-based designs) can be found
+under: \\\hrefwrpc{board/spec/wrc\_board\_spec.vhd}
+
+A VHDL package with the definition of both modules can be found under:
+\\\hrefwrpc{board/spec/wr\_spec\_pkg.vhd}
+
+An example (VHDL) instantiation of this module can be found in the SPEC WRPC reference design:
+\\\hrefwrpc{top/spec\_ref\_design/spec\_wr\_ref\_top.vhd}
+
+This section describes the generic parameters and ports which are specific to the SPEC BSP.
+Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_board_common}.
+
+\subsubsection{Generic parameters}
+
+No additional generic parameters are declared in the SPEC BSP. See
+Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters.
+
+
+\subsubsection{Ports}
+
+\begin{hdlporttable}
+  \hdltablesection{Clocks and resets}\\
+  \hline
+  areset\_n\_i & in & 1 & Reset input (active low, can be async)\\
+  \hline
+  clk\_20m\_vcxo\_i & in & 1 & 20MHz clock input from board VCXO\\
+  \hline
+  clk\_125m\_pllref\_p\_i & in & 1 & \multirowpar{2}{125MHz PLL reference
+    differential clock input from board}\\
+  \cline{1-3}
+  clk\_125m\_pllref\_n\_i & in & 1 & \\
+  \hline
+  clk\_125m\_gtp\_p\_i & in & 1 & \multirowpar{2}{125MHz GTP
+    reference differential clock input from board}\\
+  \cline{1-3}
+  clk\_125m\_gtp\_n\_i & in & 1 & \\
+  \hline
+  \hdltablesection{SPI interface to DACs}\\
+  \hline
+  plldac\_sclk\_o & out & 1 & SPI SCLK, common to both DACs\\
+  \hline
+  plldac\_din\_o & out & 1 & SPI MOSI, common to both DACs\\
+  \hline
+  pll25dac\_cs\_n\_o & out & 1 & SPI $\overline{\mbox{SS}}$ for DAC controlling 25MHz oscillator\\
+  \hline
+  pll20dac\_cs\_n\_o & out & 1 & SPI $\overline{\mbox{SS}}$ for DAC controlling 20MHz oscillator\\
+  \hline
+  \hdltablesection{SFP interface}\\
+  \hline
+  sfp\_txn\_o & out & 1 & \multirowpar{2}{differential pair for PHY TX}\\
+  \cline{1-3}
+  sfp\_txp\_o & out & 1 & \\
+  \hline
+  sfp\_rxn\_i & in & 1 & \multirowpar{2}{differential pair for PHY RX}\\
+  \cline{1-3}
+  sfp\_rxp\_i & in & 1 & \\
+  \hline
+  sfp\_det\_i & in  & 1 & Active low, indicates presence of SFP (corresponds to SFP MOD-DEF0)\\
+  \hline
+  sfp\_sda\_i & in  & 1 & \multirowpar{2}{SFP I2C SDA}\\
+  \cline{1-3}
+  sfp\_sda\_o & out & 1 & \\
+  \hline
+  sfp\_scl\_i & in  & 1 & \multirowpar{2}{SFP I2C SCL}\\
+  \cline{1-3}
+  sfp\_scl\_o & out & 1 & \\
+  \hline
+  sfp\_rate\_select\_o & out & 1 & SFP rate select\\
+  \hline
+  \hdltablesection{Physical UART interface}\\
+  \hline
+  uart\_rxd\_i & in  & 1 & UART RXD (serial data to WRPC)\\
+  \hline
+  uart\_txd\_o & out & 1 & UART TXD (serial data from WRPC)\\
+  \hline
+  \hdltablesection{Flash memory SPI interface}\\
+  \hline
+  flash\_sclk\_o & out & 1 & Flash SPI SCLK\\
+  \hline
+  flash\_ncs\_o  & out & 1 & Flash SPI $\overline{\mbox{SS}}$\\
+  \hline
+  flash\_mosi\_o & out & 1 & Flash SPI MOSI\\
+  \hline
+  flash\_miso\_i & in  & 1 & Flash SPI MISO\\
+\end{hdlporttable}
+
+\subsection{SVEC}
+\label{sec:hdl_board_svec}
+
+The SVEC BSP provides a ready-to-use WRPC wrapper for the
+\href{http://www.ohwr.org/projects/svec}{SVEC carrier board}.
+
+The top-level VHDL module is located under: \\\hrefwrpc{board/svec/xwrc\_board\_svec.vhd}
+
+An alternative top-level VHDL module which only makes use of standard logic for ports and integers
+and strings for generic parameters (ideal for instantiation in Verilog-based designs) can be found
+under: \\\hrefwrpc{board/svec/wrc\_board\_svec.vhd}
+
+A VHDL package with the definition of both modules can be found under:
+\\\hrefwrpc{board/svec/wr\_svec\_pkg.vhd}
+
+An example (VHDL) instantiation of this module can be found in the SVEC WRPC reference design:
+\\\hrefwrpc{top/svec\_ref\_design/svec\_wr\_ref\_top.vhd}
+
+This section describes the generic parameters and ports which are specific to the SVEC BSP.
+Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_board_common}.
+
+\subsubsection{Generic parameters}
+
+No additional generic parameters are declared in the SVEC BSP. See
+Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters.
+
+\subsubsection{Ports}
+
+\begin{hdlporttable}
+  \hdltablesection{Clocks and resets}\\
+  \hline
+  areset\_n\_i & in & 1 & Reset input (active low, can be async)\\
+  \hline
+  clk\_20m\_vcxo\_i & in & 1 & 20MHz clock input from board VCXO\\
+  \hline
+  clk\_125m\_pllref\_p\_i & in & 1 & \multirowpar{2}{125MHz PLL reference
+    differential clock input from board}\\
+  \cline{1-3}
+  clk\_125m\_pllref\_n\_i & in & 1 & \\
+  \hline
+  clk\_125m\_gtp\_p\_i & in & 1 & \multirowpar{2}{125MHz GTP
+    reference differential clock input from board}\\
+  \cline{1-3}
+  clk\_125m\_gtp\_n\_i & in & 1 & \\
+  \hline
+  \hdltablesection{SPI interface to DACs}\\
+  \hline
+  pll20dac\_sclk\_o & out & 1 & SPI SCLKfor DAC controlling 20MHz oscillator\\
+  \hline
+  pll20dac\_din\_o & out & 1 & SPI MOSI for DAC controlling 20MHz oscillator\\
+  \hline
+  pll20dac\_cs\_n\_o & out & 1 & SPI $\overline{\mbox{SS}}$ for DAC controlling 20MHz oscillator\\
+  \hline
+  pll25dac\_sclk\_o & out & 1 & SPI SCLK for DAC controlling 25MHz oscillator\\
+  \hline
+  pll25dac\_din\_o & out & 1 & SPI MOSI for DAC controlling 25MHz oscillator\\
+  \hline
+  pll25dac\_cs\_n\_o & out & 1 & SPI $\overline{\mbox{SS}}$ for DAC controlling 25MHz oscillator\\
+  \hline
+  \hdltablesection{SFP interface}\\
+  \hline
+  sfp\_txn\_o & out & 1 & \multirowpar{2}{differential pair for PHY TX}\\
+  \cline{1-3}
+  sfp\_txp\_o & out & 1 & \\
+  \hline
+  sfp\_rxn\_i & in & 1 & \multirowpar{2}{differential pair for PHY RX}\\
+  \cline{1-3}
+  sfp\_rxp\_i & in & 1 & \\
+  \hline
+  sfp\_det\_i & in  & 1 & Active low, indicates presence of SFP (corresponds to SFP MOD-DEF0)\\
+  \hline
+  sfp\_sda\_i & in  & 1 & \multirowpar{2}{SFP I2C SDA}\\
+  \cline{1-3}
+  sfp\_sda\_o & out & 1 & \\
+  \hline
+  sfp\_scl\_i & in  & 1 & \multirowpar{2}{SFP I2C SCL}\\
+  \cline{1-3}
+  sfp\_scl\_o & out & 1 & \\
+  \hline
+  sfp\_rate\_select\_o & out & 1 & SFP rate select\\
+  \hline
+  \hdltablesection{Physical UART interface}\\
+  \hline
+  uart\_rxd\_i & in  & 1 & UART RXD (serial data to WRPC)\\
+  \hline
+  uart\_txd\_o & out & 1 & UART TXD (serial data from WRPC)\\
+  \hline
+  \hdltablesection{Flash memory SPI interface}\\
+  \hline
+  spi\_sclk\_o & out & 1 & Flash SPI SCLK\\
+  \hline
+  spi\_ncs\_o  & out & 1 & Flash SPI $\overline{\mbox{SS}}$\\
+  \hline
+  spi\_mosi\_o & out & 1 & Flash SPI MOSI\\
+  \hline
+  spi\_miso\_i & in  & 1 & Flash SPI MISO\\
+\end{hdlporttable}
+
+\subsection{VFC-HD}
+\label{sec:hdl_board_vfchd}
+
+The VFC-HD BSP provides a ready-to-use WRPC wrapper for the
+\href{http://www.ohwr.org/projects/vfc-hd}{VFC-HD carrier board}.
+
+The top-level VHDL module is located under: \\\hrefwrpc{board/vfchd/xwrc\_board\_vfchd.vhd}
+
+An alternative top-level VHDL module which only makes use of standard logic for ports and integers
+and strings for generic parameters (ideal for instantiation in Verilog-based designs) can be found
+under: \\\hrefwrpc{board/vfchd/wrc\_board\_vfchd.vhd}
+
+A VHDL package with the definition of both modules can be found under:
+\\\hrefwrpc{board/vfchd/wr\_vfchd\_pkg.vhd}
+
+An example (VHDL) instantiation of this module can be found in the VFC-HD WRPC reference design:
+\\\hrefwrpc{top/vfchd\_ref\_design/vfchd\_wr\_ref\_top.vhd}
+
+This section describes the generic parameters and ports which are specific to the VFC-HD BSP.
+Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_board_common}.
+
+\subsubsection{Generic parameters}
+
+\begin{hdlparamtable}
+  g\_pcs16\_bit & boolean & false & Altera Arria V FPGAs provide the possibility
+  to configure the PCS of the PHY as either 8bit or 16bit. The default is to use the 8bit PCS,
+  but this generic can be used to override it\\
+\end{hdlparamtable}
+
+\subsubsection{Ports}
+
+\begin{hdlporttable}
+  \hdltablesection{Clocks and resets}\\
+  \hline
+  areset\_n\_i & in & 1 & Reset input (active low, can be async)\\
+  \hline
+  clk\_board\_20m\_i & in & 1 & 20MHz clock input from board\\
+  \hline
+  clk\_board\_125m\_i & in & 1 & 125MHz reference clock input from board\\
+  \hline
+  \hdltablesection{SPI interface to DACs}\\
+  \hline
+  dac\_sclk\_o & out & 1 & SPI SCLK, common to both DACs\\
+  \hline
+  dac\_din\_o & out & 1 & SPI MOSI, common to both DACs\\
+  \hline
+  dac\_ref\_sync\_n\_o & out & 1 & SPI $\overline{\mbox{SS}}$ for DAC controlling 125MHz oscillator\\
+  \hline
+  dac\_dmtd\_sync\_n\_o & out & 1 & SPI $\overline{\mbox{SS}}$ for DAC controlling 20MHz oscillator\\
+  \hline
+  \hdltablesection{SFP interface}\\
+  \hline
+  sfp\_tx\_o & out & 1 & PHY TX\\
+  \hline
+  sfp\_rx\_i & in & 1 & PHY RX\\
+  \hline
+  sfp\_det\_i & in  & 1 & Active high, asserted if all of the following are true:\linebreak
+  * SFP is detected (plugged in)\linebreak
+  * The part number has been successfully read\\
+  \hline
+  sfp\_data\_i & in  & 128 & 16 byte SFP vendor Part Number (ASCII encoded, first character byte
+  in bits 127 downto 120)\\
+
+\end{hdlporttable}
