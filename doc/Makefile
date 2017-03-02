@@ -1,62 +1,15 @@
-#
-# Makefile for the documentation directory
-#
-# Copyright 1994,2000,2010,2011   Alessandro Rubini <rubini@linux.it>
-#
-#################
-
-# There is not basenames here, all *.in are considered input
-INPUT = $(wildcard *.in)
-
-TEXI = $(INPUT:.in=.texi)
-INFO = $(INPUT:.in=.info)
-HTML = $(INPUT:.in=.html)
-TXT  = $(INPUT:.in=.txt)
-PDF  = $(INPUT:.in=.pdf)
-
-ALL    = $(INFO) $(HTML) $(TXT) $(PDF)
-
-MAKEINFO ?= makeinfo
-
 RELEASE=$(shell git describe --always --dirty)
 
-%.texi: %.in
-	@rm -f $@
-	sed s/__RELEASE_GIT_ID__/$(RELEASE)/ $< | sed -f ./infofilter > $@
-	emacs -batch --no-site-file -l fixinfo $@
-	chmod -w $@
+all : wrpc.pdf
 
-%.pdf: %.texi
-	texi2pdf --batch $<
 
-%.info: %.texi
-	$(MAKEINFO) $< -o $@
 
-%.html: %.texi
-	$(MAKEINFO) --html --no-split -o $@ $<
+.PHONY : all clean
 
-%.txt: %.texi
-	$(MAKEINFO) --no-headers $< > $@
+wrpc.pdf : wrpc.tex
+	@echo '\\newcommand{\\gitrevinfo}{'$(RELEASE)'}' > version.tex
+	pdflatex -dPDFSETTINGS=/prepress -dSubsetFonts=true -dEmbedAllFonts=true -dMaxSubsetPct=100 -dCompatibilityLevel=1.4 $^
+	pdflatex -dPDFSETTINGS=/prepress -dSubsetFonts=true -dEmbedAllFonts=true -dMaxSubsetPct=100 -dCompatibilityLevel=1.4 $^
 
-##############################################
-.PHONY: all images check terse clean install
-.INTERMEDIATE: $(TEXI)
-
-all: images $(ALL)
-	$(MAKE) terse
-
-images::
-	if [ -d images ]; then $(MAKE) -C images || exit 1; fi
-
-check: _err.ps
-	gs -sDEVICE=linux -r320x200x16 $<
-
-terse:
-	for n in cp fn ky pg toc tp vr aux log; do rm -f *.$$n; done
-	rm -f *~
-
-clean: terse
-	rm -f $(ALL) $(TEXI)
-
-install:
-
+clean :
+	rm -f *.eps *.pdf *.dat *.log *.out *.aux *.dvi *.ps *.toc version.tex
