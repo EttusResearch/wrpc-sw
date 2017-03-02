@@ -225,6 +225,18 @@ config LEGACY_EEPROM
 	boolean
 	default !SDB_STORAGE
 
+config WR_NODE_SIM
+	depends on WR_NODE
+	boolean "Build simple software for test of WR PTP Core in simulation"
+	default n
+	help
+	  This option builds binary that is meant to be used in testbench
+	  simulations. It initializes only simulation-needed essentials.
+	  All the initialization that is time-consuming and unnecessary
+	  is avoided. The main function sends min-size frames to PTP
+	  MAC address destination and expects the simulation to return
+	  these frames.
+
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.
@@ -490,18 +502,6 @@ config LATENCY_SYSLOG
 	depends on LATENCY_PROBE && SYSLOG
 	bool "Report latency problems to syslog"
 	default y
-
-config WR_NODE_SIM
-	depends on WR_NODE
-	boolean "Build simple software for test of WR PTP Core in simulatin"
-	default n
-	help
-	  This option builds binary that is meant to be used in testbench
-	  simulations. It initializes only simulation-needed essentials.
-	  All the initialization that is time-consuming and unnecessery
-	  is avoided. The main function sends min-size frames to PTP
-	  MAC address destination and expects the simulation to return
-	  these frames.
 
 
 # This is needed to size the pp_instance data strucuture. Instead of
