@@ -1514,7 +1514,7 @@ spll\_init() function to initialize SoftPll \\
   \code{gui} & starts GUI WRPC monitor\\
  & \\
   \code{stat} & toggles reporting of loggable statistics. You can pass
-\texttt{1} or \texttt{0} as argument as an alternative to toggling\\
+\texttt{on} or \texttt{off} as argument as an alternative to toggling\\
 
   \code{stat bts} & prints bitslide value for established WR Link,
 needed by the calibration procedure\\
@@ -1529,15 +1529,17 @@ message is only generated one time.\\
 
   \code{ptp e2e} & select end-to-end PTP mechanism. If configured you can set \texttt{p2p} mode, and \texttt{delay}/\texttt{pdelay} as aliases.\\
 
-  \code{ptp master} & force working as master. Alternatives are \texttt{slave} and \texttt{gm} (grandmaster).\\
+  \code{ptp gm|master|slave} & sets WRPC to operate as Grandmaster
+clock (requires external 10MHz and 1-PPS reference), Master or Slave. After
+setting the mode, \texttt{ptp start} must be re-issued\\
 
-  \code{ptp <cmd> <cmd> ...} & You can concatenate several of the above sbcommands in a single \texttt{ptp} command. With no arguments, the command reports the current values.\\
+  \code{ptp <cmd> <cmd> ...} & you can concatenate several of the above sbcommands in a single \texttt{ptp} command. With no arguments, the command reports the current values.\\
  & \\
-  \code{mode gm|master|slave} & sets WRPC to operate as Grandmaster
+\code{mode gm|master|slave} & (legacy) sets WRPC to operate as Grandmaster
 clock (requires external 10MHz and 1-PPS reference), Master or Slave. After
 setting the mode, \texttt{ptp start} must be re-issued\\
  & \\
-  \code{calibration} & tries to read t2/4 phase transition value from the
+  \code{calibration} & (legacy) tries to read t2/4 phase transition value from the
 Flash/EEPROM (in WR Master or GrandMaster mode), or executes the t24p
 calibration procedure and stores its result to the Flash/EEPROM (in WR 
 Slave mode)\\
@@ -1590,37 +1592,52 @@ is done automatically when WRPC starts after resetting LM32)\\
  & \\
   \code{vlan} & \\
 
-  \code{vlan set <n>} & reorts or sets the active vlan used for sending/receiving network frames. The command exists only if \texttt{CONFIG\_VLAN} is set.\\
+  \code{vlan set <n>} & reports or sets the active vlan used for sending/receiving network frames. The command exists only if \texttt{CONFIG\_VLAN} is set.\\
+  \code{vlan off} & disables vlans. Available if \texttt{CONFIG\_VLAN} is set.\\
  & \\
-  \code{w1} & List onewire devices on the bus\\
+  \code{w1} & lists onewire devices on the bus\\
  & \\
   \code{w1w <offset> <byte> [<byte> ...]}& \\
 
-  \code{w1r <offset> <len>} & If \texttt{CONFIG\_W1} is set and a OneWire EEPROM exists, write and read data. For writing, \texttt{byte} values are decimal\\
+  \code{w1r <offset> <len>} & if \texttt{CONFIG\_W1} is set and a OneWire EEPROM exists, write and read data. For writing, \texttt{byte} values are decimal\\
  & \\
   \code{delays}&\\
 
-  \code{delays <tx> <rx>} & Get or set the constant delays in frame transmission, only available if \texttt{CONFIG\_CMD\_LL}. Delays are expressed in picoseconds.\\
+  \code{delays <tx> <rx>} & gets or sets the constant delays in frame transmission, only available if \texttt{CONFIG\_CMD\_LL}. Delays are expressed in picoseconds.\\
  & \\
   \code{devmem <addr>} & \\
 
-  \code{devmem <addr> <value>} & Read or write a 32-bit word from memory and/or FPGA registers. Only available if \texttt{CONFIG\_CMD\_LL}.\\
+  \code{devmem <addr> <value>} & reads or writes a 32-bit word from memory and/or FPGA registers. Only available if \texttt{CONFIG\_CMD\_LL} is set .\\
  & \\
-  \code{diag ...} & diagnostics for auxiliary clocks. Only available if \texttt{CONFIG\_AUX\_DIAG}.\\
+  \code{diag} & diagnostics for auxiliary user registers in HDL. Only available if \texttt{CONFIG\_AUX\_DIAG}.\\
+  \code{diag ro <reg\_no>} & reads register <reg\_no> from read-only bank.\\
+  \code{diag rw <reg\_no>} & reads register <reg\_no> from read-write bank.\\
+  \code{diag w <reg\_no>} & writes register <reg\_no> from read-write bank.\\
  & \\
-  \code{temp} & Report current temperatures.\\
+  \code{temp} & reports current temperatures.\\
  & \\
   \code{faketemp} & \\
 
-  \code{faketemp <T1> <T2> <T3>}  & Read or set the three fake temperatures, used to test the temperature/syslog mechanism. Available if \texttt{CONFIG\_FAKE\_TEMPERATURES}.\\
+  \code{faketemp <T1> <T2> <T3>}  & reads or sets the three fake temperatures, used to test the temperature/syslog mechanism. Available if \texttt{CONFIG\_FAKE\_TEMPERATURES} is set.\\
  & \\
   \code{ltest} & \\
 
-  \code{ltest <secs> <msecs>} & Read or set the latency-test sending interval. See \ref{Latency Test}.\\
+  \code{ltest <secs> <msecs>} & reads or sets the latency-test sending interval.
+See \ref{Latency Test}. Available if \texttt{CONFIG\_LATENCY\_PROBE} is set.\\
+
+  \code{ltest fake <nsecs>} & fakes delay to trigger latency failures (for testing).\\
+
+  \code{ltest verbose} & enables sending latency messages to Syslog.\\
+
+  \code{ltest quiet} & disables sending latency messages to Syslog.\\
+
  & \\
+
+
   \code{syslog off} & \\
 
-  \code{syslog <ipaddr> <macaddr>} & Disable or set your \textit{syslog} server. See \ref{Syslog}.\\
+  \code{syslog <ipaddr> <macaddr>} & disables or sets your \textit{syslog} server.
+See \ref{Syslog}. Available if \texttt{CONFIG\_SYSLOG} is set.\\
 
 \end{longtable}
 
