@@ -378,6 +378,7 @@ The resulting binary \textit{wrc.bin} can be then used with the loader from
 the White Rabbit PTP Core (see section \ref{Programming FPGA} for details).
 
 % ##########################################################################
+\newpage
 \section{Programming FPGA with WRPC firmware}
 \label{Programming FPGA}
 
@@ -493,6 +494,7 @@ CERN network) for more instructions. If you are outside CERN and would like to
 use one of these boards, please contact us.
 
 % ==========================================================================
+\newpage
 \section{Using WRPC shell}
 
 \subsection{Writing configuration}
@@ -706,7 +708,9 @@ Depending on your board, 1-PPS output is produced on:
 \end{itemize*}
 
 % ==========================================================================
-\subsection{Diagnostics via SNMP}
+\newpage
+\section{WRPC diagnostics}
+\subsection{SNMP}
 \label{Diagnostics via SNMP}
 
 Up to the version 4.0 of WRPC the only way to perform diagnostics
@@ -1224,7 +1228,8 @@ whenever they are activated.  This happens at initialization time and
 whenever you change the MAC address or \textit{vlan} choice.
 
 % ==========================================================================
-\subsection{Network Services}
+\newpage
+\section{Network Services}
 \label{Network Services}
 
 If built with \texttt{CONFIG\_IP=y}, \textit{wrpc-sw} implements the following
@@ -1258,7 +1263,8 @@ udp-based network services, in addition to \textit{ptp}:
 \end{longtable}
 
 % ==========================================================================
-\subsection{VLAN Support}
+\newpage
+\section{VLAN Support}
 \label{VLAN Support}
 
 The White Rabbit node can be configured to be vlan-aware, by setting
@@ -1302,6 +1308,7 @@ processing and get back to the ``standard'' packet-filter rules.
 \end{longtable}
 
 % ##########################################################################
+\newpage
 \section{Troubleshooting}
 \label{Troubleshooting}
 
