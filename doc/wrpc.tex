@@ -177,6 +177,7 @@ Altera/Intel (e.g. VFC-HD) FPGA, you should install either Xilinx ISE or Quartus
 Prime software.
 
 \subsubsection{Setting up Xilinx ISE}
+\label{Setting up Xilinx ISE}
 To synthesize the FPGA firmware containing the WRPC, Xilinx ISE with free of
 charge WebPack license is enough. ISE provides a set of scripts:
 \texttt{settings32.sh}, \texttt{settings32.csh}, \texttt{settings64.sh} and
@@ -193,6 +194,7 @@ You can check if the shell is configured correctly by verifying if the
 \texttt{\$XILINX} variable contains path to your ISE installation directory.
 
 \subsubsection{Setting up Quartus Prime}
+\label{Setting up Quartus Prime}
 To be able to synthesize the WRPC for Arria V FPGA (which is used on the VFC-HD
 board) you need at least a license for the Quartus Prime Standard Edition with
 the support of Arria V family. To set up the software after it is installed, you
@@ -1427,44 +1429,40 @@ processing and get back to the ``standard'' packet-filter rules.
 \section{Troubleshooting}
 \label{Troubleshooting}
 
-\textbf{My computer hangs on loading spec.ko or fmc-trivial.ko driver.}
+\textbf{My computer hangs on loading spec.ko or programming the FPGA.}
 
-This will occur when you try to load the driver while your \textit{spec-vuart} is
-running and trying to get messages from Virtual-UART's registers inside the
-\codeHook{wrpc}. Please remember to quit \textit{spec-vuart} before reloading the driver.
+This will occur when you try to load the driver or program the FPGA while your
+\textit{spec-vuart} is running and trying to get messages from Virtual-UART's
+registers inside the WRPC. Please remember to quit \textit{spec-vuart} before
+reloading the driver or programming the FPGA.\\
 
-\vspace{1em}
-\textbf{I want to synthesize \codeHook{wrpc} but hdlmake does nothing, just quits without any
-message.}
+\noindent \textbf{I want to synthesize WRPC but hdlmake says I don't have the
+tools.}
 
-Please check if you have the Xilinx ISE-related system variables set correctly
-(\textit{settings64.sh} script provided by Xilinx sets them) and make sure you have
-overwritten the \textit{\$XILINX} variable to:
+If you have installed the synthesis tool (ISE for SPEC/SVEC or Quartus for
+VFC-HD), but you still see the message, please make sure you have correctly set
+up your environment. See sections \ref{Setting up Xilinx ISE} and \ref{Setting
+up Quartus Prime} for the instructions.\\
 
-\begin{lstlisting}
-$ export XILINX=/opt/Xilinx/<version>/ISE_DS
-\end{lstlisting}
+\noindent \textbf{WR PTP Core seems to work but the 1-PPS skew on the
+oscilloscope between WR Master and WR Slave is more than 1ns.}
 
-or similar, if your installation folder differs from default.
-
-\vspace{1em}
-\textbf{\codeHook{wr ptp core} seems to work but I observe on my oscilloscope that the offset
-between 1-PPS signals from \codeHook{wr} Master and \codeHook{wr} Slave is more than 1 ns.}
-
-If you're trying to synchronize the \codeHook{spec} board to \codeHook{wr} Switch please remember to
-read the document and perform the \codeHook{wr} Calibration to find out the values of
-deltaRx and deltaTx for your firmware. Check if the oscilloscope cables you use
-have the same delays (or take the delay difference into account in your
-measurements).
-
+Check if the oscilloscope cables you use have the same delays. If not, you
+should either change the cables or take the delay difference into account in your
+measurements. If that's not the case, please make sure you have the correct
+calibration values loaded to both of your devices (see section \ref{Writing
+configuration}). You made your own synthesis of the WRPC, and the default
+calibration values are no longer valid, please read and perform the White Rabbit
+Calibration procedure\footnote{Use the latest version of the document available
+at: \url{http://www.ohwr.org/documents/213}}.
 
 % ##########################################################################
 \section{Questions, reporting bugs}
 \label{Questions}
 
-If you have found a bug, you have problems with the \codeHook{wr ptp core} or one
-of the tools used to build and run it, you can write to our mailing list
-\code{white\-/rabbit\-/dev@ohwr.org}
+If you have found a bug, you have problems with the WR PTP Core or one of the
+tools used to build and run it, you can write to our mailing list
+\textbf{\textit{white-rabbit-dev@ohwr.org}}
 
 
 % ##########################################################################
