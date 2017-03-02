@@ -1593,7 +1593,7 @@ This \textit{mcs} file already includes both SDBFS image and FPGA bitstream.
 In case of a custom gateware or hardware, you can download a standalone
 SDBFS image:
 \begin{lstlisting}
-$ wget http://www.ohwr.org/attachments/download/4144/sdbfs-standalone.bin
+$ wget http://www.ohwr.org/attachments/download/4558/sdbfs-standalone-160812.bin
 \end{lstlisting}
 and generate a custom \textit{*.mcs} file with your own FPGA bitstream. You should
 use the following layout:
@@ -1606,7 +1606,7 @@ For example, to generate the \textit{*.mcs} file for M25P32 Flash on SPEC, the
 following \textit{promgen} parameters should be used:
 \begin{lstlisting}
 promgen -w -spi -p mcs -c FF -s 32768 -u 0 <your_bitstream>.bit \
--bd sdb-standalone.bin start 0x170000 -o output.mcs
+-bd sdbfs-standalone-160812.bin start 0x170000 -o output.mcs
 \end{lstlisting}
 
 After that, you can use the Xilinx JTAG cable and Xilinx ISE Impact tool to
