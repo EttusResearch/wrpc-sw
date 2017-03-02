@@ -1473,27 +1473,28 @@ tools used to build and run it, you can write to our mailing list
 \label{WRPC Shell commands}
 
 \footnotesize
+\renewcommand\arraystretch{1.5}
 \begin{longtable}{  p{7.5cm}  p{7cm} }
 
   \code{help} & lists available commands in this instance of the WRPC \\
- & \\
+
   \code{ver} & prints which version of wrpc is running \\
- & \\
+
   \code{config} & prints the Kconfig file used to build this instance of
 WRPC. It is an optional command, enabled at build time by
 \texttt{CONFIG\_CMD\_CONFIG} \\
- & \\
+
   \code{ps} & prints the list of running tasks (processes) in the CPU.
 For each task you get the number of iterations and the CPU time consumed
 since boot or last reset of values\\
- & \\
+
   \code{ps reset} & zeroes the profiling information reported by
 the \code{ps} command\\
- & \\
+
   \code{verbose <digits>} & sets PPSi verbosity. See the PPSi manual
 about the meaning of the digits (hint: \texttt{verbose 1111} is a good first bet to
 see how the PTP system is working) \\
- & \\
+
   \code{pll init <mode> <ref\_channel> <align\_pps>} & manually runs
 spll\_init() function to initialize SoftPll \\
 
@@ -1510,19 +1511,19 @@ spll\_init() function to initialize SoftPll \\
   \code{pll sdac <index> <val>} & sets the dac\\
 
   \code{pll gdac <index>} & gets dac's value\\
- & \\
+
   \code{gui} & starts GUI WRPC monitor\\
- & \\
+
   \code{stat} & toggles reporting of loggable statistics. You can pass
 \texttt{on} or \texttt{off} as argument as an alternative to toggling\\
 
   \code{stat bts} & prints bitslide value for established WR Link,
 needed by the calibration procedure\\
- & \\
+
   \code{refresh} & changes the update time period of the gui and stat
 commands. Default period is 1 second. If you set the period to 0, the log
 message is only generated one time.\\
- & \\
+
   \code{ptp start} & starts WR PTP daemon\\
 
   \code{ptp stop} & stops WR PTP daemon\\
@@ -1534,16 +1535,16 @@ clock (requires external 10MHz and 1-PPS reference), Master or Slave. After
 setting the mode, \texttt{ptp start} must be re-issued\\
 
   \code{ptp <cmd> <cmd> ...} & you can concatenate several of the above sbcommands in a single \texttt{ptp} command. With no arguments, the command reports the current values.\\
- & \\
+
 \code{mode gm|master|slave} & (legacy) sets WRPC to operate as Grandmaster
 clock (requires external 10MHz and 1-PPS reference), Master or Slave. After
 setting the mode, \texttt{ptp start} must be re-issued\\
- & \\
+
   \code{calibration} & (legacy) tries to read t2/4 phase transition value from the
 Flash/EEPROM (in WR Master or GrandMaster mode), or executes the t24p
 calibration procedure and stores its result to the Flash/EEPROM (in WR 
 Slave mode)\\
- & \\
+
   \code{time} & prints current time from WRPC\\
 
   \code{time raw} &  prints current time in a raw format (seconds, nanoseconds)\\
@@ -1555,7 +1556,7 @@ Slave mode)\\
 aligned to external 1-PPS and 10 MHz)\\
 
   \code{time setnsec <nsec>} & sets only nanoseconds of the WRPC time\\
- & \\
+
   \code{sfp erase} & erases the SFP database stored in the Flash/EEPROM\\
 
   \code{sfp add <PN> <deltaTx> <deltaRx> <alpha>} & stores calibration
@@ -1565,7 +1566,7 @@ parameters for SFP to a file in Flash/EEPROM\\
 
   \code{sfp match} & prints the ID of a currently used SFP
 transceiver and tries to load the calibration parameters for it\\
- & \\
+
   \code{init erase} & erases the initialization script in Flash/EEPROM \\
 
   \code{init add <cmd>} & adds shell command at the end of the
@@ -1575,7 +1576,7 @@ initialization script\\
 
   \code{init boot} & executes the script stored in Flash/EEPROM (the same action
 is done automatically when WRPC starts after resetting LM32)\\
- & \\
+
   \code{mac get} & prints WRPC's MAC address\\
 
   \code{mac getp} & reads the persistent MAC address stored in Flash/EEPROM\\
@@ -1583,43 +1584,43 @@ is done automatically when WRPC starts after resetting LM32)\\
   \code{mac set <mac>} & sets the MAC address of WRPC\\
 
   \code{mac setp <mac>} & stores the persistent MAC address in Flash/EEPROM\\
- & \\
+
   \code{sdb} & prints devices connected to the Wishbone bus inside WRPC\\
- & \\
+
   \code{ip get} & \\
 
   \code{ip set <ip>} & reports or sets the IPv4 address of the WRPC (only available if \texttt{CONFIG\_IP} is set at build time\\
- & \\
+
   \code{vlan} & \\
 
   \code{vlan set <n>} & reports or sets the active vlan used for sending/receiving network frames. The command exists only if \texttt{CONFIG\_VLAN} is set.\\
   \code{vlan off} & disables vlans. Available if \texttt{CONFIG\_VLAN} is set.\\
- & \\
+
   \code{w1} & lists onewire devices on the bus\\
- & \\
+
   \code{w1w <offset> <byte> [<byte> ...]}& \\
 
   \code{w1r <offset> <len>} & if \texttt{CONFIG\_W1} is set and a OneWire EEPROM exists, write and read data. For writing, \texttt{byte} values are decimal\\
- & \\
+
   \code{delays}&\\
 
   \code{delays <tx> <rx>} & gets or sets the constant delays in frame transmission, only available if \texttt{CONFIG\_CMD\_LL}. Delays are expressed in picoseconds.\\
- & \\
+
   \code{devmem <addr>} & \\
 
   \code{devmem <addr> <value>} & reads or writes a 32-bit word from memory and/or FPGA registers. Only available if \texttt{CONFIG\_CMD\_LL} is set .\\
- & \\
+
   \code{diag} & diagnostics for auxiliary user registers in HDL. Only available if \texttt{CONFIG\_AUX\_DIAG}.\\
   \code{diag ro <reg\_no>} & reads register <reg\_no> from read-only bank.\\
   \code{diag rw <reg\_no>} & reads register <reg\_no> from read-write bank.\\
   \code{diag w <reg\_no>} & writes register <reg\_no> from read-write bank.\\
- & \\
+
   \code{temp} & reports current temperatures.\\
- & \\
+
   \code{faketemp} & \\
 
   \code{faketemp <T1> <T2> <T3>}  & reads or sets the three fake temperatures, used to test the temperature/syslog mechanism. Available if \texttt{CONFIG\_FAKE\_TEMPERATURES} is set.\\
- & \\
+
   \code{ltest} & \\
 
   \code{ltest <secs> <msecs>} & reads or sets the latency-test sending interval.
@@ -1631,15 +1632,13 @@ See \ref{Latency Test}. Available if \texttt{CONFIG\_LATENCY\_PROBE} is set.\\
 
   \code{ltest quiet} & disables sending latency messages to Syslog.\\
 
- & \\
-
-
   \code{syslog off} & \\
 
   \code{syslog <ipaddr> <macaddr>} & disables or sets your \textit{syslog} server.
 See \ref{Syslog}. Available if \texttt{CONFIG\_SYSLOG} is set.\\
 
 \end{longtable}
+\renewcommand\arraystretch{1}
 
 
 
