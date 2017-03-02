@@ -1654,6 +1654,7 @@ See \ref{Syslog}. Available if \texttt{CONFIG\_SYSLOG} is set.\\
 \label{WRPC GUI elements}
 
 \footnotesize
+\renewcommand\arraystretch{1.5}
 \begin{longtable}{  p{4.5cm}  p{10cm} }
 
   \code{TAI Time:} & current state of device's local clock \\
@@ -1663,59 +1664,47 @@ See \ref{Syslog}. Available if \texttt{CONFIG\_SYSLOG} is set.\\
   \code{mode:} & operation mode of the WR PTP Core - \code{<WR Master, WR Slave>}\\
 
   \code{< Locked, NoLock >} & SoftPLL lock state\\
- & \\
 
   \code{Servo state:} & current state of WR servo state machine -
+
 \code{<Uninitialized, SYNC\_SEC, SYNC\_NSEC, SYNC\_PHASE, TRACK\_PHASE>}\\
- & \\
 
   \code{Phase tracking:} & is phase tracking enabled when WR Slave is
 synchronized to WR Master - \code{<ON, OFF>}\\
 
   \code{Synchronization source:} & network interface name from which WR
 daemon gets synchronization - \code{<wru1>}\\
- & \\
 
   \code{Round\-/trip time (mu):} & round-trip delay in picoseconds
 (\( delay_{MM} \))\\
- & \\
 
   \code{Master\-/slave delay:} & estimated one-way (master to slave) link
 delay (\( delay_{MS} \))\\
- & \\
 
   \code{Master PHY delays:} & transmission/reception delays of WR 
 Master's hardware (\( \Delta_{TXM}, \Delta_{RXM} \))\\
- & \\
 
   \code{Slave PHY delays:} & transmission/reception delays of WR Slave's
 hardware (\( \Delta_{TXS}, \Delta_{RXS} \))\\
- & \\
 
   \code{Total link asymmetry:} & WR link asymmetry calculated as
 \( delay_{MM} - 2 \cdot delay_{MS} \)\\
- & \\
 
   \code{Cable rtt delay:} & round-trip fiber latency\\
- & \\
 
   \code{Clock offset:} & Slave to Master offset calculated by PTP daemon
 (\( offset_{MS} \))\\
- & \\
 
   \code{Phase setpoint:} & current Slave's clock phase shift value\\
- & \\
 
   \code{Skew:} & the difference between current and previous estimated
 one-way link delay\\
- & \\
 
   \code{Update counter:} & the state of counter incremented every time
 the WR servo is updated\\
- & \\
 
 \end{longtable}
-
+\renewcommand\arraystretch{1}
 
 
 % ##########################################################################
