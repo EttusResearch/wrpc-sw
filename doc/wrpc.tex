@@ -941,44 +941,6 @@ To verify that database is empty:
  SFP database empty
 \end{lstlisting}
 
-% --------------------------------------------------------------------------
-\subsubsection{Mini SNMP responder's tests}
-\label{Mini SNMP responder's tests}
-
-In the \texttt{wrpc-sw} repo, automatic tests are available to validate the \textit{Mini
-SNMP responder} implementation. These tests are placed in the \texttt{test/snmp}
-directory.
-They use the \texttt{bats} framework (\url{https://github.com/sstephenson/bats}).
-
-To run these tests, please go to \texttt{test/snmp} directory, then set
-\texttt{TARGET\_IP} environment varaible to the IP of your target board, then type
-\texttt{make}. For example:
-\begin{lstlisting}
- $ TARGET_IP=192.168.1.20 make
- bats/libexec/bats snmp_tests_*.bats
-   Host up 192.168.1.20
-   Check the presence of snmpget
-   Check the presence of snmpgetnext
-   Check the presence of snmpwalk
-   Check the presence of snmpset
-   snmpget existing oid 1.3.6.1.4.1.96.101.1.1.1.0
- [...]
-   snmpwalk 1.3.6.1.4.1.95
-   snmpwalk 1.3.6 count all OIDs
- 100 tests, 0 failures
-\end{lstlisting}
-On the left of each test there will be a tick symbol shown or an \texttt{x}
-depending of the test's result (not included in the example above).
-
-Be aware that it might be necessary to clone the \texttt{bats} repo first.
-\texttt{make} command will inform whether this is needed.
-
-In case the number of OIDs changes please correct variable \texttt{TOTAL\_NUM\_OIDS}
-in file \texttt{snmp\_test\_config.bash}.
-
-These tests have to be executed after any changes are made to the \textit{Mini SNMP
-responder}.
-
 % ==========================================================================
 \subsection{Other Diagnostic Tools}
 \label{Other Diagnostic Tools}
@@ -1832,5 +1794,42 @@ $ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
 End of MIB
 \end{lstlisting}
 
+% --------------------------------------------------------------------------
+\subsection{Mini SNMP responder's tests}
+\label{Mini SNMP responder's tests}
+
+In the \texttt{wrpc-sw} repo, automatic tests are available to validate the \textit{Mini
+SNMP responder} implementation. These tests are placed in the \texttt{test/snmp}
+directory.
+They use the \texttt{bats} framework (\url{https://github.com/sstephenson/bats}).
+
+To run these tests, please go to \texttt{test/snmp} directory, then set
+\texttt{TARGET\_IP} environment varaible to the IP of your target board, then type
+\texttt{make}. For example:
+\begin{lstlisting}
+ $ TARGET_IP=192.168.1.20 make
+ bats/libexec/bats snmp_tests_*.bats
+   Host up 192.168.1.20
+   Check the presence of snmpget
+   Check the presence of snmpgetnext
+   Check the presence of snmpwalk
+   Check the presence of snmpset
+   snmpget existing oid 1.3.6.1.4.1.96.101.1.1.1.0
+ [...]
+   snmpwalk 1.3.6.1.4.1.95
+   snmpwalk 1.3.6 count all OIDs
+ 100 tests, 0 failures
+\end{lstlisting}
+On the left of each test there will be a tick symbol shown or an \texttt{x}
+depending of the test's result (not included in the example above).
+
+Be aware that it might be necessary to clone the \texttt{bats} repo first.
+\texttt{make} command will inform whether this is needed.
+
+In case the number of OIDs changes please correct variable \texttt{TOTAL\_NUM\_OIDS}
+in file \texttt{snmp\_test\_config.bash}.
+
+These tests have to be executed after any changes are made to the \textit{Mini SNMP
+responder}.
 
 \end{document}
