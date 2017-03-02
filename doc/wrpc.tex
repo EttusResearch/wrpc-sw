@@ -938,135 +938,6 @@ To verify that database is empty:
 \end{lstlisting}
 
 % --------------------------------------------------------------------------
-\subsubsection{Adding new objects to the SNMP}
-\label{Adding new objects to the SNMP}
-
-The \textit{Mini SNMP responder} can be easily expanded to export new objects.
-Values of new objects can come from WRPC's variables or other HDL modules
-as long as there is a proper interface to the WRPC to read these values.
-
-This section contains the instruction how to export new objects with
-the given variables' content.
-
-The \textit{Mini SNMP responder} internally divides all OIDs into two parts.
-The first part is called \textit{limb}. The \textit{limb} part of the incoming OID is
-matched by a function \texttt{snmp\_respond}, with the defined \textit{limb} parts of OIDs
-in the structure \texttt{oid\_limb\_array}.
-When the \textit{limb} part is matched then the corresponding function from
-the structure \texttt{oid\_limb\_array} is called to try to match the second part of
-OID (the \textit{twig} part).
-
-\begin{sloppypar} % to prevent \texttt{} from going to the margine
-The example below adds to the \textit{Mini SNMP responder} an \texttt{int32\_t} variable
-(\texttt{example\_i32var}) with OID \texttt{1.3.6.1.4.1.96.102.1.1.0} and a string
-(\texttt{example\_string}) with OID \texttt{1.3.6.1.4.1.96.102.1.2.0}.
-Before assigning new OIDs in your projects please contact the maintainer of
-\texttt{wrpc-sw} repo to avoid conflicts.
-\end{sloppypar}
-
-\begin{itemize*}
-\item First declare \texttt{example\_i32var} and \texttt{example\_string}:
-\begin{lstlisting}
- static int32_t example_i32var;
- static char example_string[] = "test string";
-\end{lstlisting}
-
-\item Define the \textit{limb} part of the OID:
-\begin{lstlisting}
- static uint8_t oid_wrpcExampleGroup[] = {0x2B,6,1,4,1,96,101,99};
-\end{lstlisting}
-
-\item Define the \textit{twig} part of the OID:
-\begin{lstlisting}
- static uint8_t oid_wrpcExampleV1[] = {1,0};
- static uint8_t oid_wrpcExampleV2[] = {2,0};
-\end{lstlisting}
-
-\item Add a group definition to the \texttt{struct snmp\_oid\_limb oid\_limb\_array}.
-      Please note that this structure has to be sorted by ascending OIDs.
-\begin{lstlisting}
-OID_LIMB_FIELD(oid_wrpcExampleGroup, func_group, oid_array_wrpcExampleGroup),
-\end{lstlisting}
-The macro \texttt{OID\_LIMB\_FIELD} takes the following arguments:
-\begin{itemize*}
-   \item \texttt{oid\_wrpcExampleGroup} -- an array with the \textit{limb} part of the
-         OID
-   \item \texttt{func\_group} -- a function to be called when the \textit{limb} part of
-         the OID is matched; this function will try to match the \textit{twig} part
-         of the OID within a table or a group.
-   \item \texttt{oid\_array\_wrpcExampleGroup} -- an array of \textit{twig} parts of OIDs
-\end{itemize*}
-\item Declare a previously used \texttt{oid\_wrpcExampleGroup}. Please note that
-      this structure has to be sorted by ascending \textit{twig} part of OIDs.
-\begin{lstlisting}
- static struct snmp_oid oid_array_wrpcExampleGroup[] = {
-   OID_FIELD_VAR(oid_wrpcExampleV1, get_p, set_p, ASN_INTEGER,   &example_i32var),
-   OID_FIELD_VAR(oid_wrpcExampleV2, get_p, set_p, ASN_OCTET_STR, &example_string),
-   { 0, }
- };
-\end{lstlisting}
-The macro \texttt{OID\_FIELD\_VAR} takes the following arguments:
-\begin{itemize*}
-   \item \texttt{oid\_wrpcExampleV1} -- an array with \textit{twig} part of the OID
-   \item \texttt{get\_p} (or \texttt{get\_pp)} -- a function to be called when \textit{twig}
-         part of the OID is matched for SNMP GET requests;
-   \item \texttt{set\_p} (or \texttt{set\_pp)} -- a function to be called when a \textit{twig}
-         part of the OID is matched for SNMP SET requests; if no SET
-         functionality is planned, please use NULL
-   \item \texttt{ASN\_INTEGER, ASN\_OCTET\_STR} -- type of the OID; please
-         check the source for other possible types
-   \item \texttt{\&example\_i32var, \&example\_string} -- addresses to the data in
-         memory
-\end{itemize*}
-In case the address of variable is not known at boot, it is possible to define
-a pointer to the variable which will be initialized (e.g. in the \texttt{snmp\_init}
-the function) at the boot time. In that case function \texttt{get\_pp} (\texttt{set\_pp}) has
-to be used instead of \texttt{get\_p} (\texttt{set\_p}). For variables that are a part of
-a structure and have to be accessed via a pointer, a macro \texttt{OID\_FIELD\_STRUCT}
-is available.
-
-For more complex extraction of variables or run-time value corrections,
-it is possible to use a custom \textit{get} function. It is possible to pass
-a constant number to the custom function instead of an address. For example:
-\begin{lstlisting}
- OID_FIELD_VAR(oid_wrpcPtpServoUpdateTime, get_servo, NO_SET, ASN_COUNTER64, \
-               SERVO_UPDATE_TIME),
-\end{lstlisting}
-
-\end{itemize*}
-Perform a \texttt{snmpwalk} to get new OIDs:
-\begin{lstlisting}
- $ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
- .1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 123432
- .1.3.6.1.4.1.96.102.1.2.0 = STRING: "test string"
- End of MIB
-\end{lstlisting}
-Trying to set too long string into the \texttt{example\_string} results in an error:
-\begin{lstlisting}
- $ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new long string"
- Error in packet.
- Reason: (badValue) The value given has the wrong type or length.
- Failed object: .1.3.6.1.4.1.96.102.1.2.0
-\end{lstlisting}
-A short enough (not longer than defined \texttt{"test string"}) value succeeds:
-\begin{lstlisting}
- $ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new value12"
- .1.3.6.1.4.1.96.102.1.2.0 = STRING: "new value12"
-\end{lstlisting}
-Set 999 to the \texttt{example\_i32var}:
-\begin{lstlisting}
-$ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.1.0 i 999
-.1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 999
-\end{lstlisting}
-Perform \texttt{snmpwalk} to verify changes:
-\begin{lstlisting}
-$ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
-.1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 999
-.1.3.6.1.4.1.96.102.1.2.0 = STRING: "new value12"
-End of MIB
-\end{lstlisting}
-
-% --------------------------------------------------------------------------
 \subsubsection{Mini SNMP responder's tests}
 \label{Mini SNMP responder's tests}
 
@@ -1796,12 +1667,134 @@ or
 This is not needed if the dump is retrieved using Etherbone.
 
 % ##########################################################################
-%  LocalWords:  gnudd titlepage iftex texinfo CERN documentlanguage settitle
-%  LocalWords:  documentencoding setfilename afourpaper paragraphindent FPGA
-%  LocalWords:  setchapternewpage finalout gateware ohwr modprobe insmod cset
-%  LocalWords:  smallexample ctrl timestamp fdelay struct spusa hdlmake Xilinx
-%  LocalWords:  bitstream wrpc init EEPROM grandmaster wrpcsw noposix http
-%  LocalWords:  tarball toolchain specsw sudo Etherbone
+\newpage
+\section{Adding new objects to the SNMP}
+\label{Adding new objects to the SNMP}
+
+The \textit{Mini SNMP responder} can be easily expanded to export new objects.
+Values of new objects can come from WRPC's variables or other HDL modules
+as long as there is a proper interface to the WRPC to read these values.
+
+This section contains the instruction how to export new objects with
+the given variables' content.
+
+The \textit{Mini SNMP responder} internally divides all OIDs into two parts.
+The first part is called \textit{limb}. The \textit{limb} part of the incoming OID is
+matched by a function \texttt{snmp\_respond}, with the defined \textit{limb} parts of OIDs
+in the structure \texttt{oid\_limb\_array}.
+When the \textit{limb} part is matched then the corresponding function from
+the structure \texttt{oid\_limb\_array} is called to try to match the second part of
+OID (the \textit{twig} part).
+
+\begin{sloppypar} % to prevent \texttt{} from going to the margine
+The example below adds to the \textit{Mini SNMP responder} an \texttt{int32\_t} variable
+(\texttt{example\_i32var}) with OID \texttt{1.3.6.1.4.1.96.102.1.1.0} and a string
+(\texttt{example\_string}) with OID \texttt{1.3.6.1.4.1.96.102.1.2.0}.
+Before assigning new OIDs in your projects please contact the maintainer of
+\texttt{wrpc-sw} repo to avoid conflicts.
+\end{sloppypar}
+
+\begin{itemize*}
+\item First declare \texttt{example\_i32var} and \texttt{example\_string}:
+\begin{lstlisting}
+ static int32_t example_i32var;
+ static char example_string[] = "test string";
+\end{lstlisting}
+
+\item Define the \textit{limb} part of the OID:
+\begin{lstlisting}
+ static uint8_t oid_wrpcExampleGroup[] = {0x2B,6,1,4,1,96,101,99};
+\end{lstlisting}
+
+\item Define the \textit{twig} part of the OID:
+\begin{lstlisting}
+ static uint8_t oid_wrpcExampleV1[] = {1,0};
+ static uint8_t oid_wrpcExampleV2[] = {2,0};
+\end{lstlisting}
+
+\item Add a group definition to the \texttt{struct snmp\_oid\_limb oid\_limb\_array}.
+      Please note that this structure has to be sorted by ascending OIDs.
+\begin{lstlisting}
+OID_LIMB_FIELD(oid_wrpcExampleGroup, func_group, oid_array_wrpcExampleGroup),
+\end{lstlisting}
+The macro \texttt{OID\_LIMB\_FIELD} takes the following arguments:
+\begin{itemize*}
+   \item \texttt{oid\_wrpcExampleGroup} -- an array with the \textit{limb} part of the
+         OID
+   \item \texttt{func\_group} -- a function to be called when the \textit{limb} part of
+         the OID is matched; this function will try to match the \textit{twig} part
+         of the OID within a table or a group.
+   \item \texttt{oid\_array\_wrpcExampleGroup} -- an array of \textit{twig} parts of OIDs
+\end{itemize*}
+\item Declare a previously used \texttt{oid\_wrpcExampleGroup}. Please note that
+      this structure has to be sorted by ascending \textit{twig} part of OIDs.
+\begin{lstlisting}
+ static struct snmp_oid oid_array_wrpcExampleGroup[] = {
+   OID_FIELD_VAR(oid_wrpcExampleV1, get_p, set_p, ASN_INTEGER,   &example_i32var),
+   OID_FIELD_VAR(oid_wrpcExampleV2, get_p, set_p, ASN_OCTET_STR, &example_string),
+   { 0, }
+ };
+\end{lstlisting}
+The macro \texttt{OID\_FIELD\_VAR} takes the following arguments:
+\begin{itemize*}
+   \item \texttt{oid\_wrpcExampleV1} -- an array with \textit{twig} part of the OID
+   \item \texttt{get\_p} (or \texttt{get\_pp)} -- a function to be called when \textit{twig}
+         part of the OID is matched for SNMP GET requests;
+   \item \texttt{set\_p} (or \texttt{set\_pp)} -- a function to be called when a \textit{twig}
+         part of the OID is matched for SNMP SET requests; if no SET
+         functionality is planned, please use NULL
+   \item \texttt{ASN\_INTEGER, ASN\_OCTET\_STR} -- type of the OID; please
+         check the source for other possible types
+   \item \texttt{\&example\_i32var, \&example\_string} -- addresses to the data in
+         memory
+\end{itemize*}
+In case the address of variable is not known at boot, it is possible to define
+a pointer to the variable which will be initialized (e.g. in the \texttt{snmp\_init}
+the function) at the boot time. In that case function \texttt{get\_pp} (\texttt{set\_pp}) has
+to be used instead of \texttt{get\_p} (\texttt{set\_p}). For variables that are a part of
+a structure and have to be accessed via a pointer, a macro \texttt{OID\_FIELD\_STRUCT}
+is available.
+
+For more complex extraction of variables or run-time value corrections,
+it is possible to use a custom \textit{get} function. It is possible to pass
+a constant number to the custom function instead of an address. For example:
+\begin{lstlisting}
+ OID_FIELD_VAR(oid_wrpcPtpServoUpdateTime, get_servo, NO_SET, ASN_COUNTER64, \
+               SERVO_UPDATE_TIME),
+\end{lstlisting}
+
+\end{itemize*}
+Perform a \texttt{snmpwalk} to get new OIDs:
+\begin{lstlisting}
+ $ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
+ .1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 123432
+ .1.3.6.1.4.1.96.102.1.2.0 = STRING: "test string"
+ End of MIB
+\end{lstlisting}
+Trying to set too long string into the \texttt{example\_string} results in an error:
+\begin{lstlisting}
+ $ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new long string"
+ Error in packet.
+ Reason: (badValue) The value given has the wrong type or length.
+ Failed object: .1.3.6.1.4.1.96.102.1.2.0
+\end{lstlisting}
+A short enough (not longer than defined \texttt{"test string"}) value succeeds:
+\begin{lstlisting}
+ $ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.2.0 s "new value12"
+ .1.3.6.1.4.1.96.102.1.2.0 = STRING: "new value12"
+\end{lstlisting}
+Set 999 to the \texttt{example\_i32var}:
+\begin{lstlisting}
+$ snmpset -On $SNMP_OPT 1.3.6.1.4.1.96.102.1.1.0 i 999
+.1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 999
+\end{lstlisting}
+Perform \texttt{snmpwalk} to verify changes:
+\begin{lstlisting}
+$ snmpwalk -On $SNMP_OPT 1.3.6.1.4.1.96.102.1
+.1.3.6.1.4.1.96.102.1.1.0 = INTEGER: 999
+.1.3.6.1.4.1.96.102.1.2.0 = STRING: "new value12"
+End of MIB
+\end{lstlisting}
 
 
 \end{document}
