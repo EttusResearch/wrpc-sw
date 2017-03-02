@@ -25,7 +25,6 @@ CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Wno-pointer-sign
 CFLAGS += $(ENDIAN) $(LINUXINCLUDE)
 
-
 LIB = libsdbfs.a
 OBJS = glue.o access.o
 
@@ -34,7 +33,7 @@ all: $(LIB)
 $(OBJS): $(wildcard *.h)
 
 $(LIB): $(OBJS)
-	$(AR) r $@ $(OBJS)
+	$(AR) rc $@ $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(LIB) *~ core

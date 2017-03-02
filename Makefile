@@ -102,6 +102,7 @@ CFLAGS = $(cflags-y) -Wall -Wstrict-prototypes \
 	-ffunction-sections -fdata-sections -Os -Wmissing-prototypes \
 	-include include/wrc.h -ggdb
 
+# Assembler Flags
 ASFLAGS = -I.
 
 LDFLAGS = $(ldflags-y) \
