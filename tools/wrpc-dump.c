@@ -38,9 +38,9 @@ static long long wrpc_get_64(void *p)
 	if (endian_flag == DUMP_ENDIAN_FLAG) {
 		return *p64;
 	}
-	result = __bswap_32((uint32_t)(*p64 >> 32));
+	result = __bswap_32((uint32_t)*p64);
 	result <<= 32;
-	result |= __bswap_32((uint32_t)*p64);
+	result |= __bswap_32((uint32_t)(*p64 >> 32));
 	return result;
 }
 
