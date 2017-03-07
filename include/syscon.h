@@ -111,5 +111,7 @@ void diag_read_info(uint32_t *id, uint32_t *ver, uint32_t *nrw, uint32_t *nro);
 int diag_read_word(uint32_t adr, int bank, uint32_t *val);
 int diag_write_word(uint32_t adr, uint32_t val);
 
+void net_rst(void);
+
 #endif /* CONFIG_WR_NODE */
 #endif

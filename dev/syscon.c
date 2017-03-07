@@ -104,3 +104,9 @@ int diag_write_word(uint32_t adr, uint32_t val)
 
 	return 0;
 }
+
+void net_rst(void)
+{
+	syscon->GPSR |= SYSC_GPSR_NET_RST;
+}
+
