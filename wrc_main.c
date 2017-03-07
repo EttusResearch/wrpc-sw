@@ -82,6 +82,9 @@ static void wrc_initialize(void)
 
 	net_rst();
 	ep_init(mac_addr);
+	/* Sleep for 1s to make sure WRS v4.2 always realizes that
+	 * the link is down */
+	timer_delay_ms(200);
 	ep_enable(1, 1);
 
 	minic_init();
