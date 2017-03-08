@@ -79,7 +79,7 @@ distributed in the following places:
 
 \item \url{git://ohwr.org/hdl-core-lib/wr-cores.git}
 
-	repository with the completed HDL sources of the WRPC
+	repository with HDL sources of the WRPC
 
 \item \url{git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git}
 
@@ -234,8 +234,8 @@ $ chmod a+x /usr/bin/hdlmake
 \end{lstlisting}
 
 Having all the tools in place, you can now clone the main WR PTP Core git
-repository for the v4.0 release. The set of commands below clones the WR PTP Core 
-repository, checks out the release tag, and downloads other HDL repositories 
+repository for the v4.0 release. The set of commands below clones the WR PTP Core
+repository, checks out the release tag, and downloads other HDL repositories
 (submodules) needed to synthesize the core:
 \begin{lstlisting}
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_location>/wr-cores
@@ -373,9 +373,18 @@ the \textit{git submodules} of this package, unless you already did that
 by hand. The second and later build won't download anything
 from the network.
 
-The resulting binary \textit{wrc.bin} can be then used with the loader from
-\textit{spec-sw} or \textit{svec-sw} software package to program the LM32 inside
-the White Rabbit PTP Core (see Appendix \ref{Programming FPGA} for details).
+The compilation process produces the binary in 3 different formats:
+\begin{itemize*}
+  \item \textit{wrc.bin} can be then used with the loader from \textit{spec-sw}
+    or \textit{svec-sw} software package to program the LM32 inside the White
+    Rabbit PTP Core (see section \ref{Programming FPGA} for details).
+  \item \textit{wrc.bram} you can use to initialize WRPC internal RAM with LM32
+    software during the synthesis for Xilinx FPGAs.
+  \item \textit{wrc.mif} you can use to initialize WRPC internal RAM with LM32
+    software during the synthesis for Altera FPGAs.
+\end{itemize*}
+The location of \textit{wrc.bram}/\textit{wrc.mif} files should be passed to the
+WR PTP Core HDL using the \texttt{g\_dpram\_initf} generic.
 
 % ##########################################################################
 \newpage
@@ -836,37 +845,35 @@ The same data is exported by the \textit{Mini SNMP responder} via the table
  End of MIB
 \end{lstlisting}
 When the SET support is compiled into the \textit{Mini SNMP responder}, it is
-possible to erase or add/replace SFP entires to the SFPs database via SNMP.
+possible to erase or add/replace SFP entires to the SFPs database via SNMP.\\
 
 \begin{sloppypar} % to prevent \texttt{} from going to the margine
 Addition (or modification) of one SFP to the database can be done by a row of
-SNMP SETs. Firstly, please set the delta Tx (\texttt{wrpcPtpConfigDeltaTx.0}), the
+SNMP SETs. First, please set the delta Tx (\texttt{wrpcPtpConfigDeltaTx.0}), the
 delta Rx (\texttt{wrpcPtpConfigDeltaRx.0}) and the alpha (\texttt{wrpcPtpConfigAlpha.0})
-with new values.
-Then, to commit the change to the SFP database, perform the SNMP SET on
+with new values. Then, to commit the change to the SFP database, perform the SNMP SET on
 the \texttt{wrpcPtpConfigApply.0} with the value \texttt{writeToFlashCurrentSfp}. It will
 add/update values for the currently plugged SFP.
 \end{sloppypar}
 
-To add/update entries for different SFPs, please set deltas and alpha like
-above, then set PN of an SFP to the \texttt{wrpcPtpConfigSfpPn.0} and commit
-the change by setting \texttt{writeToFlashGivenSfp} to the \texttt{wrpcPtpConfigApply.0}.
+To add or update entries for other SFPs, you shoud set deltas and alpha like
+above, set PN of an SFP to the \texttt{wrpcPtpConfigSfpPn.0} and commit
+the change by setting \texttt{writeToFlashGivenSfp} to the
+\texttt{wrpcPtpConfigApply.0}.\\
 
-It is also possible to update values in the memory for the current SFP.
-For that, please set delta Tx, delta Rx and alpha as described above,
-then set \texttt{writeToMemoryCurrentSfp} to the \texttt{wrpcPtpConfigApply.0}
+It is also possible to update parameters of the currently used SFP without
+storing them to the Flash/EEPROM. For that, please set delta Tx, delta Rx and
+alpha as described above, then set \texttt{writeToMemoryCurrentSfp} to the
+\texttt{wrpcPtpConfigApply.0}. Please remember that these changes are made only
+in RAM and will be lost after a power cycle of a board, soft reset of WRPC or
+unplug/plug of a fiber/SFP.\\
 
-Please be aware that these changes will be lost after a power cycle of a board,
-soft reset of WRPC or unplug/plug of a fiber/SFP.
-
-In the current and previous versions of the WRPC after the update of SFP values in 
-the memory, PTP should be restarted. 
-Such restart is necessary because PTP does not support on-the-fly changes of
-deltas nor alpha. It is expected that this behavior will change in the future.
-
-If a database entry of the SFP, which is currently used was updated, it is
+If a database entry or values in RAM of the currently used SFP are updated, it is
 necessary to perform a restart of the PTP daemon
-(set \texttt{wrpcPtpConfigRestart.0} with the value \texttt{restartPtp}).
+(set \texttt{wrpcPtpConfigRestart.0} with the value \texttt{restartPtp}). Such
+restart is necessary because currently PTP does not support on-the-fly changes
+of deltas nor alpha. It is expected that this behavior will change in the
+future.\\
 
 Each SNMP SET of \texttt{wrpcPtpConfigApply.0} or \texttt{wrpcPtpConfigRestart.0} returns
 the status of a performed action. For details please check \texttt{WR-WRPC-MIB}
@@ -1271,6 +1278,14 @@ processing and get back to the ``standard'' packet-filter rules.
 
 \end{longtable}
 
+Frame classes are assigned inside the WRPC and are used to distinguish received
+frames between these that should be processed by the WR PTP Core (e.g. PTP
+frames, SNMP requests) and frames that should be passed to the external WR
+Fabric interface. Currently, class 0 is used for all frames that should be
+processed by the WRPC, class 6 is used for Streamers traffic, class 7 is used
+for Etherbone traffic (see HDL documentation for boards HDL modules and
+selection between Streamers, Etherbone and Plain modes).
+
 % ##########################################################################
 \newpage
 \section{Troubleshooting}
@@ -1426,7 +1441,9 @@ tools used to build and run it, you can write to our mailing list
     command \\
 
   \code{ptp <e2e|p2p>} & selects PTP delay mechanism: end-to-end or peer-to-peer.
-    If configured, you can set \texttt{p2p} mode, and \texttt{delay}/\texttt{pdelay} as aliases. \\
+    If configured, you can set \texttt{p2p} mode. Alternatively you can use also
+    aliases: \texttt{delay} (instead of \texttt{e2e}) or \texttt{pdelay}
+    (instead of \texttt{p2p}).\\
 
   \code{ptp gm|master|slave} & sets WRPC to operate as Grandmaster clock
     (requires external 10MHz and 1-PPS reference), Master or Slave. After
@@ -1652,9 +1669,10 @@ This is an example:
 The address is specified as a hex number, and can be retrieved running
 ``\texttt{lm32-elf-nm  wrc.elf}''.
 
-Please note that the \textit{spec} device has a strange memory mapping, and
-it needs a special endian conversion. With current \textit{wrpc} it is
-autodetected, but if you dump an older binary you'll need to set the
+Please note that the LM32 soft-core processor inside the WRPC has a different
+endianness than your host machine, thus a special endian conversion is needed.
+With current \textit{wrpc} it is autodetected, but if you dump an older binary
+you'll need to set the
 \texttt{WRPC\_SPEC} environment variable (to any value you like) to properly
 access the PCI memory or a dump taken from PCI:
 \begin{lstlisting}
