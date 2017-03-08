@@ -167,5 +167,15 @@ void pfilter_init_default(void)
 		*v_vlan |= 0x0aaa << 13;
 	}
 
+	/* Restore default MAC, so that the rule-set check doesn't fail on LM32
+	 * restart */
+	v = vini + 1; /* rewind v to the beginning, skipping the first magic number */
+	v[2] &= ~(0xffff << 13);
+	v[4] &= ~(0xffff << 13);
+	v[6] &= ~(0xffff << 13);
+	v[2] |= 0x1234 << 13;
+	v[4] |= 0x5678 << 13;
+	v[6] |= 0x9abc << 13;
+
 	EP->PFCR0 = EP_PFCR0_ENABLE;
 }
