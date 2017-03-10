@@ -281,11 +281,13 @@
   \hline 
   \hdltablesection{Pause frame control}\\
   \hline
-  fc\_tx\_pause\_req\_i   & in  &  1 & \\
+  fc\_tx\_pause\_req\_i   & in  &  1 & Ethernet flow control, request sending
+  Pause frame\\
   \hline
-  fc\_tx\_pause\_delay\_i & in  & 16 & \\
+  fc\_tx\_pause\_delay\_i & in  & 16 & Pause quanta\\
   \hline
-  fc\_tx\_pause\_ready\_o & out &  1 & \\
+  fc\_tx\_pause\_ready\_o & out &  1 & Pause acknowledge - active after the
+  current pause send request has been completed\\
   \hline
   \hdltablesection{Timecode/Servo control}\\
   \hline

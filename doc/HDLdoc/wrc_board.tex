@@ -218,11 +218,13 @@ their own BSP, can find the board-common module under:
   \hline 
   \hdltablesection{Pause frame control}\\
   \hline
-  fc\_tx\_pause\_req\_i   & in  &  1 & \\
+  fc\_tx\_pause\_req\_i   & in  &  1 & [optional] Ethernet flow control, request sending
+  Pause frame\\
   \hline
-  fc\_tx\_pause\_delay\_i & in  & 16 & \\
+  fc\_tx\_pause\_delay\_i & in  & 16 & [optional] Pause quanta\\
   \hline
-  fc\_tx\_pause\_ready\_o & out &  1 & \\
+  fc\_tx\_pause\_ready\_o & out &  1 & [optional] Pause acknowledge - active after the
+  current pause send request has been completed\\
   \hline
   \hdltablesection{WRPC timecode interface}\\
   \hline
@@ -476,8 +478,8 @@ Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_bo
 
 \begin{hdlparamtable}
   g\_pcs16\_bit & boolean & false & Altera Arria V FPGAs provide the possibility
-  to configure the PCS of the PHY as either 8bit or 16bit. The default is to use the 8bit PCS,
-  but this generic can be used to override it\\
+  to configure the PCS of the PHY as either 8bit or 16bit. The default is to use
+  the 8bit PCS. Currently, 16bit PCS is not supported for Arria V.\\
 \end{hdlparamtable}
 
 \subsubsection{Ports}

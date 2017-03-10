@@ -17,7 +17,9 @@
   g\_rx\_buffer\_size & integer & 1024 & size of Rx buffer in WRPC MAC module,
   default value is 1024 and should not be changed\\
   \hline
-  g\_tx\_runt\_padding & boolean & true & \\
+  g\_tx\_runt\_padding & boolean & true & when set to true, all user frames
+  transmitted from the external fabric interface are padded if shorter than
+  minimal Ethernet frame size (60B with header)\\
   \hline
   g\_dpram\_initf & string & "" & filename of compiled WRPC software, to be
   stored in WRPC memory during the synthesis (default is \emph{wrc.ram}
@@ -37,7 +39,9 @@
   and can be left unassigned. The default value corresponds to an undocumented device with an
   address space of 256 bytes\\
   \hline
-  g\_softpll\_enable\_debugger & boolean & false & \\
+  g\_softpll\_enable\_debugger & boolean & false & when set to true, additional
+  FIFO is instantiated in the SoftPLL for collecting DMTD tags. It can be read
+  out by the host and analyzed for SoftPLL debugging.\\
   \hline
   g\_vuart\_fifo\_size & integer & 1024 & size (in bytes) for the virtual UART FIFO\\
   \hline
@@ -47,11 +51,12 @@
   signals will be grouped in the \tts{phy8/phy16} VHDL records, otherwise the individual standard
   logic signals will be used\\
   \hline
-  g\_diag\_id  & integer & 0 & \\
+  g\_diag\_id  & integer & 0 & auxiliary diagnostics module ID\\
   \hline
-  g\_diag\_ver & integer  & 0 & \\
+  g\_diag\_ver & integer  & 0 & auxiliary diagnostics version for a given module ID\\
   \hline
-  g\_diag\_ro\_size & integer & 0 & \\
+  g\_diag\_ro\_size & integer & 0 & number of read-only registers fed to auxiliary diagnostics\\
   \hline
-  g\_diag\_rw\_size & integer & 0 & \\  
+  g\_diag\_rw\_size & integer & 0 & number of read-write registers fed to
+  auxiliary diagnostics\\  
 \end{hdlparamtable}
