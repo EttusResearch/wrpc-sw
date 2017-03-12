@@ -1,0 +1,14 @@
+\subsection{Auxiliary diagnostics interface}
+\label{sec:aux_diag}
+
+Auxiliary diagnostics interface can be used if a user would like to benefit from
+the WR PTP Core diagnostics capabilities to export some registers from his/her
+IP core. The interface consists of two 32-bit \texttt{std\_logic\_vector}
+arrays. User-defined registers that are to be read from the WRPC SNMP agent (SNMP
+GET requests), should be connected to the \texttt{aux\_diag\_i} vector.
+User-defined values that are written from the WRPC SNMP agent (SNMP SET
+requests) will be available in the \texttt{aux\_diag\_o} vector.
+
+Two VHDL generics \texttt{g\_diag\_id} and \texttt{g\_diag\_ver} are used to let
+the user uniquely identify given application (user-defined set of registers)
+to match it with appropriate, custom SNMP MIB file.

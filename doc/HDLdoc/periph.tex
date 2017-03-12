@@ -1,4 +1,4 @@
-\subsection{GPIO/UART/I2C/1-Wire interfaces}
+\subsection{GPIO/UART/I2C/1-Wire/SPI interfaces}
 \label{sec:wrpc_periph}
 
 %\begin{figure}[ht]
@@ -8,17 +8,17 @@
 %  \end{center}
 %\end{figure}
 
-Several hardware peripherals can be connected to the White Rabbit PTP Core. It has a UART, 1-Wire
-and two $I^2C$ interfaces implemented inside. The $I^2C$ connection to the SFP module is used to
-read its Part ID, while the external EEPROM stores calibration values for each supported SFP
-together with an initialization script. That script is executed every time the WRPC is powered on
-and can contain instructions to automatically match the SFP's Part ID with the EEPROM content and
-load appropriate calibration values. The SFP presence indicator is mandatory and has to be
-connected.  Otherwise, the WRPC won't be able to operate properly (without knowing whether the SFP
-transceiver is actually inserted).
-
-Furthermore, a 1-Wire digital thermometer provides on-board temperature, but also its unique ID is
-used to calculate default MAC address of the physical Ethernet interface. The UART interface
-provides a user shell that can be used to interact with the White Rabbit PTP Core. More detailed
-description of the WRPC shell can be found in the \emph{White Rabbit PTP Core User's Manual -
-  Building and Running} \cite{wrpc_man}.
+Several hardware peripherals can be connected to the White Rabbit PTP Core. It
+has:
+\begin{itemize}
+  \item UART - provides access to the WR PTP Core user shell
+  \item 1-Wire - access to a digital thermometer for an on-board temperature and
+    unique ID (used to generate a default MAC address of the WR port)
+  \item SFP $I^2C$ - access to the SFP EEPROM, to read its ID and math with the
+    calibration values
+  \item SPI - access to the Flash memory, used to store calibration
+    parameters and init script
+  \item EEPROM $I^2C$ - [optional] access to the EEPROM memory, used to store
+    calibration parameters and init script - currently SPI Flash is the
+    preferred storage, however, EEPROM can still be used if needed.
+\end{itemize}
