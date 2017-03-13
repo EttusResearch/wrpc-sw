@@ -20,9 +20,9 @@ Figure \ref{intro:fig:wrpc_top} is an example on how to instantiate the WRPC com
 Xilinx Spartan6-based project. It contains few additional modules besides the WRPC:
 \begin{itemize}
   \item \emph{wr\_gtp\_phy\_spartan6}: module wrapping Xilinx GTP SerDes to improve its determinism
-  \item \emph{PLL\_BASE}: Xilinx Spartan6 PLL primitive \cite{pll_base}, used to produce 62.5 MHz
-    system clock from 125 MHz local reference clock and to produce the DMTD offset clock from a
-    local 20 MHz oscillator
+  \item \emph{PLL\_BASE}: Xilinx Spartan6 PLL primitive\footnote{see also Xilinx Spartan-6 FPGA
+    Clocking Resources, User Guide}, used to produce 62.5 MHz system clock from 125 MHz local
+    reference clock and to produce the DMTD offset clock from a local 20 MHz oscillator
   \item \emph{spec\_serial\_dac\_arb}: converts DACs tuning values to serial interface and
     arbitrates access to two DACs used for reference and DMTD clock tuning.
 \end{itemize}

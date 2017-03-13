@@ -4,15 +4,10 @@
 \usepackage{pgf}
 \usepackage{tikz}
 \usepackage[pdftex]{hyperref}  % makes cross references and URLs clickable
-\newcommand{\code}[1]{\texttt{#1}}
 \usepackage[overload]{textcase}
 \usepackage{listings}
 \usepackage{color}
-\definecolor{light-gray}{gray}{0.95}
 \usepackage{textcomp}
-% set listings as in other WR-doc(s)
-\lstset{columns=flexible, upquote=true, frame=single,
-basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_src}
 \usepackage{longtable} % table over many pages
 \usepackage[document]{ragged2e} %texta djustment
 \usepackage{mdwlist} % to have tight itemization
@@ -23,10 +18,23 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 \usepackage{colortbl}
 \usepackage{array}
 \usepackage{multirow}
+
 \newcommand{\newparagraph}[1]{\paragraph{#1}\mbox{}\\}
 
 \definecolor{wrlblue}{RGB}{165,195,210}
 \definecolor{wrlgray}{RGB}{209,211,212}
+\definecolor{light-gray}{gray}{0.95}
+
+\hypersetup{
+    colorlinks,
+    linkcolor={red!50!black},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+% set listings as in other WR-doc(s)
+\lstset{columns=flexible, upquote=true, frame=single,
+basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst:init_src}
 
 \newcommand{\multirowpar}[2]{
   \multirow{#1}{\hsize}{\parbox{\hsize}{\strut\raggedright#2\strut}}
@@ -40,10 +48,11 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 \newcolumntype{M}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}\ttsmall}m{#1}}
 \newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 \newcolumntype{D}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}\ttsmall}m{#1}}
-  
+
+\let\underscore\_
+\renewcommand{\_}{\underscore\allowbreak}
+
 \newenvironment{hdlparamtable}{
-  \let\underscore\_
-  \renewcommand{\_}{\underscore\allowbreak}
   \setlength{\extrarowheight}{1pt}
   \begin{center}
     \begin{longtable}{|M{.2\textwidth}|C{.09\textwidth}|D{.11\textwidth}|L{.5\textwidth}|}
@@ -59,8 +68,6 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 }
 
 \newenvironment{hdlporttable}{
-  \let\underscore\_
-  \renewcommand{\_}{\underscore\allowbreak}
   \setlength{\extrarowheight}{1pt}
   \begin{center}
     \begin{longtable}{|M{.25\textwidth}|C{.05\textwidth}|D{.05\textwidth}|L{.55\textwidth}|}
@@ -77,6 +84,8 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 
 \def \wrpcrelease {for-tests}
 %\def \wrpcrelease {wrpc-v4.0}
+
+\newcommand{\code}[1]{\texttt{#1}}
 
 \newcommand{\tts}[1]{
   \texttt{\small{#1}}}
@@ -98,9 +107,9 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 \raggedright
 {\LARGE\bf\@title}\\[0.2 cm]
 \hrule height 4pt \vspace{0.1cm}
-\large\gitrevinfo\hfill\today\\
+{\large\gitrevinfo\hfill\today}\\
 \vspace*{\fill}
-\large\@author\\
+{\large\@author}\\
 \hrule height 2pt
 \justify
 \makeatother
@@ -111,23 +120,25 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 
 \newpage
 
-{\noindent \LARGE {\bf Introduction}}\\
+\section{Introduction}
 
+This is the user manual for the White Rabbit PTP Core (WRPC), part of the White
+Rabbit project. It describes the building and running process, and it provides a
+guide to instantiating the WRPC in your own HDL design.
 
-This is the user manual for the White Rabbit PTP Core, part of the White
-Rabbit project. It describes the building and running process. If you don't
-want to get your hands dirty and prefer to start with the demo binaries
+If you don't want to get your hands dirty and prefer to start with the demo binaries
 available at \url{http://www.ohwr.org/projects/wr-cores/files} for officially
-supported boards, please skip section \ref{Building the Core} and move forward
-directly to section \ref{Programming FPGA}.
+supported boards, please skip Section~\ref{Building the Core} and move forward
+directly to Section~\ref{Programming FPGA}. For help with instantiating the WRPC in
+your own HDL design, see Section~\ref{sec:wrpc_hdl}.
 
 
 % ##########################################################################
-\section{Software and hardware requirements}
+\subsection{Software and hardware requirements}
 \label{Software and hardware requirements}
 
 % ==========================================================================
-\subsection{Repositories and Releases}
+\subsubsection{Repositories and Releases}
 \label{Repositories and Releases}
 
 This manual is about the official \gitrevinfo{} stable release of the White
@@ -182,27 +193,22 @@ build the core and load it into the FPGA should be used in their newest stable
 releases, unless otherwise stated.
 
 % ==========================================================================
-\subsection{Required hardware}
+\subsubsection{Required hardware}
 \label{Required hardware}
 
 The minimum hardware set required to run the WR PTP Core reference firmware
 depends on the hardware platform you want to use. One of the following setups
 can be chosen:
 \begin{itemize}
-  \item {\bf SPEC} PCIe board\footnote{SPEC project page
-    \url{http://www.ohwr.org/projects/spec}} + FMC DIO
-    card\footnote{\label{note_dio}FMC DIO project page
-    \url{http://www.ohwr.org/projects/fmc-dio-5chttla}} + PC computer running
-    Linux
-
-  \item  {\bf SVEC} VME board\footnote{SVEC project page
-    \url{http://www.ohwr.org/projects/svec}} + VME crate with a single board
-    computer running Linux\footnote{\label{note_a20}In our test setup we used MEN A20 board}
-
-  \item {\bf VFC-HD} VME board\footnote{VFC-HD project page
-    \url{http://www.ohwr.org/projects/vfc-hd}} + FMC DIO card\footref{note_dio}
-    + VME crate with s single board computer running Linux\footref{note_a20}
-
+\item \href{http://www.ohwr.org/projects/spec}{SPEC PCIe board} +
+  \href{http://www.ohwr.org/projects/fmc-dio-5chttla}{FMC DIO card} + PC
+  computer running Linux
+\item \href{http://www.ohwr.org/projects/svec}{SVEC VME board} + VME crate with
+  a single board computer running Linux\footnote{\label{note_a20}In our test setup
+    we used MEN A20 board}
+\item \href{http://www.ohwr.org/projects/vfc-hd}{VFC-HD VME board} +
+  \href{http://www.ohwr.org/projects/fmc-dio-5chttla}{FMC DIO card} +
+  VME crate with a single board computer running Linux\footref{note_a20}
 \end{itemize}
 
 To be able to test White Rabbit synchronization you would also need
@@ -239,7 +245,7 @@ which contains a description of the software compilation process.
 
 Before running the synthesis process you have to make sure your environment is
 set up correctly. You will need a synthesis software from your FPGA vendor.
-Depending if you want to run the WRPC on Xilinx (e.g. SPEC, SVEC boards) or
+Depending on whether you want to run the WRPC on Xilinx (e.g. SPEC, SVEC boards) or
 Altera/Intel (e.g. VFC-HD) FPGA, you should install either Xilinx ISE or Quartus
 Prime software.
 
@@ -249,7 +255,7 @@ To synthesize the FPGA firmware containing the WRPC, Xilinx ISE with free of
 charge WebPack license is enough. ISE provides a set of scripts:
 \texttt{settings32.sh}, \texttt{settings32.csh}, \texttt{settings64.sh} and
 \texttt{settings64.csh} that configure all the system variables to let you
-easily run the software. Depending on a shell you use and whether your Linux is
+easily run the software. Depending on the shell you use and whether your Linux is
 32 or 64-bits you should execute one of them before the other tools are used.
 For 64-bit system and BASH shell you should call (assuming that ISE is installed
 in the default \textit{/opt} directory):
@@ -313,8 +319,9 @@ $ git submodule init
 $ git submodule update
 \end{lstlisting}
 
-The local copies of the submodules are stored to
-\texttt{<your\_location>/wr-cores/ip\_cores}.
+The local copies of the submodules are stored to:
+
+\texttt{<your\_location>/wr-cores/ip\_cores}
 
 \vspace{1em}
 \textbf{Note:} If you use the WRPC within another project (like

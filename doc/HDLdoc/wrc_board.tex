@@ -185,7 +185,7 @@ their own BSP, can find the board-common module under:
     in order to provide access to all WB peripherals over Etherbone}\\
   \cline{1-3}
   \linebreak wb\_eth\_master\_i\linebreak & in & rec & \\
-  \hline
+  \hline\pagebreak
   \hdltablesection{Generic diagnostics interface}\\
   \hline
   \linebreak aux\_diag\_i\linebreak & in & var & \multirowpar{2}{Arrays of 32~bit vectors, to be
@@ -435,7 +435,7 @@ Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters
   sfp\_scl\_o & out & 1 & \\
   \hline
   sfp\_rate\_select\_o & out & 1 & SFP rate select\\
-  \hline
+  \hline\pagebreak
   \hdltablesection{Physical UART interface}\\
   \hline
   uart\_rxd\_i & in  & 1 & UART RXD (serial data to WRPC)\\
@@ -482,6 +482,7 @@ Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_bo
   the 8bit PCS. Currently, 16bit PCS is not supported for Arria V.\\
 \end{hdlparamtable}
 
+\pagebreak
 \newparagraph{Ports}
 
 \begin{hdlporttable}
