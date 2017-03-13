@@ -56,6 +56,7 @@ tables short and to the point. Users interested in studying the board-common mod
 their own BSP, can find the board-common module under:
 \\\hrefwrpc{board/common/xwrc\_board\_common.vhd}
 
+\newpage
 \newparagraph{Generic parameters}
 \label{sec:hdl_board_common_param}
 
@@ -108,7 +109,7 @@ their own BSP, can find the board-common module under:
   rst\_62m5\_n\_o & out & 1 & Active low reset output, synchronous to \tts{clk\_sys\_62m5\_o}\\
   \hline
   rst\_125m\_n\_o & out & 1 & Active low reset output, synchronous to \tts{clk\_ref\_125m\_o}\\
-  \hline
+  \hline\pagebreak
   \hdltablesection{Interface with SFP}\\
   \hline
   sfp\_tx\_fault\_i & in & 1 & TX fault indicator\\
@@ -185,7 +186,7 @@ their own BSP, can find the board-common module under:
     in order to provide access to all WB peripherals over Etherbone}\\
   \cline{1-3}
   \linebreak wb\_eth\_master\_i\linebreak & in & rec & \\
-  \hline\pagebreak
+  \hline
   \hdltablesection{Generic diagnostics interface}\\
   \hline
   \linebreak aux\_diag\_i\linebreak & in & var & \multirowpar{2}{Arrays of 32~bit vectors, to be
@@ -435,7 +436,7 @@ Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters
   sfp\_scl\_o & out & 1 & \\
   \hline
   sfp\_rate\_select\_o & out & 1 & SFP rate select\\
-  \hline\pagebreak
+  \hline
   \hdltablesection{Physical UART interface}\\
   \hline
   uart\_rxd\_i & in  & 1 & UART RXD (serial data to WRPC)\\
@@ -482,7 +483,6 @@ Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_bo
   the 8bit PCS. Currently, 16bit PCS is not supported for Arria V.\\
 \end{hdlparamtable}
 
-\pagebreak
 \newparagraph{Ports}
 
 \begin{hdlporttable}

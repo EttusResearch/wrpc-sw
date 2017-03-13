@@ -103,7 +103,7 @@
   scl\_i & in  & 1 & \\
   \cline{1-3}
   scl\_o & out & 1 & \\
-  \hline
+  \hline\pagebreak
   sfp\_sda\_i & in  & 1 & \multirowpar{4}{I2C interface for EEPROM inside SFP module}\\
   \cline{1-3}
   sfp\_sda\_o & out & 1 & \\
@@ -113,7 +113,7 @@
   sfp\_scl\_o & out & 1 & \\
   \hline
   sfp\_det\_i & in & 1 & SFP presence indicator\\
-  \hline\pagebreak
+  \hline
   btn1\_i & in & 1 & \multirowpar{2}{two microswitch inputs, active low, currently not
     used in official WRPC software}\\
   \cline{1-3}
@@ -173,7 +173,7 @@
     for the WB slave interface (available in \tts{xwr\_core.vhd})}\\
   \cline{1-3}
   wb\_slave\_i & in & rec & \\
-  \hline
+  \hline\pagebreak
   \hdltablesection{Auxiliary WB master}\\
   \hline
   aux\_adr\_i   & in & 32 & \multirowpar{11}{Auxilirary Wishbone pipelined
@@ -199,7 +199,7 @@
     ports for the aux WB master interface (available in \tts{xwr\_core.vhd})}\\
   \cline{1-3}
   aux\_master\_i & in & rec & \\
-  \hline\pagebreak
+  \hline
   \hdltablesection{External fabric interface}\\
   \hline
   ext\_snk\_adr\_i & in & 2 & \multirowpar{9}{External fabric Wishbone
@@ -248,7 +248,7 @@
   wrf\_snk\_o & out & rec & \\
   \cline{1-3}
   wrf\_snk\_i & in &  rec & \\
-  \hline  
+  \hline\pagebreak
   \hdltablesection{External TX timestamp interface}\\
   \hline
   txtsu\_port\_id\_o & out & 5 & physical port ID from which the timestamp
@@ -271,7 +271,7 @@
   \hline
   txtsu\_ack\_i & in & 1 & acknowledge, indicating that user-defined module
   has received the timestamp\\
-  \hline\pagebreak
+  \hline
   \hdltablesection{Pause frame control}\\
   \hline
   fc\_tx\_pause\_req\_i   & in  &  1 & Ethernet flow control, request sending
