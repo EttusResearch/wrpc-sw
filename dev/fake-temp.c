@@ -42,16 +42,14 @@ static int cmd_faketemp(const char *args[])
 	}
 
 	for (i = 0; i < 3 && args[i]; i++) {
-		int sign = 1, val;
+		int val;
 
-		/* accept negative, and at most one decimal */
-		if (args[i][0] == '-')
-			sign = -1, args[i]++;
+		/* accept at most one decimal */
 		dot = fromdec(args[i], &val);
 		val <<= 16;
 		if (dot[0] == '.' && dot[1] >= '0' && dot[1] <= '9')
 			val += 0x10000 / 10 * (dot[1] - '0');
-		temp_fake_data[i].t = val * sign;
+		temp_fake_data[i].t = val;
 	}
 	return 0;
 }

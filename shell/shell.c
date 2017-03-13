@@ -214,8 +214,12 @@ int shell_interactive()
 
 const char *fromhex(const char *hex, int *v)
 {
-	int o = 0;
+	int o = 0, sign = 1;
 
+	if (hex && *hex == '-') {
+		sign = -1;
+		hex++;
+	}
 	for (; hex && *hex; ++hex) {
 		if (*hex >= '0' && *hex <= '9') {
 			o = (o << 4) + (*hex - '0');
@@ -228,14 +232,18 @@ const char *fromhex(const char *hex, int *v)
 		}
 	}
 
-	*v = o;
+	*v = o * sign;
 	return hex;
 }
 
 const char *fromdec(const char *dec, int *v)
 {
-	int o = 0;
+	int o = 0, sign = 1;
 
+	if (dec && *dec == '-') {
+		sign = -1;
+		dec++;
+	}
 	for (; dec && *dec; ++dec) {
 		if (*dec >= '0' && *dec <= '9') {
 			o = (o * 10) + (*dec - '0');
@@ -244,7 +252,7 @@ const char *fromdec(const char *dec, int *v)
 		}
 	}
 
-	*v = o;
+	*v = o * sign;
 	return dec;
 }
 
