@@ -3,7 +3,7 @@
 \usepackage{fullpage}
 \usepackage{pgf}
 \usepackage{tikz}
-\usepackage{hyperref}  % makes cross references and URLs clickable
+\usepackage[pdftex]{hyperref}  % makes cross references and URLs clickable
 \newcommand{\code}[1]{\texttt{#1}}
 \usepackage[overload]{textcase}
 \usepackage{listings}
@@ -87,22 +87,23 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 \newcommand{\hrefwrpc}[1]{
   \tts{\href{http://www.ohwr.org/projects/wr-cores/repository/entry/#1?rev=\wrpcrelease}{#1}}}
 
+\title{White Rabbit PTP Core User's Manual}
+\author{Grzegorz Daniluk \\Dimitrios Lampridis \hfill CERN (BE-CO-HT)}
+
 \begin{document}
 \input{version.tex}
-\title{White Rabbit PTP Core User's Manual}
-\author{Grzegorz Daniluk\\ CERN BE-CO-HT}
 
+\makeatletter
+\hypersetup{pdftitle={\@title},pdfauthor={\@author}}
 \raggedright
-{\LARGE {\bf White Rabbit PTP Core User's Manual}}\\[0.2 cm]
+{\LARGE\bf\@title}\\[0.2 cm]
 \hrule height 4pt \vspace{0.1cm}
-\raggedleft
-{\large \today ~ (\gitrevinfo)}\\
-{\large Building and Running}\\
+\large\gitrevinfo\hfill\today\\
 \vspace*{\fill}
-\raggedright
-{\large Grzegorz Daniluk (CERN BE-CO-HT)}\\
+\large\@author\\
 \hrule height 2pt
 \justify
+\makeatother
 
 \newpage
 
