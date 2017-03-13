@@ -1,4 +1,4 @@
-\subsection{Fabric interface}
+\subsubsection{Fabric interface}
 \label{sec:wrpc_fabric}
 
 %\begin{figure}[ht]
@@ -117,7 +117,7 @@ WRPC and user-defined module doesn't care about it. The Ethernet frame received
 from the WR Fabric interface may contain additional OOB data suffixed. It has to
 be received (acknowledged) by the user-defined module, but can be simply discarded.
 
-\subsubsection{Examples}
+\newparagraph{Examples}
 Figure \ref{fig:fabric:simple_tx} shows a very simple WR Fabric cycle. The WRF
 Source of user-defined module sends there an Ethernet frame containing even
 number of bytes.
@@ -207,7 +207,7 @@ immediately break the cycle. This situation is presented in figure
     from the WRF Sink.
 \end{enumerate}
 
-\subsubsection{SystemVerilog model}
+\newparagraph{SystemVerilog model}
 The SystemVerilog simulation model of the WR Fabric interface (both WRF Source and 
 WRF Sink) can be found in the \emph{wr-cores} git repository
 (git://ohwr.org/hdl-core-lib/wr-cores.git) and consists of the files:

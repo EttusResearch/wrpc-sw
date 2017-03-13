@@ -19,6 +19,73 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{multirow}
+\newcommand{\newparagraph}[1]{\paragraph{#1}\mbox{}\\}
+
+\definecolor{wrlblue}{RGB}{165,195,210}
+\definecolor{wrlgray}{RGB}{209,211,212}
+
+\newcommand{\multirowpar}[2]{
+  \multirow{#1}{\hsize}{\parbox{\hsize}{\strut\raggedright#2\strut}}
+}
+
+\newcommand{\hdltablesection}[1]{
+  \multicolumn{4}{|c|}{\bf\small#1}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{M}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}\ttsmall}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{D}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}\ttsmall}m{#1}}
+  
+\newenvironment{hdlparamtable}{
+  \let\underscore\_
+  \renewcommand{\_}{\underscore\allowbreak}
+  \setlength{\extrarowheight}{1pt}
+  \begin{center}
+    \begin{longtable}{|M{.2\textwidth}|C{.09\textwidth}|D{.11\textwidth}|L{.5\textwidth}|}
+      \firsthline
+      \rowcolor{wrlblue}
+      \bf{name} & \bf{type} & \bf{default} & \bf{description}\\
+      \hline
+      \endhead
+}{
+  \lasthline
+    \end{longtable}
+  \end{center}
+}
+
+\newenvironment{hdlporttable}{
+  \let\underscore\_
+  \renewcommand{\_}{\underscore\allowbreak}
+  \setlength{\extrarowheight}{1pt}
+  \begin{center}
+    \begin{longtable}{|M{.25\textwidth}|C{.05\textwidth}|D{.05\textwidth}|L{.55\textwidth}|}
+      \firsthline
+      \rowcolor{wrlblue}
+      \bf{name} & \bf{dir} & \bf{size} & \bf{description}\\
+      \hline
+      \endhead
+}{
+  \lasthline
+    \end{longtable}
+  \end{center}
+}
+
+\def \wrpcrelease {for-tests}
+%\def \wrpcrelease {wrpc-v4.0}
+
+\newcommand{\tts}[1]{
+  \texttt{\small{#1}}}
+
+% same as \tts{}, without argument
+\newcommand{\ttsmall}{\ttfamily\small}
+
+\newcommand{\hrefwrpc}[1]{
+  \tts{\href{http://www.ohwr.org/projects/wr-cores/repository/entry/#1?rev=\wrpcrelease}{#1}}}
 
 \begin{document}
 \input{version.tex}
@@ -1285,6 +1352,14 @@ Fabric interface. Currently, class 0 is used for all frames that should be
 processed by the WRPC, class 6 is used for Streamers traffic, class 7 is used
 for Etherbone traffic (see HDL documentation for boards HDL modules and
 selection between Streamers, Etherbone and Plain modes).
+
+% ##########################################################################
+\newpage
+
+\input{HDLdoc/intro}
+\input{HDLdoc/wrc_core}
+\input{HDLdoc/wrc_platform}
+\input{HDLdoc/wrc_board}
 
 % ##########################################################################
 \newpage

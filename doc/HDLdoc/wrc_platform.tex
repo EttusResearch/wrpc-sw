@@ -1,4 +1,4 @@
-\section{Platform Support Packages}
+\subsection{Platform Support Packages}
 \label{sec:hdl_platform}
 
 The White Rabbit (WR) PTP core project provides platform support packages (PSPs) for Altera and
@@ -9,12 +9,12 @@ components for the WR PTP core (PHY, PLLs, etc.) in one go, without having to de
 implementation details, using a setup that has been tested and is known to work well on the
 supported FPGAs.
 
-\subsection{Common}
+\subsubsection{Common}
 \label{sec:hdl_platform_common}
 
 This section describes the generic parameters and ports which are common to all provided PSPs.
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 
 \begin{hdlparamtable}
   g\_with\_external\_clock\_input & boolean & false & Select whether to
@@ -43,7 +43,7 @@ these parameters.
   and also multiplied to 125MHz.
 \end{description}
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 
 \begin{hdlporttable}
   areset\_n\_i & in & 1 & asynchronous reset (active low)\\
@@ -123,7 +123,7 @@ these parameters.
   ext\_ref\_rst\_i & in & 1 & \\
 \end{hdlporttable}
 
-\subsection{Altera}
+\subsubsection{Altera}
 \label{sec:hdl_platform_altera}
 
 The Altera PSP currently supports the Arria V family of FPGAs.
@@ -139,7 +139,7 @@ also Section~\ref{sec:hdl_board_vfchd}):\\\hrefwrpc{board/vfchd/xwrc\_board\_vfc
 This section describes the generic parameters and ports which are specific to the Altera
 PSP. Parameters and ports common to all PSPs are described in Section~\ref{sec:hdl_platform_common}.
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 
 \begin{hdlparamtable}
   g\_fpga\_family & string & arria5 & Defines the family/model of Altera
@@ -150,7 +150,7 @@ PSP. Parameters and ports common to all PSPs are described in Section~\ref{sec:h
   but this generic can be used to override it\\
 \end{hdlparamtable}
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 
 \begin{hdlporttable}
   \hdltablesection{Interface with SFP}\\
@@ -162,7 +162,7 @@ PSP. Parameters and ports common to all PSPs are described in Section~\ref{sec:h
   \linebreak sfp\_rx\_i\linebreak & in & 1 &\\
 \end{hdlporttable}
 
-\subsection{Xilinx}
+\subsubsection{Xilinx}
 \label{sec:hdl_platform_xilinx}
 
 The Xilinx PSP currently supports the Spartan 6 family of FPGAs.
@@ -182,7 +182,7 @@ This section describes the generic parameters and ports which are
 specific to the Xilinx PSP. Parameters and ports common to all PSPs
 are described in Section~\ref{sec:hdl_platform_common}.
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 
 \begin{hdlparamtable}
   g\_fpga\_family & string & spartan6 & Defines the family/model of Xilinx
@@ -192,7 +192,7 @@ are described in Section~\ref{sec:hdl_platform_common}.
   be set to '0' for synthesis\\
 \end{hdlparamtable}
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 
 \begin{hdlporttable}
   clk\_125m\_gtp\_p\_i & in & 1 & \multirowpar{2}{125MHz GTP

@@ -1,4 +1,4 @@
-\section{Board Support Packages}
+\subsection{Board Support Packages}
 \label{sec:hdl_board}
 
 The White Rabbit (WR) PTP core project provides board support packages (BSPs) for the following
@@ -28,7 +28,7 @@ Section~\ref{sec:hdl_platform}). For users who need more control and flexibility
 it is suggested to use the BSP as a reference, and to consider instantiating directly the respective
 PSP for their FPGA family.
 
-\subsection{Common}
+\subsubsection{Common}
 \label{sec:hdl_board_common}
 
 Most of the generic parameters and ports of the board-common module map directly to those of the
@@ -56,7 +56,7 @@ tables short and to the point. Users interested in studying the board-common mod
 their own BSP, can find the board-common module under:
 \\\hrefwrpc{board/common/xwrc\_board\_common.vhd}
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 \label{sec:hdl_board_common_param}
 
 \begin{hdlparamtable}
@@ -86,7 +86,7 @@ their own BSP, can find the board-common module under:
   fabric interface of WRPC \tts{[PLAIN/STREAMERS/ETHERBONE]}\\
 \end{hdlparamtable}
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 \label{sec:hdl_board_common_ports}
 
 \begin{hdlporttable}
@@ -260,7 +260,7 @@ their own BSP, can find the board-common module under:
   link\_ok\_o & out & 1 & Link status indicator\\
 \end{hdlporttable}
 
-\subsection{SPEC}
+\subsubsection{SPEC}
 \label{sec:hdl_board_spec}
 
 The SPEC BSP provides a ready-to-use WRPC wrapper for the
@@ -281,13 +281,13 @@ An example (VHDL) instantiation of this module can be found in the SPEC WRPC ref
 This section describes the generic parameters and ports which are specific to the SPEC BSP.
 Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_board_common}.
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 
 No additional generic parameters are declared in the SPEC BSP. See
 Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters.
 
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 
 \begin{hdlporttable}
   \hdltablesection{Clocks and resets}\\
@@ -355,7 +355,7 @@ Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters
   flash\_miso\_i & in  & 1 & Flash SPI MISO\\
 \end{hdlporttable}
 
-\subsection{SVEC}
+\subsubsection{SVEC}
 \label{sec:hdl_board_svec}
 
 The SVEC BSP provides a ready-to-use WRPC wrapper for the
@@ -376,12 +376,12 @@ An example (VHDL) instantiation of this module can be found in the SVEC WRPC ref
 This section describes the generic parameters and ports which are specific to the SVEC BSP.
 Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_board_common}.
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 
 No additional generic parameters are declared in the SVEC BSP. See
 Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters.
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 
 \begin{hdlporttable}
   \hdltablesection{Clocks and resets}\\
@@ -453,7 +453,7 @@ Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters
   spi\_miso\_i & in  & 1 & Flash SPI MISO\\
 \end{hdlporttable}
 
-\subsection{VFC-HD}
+\subsubsection{VFC-HD}
 \label{sec:hdl_board_vfchd}
 
 The VFC-HD BSP provides a ready-to-use WRPC wrapper for the
@@ -474,7 +474,7 @@ An example (VHDL) instantiation of this module can be found in the VFC-HD WRPC r
 This section describes the generic parameters and ports which are specific to the VFC-HD BSP.
 Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_board_common}.
 
-\subsubsection{Generic parameters}
+\newparagraph{Generic parameters}
 
 \begin{hdlparamtable}
   g\_pcs16\_bit & boolean & false & Altera Arria V FPGAs provide the possibility
@@ -482,7 +482,7 @@ Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_bo
   the 8bit PCS. Currently, 16bit PCS is not supported for Arria V.\\
 \end{hdlparamtable}
 
-\subsubsection{Ports}
+\newparagraph{Ports}
 
 \begin{hdlporttable}
   \hdltablesection{Clocks and resets}\\
