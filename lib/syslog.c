@@ -32,6 +32,8 @@ void syslog_init(void)
 static int cmd_syslog(const char *args[])
 {
 	char b1[32], b2[32];
+	char *p;
+	int i;
 
 	if (args[0] && !strcmp(args[0], "off")) {
 		syslog_addr.daddr = 0;
@@ -39,7 +41,18 @@ static int cmd_syslog(const char *args[])
 	}
 	if (!args[1]) {
 		pp_printf("use: syslog <ipaddr> <macaddr> (or just \"off\"\n");
+		pp_printf(" or  syslog msg  ....\n");
 		return -1;
+	}
+	if (!strcmp(args[0], "msg")) {
+		for (i = 0; args[i+1]; i++)
+			;
+		/* now, args[i] is the last argument; undo previous nulls */
+		for (p = (void *)args[i]; p > args[1]; p--) /* not "const"! */
+			if (*p == '\0')
+				*p = ' ';
+		syslog_report(args[1]);
+		return 0;
 	}
 	decode_ip(args[0], (void *)&syslog_addr.daddr);
 	decode_mac(args[1], syslog_mac);
@@ -207,7 +220,7 @@ send:
 }
 
 /* A report tool for others to call (used by ltest at least) */
-void syslog_report(char *msg)
+void syslog_report(const char *msg)
 {
 	char buf[256];
 	unsigned char ip[4];
