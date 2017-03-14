@@ -706,6 +706,7 @@ wrc# init boot
 You should see log messages that confirm the execution of the initialization
 script:
 
+\begin{minipage}{\textwidth}
 \begin{lstlisting}
 executing: ptp stop
 PTP stop
@@ -721,6 +722,7 @@ Slave Only, clock class set to 255
 executing: ip set 192.168.1.5
 IP-address: 192.168.1.5 (static assignment)
 \end{lstlisting}
+\end{minipage}
 
 Now you should have the WR PTP Core running in WR Slave mode.\\
 
@@ -977,13 +979,15 @@ Optionally restart the PTP:
  WR-WRPC-MIB::wrpcPtpConfigRestart.0 = INTEGER: restartPtpSuccessful(100)
 \end{lstlisting}
 
-Simple verification of performed actions:
+Simple verification of performed actions:\\
+\begin{minipage}{\textwidth}
 \begin{lstlisting}
  wrc# sfp show
  1: PN:AXGE-1254-0531   dTx:   180625 dRx:   148451 alpha: 72169888
  2: PN:AXGE-3454-0531   dTx:   180625 dRx:   148451 alpha: -73685416
  3: PN:NEW-SFP          dTx:     1111 dRx:     2222 alpha:     3333
 \end{lstlisting}
+\end{minipage}
 
 The same add can also be achieved by performing \texttt{sfp add} command in
 the WRPC's console:
@@ -1053,7 +1057,8 @@ using the format:  ``\texttt{<}\textit{level}\texttt{>} \textit{Jan 01 00:00:00 
 where \textit{level} is usually 14 (type ``user'', priority ``info'')
 and \textit{msg} is a free-format message strings.
 The \textit{syslog} client sends strings to the server in the following
-situations:
+situations:\\
+
 \begin{longtable}{  p{6.5cm}  p{9cm} }
 
 \textit{ Boot time } &
@@ -1105,7 +1110,6 @@ situations:
         until all temperatures are under-threshold. When temperature
         is recovered the node sends ``\texttt{Temperature ok:}'' followed by
         the current list of temperatures.\\
-
 \end{longtable}
 \end{sloppypar}
 
