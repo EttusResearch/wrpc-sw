@@ -395,7 +395,7 @@ config PRINTF_IS_NONE
 	  but not suited for wrpc-sw. See pp_printf/README for details.
 endchoice
 
-config ASSERT_ENA
+config ASSERT
 	bool "Build assertion checks in the code"
 	depends on DEVELOPER
 	default y
@@ -534,8 +534,3 @@ config PPSI
 	boolean
 	help
 	  Select this option for the ppsi engine (now only option)
-
-config ASSERT
-	bool
-	default n if DEVELOPER && !ASSERT_ENA
-	default y
