@@ -225,6 +225,25 @@ config LEGACY_EEPROM
 	boolean
 	default !SDB_STORAGE
 
+config VLAN
+	boolean "Filter and rx/tx frames in a VLAN (as opposed to untagged)"
+
+config VLAN_NR
+	depends on VLAN
+	int "Use this VLAN number for filter/tx/rx"
+
+config VLAN_1_FOR_CLASS7
+	depends on VLAN
+	int "Route this VLAN to fabric class 7 (Etherbone)"
+
+config VLAN_2_FOR_CLASS7
+	depends on VLAN
+	int "Route this VLAN too to fabric class 7 (Etherbone)"
+
+config VLAN_FOR_CLASS6
+	depends on VLAN
+	int "Route this VLAN too to fabric class 6 (Streamer/NIC)"
+
 config WR_NODE_SIM
 	depends on WR_NODE
 	boolean "Build simple software for test of WR PTP Core in simulation"
@@ -457,27 +476,6 @@ config FAKE_TEMPERATURES
 	help
 	  The option adds also a "faketemp" command, used to set
 	  the fake temperatures: e.g. "faketemp 120 -10 50"
-
-config VLAN
-	depends on DEVELOPER
-	boolean "Filter and rx/tx frames in a VLAN (as opposed to untagged)"
-
-config VLAN_NR
-	depends on VLAN
-	int "Use this VLAN number for filter/tx/rx"
-
-config VLAN_1_FOR_CLASS7
-	depends on VLAN
-	int "Route this VLAN to fabric class 7 (Etherbone)"
-
-config VLAN_2_FOR_CLASS7
-	depends on VLAN
-	int "Route this VLAN too to fabric class 7 (Etherbone)"
-
-config VLAN_FOR_CLASS6
-	depends on VLAN
-	int "Route this VLAN too to fabric class 6 (Streamer/NIC)"
-
 
 config LATENCY_PROBE
 	depends on DEVELOPER
