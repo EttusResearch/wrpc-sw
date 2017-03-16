@@ -30,6 +30,13 @@ config TEMP_POLL_INTERVAL
 	int
 	default 15
 
+config TEMP_HIGH_THRESHOLD
+	int
+	default 70
+
+config TEMP_HIGH_RAPPEL
+	int
+	default 60
 config PLL_VERBOSE
 	boolean
 	default y if WR_SWITCH
@@ -317,12 +324,10 @@ config TEMP_POLL_INTERVAL
 
 config TEMP_HIGH_THRESHOLD
 	depends on DEVELOPER && WR_NODE && SYSLOG
-	default 70
 	int "Threshold for temperature: tell syslog if higher"
 
 config TEMP_HIGH_RAPPEL
 	depends on DEVELOPER && WR_NODE && SYSLOG
-	default 60
 	int "Remember over-temperature every that many seconds"
 
 config CMD_LL
