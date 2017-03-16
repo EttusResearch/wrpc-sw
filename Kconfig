@@ -476,14 +476,14 @@ config SNMP_VERBOSE
 	  This enables some more diagnostic messages. Normally off.
 
 config FAKE_TEMPERATURES
-	depends on DEVELOPER
+	depends on DEVELOPER && WR_NODE
 	boolean "Offer an array of 3 fake temperatures, for testing"
 	help
 	  The option adds also a "faketemp" command, used to set
 	  the fake temperatures: e.g. "faketemp 120 -10 50"
 
 config LATENCY_PROBE
-	depends on DEVELOPER
+	depends on DEVELOPER && WR_NODE
 	bool "Build the latency probe mechanism (send/recv)"
 	help
 	  The latency prober sends two frames to broadcast and
