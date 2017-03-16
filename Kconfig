@@ -213,6 +213,7 @@ config FLASH_INIT
 	default n
 
 config AUX_DIAG
+	depends on WR_NODE
 	default n
 	boolean "Add support for auxiliary diagnostics registers"
 	help
