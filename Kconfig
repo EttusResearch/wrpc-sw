@@ -5,7 +5,6 @@ mainmenu "WR PTP Core software configuration"
 config WR_SWITCH
 	bool "Build rt_cpu.bin, for the WR-Switch FPGA"
 	default n
-	select UART
 
 config WR_NODE
 	bool
@@ -102,11 +101,6 @@ config PPSI
 	depends on WR_NODE
 	boolean
 	default y
-
-config UART
-	boolean
-	default y if EMBEDDED_NODE
-	default n
 
 config W1
 	depends on EMBEDDED_NODE
@@ -423,25 +417,6 @@ config DETERMINISTIC_BINARY
 	  changes.
 
 	  If in doubt, say No.
-
-config UART
-	boolean "Use hardware uart (and/or vuart if available)"
-	depends on (DEVELOPER && EMBEDDED_NODE) || WR_SWITCH
-	help
-	  This option selects the serial driver, connected to either
-	  the USB socket, or "vuart" (software fifo) or both, according
-	  to how the gateware is built. 
-
-config UART_SW
-	depends on DEVELOPER && EMBEDDED_NODE
-	default !UART
-	boolean "Use software uart"
-	help
-	  The software uart is made up of two circular buffers. It can
-	  be used either as an alternative to the harwdare UART or as
-	  an addition. If the option is turned on, ppsi log messages
-	  are routed to the software uart. The interactive wrpc shell
-	  and diagnostics run on the hardware UART if available.
 
 config NET_VERBOSE
 	depends on DEVELOPER && WR_NODE
