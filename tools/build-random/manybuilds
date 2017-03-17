@@ -1,0 +1,51 @@
+#!/bin/bash
+
+mkdir -p ok-configs
+declare -A ok
+
+touch ok-configs/empty
+for n in ok-configs/*; do
+    S=$(md5sum $n | awk '{print $1}')
+    ok[$S]=y
+done
+rm ok-configs/empty
+
+while true; do
+    D=$(mktemp build.XXXXXX); rm $D; mkdir $D
+    make randconfig 2>&1 | grep KCONFIG_SEED | tee /dev/tty > $D/seed
+    S=$(md5sum .config | awk '{print $1}')
+    if [ "${ok[$S]}" = y ]; then
+        echo "duplicate; skipping"
+	rm -rf $D
+        continue
+    fi
+    cp .config $D/config
+    make -s clean> $D/clean 2>&1 
+    rm ppsi/.config
+    make  -j8 > $D/build 2>&1
+    if [ $? -eq 0 ]; then
+        if grep -q warning: $D/build; then
+            echo "Warning"
+            make -s savedefconfig
+            mv defconfig $D
+            mv $D warn-$D
+        else
+            echo "Ok"
+            cp $D/config ok-configs/$D
+            S=$(md5sum ok-configs/$D | awk '{print $1}')
+            ok[$S]=y
+            rm -rf $D
+        fi
+    else
+        echo "Failed"
+        make -s savedefconfig
+        mv defconfig $D
+        mv $D ko-$D
+        echo ko-$D
+    fi
+    sleep .5
+    echo ""
+done
+
+
+
