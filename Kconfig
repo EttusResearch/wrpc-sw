@@ -247,7 +247,7 @@ config VLAN_FOR_CLASS6
 	int "Route this VLAN too to fabric class 6 (Streamer/NIC)"
 
 config WR_NODE_SIM
-	depends on WR_NODE
+	depends on WR_NODE && !HOST_PROCESS
 	boolean "Build simple software for test of WR PTP Core in simulation"
 	default n
 	help
