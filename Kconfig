@@ -152,7 +152,7 @@ config SYSLOG
 	  to enable it.  The special "off" ipaddr disables syslog.
 
 config SNMP
-	depends on IP
+	depends on IP && !HOST_PROCESS
 	default y
 	boolean "Mini SNMP responder"
 
