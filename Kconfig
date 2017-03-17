@@ -264,6 +264,7 @@ config WR_NODE_SIM
 
 comment "wrpc-sw is tainted if you change the following options"
 config DEVELOPER
+	depends on WR_NODE
 	bool "Advanced configurations, only for developers"
 	help
 	  The following options are new features under testing, or
@@ -272,7 +273,7 @@ config DEVELOPER
 	  you are a developer of wrpc-sw.
 
 config PPSI_FORCE_CONFIG
-	depends on DEVELOPER && WR_NODE       
+	depends on DEVELOPER
 	bool "Reconfigure ppsi from wrpc-sw at every build"
 	default y
 	help
@@ -282,11 +283,11 @@ config PPSI_FORCE_CONFIG
 	  peer-to-peer here, the change is propagated to the ppsi build.
 
 config HOST_PROCESS
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 	boolean "Build as a host process, to develop/debug network"
 
 config RAMSIZE
-	depends on DEVELOPER && EMBEDDED_NODE
+	depends on DEVELOPER && LM32
 	int "Size of the RAM in the FPGA for this program"
 	default 90112
 	help
@@ -296,7 +297,7 @@ config RAMSIZE
 	  choose your preferred value here.
 
 config STACKSIZE
-	depends on DEVELOPER && EMBEDDED_NODE
+	depends on DEVELOPER && LM32
 	int "Size of the stack area needed by this program"
 	default 2048
 	help
@@ -305,7 +306,7 @@ config STACKSIZE
 	  at run time. (However, we have a detector for overflows).
 
 config PRINT_BUFSIZE
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 	int "Size for the temporary output string of pp_printf"
 	default 128
 	help
@@ -314,19 +315,19 @@ config PRINT_BUFSIZE
 	  in a single call to printf.
 
 config TEMP_POLL_INTERVAL
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 	int "Poll interval, in seconds, for temperature sensors"
 
 config TEMP_HIGH_THRESHOLD
-	depends on DEVELOPER && WR_NODE && SYSLOG
+	depends on DEVELOPER && SYSLOG
 	int "Threshold for temperature: tell syslog if higher"
 
 config TEMP_HIGH_RAPPEL
-	depends on DEVELOPER && WR_NODE && SYSLOG
+	depends on DEVELOPER && SYSLOG
 	int "Remember over-temperature every that many seconds"
 
 config CMD_LL
-	depends on DEVELOPER && EMBEDDED_NODE
+	depends on DEVELOPER && LM32
 	bool "Build low-level commands for development/testing"
 	help
 	  This enables low-level commands: "devmem" to read/write memory
@@ -336,13 +337,13 @@ config CMD_LL
 	  during the initial handshake
 
 config FLASH_INIT
-	depends on DEVELOPER && EMBEDDED_NODE
+	depends on DEVELOPER && LM32
 	default y
 	boolean "Read init commands from flash storage"
 
 # CHECK_RESET for switch and node
 config CHECK_RESET
-	depends on DEVELOPER && !HOST_PROCESS
+	depends on DEVELOPER && LM32 || WR_SWITCH
 	bool "Print a stack trace if reset happens"
 	help
 	  If the CPU is following a NULL pointer, the program will
@@ -351,7 +352,7 @@ config CHECK_RESET
 	  then clears the stack (for next time) and restarts again.
 
 config SPLL_FIFO_LOG
-	depends on DEVELOPER && !HOST_PROCESS
+	depends on DEVELOPER && LM32
 	bool "Add a circular buffer for spll logging, used by tools/wrpc-dump"
 	help
 	  This option addrs 256 bytes to the wrpc bynary, to log
@@ -361,7 +362,7 @@ config SPLL_FIFO_LOG
 
 choice
 	prompt "Implementation of pp_printf"
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 
 config PRINTF_IS_XINT
 	bool "hex-and-int"
@@ -406,7 +407,7 @@ config ASSERT
 	  with no Kconfig -- and it does the same, unconditionally.
 
 config DETERMINISTIC_BINARY
-	depends on DEVELOPER && EMBEDDED_NODE
+	depends on DEVELOPER || WR_SWITCH
 	boolean "Build a binary that is the same every time"
 	help
 	  This option is used to #ifdef __DATE__ and __TIME__ strings
@@ -419,7 +420,7 @@ config DETERMINISTIC_BINARY
 	  If in doubt, say No.
 
 config NET_VERBOSE
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 	boolean "Extra verbose messages for networking"
 	help
 	  This is mainly a debug tool, to be left off unless you hack
@@ -439,7 +440,7 @@ config PFILTER_VERBOSE
 	  A debug tool for people changing the packet filter rules
 
 config WRC_VERBOSE
-	depends on DEVELOPER
+	depends on DEVELOPER || WR_SWITCH
 	boolean "More verbose messages in wr core"
 	default y if WR_SWITCH
 	help
@@ -452,14 +453,14 @@ config SNMP_VERBOSE
 	  This enables some more diagnostic messages. Normally off.
 
 config FAKE_TEMPERATURES
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 	boolean "Offer an array of 3 fake temperatures, for testing"
 	help
 	  The option adds also a "faketemp" command, used to set
 	  the fake temperatures: e.g. "faketemp 120 -10 50"
 
 config LATENCY_PROBE
-	depends on DEVELOPER && WR_NODE
+	depends on DEVELOPER
 	bool "Build the latency probe mechanism (send/recv)"
 	help
 	  The latency prober sends two frames to broadcast and
