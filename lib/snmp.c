@@ -12,8 +12,9 @@
  * Each OID is divided into the limb and twig part.
  * The twig part can be handled as a group or a table
  */
-#include <string.h>
+#include <wrc.h>
 #include <wrpc.h>
+#include <string.h>
 #include <minic.h>
 #include <limits.h>
 
@@ -29,10 +30,6 @@
 #include "sfp.h"
 
 #include "storage.h"
-
-#ifndef htons
-#define htons(x) x
-#endif
 
 #define ASN_BOOLEAN	((u_char)0x01)
 #define ASN_INTEGER	((u_char)0x02)
