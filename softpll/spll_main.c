@@ -16,6 +16,12 @@
 
 #undef WITH_SEQUENCING
 
+#ifdef CONFIG_DAC_LOG
+extern void spll_log_dac(int y);
+#else
+static inline void spll_log_dac(int y) {}
+#endif
+
 void mpll_init(struct spll_main_state *s, int id_ref,
 		      int id_out)
 {
@@ -130,6 +136,8 @@ int mpll_update(struct spll_main_state *s, int tag, int source)
 		y = pi_update((spll_pi_t *)&s->pi, err);
 		SPLL->DAC_MAIN = SPLL_DAC_MAIN_VALUE_W(y)
 			| SPLL_DAC_MAIN_DAC_SEL_W(s->dac_index);
+		if (s->dac_index == 0)
+			spll_log_dac(y);
 
 		spll_debug(DBG_MAIN | DBG_REF, s->tag_ref + s->adder_ref, 0);
 		spll_debug(DBG_MAIN | DBG_TAG, s->tag_out + s->adder_out, 0);

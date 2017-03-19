@@ -349,6 +349,14 @@ config CMD_LL
 	  on the master, because they are just sent to the slave
 	  during the initial handshake
 
+config DAC_LOG
+	depends on DEVELOPER && EMBEDDED_NODE
+	bool "Be able send DAC values through UDP"
+	help
+	  If you want to see the dac output, input to the VCXO main
+	  oscillator, enable this. You'll have a "daclog" shell command
+	  to set ipaddress and mac of the target host. UDP port is 1050.
+
 config FLASH_INIT
 	depends on DEVELOPER && LM32
 	default y
