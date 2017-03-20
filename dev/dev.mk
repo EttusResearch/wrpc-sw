@@ -1,6 +1,8 @@
 
 # Those hardware-specific files should not be built for the host, even if
 # most of them give no error no warning. The host has different implementations
+obj-$(CONFIG_LM32) += dev/uart.o
+
 obj-$(CONFIG_EMBEDDED_NODE) += \
 	dev/endpoint.o \
 	dev/ep_pfilter.o \
@@ -24,8 +26,6 @@ obj-$(CONFIG_SDB_STORAGE) += dev/sdb-storage.o
 obj-$(CONFIG_W1) +=		dev/w1.o	dev/w1-hw.o	dev/w1-shell.o
 obj-$(CONFIG_W1) +=		dev/w1-temp.o	dev/w1-eeprom.o
 obj-$(CONFIG_W1) +=		dev/temp-w1.o
-obj-$(CONFIG_UART) +=		dev/uart.o
-obj-$(CONFIG_UART_SW) +=	dev/uart-sw.o
 
 obj-$(CONFIG_FAKE_TEMPERATURES) += dev/fake-temp.o
 

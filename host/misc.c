@@ -73,10 +73,6 @@ void uart_init_hw(void)
 
 }
 
-void uart_init_sw(void)
-{ printf("%s\n", __func__); }
-
-
 void uart_exit(int i)
 {
 	system("stty sane");

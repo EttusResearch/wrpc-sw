@@ -25,10 +25,6 @@ void uart_init_hw()
 	uart->BCR = CALC_BAUD(UART_BAUDRATE);
 }
 
-void __attribute__((weak)) uart_init_sw(void)
-{}
-
-
 void uart_write_byte(int b)
 {
 	if (b == '\n')
@@ -61,7 +57,3 @@ int uart_read_byte(void)
 
 int puts(const char *s)
 	__attribute__((alias("uart_write_string")));
-
-/* The next alias is for ppsi log messages, that go to sw_uart if built */
-int uart_sw_write_string(const char *s)
-	__attribute__((alias("uart_write_string"), weak));

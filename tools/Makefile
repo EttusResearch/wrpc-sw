@@ -3,7 +3,7 @@ SDBFS ?= no
 
 CFLAGS = -Wall -ggdb -I../include
 LDFLAGS = -lutil
-ALL    = genraminit genramvhd genrammif wrpc-uart-sw
+ALL    = genraminit genramvhd genrammif
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder
 ALL   += wrpc-dump mapper

@@ -49,7 +49,6 @@ static void wrc_initialize(void)
 	uint8_t mac_addr[6];
 
 	sdb_find_devices();
-	uart_init_sw();
 	uart_init_hw();
 
 	pp_printf("WR Core: starting up...\n");
@@ -166,7 +165,6 @@ void init_hw_after_reset(void)
 {
 	/* Ok, now init the devices so we can printf and delay */
 	sdb_find_devices();
-	uart_init_sw();
 	uart_init_hw();
 	timer_init(1);
 }
