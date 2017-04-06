@@ -151,6 +151,18 @@ config SYSLOG
 	  The user (or init script) must use "syslog <ipaddr> <macaddr>"
 	  to enable it.  The special "off" ipaddr disables syslog.
 
+config PUTS_SYSLOG
+	depends on SYSLOG
+	boolean "Sent puts (i.e. printf) to syslog too"
+	help
+	  This allows logging the various warning and error messages
+	  that normally go to the console alone, where nobody is looking
+	  in a deployed system.  Output from interactive commands is
+	  not sent to syslog, but self-timed diagnostic (stat, gui, verbose)
+	  will reach syslog anyways, if an interactive user enables them.
+	  Unfortunately, "stat" will reach syslog as several short strings,
+	  and "gui" is full of escape sequences.
+
 config SNMP
 	depends on IP && !HOST_PROCESS
 	default y

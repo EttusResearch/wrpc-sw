@@ -19,6 +19,7 @@ obj-$(CONFIG_WR_NODE) += \
 	dev/pps_gen.o
 
 obj-$(CONFIG_WR_SWITCH) += dev/timer-wrs.o dev/ad9516.o
+obj-$(CONFIG_PUTS_SYSLOG) += dev/puts-syslog.o
 
 obj-$(CONFIG_LEGACY_EEPROM) += dev/eeprom.o
 obj-$(CONFIG_SDB_STORAGE) += dev/sdb-storage.o
