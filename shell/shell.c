@@ -21,7 +21,6 @@
 
 #define SH_MAX_LINE_LEN 80
 #define SH_MAX_ARGS 8
-#define SH_ENVIRON_SIZE 256
 
 /* interactive shell state definitions */
 
