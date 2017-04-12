@@ -124,13 +124,3 @@ void spll_enable_tagger(int channel, int enable)
 	pll_verbose("%s: ch %d, OCER 0x%x, RCER 0x%x\n", __FUNCTION__, channel, SPLL->OCER, SPLL->RCER);
 }
 
-const char *stringlist_lookup(const struct stringlist_entry *slist, int id)
-{
-	int i;
-
-	for(i=0; slist[i].str; i++) {
-		if(slist[i].id == id)
-			return slist[i].str;
-	}
-	return "<unknown>";
-}

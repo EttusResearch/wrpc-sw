@@ -50,11 +50,6 @@ typedef struct {
 	int lock_changed;
 } spll_lock_det_t;
 
-struct stringlist_entry {
-	int id;
-	const char *str;
-};
-
 /* initializes the PI controller state. Currently almost a stub. */
 void pi_init(spll_pi_t *pi);
 
@@ -66,7 +61,5 @@ void ld_init(spll_lock_det_t *ld);
 int ld_update(spll_lock_det_t *ld, int y);
 
 void spll_enable_tagger(int channel, int enable);
-
-const char *stringlist_lookup(const struct stringlist_entry *slist, int id);
 
 #endif // __SPLL_COMMON_H
