@@ -23,16 +23,10 @@ struct spll_main_state {
 
 	int adder_ref, adder_out, tag_ref, tag_out, tag_ref_d, tag_out_d;
 
-	// tag sequencing stuff
-	uint32_t seq_ref, seq_out;
-	int match_state;
-	int match_seq;
-
 	int phase_shift_target;
 	int phase_shift_current;
 	int id_ref, id_out;	/* IDs of the reference and the output channel */
 	int sample_n;
-	int delock_count;
 	int dac_index;
 	int enabled;
 };

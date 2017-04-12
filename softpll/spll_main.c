@@ -14,10 +14,6 @@
 
 #define MPLL_TAG_WRAPAROUND 100000000
 
-#define MATCH_NEXT_TAG 0
-#define MATCH_WAIT_REF 1
-#define MATCH_WAIT_OUT 2
-
 #undef WITH_SEQUENCING
 
 void mpll_init(struct spll_main_state *s, int id_ref,
@@ -37,7 +33,6 @@ void mpll_init(struct spll_main_state *s, int id_ref,
 #else
 #error "Please set CONFIG for wr switch or wr node"
 #endif
-	s->delock_count = 0;
 	s->enabled = 0;
 
 	/* Freqency branch lock detection */
@@ -63,9 +58,6 @@ void mpll_start(struct spll_main_state *s)
 	s->tag_out = -1;
 	s->tag_ref_d = -1;
 	s->tag_out_d = -1;
-	s->seq_ref = 0;
-	s->seq_out = 0;
-	s->match_state = MATCH_NEXT_TAG;
 
 	s->phase_shift_target = 0;
 	s->phase_shift_current = 0;

@@ -31,10 +31,8 @@ struct spll_helper_state {
 	int p_setpoint, tag_d0;
 	int ref_src;
 	int sample_n;
-	int delock_count;
 	spll_pi_t pi;
 	spll_lock_det_t ld;
-	spll_biquad_t precomp;
 };
 
 void helper_init(struct spll_helper_state *s, int ref_channel);
