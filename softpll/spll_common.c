@@ -93,24 +93,6 @@ void ld_init(spll_lock_det_t *ld)
 	ld->lock_changed = 0;
 }
 
-void lowpass_init(spll_lowpass_t *lp, int alpha)
-{
-	lp->y_d = 0x80000000;
-	lp->alpha = alpha;
-}
-
-int lowpass_update(spll_lowpass_t *lp, int x)
-{
-	if (lp->y_d == 0x80000000) {
-		lp->y_d = x;
-		return x;
-	} else {
-		int scaled = (lp->alpha * (x - lp->y_d)) >> 15;
-		lp->y_d = lp->y_d + (scaled >> 1) + (scaled & 1);
-		return lp->y_d;
-	}
-}
-
 /* Enables/disables DDMTD tag generation on a given (channel). 
 
 Channels (0 ... splL_n_chan_ref - 1) are the reference channels
@@ -140,33 +122,6 @@ void spll_enable_tagger(int channel, int enable)
 	}
 
 	pll_verbose("%s: ch %d, OCER 0x%x, RCER 0x%x\n", __FUNCTION__, channel, SPLL->OCER, SPLL->RCER);
-}
-
-void biquad_init(spll_biquad_t *bq, const int *coefs, int shift)
-{
-	memset(bq, 0, sizeof(spll_biquad_t));
-	memcpy(bq->coefs, coefs, 5 * sizeof(int));
-	bq->shift = shift;
-}
-
-int biquad_update(spll_biquad_t *bq, int x)
-{
-	register int y = 0;
-	
-	y += bq->coefs[0] * x;
-	y += bq->coefs[1] * bq->xd[0];
-	y += bq->coefs[2] * bq->xd[1];
-	y -= bq->coefs[3] * bq->yd[0];
-	y -= bq->coefs[4] * bq->yd[1];
-	y >>= bq->shift;
-	
-	bq->xd[1] = bq->xd[0];
-	bq->xd[0] = x;
-	
-	bq->yd[1] = bq->yd[0];
-	bq->yd[0] = y;
-	
-	return y;
 }
 
 const char *stringlist_lookup(const struct stringlist_entry *slist, int id)
