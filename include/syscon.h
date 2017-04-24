@@ -55,6 +55,25 @@ struct SYSCON_WB {
 	uint32_t DIAG_NW;
 	uint32_t DIAG_CR;
 	uint32_t DIAG_DAT;
+	uint32_t WDIAG_CTRL;
+	uint32_t WDIAG_SSTAT;
+	uint32_t WDIAG_PSTAT;
+	uint32_t WDIAG_PTPSTAT;
+	uint32_t WDIAG_ASTAT;
+	uint32_t WDIAG_TXFCNT;
+	uint32_t WDIAG_RXFCNT;
+	uint32_t WDIAG_SEC_MSB;
+	uint32_t WDIAG_SEC_LSB;
+	uint32_t WDIAG_NS;
+	uint32_t WDIAG_MU_MSB;
+	uint32_t WDIAG_MU_LSB;
+	uint32_t WDIAG_DMS_MSB;
+	uint32_t WDIAG_DMS_LSB;
+	uint32_t WDIAG_ASYM;
+	uint32_t WDIAG_CKO;
+	uint32_t WDIAG_SETP;
+	uint32_t WDIAG_UCNT;
+	uint32_t WDIAG_TEMP;
 };
 
 /*GPIO pins*/
@@ -112,6 +131,19 @@ int diag_read_word(uint32_t adr, int bank, uint32_t *val);
 int diag_write_word(uint32_t adr, uint32_t val);
 
 void net_rst(void);
+
+int wdiag_set_valid(int enable);
+int wdiag_get_valid(void);
+int wdiag_get_snapshot(void);
+void wdiags_write_servo_state(int wr_mode, uint8_t servostate, uint64_t mu,
+			      uint64_t dms, int32_t asym, int32_t cko, int32_t setp,
+			      int32_t ucnt);
+void wdiags_write_port_state(int link, int locked);
+void wdiags_write_ptp_state(uint8_t ptpstate);
+void wdiags_write_aux_state(uint32_t aux_states);
+void wdiags_write_cnts(uint32_t tx, uint32_t rx);
+void wdiags_write_time(uint64_t sec, uint32_t nsec);
+void wdiags_write_temp(uint32_t temp);
 
 #endif /* CONFIG_WR_NODE */
 #endif
