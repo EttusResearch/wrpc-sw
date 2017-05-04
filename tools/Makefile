@@ -1,8 +1,12 @@
 EB    ?= no
 SDBFS ?= no
+SUPPORT_CERN_VMEBRIDGE ?= n
 
 CFLAGS = -Wall -ggdb -I../include -I../liblinux
-LDFLAGS = -lutil -L../liblinux -lwhiterabbit
+ifeq ($(SUPPORT_CERN_VMEBRIDGE), y)
+CFLAGS += -DSUPPORT_CERN_VMEBRIDGE
+endif
+LDFLAGS = -lutil -L../liblinux -ldevmap
 ALL    = genraminit genramvhd genrammif
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder

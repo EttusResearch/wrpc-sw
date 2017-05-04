@@ -5,21 +5,102 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <inttypes.h>
 #include <unistd.h>
 #include <termios.h>
 #include <getopt.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
-#include <libwhiterabbit.h>
+#include <hw/wb_uart.h>
+#include <libdevmap.h>
 
 static void wrpc_vuart_help(char *prog)
 {
-	fprintf(stderr, "%s [options]\n\n", prog);
-	fprintf(stderr, "-a 0x<address>\tAbsolute virtual address for the White Rabbit VUART\n");
+	const char *mapping_help_str;
+
+	mapping_help_str = dev_mapping_help();
+	fprintf(stderr, "%s [options]\n", prog);
+	fprintf(stderr, "%s\n", mapping_help_str);
+	fprintf(stderr, "Vuart specific option: [-k(keep terminal)]\n");
 }
 
+/**
+ * It receives a single byte
+ * @param[in] vuart token from dev_map()
+ *
+ *
+ */
+static int8_t wr_vuart_rx(struct mapping_desc *vuart)
+{
+	int rdr = ((volatile struct UART_WB *)vuart->base)->HOST_RDR;
+	if (vuart->is_be)
+		rdr = ntohl(rdr);
 
-static void wrpc_vuart_term_main(struct wr_vuart *vuart, int keep_term)
+	return (rdr & UART_HOST_RDR_RDY) ? UART_HOST_RDR_DATA_R(rdr) : -1;
+}
+
+/**
+ * It transmits a single byte
+ * @param[in] vuart token from dev_map()
+ */
+static void wr_vuart_tx(struct mapping_desc *vuart, char data)
+{
+	volatile struct UART_WB *ptr = (volatile struct UART_WB *)vuart->base;
+	int sr = (vuart->is_be) ? ntohl(ptr->SR) : ptr->SR;
+	uint32_t val;
+
+	while(sr & UART_SR_RX_RDY)
+		sr = (vuart->is_be) ? ntohl(ptr->SR) : ptr->SR;
+	val = (vuart->is_be) ? htonl(UART_HOST_TDR_DATA_W(data)) :
+		UART_HOST_TDR_DATA_W(data);
+	ptr->HOST_TDR =  val;
+}
+
+/**
+ * It reads a number of bytes and it stores them in a given buffer
+ * @param[in] vuart token from dev_map()
+ * @param[out] buf destination for read bytes
+ * @param[in] size numeber of bytes to read
+ *
+ * @return the number of read bytes
+ */
+static size_t wr_vuart_read(struct mapping_desc *vuart, char *buf, size_t size)
+{
+	size_t s = size, n_rx = 0;
+	int8_t c;
+
+	while(s--) {
+		c =  wr_vuart_rx(vuart);
+		if(c < 0)
+			return n_rx;
+		*buf++ = c;
+		n_rx ++;
+	}
+	return n_rx;
+}
+
+/**
+ * It writes a number of bytes from a given buffer
+ * @param[in] vuart token from dev_map()
+ * @param[in] buf buffer to write
+ * @param[in] size numeber of bytes to write
+ *
+ * @return the number of written bytes
+ */
+static size_t wr_vuart_write(struct mapping_desc *vuart, char *buf, size_t size)
+{
+
+	size_t s = size;
+
+	while(s--)
+		wr_vuart_tx(vuart, *buf++);
+
+	return size;
+}
+
+static void wrpc_vuart_term_main(struct mapping_desc *vuart, int keep_term)
 {
 	struct termios oldkey, newkey;
 	//above is place for old and new port settings for keyboard teletype
@@ -94,41 +175,40 @@ static void wrpc_vuart_term_main(struct wr_vuart *vuart, int keep_term)
 
 int main(int argc, char *argv[])
 {
-	char c, *resource_file;
-	int ret, keep_term = 0;
-	unsigned int vuart_base;
-	struct wr_vuart *vuart;
+	char c;
+	int keep_term = 0;
+	struct mapping_args *map_args;
+	struct mapping_desc *vuart = NULL;
 
-	while ((c = getopt (argc, argv, "a:f:k")) != -1)
-	{
-		switch (c)
-		{
-		case 'a':
-			ret = sscanf(optarg, "0x%x", &vuart_base);
-			if (ret != 1) {
-				wrpc_vuart_help(argv[0]);
-				return -1;
-			}
-			break;
-		case 'f':
-			resource_file = optarg;
-			break;
+	map_args = dev_parse_mapping_args(argc, argv);
+	if (!map_args) {
+		wrpc_vuart_help(argv[0]);
+		goto out;
+	}
+
+	/* Parse specific args */
+	while ((c = getopt (argc, argv, "k")) != -1) {
+		switch (c) {
 		case 'k':
 			keep_term = 1;
 			break;
-		default:
+		case 'h':
 			wrpc_vuart_help(argv[0]);
-			return -1;
+			break;
+		case '?':
+			break;
 		}
 	}
 
-	vuart = wr_vuart_open(resource_file, vuart_base);
+	vuart = dev_map(map_args, sizeof(struct UART_WB));
 	if (!vuart) {
+		fprintf(stderr, "%s: vuart_open() failed: %s\n", argv[0],
+			strerror(errno));
 		goto out;
 	}
 
 	wrpc_vuart_term_main(vuart, keep_term);
-	wr_vuart_close(vuart);
+	dev_unmap(vuart);
 
 	return 0;
 out:
