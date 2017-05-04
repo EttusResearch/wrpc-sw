@@ -2,16 +2,18 @@ EB    ?= no
 SDBFS ?= no
 SUPPORT_CERN_VMEBRIDGE ?= n
 
-CFLAGS = -Wall -ggdb -I../include -I../liblinux
+CFLAGS = -Wall -ggdb -I../include -I../liblinux -I../liblinux/extest
 ifeq ($(SUPPORT_CERN_VMEBRIDGE), y)
 CFLAGS += -DSUPPORT_CERN_VMEBRIDGE
 endif
-LDFLAGS = -lutil -L../liblinux -ldevmap
+LDFLAGS = -lutil -L../liblinux -ldevmap -L../liblinux/extest -lextest
+LDFLAGS += -lreadline
 ALL    = genraminit genramvhd genrammif
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder
 ALL   += wrpc-dump mapper
 ALL   += wrpc-vuart
+ALL   += wr-streamer
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
@@ -52,6 +54,9 @@ wrpc-dump: wrpc-dump.c dump-info-host.o
 	-I ../softpll \
 	$^ -o $@ \
 	-D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
+
+wr-streamer: wr-streamer.c
+	$(CC) $(CFLAGS)  $^ $(LDFLAGS) -o $@
 
 wrpc-vuart: wrpc-vuart.c
 	$(CC) $(CFLAGS) -Werror  $^ $(LDFLAGS) -o $@
