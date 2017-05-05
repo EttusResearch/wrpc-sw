@@ -103,46 +103,111 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 
 int reset_counters(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	volatile struct WR_TRANSMISSION_WB *ptr =
+		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	ptr->SSCR1 = WR_TRANSMISSION_SSCR1_RST_STATS;
+	fprintf(stderr, "Reseted statistics counters\n");
 	return 1;
 }
 
 int reset_seqid(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	volatile struct WR_TRANSMISSION_WB *ptr =
+		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	ptr->SSCR1 = WR_TRANSMISSION_SSCR1_RST_SEQ_ID;
 	return 1;
 }
 
 int set_tx_ethertype(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	fprintf(stderr, "Not impleented\n");
 	return 1;
 }
 
 int set_tx_local_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	fprintf(stderr, "Not impleented\n");
 	return 1;
 }
 
 int set_tx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	fprintf(stderr, "Not impleented\n");
 	return 1;
 }
 
 int set_rx_ethertype(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	fprintf(stderr, "Not impleented\n");
 	return 1;
 }
 
 int set_rx_local_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	fprintf(stderr, "Not impleented\n");
 	return 1;
 }
 
 int set_rx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	fprintf(stderr, "Not impleented\n");
 	return 1;
 }
 
 int get_set_latency(struct cmd_desc *cmdd, struct atom *atoms)
 {
+	volatile struct WR_TRANSMISSION_WB *ptr =
+		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+	int lat;
+	uint32_t val;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type == Terminator) {
+		// Get Latency
+		fprintf(stderr, "Fixed latency configured: %d [us]\n",
+			ptr->RX_CFG5);
+	}
+	else {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		lat = atoms->val;
+		if (lat < 0) {
+			val = ~WR_TRANSMISSION_CFG_OR_RX_FIX_LAT & ptr->CFG;
+			ptr->CFG = val;
+			fprintf(stderr, "Disabled overriding of default fixed "
+				"latency value (it is now the default/set "
+				"by application)\n");
+		}
+		else {
+			val = (lat * 1000) / 8;
+			ptr->RX_CFG5 = WR_TRANSMISSION_RX_CFG5_FIXED_LATENCY_W(val);
+			val = ptr->CFG;
+			val |= WR_TRANSMISSION_CFG_OR_RX_FIX_LAT;
+			ptr->CFG = val;
+			val = WR_TRANSMISSION_RX_CFG5_FIXED_LATENCY_R(ptr->RX_CFG5);
+			fprintf(stderr, "Fixed latency set: %d [us] "
+				"(set %d | read : %d [cycles])\n",
+				lat, ((lat * 1000) / 8), val);
+		}
+	}
+
 	return 1;
 }
 
