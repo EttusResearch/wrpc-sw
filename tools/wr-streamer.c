@@ -23,8 +23,8 @@ int read_all_stats(struct cmd_desc *cmdd, struct atom *atoms)
 	uint32_t latency_acc_lsb=0, latency_acc_msb=0, latency_cnt=0, val=0;
 	int overflow=0;
 	double latency_avg=0;
-	volatile struct WR_TRANSMISSION_WB *ptr =
-		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - %s\n", cmdd->name, cmdd->help);
@@ -32,13 +32,13 @@ int read_all_stats(struct cmd_desc *cmdd, struct atom *atoms)
 	}
 
 	//snapshot stats
-	ptr->SSCR1 = WR_TRANSMISSION_SSCR1_SNAPSHOT_STATS;
+	ptr->SSCR1 = WR_STREAMERS_SSCR1_SNAPSHOT_STATS;
 
 	// min/max
 	max_latency_raw  = ptr->RX_STAT3;
-	max_latency      =  (WR_TRANSMISSION_RX_STAT3_RX_LATENCY_MAX_R(max_latency_raw)*8)/1000.0;
+	max_latency      =  (WR_STREAMERS_RX_STAT3_RX_LATENCY_MAX_R(max_latency_raw)*8)/1000.0;
 	min_latency_raw  = ptr->RX_STAT4;
-	min_latency = (WR_TRANSMISSION_RX_STAT4_RX_LATENCY_MIN_R(min_latency_raw)*8)/1000.0;
+	min_latency = (WR_STREAMERS_RX_STAT4_RX_LATENCY_MIN_R(min_latency_raw)*8)/1000.0;
 
 	//cnts
 	tx_cnt           = ptr->TX_STAT;
@@ -51,7 +51,7 @@ int read_all_stats(struct cmd_desc *cmdd, struct atom *atoms)
 	latency_acc_msb  = ptr->RX_STAT6;
 	latency_cnt      = ptr->RX_STAT7;
 	val              = ptr->RX_STAT7;
-	overflow         = (WR_TRANSMISSION_SSCR1_RX_LATENCY_ACC_OVERFLOW & val) != 0;
+	overflow         = (WR_STREAMERS_SSCR1_RX_LATENCY_ACC_OVERFLOW & val) != 0;
 	//put it all together
 	latency_acc     = (((uint64_t)latency_acc_msb) << 32) | latency_acc_lsb;
 	latency_avg     = (((double)latency_acc)*8/1000)/(double)latency_cnt;
@@ -78,8 +78,8 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 	double reset_time_elapsed=0;
 	time_t cur_time;
 	time_t res_time_sec;
-	volatile struct WR_TRANSMISSION_WB *ptr =
-		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - %s\n", cmdd->name, cmdd->help);
@@ -87,7 +87,7 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 	}
 
 	val = ptr->SSCR2;
-	res_time_sec = (time_t)(WR_TRANSMISSION_SSCR2_RST_TS_TAI_LSB_R(val) +
+	res_time_sec = (time_t)(WR_STREAMERS_SSCR2_RST_TS_TAI_LSB_R(val) +
 		       LEAP_SECONDS);//to UTC
 
 	cur_time           = time(NULL);
@@ -103,30 +103,30 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 
 int reset_counters(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	volatile struct WR_TRANSMISSION_WB *ptr =
-		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - %s\n", cmdd->name, cmdd->help);
 		return 1;
 	}
 
-	ptr->SSCR1 = WR_TRANSMISSION_SSCR1_RST_STATS;
+	ptr->SSCR1 = WR_STREAMERS_SSCR1_RST_STATS;
 	fprintf(stderr, "Reseted statistics counters\n");
 	return 1;
 }
 
 int reset_seqid(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	volatile struct WR_TRANSMISSION_WB *ptr =
-		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - %s\n", cmdd->name, cmdd->help);
 		return 1;
 	}
 
-	ptr->SSCR1 = WR_TRANSMISSION_SSCR1_RST_SEQ_ID;
+	ptr->SSCR1 = WR_STREAMERS_SSCR1_RST_SEQ_ID;
 	return 1;
 }
 
@@ -168,8 +168,8 @@ int set_rx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
 
 int get_set_latency(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	volatile struct WR_TRANSMISSION_WB *ptr =
-		(volatile struct WR_TRANSMISSION_WB *)wrstm->base;
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 	int lat;
 	uint32_t val;
 
@@ -189,7 +189,7 @@ int get_set_latency(struct cmd_desc *cmdd, struct atom *atoms)
 			return -TST_ERR_WRONG_ARG;
 		lat = atoms->val;
 		if (lat < 0) {
-			val = ~WR_TRANSMISSION_CFG_OR_RX_FIX_LAT & ptr->CFG;
+			val = ~WR_STREAMERS_CFG_OR_RX_FIX_LAT & ptr->CFG;
 			ptr->CFG = val;
 			fprintf(stderr, "Disabled overriding of default fixed "
 				"latency value (it is now the default/set "
@@ -197,11 +197,11 @@ int get_set_latency(struct cmd_desc *cmdd, struct atom *atoms)
 		}
 		else {
 			val = (lat * 1000) / 8;
-			ptr->RX_CFG5 = WR_TRANSMISSION_RX_CFG5_FIXED_LATENCY_W(val);
+			ptr->RX_CFG5 = WR_STREAMERS_RX_CFG5_FIXED_LATENCY_W(val);
 			val = ptr->CFG;
-			val |= WR_TRANSMISSION_CFG_OR_RX_FIX_LAT;
+			val |= WR_STREAMERS_CFG_OR_RX_FIX_LAT;
 			ptr->CFG = val;
-			val = WR_TRANSMISSION_RX_CFG5_FIXED_LATENCY_R(ptr->RX_CFG5);
+			val = WR_STREAMERS_RX_CFG5_FIXED_LATENCY_R(ptr->RX_CFG5);
 			fprintf(stderr, "Fixed latency set: %d [us] "
 				"(set %d | read : %d [cycles])\n",
 				lat, ((lat * 1000) / 8), val);
@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	wrstm = dev_map(map_args, sizeof(struct WR_TRANSMISSION_WB));
+	wrstm = dev_map(map_args, sizeof(struct WR_STREAMERS_WB));
 	if (!wrstm) {
 		fprintf(stderr, "%s: wrstm mmap() failed: %s\n", argv[0],
 			strerror(errno));
