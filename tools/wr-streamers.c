@@ -14,59 +14,96 @@
 
 static struct mapping_desc *wrstm = NULL;
 
-int read_all_stats(struct cmd_desc *cmdd, struct atom *atoms)
+static char *stats_mesg[][2] = {
+	{"Number of sent wr streamer frames since reset", "tx_cnt"},
+        {"Number of received wr streamer frames since reset", "rx_cnt"},
+        {"Number of lost wr streamer frames since reset", "rx_cnt_lost_fr"},
+        {"Maximum latency of received frames since reset", "max_lat_raw"},
+        {"Minimum latency of received frames since reset", "min_lat_raw"},
+        {"Accumulated latency of received frames since reset", "acc_lat"},
+        {"Counter of the accumulated frequency", "acc_freq_cnt"},
+        {"Number of indications that one or more blocks in a"
+	 "frame were lost (probably CRC error) since reset", "rx_cnt_lost_blk"},
+};
+
+int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	uint32_t max_latency_raw= 0, min_latency_raw=0;
-	double   max_latency= 0, min_latency=0;
-	uint32_t rx_cnt= 0, tx_cnt=0, rx_cnt_lost_fr=0, rx_cnt_lost_blk=0;
-	uint64_t latency_acc =0;
-	uint32_t latency_acc_lsb=0, latency_acc_msb=0, latency_cnt=0, val=0;
-	int overflow=0;
-	double latency_avg=0;
 	volatile struct WR_STREAMERS_WB *ptr =
 		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	int val, overflow;
+	double max_lat, min_lat, avg_lat;
+	uint64_t acc_lat;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
-		printf("%s - %s\n", cmdd->name, cmdd->help);
+		printf("%s - options\n"
+		       "\t0: %s\n\t1: %s\n\t2: %s\n\t3: %s\n\t4: %s\n\t5: %s\n"
+		       "\t6: %s\n\t7: %s\n", cmdd->name, stats_mesg[0][0],
+		       stats_mesg[1][0], stats_mesg[2][0], stats_mesg[3][0],
+		       stats_mesg[4][0], stats_mesg[5][0], stats_mesg[6][0],
+		       stats_mesg[7][0]);
 		return 1;
 	}
 
+	++atoms;
+	if (atoms->type != Terminator && atoms->type != Numeric)
+		return -TST_ERR_WRONG_ARG;
+	val = -1; // all stats
+	if (atoms->type == Numeric)
+		val = atoms->val; // specific stats
 	//snapshot stats
 	ptr->SSCR1 = WR_STREAMERS_SSCR1_SNAPSHOT_STATS;
 
-	// min/max
-	max_latency_raw  = ptr->RX_STAT3;
-	max_latency      =  (WR_STREAMERS_RX_STAT3_RX_LATENCY_MAX_R(max_latency_raw)*8)/1000.0;
-	min_latency_raw  = ptr->RX_STAT4;
-	min_latency = (WR_STREAMERS_RX_STAT4_RX_LATENCY_MIN_R(min_latency_raw)*8)/1000.0;
-
-	//cnts
-	tx_cnt           = ptr->TX_STAT;
-	rx_cnt           = ptr->RX_STAT1;
-	rx_cnt_lost_fr   = ptr->RX_STAT2;
-	rx_cnt_lost_blk  = ptr->RX_STAT8;
-
-	//read values
-	latency_acc_lsb  = ptr->RX_STAT5;
-	latency_acc_msb  = ptr->RX_STAT6;
-	latency_cnt      = ptr->RX_STAT7;
-	val              = ptr->RX_STAT7;
-	overflow         = (WR_STREAMERS_SSCR1_RX_LATENCY_ACC_OVERFLOW & val) != 0;
-	//put it all together
-	latency_acc     = (((uint64_t)latency_acc_msb) << 32) | latency_acc_lsb;
-	latency_avg     = (((double)latency_acc)*8/1000)/(double)latency_cnt;
+	switch(val) {
+	case -1:
+		max_lat = WR_STREAMERS_RX_STAT3_RX_LATENCY_MAX_R(ptr->RX_STAT3);
+		max_lat = (max_lat * 8) / 1000.0;
+		min_lat = WR_STREAMERS_RX_STAT3_RX_LATENCY_MAX_R(ptr->RX_STAT4);
+		min_lat = (min_lat * 8) / 1000.0;
+		val = WR_STREAMERS_SSCR1_RX_LATENCY_ACC_OVERFLOW &
+		      ptr->RX_STAT7;
+		overflow = val != 0;
+		//put it all together
+		acc_lat = (((uint64_t)ptr->RX_STAT6) << 32) | ptr->RX_STAT5;
+		avg_lat = (((double)acc_lat) * 8 / 1000) / (double)ptr->RX_STAT7;
+		fprintf(stderr, "Latency [us]    : min=%10g max=%10g avg =%10g "
+			"(0x%x, 0x%x, %lld=%u << 32 | %u)*8/1000 us, cnt=%u)\n",
+			min_lat, max_lat, avg_lat, ptr->RX_STAT4,
+			ptr->RX_STAT3, (long long)acc_lat, ptr->RX_STAT6,
+			ptr->RX_STAT5, ptr->RX_STAT7);
+		fprintf(stderr, "Frames  [number]: tx =%10u rx =%10u lost=%10u "
+			"(lost blocks%5u)\n",
+			ptr->TX_STAT, ptr->RX_STAT1, ptr->RX_STAT2,
+			ptr->RX_STAT8);
+		break;
+	case 0:
+		fprintf(stderr, "%s:%10u\n", stats_mesg[0][1], ptr->RX_STAT1);
+		break;
+	case 1:
+		fprintf(stderr, "%s:%10u\n", stats_mesg[1][1], ptr->RX_STAT2);
+		break;
+	case 2:
+		fprintf(stderr, "%s: 0x%x\n", stats_mesg[2][1], ptr->RX_STAT3);
+		break;
+	case 3:
+		fprintf(stderr, "%s: 0x%x\n", stats_mesg[3][1], ptr->RX_STAT4);
+		break;
+	case 4:
+		fprintf(stderr, "%s:%10u\n", stats_mesg[4][1], ptr->RX_STAT5);
+		break;
+	case 5:
+		fprintf(stderr, "%s:%10u\n", stats_mesg[5][1], ptr->RX_STAT6);
+		break;
+	case 6:
+		fprintf(stderr, "%s:%10u\n", stats_mesg[6][1], ptr->RX_STAT7);
+		break;
+	case 7:
+		fprintf(stderr, "%s: 0x%x\n", stats_mesg[7][1], ptr->RX_STAT8);
+		break;
+	}
 
 	//release snapshot
 	ptr->SSCR1 = 0;
 
-	fprintf(stderr, "Latency [us]    : min=%10g max=%10g avg =%10g "
-		"(0x%x, 0x%x, %lld=%u << 32 | %u)*8/1000 us, cnt=%u)\n",
-		min_latency, max_latency, latency_avg, min_latency_raw,
-		max_latency_raw, (long long)latency_acc, latency_acc_msb,
-		latency_acc_lsb, latency_cnt);
-	fprintf(stderr, "Frames  [number]: tx =%10u rx =%10u lost=%10u "
-		"(lost blocks%5u)\n",
-		tx_cnt, rx_cnt, rx_cnt_lost_fr,rx_cnt_lost_blk);
 	return 1;
 }
 
@@ -231,8 +268,8 @@ enum wrstm_cmd_id{
 
 #define WRSTM_CMD_NB WRSTM_CMD_LAST - CMD_USR
 struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
-	{ 1, WRSTM_CMD_STATS, "stats", "show all streamers statistics",
-	  "", 0, read_all_stats},
+	{ 1, WRSTM_CMD_STATS, "stats", "show streamers statistics",
+	  "[0/1/2/3/4/5/6/7]", 0, read_stats},
 	{ 1, WRSTM_CMD_RESET, "reset",
 	  "show time of the latest reset / time elapsed since then", "", 0,
 	  read_reset_time},
