@@ -283,9 +283,19 @@ config WR_NODE_SIM
 	  is avoided. The main function sends min-size frames to PTP
 	  MAC address destination and expects the simulation to return
 	  these frames.
+
+config ABSCAL
+	default y
+	boolean "Support absolute calibration"
+	help
+	  If you select this, you'll be able to do absolute calibration
+	  using a loop-back SFP adapter, according to the procedure
+	  described and documented by Peter Jansweijer.
+
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.
+
 
 comment "wrpc-sw is tainted if you change the following options"
 config DEVELOPER
