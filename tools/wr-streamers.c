@@ -6,11 +6,12 @@
 #include <getopt.h>
 #include <errno.h>
 #include <time.h>
+#include <arpa/inet.h>
 
 #include <libdevmap.h>
 #include <extest.h>
 
-#include <hw/wr-streamer.h>
+#include <hw/wr_streamers.h>
 
 static struct mapping_desc *wrstm = NULL;
 
@@ -32,7 +33,7 @@ int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 	int val, overflow;
 	double max_lat, min_lat, avg_lat;
-	uint64_t acc_lat;
+	uint64_t acc_lat, cnt_lat;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - options\n"
@@ -51,53 +52,83 @@ int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 	if (atoms->type == Numeric)
 		val = atoms->val; // specific stats
 	//snapshot stats
-	ptr->SSCR1 = WR_STREAMERS_SSCR1_SNAPSHOT_STATS;
+	ptr->SSCR1 = iomemw32(wrstm->is_be, WR_STREAMERS_SSCR1_SNAPSHOT_STATS);
 
 	switch(val) {
-	case -1:
-		max_lat = WR_STREAMERS_RX_STAT3_RX_LATENCY_MAX_R(ptr->RX_STAT3);
+	case -1: //all stats
+		max_lat = WR_STREAMERS_RX_STAT0_RX_LATENCY_MAX_R(
+			  iomemr32(wrstm->is_be, ptr->RX_STAT0));
 		max_lat = (max_lat * 8) / 1000.0;
-		min_lat = WR_STREAMERS_RX_STAT3_RX_LATENCY_MAX_R(ptr->RX_STAT4);
+		min_lat = WR_STREAMERS_RX_STAT1_RX_LATENCY_MIN_R(
+			  iomemr32(wrstm->is_be, ptr->RX_STAT1));
 		min_lat = (min_lat * 8) / 1000.0;
-		val = WR_STREAMERS_SSCR1_RX_LATENCY_ACC_OVERFLOW &
-		      ptr->RX_STAT7;
-		overflow = val != 0;
+		overflow = WR_STREAMERS_SSCR1_RX_LATENCY_ACC_OVERFLOW &
+		           iomemr32(wrstm->is_be, ptr->SSCR1);
 		//put it all together
-		acc_lat = (((uint64_t)ptr->RX_STAT6) << 32) | ptr->RX_STAT5;
-		avg_lat = (((double)acc_lat) * 8 / 1000) / (double)ptr->RX_STAT7;
+		acc_lat = ((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT11)
+			  << 32) |iomemr32(wrstm->is_be, ptr->RX_STAT10);
+		cnt_lat = ((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT13)
+			  << 32) | iomemr32(wrstm->is_be, ptr->RX_STAT12);
+		avg_lat = (((double)acc_lat) * 8 / 1000) / (double)cnt_lat;
 		fprintf(stderr, "Latency [us]    : min=%10g max=%10g avg =%10g "
-			"(0x%x, 0x%x, %lld=%u << 32 | %u)*8/1000 us, cnt=%u)\n",
-			min_lat, max_lat, avg_lat, ptr->RX_STAT4,
-			ptr->RX_STAT3, (long long)acc_lat, ptr->RX_STAT6,
-			ptr->RX_STAT5, ptr->RX_STAT7);
-		fprintf(stderr, "Frames  [number]: tx =%10u rx =%10u lost=%10u "
-			"(lost blocks%5u)\n",
-			ptr->TX_STAT, ptr->RX_STAT1, ptr->RX_STAT2,
-			ptr->RX_STAT8);
+			"(0x%x, 0x%x, %lu=%u << 32 | %u)*8/1000 us, "
+			"cnt =%lu overflow =%d)\n",
+			min_lat, max_lat, avg_lat,
+			iomemr32(wrstm->is_be, ptr->RX_STAT1),
+			iomemr32(wrstm->is_be, ptr->RX_STAT0),
+			acc_lat, iomemr32(wrstm->is_be, ptr->RX_STAT11),
+			iomemr32(wrstm->is_be, ptr->RX_STAT10),
+			cnt_lat, overflow);
+		fprintf(stderr, "Frames  [number]: tx =%lu rx =%lu lost=%lu "
+			"(lost blocks =%lu)\n",
+			((uint64_t)iomemr32(wrstm->is_be, ptr->TX_STAT3)
+			<< 32) | iomemr32(wrstm->is_be, ptr->TX_STAT2),
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT5)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT4),
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT7)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT6),
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT9)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT8));
 		break;
 	case 0:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[0][1], ptr->RX_STAT1);
+		fprintf(stderr, "%s:%lu\n", stats_mesg[0][1],
+			((uint64_t)iomemr32(wrstm->is_be, ptr->TX_STAT3)
+			<< 32) | iomemr32(wrstm->is_be, ptr->TX_STAT2));
 		break;
 	case 1:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[1][1], ptr->RX_STAT2);
+		fprintf(stderr, "%s:%lu\n", stats_mesg[1][1],
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT5)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT4));
 		break;
 	case 2:
-		fprintf(stderr, "%s: 0x%x\n", stats_mesg[2][1], ptr->RX_STAT3);
+		fprintf(stderr, "%s:%lu\n", stats_mesg[2][1],
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT7)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT6));
 		break;
 	case 3:
-		fprintf(stderr, "%s: 0x%x\n", stats_mesg[3][1], ptr->RX_STAT4);
+		fprintf(stderr, "%s: 0x%x\n", stats_mesg[3][1],
+			WR_STREAMERS_RX_STAT0_RX_LATENCY_MAX_R(
+			iomemr32(wrstm->is_be, ptr->RX_STAT0)));
 		break;
 	case 4:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[4][1], ptr->RX_STAT5);
+		fprintf(stderr, "%s:%10u\n", stats_mesg[4][1],
+			WR_STREAMERS_RX_STAT1_RX_LATENCY_MIN_R(
+				iomemr32(wrstm->is_be, ptr->RX_STAT1)));
 		break;
 	case 5:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[5][1], ptr->RX_STAT6);
+		fprintf(stderr, "%s:%lu\n", stats_mesg[5][1],
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT11)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT10));
 		break;
 	case 6:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[6][1], ptr->RX_STAT7);
+		fprintf(stderr, "%s:%lu\n", stats_mesg[6][1],
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT13)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT12));
 		break;
 	case 7:
-		fprintf(stderr, "%s: 0x%x\n", stats_mesg[7][1], ptr->RX_STAT8);
+		fprintf(stderr, "%s:%lu\n", stats_mesg[7][1],
+			((uint64_t)iomemr32(wrstm->is_be, ptr->RX_STAT9)
+			<< 32) | iomemr32(wrstm->is_be, ptr->RX_STAT8));
 		break;
 	}
 
@@ -110,7 +141,7 @@ int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 #define LEAP_SECONDS 37
 int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	uint32_t val=0;
+	uint32_t val;
 	int days=0, hours=0, minutes=0, seconds;
 	double reset_time_elapsed=0;
 	time_t cur_time;
@@ -123,9 +154,9 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 		return 1;
 	}
 
-	val = ptr->SSCR2;
+	val = iomemr32(wrstm->is_be, ptr->SSCR2);
 	res_time_sec = (time_t)(WR_STREAMERS_SSCR2_RST_TS_TAI_LSB_R(val) +
-		       LEAP_SECONDS);//to UTC
+				LEAP_SECONDS);//to UTC
 
 	cur_time           = time(NULL);
 	reset_time_elapsed = difftime(cur_time,res_time_sec);
@@ -133,8 +164,10 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 	hours              = (reset_time_elapsed-days*60*60*24)/(60*60);
 	minutes            = (reset_time_elapsed-days*60*60*24-hours*60*60)/(60);
 	seconds            = (reset_time_elapsed-days*60*60*24-hours*60*60-minutes*60);
-	fprintf(stderr, "Time elapsed from reset: %d days, %d h, %d m, %d s; Reseted on %s\n",
-		days, hours, minutes, seconds, asctime(localtime(&res_time_sec)));
+	fprintf(stderr, "Time elapsed from reset: %d days, %d h, %d m, %d s; "
+		"Reseted on %s\n",
+		days, hours, minutes, seconds,
+		asctime(localtime(&res_time_sec)));
 	return 1;
 }
 
@@ -148,7 +181,7 @@ int reset_counters(struct cmd_desc *cmdd, struct atom *atoms)
 		return 1;
 	}
 
-	ptr->SSCR1 = WR_STREAMERS_SSCR1_RST_STATS;
+	ptr->SSCR1 = iomemw32(wrstm->is_be, WR_STREAMERS_SSCR1_RST_STATS);
 	fprintf(stderr, "Reseted statistics counters\n");
 	return 1;
 }
@@ -163,7 +196,7 @@ int reset_seqid(struct cmd_desc *cmdd, struct atom *atoms)
 		return 1;
 	}
 
-	ptr->SSCR1 = WR_STREAMERS_SSCR1_RST_SEQ_ID;
+	ptr->SSCR1 = iomemw32(wrstm->is_be, WR_STREAMERS_SSCR1_RST_SEQ_ID);
 	return 1;
 }
 
@@ -219,26 +252,29 @@ int get_set_latency(struct cmd_desc *cmdd, struct atom *atoms)
 	if (atoms->type == Terminator) {
 		// Get Latency
 		fprintf(stderr, "Fixed latency configured: %d [us]\n",
-			ptr->RX_CFG5);
+			(iomemr32(wrstm->is_be, ptr->RX_CFG5) * 8) / 1000);
 	}
 	else {
 		if (atoms->type != Numeric)
 			return -TST_ERR_WRONG_ARG;
 		lat = atoms->val;
 		if (lat < 0) {
-			val = ~WR_STREAMERS_CFG_OR_RX_FIX_LAT & ptr->CFG;
-			ptr->CFG = val;
+			val = ~WR_STREAMERS_CFG_OR_RX_FIX_LAT &
+			      iomemr32(wrstm->is_be, ptr->CFG);
+			ptr->CFG = iomemw32(wrstm->is_be, val);
 			fprintf(stderr, "Disabled overriding of default fixed "
 				"latency value (it is now the default/set "
 				"by application)\n");
 		}
 		else {
 			val = (lat * 1000) / 8;
-			ptr->RX_CFG5 = WR_STREAMERS_RX_CFG5_FIXED_LATENCY_W(val);
-			val = ptr->CFG;
+			ptr->RX_CFG5 = iomemw32(wrstm->is_be,
+				       WR_STREAMERS_RX_CFG5_FIXED_LATENCY_W(val));
+			val = iomemr32(wrstm->is_be, ptr->CFG);
 			val |= WR_STREAMERS_CFG_OR_RX_FIX_LAT;
-			ptr->CFG = val;
-			val = WR_STREAMERS_RX_CFG5_FIXED_LATENCY_R(ptr->RX_CFG5);
+			ptr->CFG = iomemw32(wrstm->is_be, val);
+			val = WR_STREAMERS_RX_CFG5_FIXED_LATENCY_R(
+			      iomemr32(wrstm->is_be, ptr->RX_CFG5));
 			fprintf(stderr, "Fixed latency set: %d [us] "
 				"(set %d | read : %d [cycles])\n",
 				lat, ((lat * 1000) / 8), val);
@@ -342,7 +378,7 @@ int main(int argc, char *argv[])
 	}
 
 	/* execute command loop */
-	ret = extest_run("wrtsm", sig_hndl);
+	ret = extest_run("wrstm", sig_hndl);
 
 	dev_unmap(wrstm);
 	return (ret) ? -1 : 0;
