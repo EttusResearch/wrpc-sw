@@ -18,6 +18,15 @@
 
 #ifdef SUPPORT_CERN_VMEBRIDGE
 #include <libvmebus.h>
+
+struct vmebridge_map_args {
+	/**
+ 	 * VME memory map arguments
+ 	 */
+	uint32_t data_width; /**< default register size in bytes */
+	uint32_t am; /**< VME address modifier to use */
+	uint64_t addr; /**< physical base address */
+};
 #endif
 
 #ifdef SUPPORT_CERN_VMEBRIDGE
@@ -27,6 +36,8 @@ static struct mapping_desc *cern_vmebridge_dev_map(
 	struct mapping_desc *desc;
 	struct vme_mapping *vme_mapping;
 	volatile void *ptr_map;
+	struct vmebridge_map_args *vme_args =
+		(struct vmebridge_map_args *)map_args->vme_extra_args;
 
 	vme_mapping = malloc(sizeof(struct vme_mapping));
 	if (!vme_mapping)
@@ -34,10 +45,10 @@ static struct mapping_desc *cern_vmebridge_dev_map(
 
 	/* Prepare mmap description */
 	memset(vme_mapping, 0, sizeof(struct vme_mapping));
-	vme_mapping->am = map_args->am;
-	vme_mapping->data_width = map_args->data_width;
+	vme_mapping->am = vme_args->am;
+	vme_mapping->data_width = vme_args->data_width;
 	vme_mapping->sizel = map_args->offset + mapping_length;
-	vme_mapping->vme_addrl = map_args->addr;
+	vme_mapping->vme_addrl = vme_args->addr;
 
 	/* Do mmap */
 	ptr_map = vme_map(vme_mapping, 1);
@@ -78,7 +89,7 @@ struct mapping_desc *dev_map(struct mapping_args *map_args, uint32_t map_length)
 	off_t pa_offset /*page aligned offset */;
 
 #ifdef SUPPORT_CERN_VMEBRIDGE
-	if (!map_args->resource_file) { //map device through CERN VME_BRIDGE
+	if (map_args->vme_extra_args) { //map device through CERN VME_BRIDGE
 		desc =  cern_vmebridge_dev_map(map_args, map_length);
 		if (!desc) {
 			return NULL;
@@ -133,6 +144,7 @@ void dev_unmap(struct mapping_desc *desc)
 #ifdef SUPPORT_CERN_VMEBRIDGE
 	if (!desc->fd) { /* cern vmebridge resource */
 		vme_unmap((struct vme_mapping *)desc->mmap, 1);
+		free(desc->args->vme_extra_args);
 		free(desc->args);
 		free(desc);
 		return;
@@ -182,11 +194,18 @@ static int cern_vmebridge_match(int argc, char *argv[])
 static int cern_vmebridge_parse_args(int argc, char *argv[],
 			struct mapping_args *map_args)
 {
+	struct vmebridge_map_args *vme_args;
 	int ret, arg_count = 0, c, option_index = 0;
 
+	vme_args = calloc(1, sizeof(struct vmebridge_map_args));
+	if (!vme_args)
+		return -1;
+	map_args->vme_extra_args = vme_args;
+
 	/* set default values in case they are not provided*/
-	map_args->data_width = 32;
-	map_args->am = 0x39;
+	vme_args->data_width = 32;
+	vme_args->am = 0x39;
+
 	while ((c = getopt_long(argc, argv, "w:o:m:a:CERN_VMEBRIDGE", long_options,
 				&option_index)) != -1) {
 		switch(c) {
@@ -194,13 +213,14 @@ static int cern_vmebridge_parse_args(int argc, char *argv[],
 			// nothing to do
 			break;
 		case 'w': /* optional arg */
-			ret = sscanf(optarg, "%u", &map_args->data_width);
+			ret = sscanf(optarg, "%u",
+				     &vme_args->data_width);
 			if (ret != 1)
 				return -1;
-			if ( !(map_args->data_width == 8 ||
-			       map_args->data_width == 16 ||
-			       map_args->data_width == 32 ||
-			       map_args->data_width == 64) )
+			if ( !(vme_args->data_width == 8 ||
+			       vme_args->data_width == 16 ||
+			       vme_args->data_width == 32 ||
+			       vme_args->data_width == 64) )
 				return -1;
 			break;
 		case 'o': /* mandatory arg */
@@ -210,12 +230,14 @@ static int cern_vmebridge_parse_args(int argc, char *argv[],
 			++arg_count;
 			break;
 		case 'm': /* optional arg */
-			ret = sscanf(optarg, "0x%x", &map_args->am);
+			ret = sscanf(optarg, "0x%x",
+				     &vme_args->am);
 			if (ret != 1)
 				return -1;
 			break;
 		case 'a': /* mandatory arg */
-			ret = sscanf(optarg, "0x%"SCNx64, &map_args->addr);
+			ret = sscanf(optarg, "0x%"SCNx64,
+				     &vme_args->addr);
 			if (ret != 1)
 				return -1;
 			++arg_count;
@@ -236,7 +258,7 @@ struct mapping_args *dev_parse_mapping_args(int argc, char *argv[])
 	char c;
 	int ret, arg_count = 0;
 
-	map_args = malloc(sizeof(struct mapping_args));
+	map_args = calloc(1, sizeof(struct mapping_args));
 	if (!map_args)
 		return NULL;
 

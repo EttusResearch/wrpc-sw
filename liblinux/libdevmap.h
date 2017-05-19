@@ -13,14 +13,7 @@
 struct mapping_args {
 	char *resource_file;
 	uint64_t offset;
-#ifdef SUPPORT_CERN_VMEBRIDGE
-	/**
- 	 * VME memory map arguments
- 	 */
-	uint32_t data_width; /**< default register size in bytes */
-	uint32_t am; /**< VME address modifier to use */
-	uint64_t addr; /**< physical base address */
-#endif
+	void *vme_extra_args;
 };
 
 /* device resource mapped into memory */
