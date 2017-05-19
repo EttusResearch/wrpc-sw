@@ -7,6 +7,9 @@
 
 #include <stdint.h>
 
+#define iomemr32(is_be, val) ((is_be) ? ntohl(val) : val)
+#define iomemw32(is_be, val) ((is_be) ? htonl(val) : val)
+
 struct mapping_args {
 	char *resource_file;
 	uint64_t offset;
