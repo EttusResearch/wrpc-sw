@@ -6,7 +6,6 @@
 #include <getopt.h>
 #include <errno.h>
 #include <time.h>
-#include <arpa/inet.h>
 
 #include <libdevmap.h>
 #include <extest.h>

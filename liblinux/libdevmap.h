@@ -6,6 +6,7 @@
 #define __LIBDEVMAP_H__
 
 #include <stdint.h>
+#include <arpa/inet.h>
 
 #define iomemr32(is_be, val) ((is_be) ? ntohl(val) : val)
 #define iomemw32(is_be, val) ((is_be) ? htonl(val) : val)

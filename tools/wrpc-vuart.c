@@ -11,7 +11,6 @@
 #include <termios.h>
 #include <getopt.h>
 #include <errno.h>
-#include <arpa/inet.h>
 
 #include <hw/wb_uart.h>
 #include <libdevmap.h>
