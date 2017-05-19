@@ -6,6 +6,8 @@
 #include <getopt.h>
 #include <errno.h>
 #include <time.h>
+#include <arpa/inet.h>
+
 #include <libdevmap.h>
 #include <extest.h>
 
@@ -15,22 +17,26 @@ static struct mapping_desc *wrcdiag = NULL;
 
 static void unlock_diag(volatile struct WRC_DIAGS_WB *ptr)
 {
-	ptr->CTRL &= 0x1; //reset snapshot bit & keep valid bit as it is
+	//reset snapshot bit & keep valid bit as it is
+	ptr->CTRL &= iomemw32(wrcdiag->is_be, 0x1);
 }
 
 static int lock_diag(volatile struct WRC_DIAGS_WB *ptr)
 {
-	static int loop = 10;
+	int loop = 10;
 
 	//snapshot diag ( just raise snapshot bit)
-	ptr->CTRL |= WRC_DIAGS_CTRL_DATA_SNAPSHOT;
+	ptr->CTRL |= iomemw32(wrcdiag->is_be, WRC_DIAGS_CTRL_DATA_SNAPSHOT);
 	//wait max 10ms that valid bit becomes true.
 	do {
-		if (ptr->CTRL & WRC_DIAGS_CTRL_DATA_VALID)
+		if (ptr->CTRL & iomemw32(wrcdiag->is_be,
+					 WRC_DIAGS_CTRL_DATA_VALID))
 			return 0;
 		usleep(1000);
 		--loop;
 	} while(loop);
+	fprintf(stderr, "timeout(10ms) expired while waiting for the valid bit "
+		"for snapshot\n");
 	return 1;
 }
 
@@ -193,69 +199,84 @@ static int read_diags(struct cmd_desc *cmdd, struct atom *atoms)
 
 	res = lock_diag(ptr);
 	if (res) {
-		exit(-1);
+		fprintf(stderr, "Cmd is not executed\n");
+		return 1;
 	}
 
 	switch (cmdd->id) {
 	case WRCDIAG_CMD_DIAGS:
-		print_servo_status(ptr->WDIAG_SSTAT);
-		print_port_status(ptr->WDIAG_PSTAT);
-		print_ptp_state(ptr->WDIAG_PTPSTAT);
-		print_aux_state(ptr->WDIAG_PTPSTAT);
-		print_tx_frame_count(ptr->WDIAG_TXFCNT);
-		print_rx_frame_count(ptr->WDIAG_RXFCNT);
-		print_local_time(ptr->WDIAG_SEC_MSB, ptr->WDIAG_SEC_LSB,
-				 ptr->WDIAG_NS);
-		print_roundtrip_time(ptr->WDIAG_MU_MSB, ptr->WDIAG_MU_LSB);
-		print_master_slave_delay(ptr->WDIAG_DMS_MSB, ptr->WDIAG_DMS_LSB);
-		print_link_asym(ptr->WDIAG_ASYM);
-		print_clock_offset(ptr->WDIAG_CKO);
-		print_phase_setpoint(ptr->WDIAG_SETP);
-		print_update_counter(ptr->WDIAG_UCNT);
-		print_board_temp(ptr->WDIAG_TEMP);
+		print_servo_status(iomemr32(wrcdiag->is_be, ptr->WDIAG_SSTAT));
+		print_port_status(iomemr32(wrcdiag->is_be, ptr->WDIAG_PSTAT));
+		print_ptp_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
+		print_aux_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
+		print_tx_frame_count(iomemr32(wrcdiag->is_be, ptr->WDIAG_TXFCNT));
+		print_rx_frame_count(iomemr32(wrcdiag->is_be, ptr->WDIAG_RXFCNT));
+		print_local_time(iomemr32(wrcdiag->is_be, ptr->WDIAG_SEC_MSB),
+				 iomemr32(wrcdiag->is_be, ptr->WDIAG_SEC_LSB),
+				 iomemr32(wrcdiag->is_be, ptr->WDIAG_NS));
+		print_roundtrip_time(iomemr32(wrcdiag->is_be, ptr->WDIAG_MU_MSB),
+				     iomemr32(wrcdiag->is_be, ptr->WDIAG_MU_LSB));
+		print_master_slave_delay(iomemr32(wrcdiag->is_be,
+						  ptr->WDIAG_DMS_MSB),
+					 iomemr32(wrcdiag->is_be,
+					 	  ptr->WDIAG_DMS_LSB));
+		print_link_asym(iomemr32(wrcdiag->is_be, ptr->WDIAG_ASYM));
+		print_clock_offset(iomemr32(wrcdiag->is_be, ptr->WDIAG_CKO));
+		print_phase_setpoint(iomemr32(wrcdiag->is_be, ptr->WDIAG_SETP));
+		print_update_counter(iomemr32(wrcdiag->is_be, ptr->WDIAG_UCNT));
+		print_board_temp(iomemr32(wrcdiag->is_be, ptr->WDIAG_TEMP));
 		break;
 	case WRCDIAG_CMD_SSTAT:
-		print_servo_status(ptr->WDIAG_SSTAT);
+		print_servo_status(iomemr32(wrcdiag->is_be, ptr->WDIAG_SSTAT));
 		break;
 	case WRCDIAG_CMD_PSTAT:
-		print_port_status(ptr->WDIAG_PSTAT);
+		print_port_status(iomemr32(wrcdiag->is_be, ptr->WDIAG_PSTAT));
 		break;
 	case WRCDIAG_CMD_PTPSTAT:
-		print_ptp_state(ptr->WDIAG_PTPSTAT);
+		print_ptp_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
 		break;
 	case WRCDIAG_CMD_ASTAT:
-		print_aux_state(ptr->WDIAG_PTPSTAT);
+		print_aux_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
 		break;
 	case WRCDIAG_CMD_TXFCNT:
-		print_tx_frame_count(ptr->WDIAG_TXFCNT);
+		print_tx_frame_count(iomemr32(wrcdiag->is_be,
+					      ptr->WDIAG_TXFCNT));
 		break;
 	case WRCDIAG_CMD_RXFCNT:
-		print_rx_frame_count(ptr->WDIAG_RXFCNT);
+		print_rx_frame_count(iomemr32(wrcdiag->is_be,
+					      ptr->WDIAG_RXFCNT));
 		break;
 	case WRCDIAG_CMD_LTIME:
-		print_local_time(ptr->WDIAG_SEC_MSB, ptr->WDIAG_SEC_LSB,
-				 ptr->WDIAG_NS);
+		print_local_time(iomemr32(wrcdiag->is_be, ptr->WDIAG_SEC_MSB),
+				 iomemr32(wrcdiag->is_be, ptr->WDIAG_SEC_LSB),
+				 iomemr32(wrcdiag->is_be, ptr->WDIAG_NS));
 		break;
 	case WRCDIAG_CMD_RTTIME:
-		print_roundtrip_time(ptr->WDIAG_MU_MSB, ptr->WDIAG_MU_LSB);
+		print_roundtrip_time(iomemr32(wrcdiag->is_be,
+					      ptr->WDIAG_MU_MSB),
+			             iomemr32(wrcdiag->is_be,
+				     	      ptr->WDIAG_MU_LSB));
 		break;
 	case WRCDIAG_CMD_MSTRSLAVEDELAY:
-		print_master_slave_delay(ptr->WDIAG_DMS_MSB, ptr->WDIAG_DMS_LSB);
+		print_master_slave_delay(iomemr32(wrcdiag->is_be,
+						  ptr->WDIAG_DMS_MSB),
+			                 iomemr32(wrcdiag->is_be,
+					   	  ptr->WDIAG_DMS_LSB));
 		break;
 	case WRCDIAG_CMD_LINKASYM:
-		print_link_asym(ptr->WDIAG_ASYM);
+		print_link_asym(iomemr32(wrcdiag->is_be, ptr->WDIAG_ASYM));
 		break;
 	case WRCDIAG_CMD_CKOFFSET:
-		print_clock_offset(ptr->WDIAG_CKO);
+		print_clock_offset(iomemr32(wrcdiag->is_be, ptr->WDIAG_CKO));
 		break;
 	case WRCDIAG_CMD_PHASESETPOINT:
-		print_phase_setpoint(ptr->WDIAG_SETP);
+		print_phase_setpoint(iomemr32(wrcdiag->is_be, ptr->WDIAG_SETP));
 		break;
 	case WRCDIAG_CMD_UPDATECNT:
-		print_update_counter(ptr->WDIAG_UCNT);
+		print_update_counter(iomemr32(wrcdiag->is_be, ptr->WDIAG_UCNT));
 		break;
 	case WRCDIAG_CMD_TEMP:
-		print_board_temp(ptr->WDIAG_TEMP);
+		print_board_temp(iomemr32(wrcdiag->is_be, ptr->WDIAG_TEMP));
 		break;
 	}
 
