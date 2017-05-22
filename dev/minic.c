@@ -197,7 +197,7 @@ int minic_rx_frame(struct wr_ethhdr *hdr, uint8_t * payload, uint32_t buf_size,
 		    && counter_ppsg < 250000000)
 			sec--;
 
-		hwts->sec = sec & 0x7fffffff;
+		hwts->sec = sec;
 
 		cntr_diff = (counter_r & F_COUNTER_MASK) - counter_f;
 
