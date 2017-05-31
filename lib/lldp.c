@@ -16,6 +16,7 @@
 #include "lldp.h"
 #include "endpoint.h"
 #include "ipv4.h"
+#include "shell.h"
 
 static char lldpdu[LLDP_PKT_LEN];
 static uint16_t lldpdu_len;
@@ -31,10 +32,10 @@ static struct wr_sockaddr addr;
 
 static void lldp_header_tlv(int tlv_type) {
 
+	lldpdu_len = tlv_offset[tlv_type];
 	lldpdu[lldpdu_len] = tlv_type * 2;
-	lldpdu[lldpdu_len + 1] = tlv_type_len[tlv_type];
+	lldpdu[lldpdu_len + LLDP_SUBTYPE] = tlv_type_len[tlv_type];
 	lldpdu_len += LLDP_HEADER;
-
 }
 
 #ifndef htons
@@ -44,7 +45,7 @@ static void lldp_header_tlv(int tlv_type) {
 static void lldp_add_tlv(int tlv_type) {
 
 	unsigned char mac[6];
-	uint8_t myIP[4];
+	unsigned char ipWR[4];
 
 	switch(tlv_type) {
 		case END_LLDP:
@@ -52,9 +53,7 @@ static void lldp_add_tlv(int tlv_type) {
 			lldp_header_tlv(tlv_type);
 
 			/* End TLV */
-			memcpy(lldpdu+(lldpdu_len), 0x0, tlv_type_len[tlv_type]);
-			lldpdu_len += tlv_type_len[tlv_type];
-
+			memcpy(lldpdu + lldpdu_len, 0x0, tlv_type_len[tlv_type]);
 			break;
 		case CHASSIS_ID:
 			/* header */
@@ -63,9 +62,7 @@ static void lldp_add_tlv(int tlv_type) {
 			/* TLV Chassis Component */
 			lldpdu[lldpdu_len] = 4;
 			get_mac_addr(mac);
-			memcpy(lldpdu+(lldpdu_len + LLDP_SUBTYPE), mac, 6);
-			lldpdu_len += tlv_type_len[tlv_type];
-
+			memcpy(lldpdu + (lldpdu_len + LLDP_SUBTYPE), mac, 6);
 			break;
 		case PORT_ID:
 			/* header */
@@ -73,16 +70,14 @@ static void lldp_add_tlv(int tlv_type) {
 
 			/* TLV Interce Alias */
 			lldpdu[lldpdu_len] = 7;
-			strcpy(lldpdu+(lldpdu_len + LLDP_SUBTYPE), "WR Timing Receiver");
-			lldpdu_len += tlv_type_len[tlv_type];
+			strcpy(lldpdu + (lldpdu_len + LLDP_SUBTYPE), "WR Port");
 			break;
 		case TTL:
 			/* header */
 			lldp_header_tlv(tlv_type);
 
 			/* TLV Time to Live */
-			lldpdu[lldpdu_len + 1] = 0xFF; /* sec */
-			lldpdu_len += tlv_type_len[tlv_type];
+			lldpdu[lldpdu_len + LLDP_SUBTYPE] = 0x20; /* sec */
 			break;
 		case PORT:
 			/* header */
@@ -90,9 +85,10 @@ static void lldp_add_tlv(int tlv_type) {
 
 			/* TLV Info srting */
                         if (HAS_IP) {
-                                getIP(myIP);
-                                memcpy(lldpdu + lldpdu_len, myIP, 4);
-                                lldpdu_len += tlv_type_len[tlv_type];
+                                getIP(ipWR);
+                                char buf[32];
+                                format_ip(buf, ipWR);
+			        strcpy(lldpdu + lldpdu_len, buf);
                         }
 			break;
 		case SYS_NAME:
@@ -101,16 +97,15 @@ static void lldp_add_tlv(int tlv_type) {
 
 			/* TLV Info srting */
 			/* TODO get host system name from wr-core outer world  */
-			//strcpy(lldpdu+lldpdu_len, hostname);
-			lldpdu_len += tlv_type_len[tlv_type];
+			strcpy(lldpdu + lldpdu_len, "WR Timing Receiver");
+
 			break;
 		case SYS_DESCR:
 			/* header */
 			lldp_header_tlv(tlv_type);
 
 			/* TLV Info srting */
-			strcpy(lldpdu+lldpdu_len, build_revision);
-			lldpdu_len += tlv_type_len[tlv_type];
+			strcpy(lldpdu + lldpdu_len, build_revision);
 			break;
 		case SYS_CAPLTY:
 			/* header */
@@ -118,23 +113,20 @@ static void lldp_add_tlv(int tlv_type) {
 
 			/* TLV Info string */
 			memset(lldpdu + lldpdu_len, 0x0, 4);
-			lldpdu_len += tlv_type_len[tlv_type];
 			break;
 		case MNG_ADD:
 			/* header */
 			lldp_header_tlv(tlv_type);
 
 			/* TLV Info string */
-			lldpdu[lldpdu_len] = 0x5; /* len */
+                        /* TODO get host system name from wr-core outer world  */
+			lldpdu[lldpdu_len] = 0x4; /* len */
 			lldpdu[lldpdu_len + LLDP_SUBTYPE] = 0x1; /* mngt add subtype */
-			/* TODO get host system mgnt ip from wr-core outer world  */
-			//memcpy(lldpdu + (lldpdu_len + 2), MNG_IP , 4); /* mngt IP */
 			lldpdu[lldpdu_len + IF_SUBTYPE] = 0x1; /* if subtype */
 			lldpdu[lldpdu_len + IF_NUM] = 0x1; /* if number */
-			lldpdu_len += tlv_type_len[tlv_type];
 			break;
 		case USER_DEF:
-			/* to be added */
+			/* TODO define WR TLV */
 			break;
 		default:
 			break;
@@ -144,7 +136,7 @@ static void lldp_add_tlv(int tlv_type) {
 static void lldp_init(void)
 {
 	struct wr_sockaddr saddr;
-	int i;
+        int i;
 
         /* LLDP: raw ethernet*/
 	memset(&saddr, 0x0, sizeof(saddr));
@@ -163,8 +155,10 @@ static void lldp_init(void)
 	for (i=CHASSIS_ID; i <= SYS_CAPLTY; i++)
 		lldp_add_tlv(i);
 
-	/* add optional and end TLVs */
+	/* add optional TLVs */
 	lldp_add_tlv(MNG_ADD);
+
+        /* end TLVs */
 	lldp_add_tlv(END_LLDP);
 }
 
@@ -172,13 +166,16 @@ static void lldp_poll(void)
 {
         static int ticks;
 
-        if (HAS_IP & (ip_status != IP_TRAINING)) {
-                lldp_add_tlv(PORT);
-        }
-
-	/* fix me, waiting for periodic tasks */
+	/* periodic tasks */
         if (ticks > LLDP_TX_FQ) {
+
+                if (HAS_IP & (ip_status != IP_TRAINING)) {
+                        lldp_add_tlv(PORT);
+                        /* update other dynamic TLVs */
+                }
+
 		ptpd_netif_sendto(lldp_socket, &addr, lldpdu, LLDP_PKT_LEN, 0);
+
                 ticks = 0;
         }
         else
