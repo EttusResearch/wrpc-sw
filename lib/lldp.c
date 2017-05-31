@@ -89,17 +89,19 @@ static void lldp_add_tlv(int tlv_type) {
 			lldp_header_tlv(tlv_type);
 
 			/* TLV Info srting */
-			getIP(myIP);
-			memcpy(lldpdu + lldpdu_len, myIP, 4);
-			lldpdu_len += tlv_type_len[tlv_type];
+                        if (HAS_IP) {
+                                getIP(myIP);
+                                memcpy(lldpdu + lldpdu_len, myIP, 4);
+                                lldpdu_len += tlv_type_len[tlv_type];
+                        }
 			break;
 		case SYS_NAME:
 			/* header */
 			lldp_header_tlv(tlv_type);
 
 			/* TLV Info srting */
-			/* fixme, define how to get formfactor name */
-			//strcpy(lldpdu+lldpdu_len, form_factor);
+			/* TODO get host system name from wr-core outer world  */
+			//strcpy(lldpdu+lldpdu_len, hostname);
 			lldpdu_len += tlv_type_len[tlv_type];
 			break;
 		case SYS_DESCR:
@@ -125,7 +127,7 @@ static void lldp_add_tlv(int tlv_type) {
 			/* TLV Info string */
 			lldpdu[lldpdu_len] = 0x5; /* len */
 			lldpdu[lldpdu_len + LLDP_SUBTYPE] = 0x1; /* mngt add subtype */
-			/* fixme, defien how to get the mngt IP from the host */
+			/* TODO get host system mgnt ip from wr-core outer world  */
 			//memcpy(lldpdu + (lldpdu_len + 2), MNG_IP , 4); /* mngt IP */
 			lldpdu[lldpdu_len + IF_SUBTYPE] = 0x1; /* if subtype */
 			lldpdu[lldpdu_len + IF_NUM] = 0x1; /* if number */
@@ -164,12 +166,15 @@ static void lldp_init(void)
 	/* add optional and end TLVs */
 	lldp_add_tlv(MNG_ADD);
 	lldp_add_tlv(END_LLDP);
-
 }
 
 static void lldp_poll(void)
 {
         static int ticks;
+
+        if (HAS_IP & (ip_status != IP_TRAINING)) {
+                lldp_add_tlv(PORT);
+        }
 
 	/* fix me, waiting for periodic tasks */
         if (ticks > LLDP_TX_FQ) {
