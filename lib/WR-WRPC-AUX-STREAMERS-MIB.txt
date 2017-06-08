@@ -1,0 +1,394 @@
+WR-WRPC-AUX-STREAMERS-MIB DEFINITIONS ::= BEGIN
+
+-- Based on the WR-WRPC-MIB
+-- Adam Wujek & Maciej Lipinski, BE-CO-HT, CERN
+
+-- IMPORTS: Include definitions from other mibs here
+IMPORTS
+        OBJECT-TYPE, Unsigned32, MODULE-IDENTITY FROM SNMPv2-SMI
+        wrWrpcMIB FROM WR-WRPC-MIB;
+
+wrpcAuxDiag MODULE-IDENTITY
+    LAST-UPDATED "201706081000Z"
+    ORGANIZATION "CERN"
+    CONTACT-INFO "postal:   BE-CO-HT, CERN, Geneva
+                  email:    ht-drivers@cern.ch
+                 "
+    DESCRIPTION  "White Rabbit WRPC aux registers for WR Streamers
+                 "
+
+    REVISION     "201706081000Z"
+    DESCRIPTION
+        "Second revision."
+
+    ::= { wrWrpcMIB 2 }
+
+wrpcAuxDiagId1                 OBJECT IDENTIFIER ::= { wrpcAuxDiag 1 }
+wrpcAuxDiagVersion101          OBJECT IDENTIFIER ::= { wrpcAuxDiagId1 2 }
+
+-- ****************************************************************************
+
+wrpcAuxDiag101RoTable          OBJECT-TYPE
+    SYNTAX                     SEQUENCE OF WrpcAuxDiag101RoEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Table with read only registers"
+    ::= { wrpcAuxDiagVersion101 1 }
+
+wrpcAuxDiag101RoEntry          OBJECT-TYPE
+    SYNTAX                     WrpcAuxDiag101RoEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "An entry for read only registers"
+    INDEX   { wrpcAuxDiag101RoIndex }
+    ::= { wrpcAuxDiag101RoTable 1 }
+
+WrpcAuxDiag101RoEntry ::=
+    SEQUENCE {
+        wrpcAuxDiag101RoIndex              Unsigned32,
+        wrpcAuxDiag101RoRegCount           Unsigned32,
+        wrpcAuxDiag101RoStatus             Unsigned32,
+        wrpcAuxDiag101RoResetTimeCycles    Unsigned32,
+        wrpcAuxDiag101RoResetTimeTaiLsb    Unsigned32,
+        wrpcAuxDiag101RoResetTimeTaiMsb    Unsigned32,
+        wrpcAuxDiag101RoLatencyMax         Unsigned32,
+        wrpcAuxDiag101RoLatencyMin         Unsigned32,
+        wrpcAuxDiag101RoSentFrameCntLsb    Unsigned32,
+        wrpcAuxDiag101RoSentFrameCntMsb    Unsigned32,
+        wrpcAuxDiag101RoRcvdFrameCntLsb    Unsigned32,
+        wrpcAuxDiag101RoRcvdFrameCntMsb    Unsigned32,
+        wrpcAuxDiag101RoLostFrameCntLsb    Unsigned32,
+        wrpcAuxDiag101RoLostFrameCntMsb    Unsigned32,
+        wrpcAuxDiag101RoLostBlockCntLsb    Unsigned32,
+        wrpcAuxDiag101RoLostBlockCntMsb    Unsigned32,
+        wrpcAuxDiag101RoLatencyCntLsb      Unsigned32,
+        wrpcAuxDiag101RoLatencyCntMsb      Unsigned32,
+        wrpcAuxDiag101RoLatencyAccLsb      Unsigned32,
+        wrpcAuxDiag101RoLatencyAccMsb      Unsigned32,
+        wrpcAuxDiag101RoDbgWord            Unsigned32,
+        wrpcAuxDiag101RoMagicNumber        Unsigned32
+    }
+
+wrpcAuxDiag101RoIndex          OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Index for wrpcAuxDiag101RoTable"
+    ::= { wrpcAuxDiag101RoEntry 1 }
+
+wrpcAuxDiag101RoRegCount       OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of registers available in the wrpcAuxDiag101RoTable"
+    ::= { wrpcAuxDiag101RoEntry 2 }
+
+wrpcAuxDiag101RoStatus         OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "bit 0: HIGH indicates that  statistics are being reseted
+             bit 1: HIGH indicates that latency accumulator has overflown since
+                    last reset. Snapshot-able by setting bit 1 in
+                    wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 3 }
+
+wrpcAuxDiag101RoResetTimeCycles OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Cycle part of reset timestamp: number of cycles of the 125MHz
+             clock in the since the TAI second started;
+
+             Timestamp is taken at the rising and falling edge of the input
+             reset value. This allows to:
+             1. read the timestamp of the start of statistics acquisition
+                (generated before)
+             2. set HIGH reset (this can be combine with snapshotting
+                the statistics at the same time)
+             3. read the timestamp of the end of statistics acquisition and
+                the stats values for as long as it takes
+             4. set LOW reset, this restart acquisition (a new timestamp will
+                indicate the start of the acquisition (you can restart before
+                point 3)"
+    ::= { wrpcAuxDiag101RoEntry 4 }
+
+wrpcAuxDiag101RoResetTimeTaiLsb OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB part of reset timestamp: number: TAI time - indicates
+             number of seconds since epoch
+
+             Timestamp is taken at the rising and falling edge of the input
+             reset value. This allows to:
+             1. read the timestamp of the start of statistics acquisition
+                (generated before)
+             2. set HIGH reset (this can be combine with snapshotting
+                the statistics at the same time)
+             3. read the timestamp of the end of statistics acquisition and
+                the stats values for as long as it takes
+             4. set LOW reset, this restart acquisition (a new timestamp will
+                indicate the start of the acquisition (you can restart before
+                point 3)"
+    ::= { wrpcAuxDiag101RoEntry 5 }
+
+wrpcAuxDiag101RoResetTimeTaiMsb OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MSB part of reset timestamp
+
+             Timestamp is taken at the rising and falling edge of the input
+             reset value. This allows to:
+             1. read the timestamp of the start of statistics acquisition
+                (generated before)
+             2. set HIGH reset (this can be combine with snapshotting
+                the statistics at the same time)
+             3. read the timestamp of the end of statistics acquisition and
+                the stats values for as long as it takes
+             4. set LOW reset, this restart acquisition (a new timestamp will
+                indicate the start of the acquisition (you can restart before
+                point 3)"
+    ::= { wrpcAuxDiag101RoEntry 6 }
+
+wrpcAuxDiag101RoLatencyMax     OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Maximum latency since reset. Snapshot-able by setting bit 1 in
+             wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 7 }
+
+wrpcAuxDiag101RoLatencyMin     OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Minimum latency since reset. Snapshot-able by setting bit 1 in
+             wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 8 }
+
+wrpcAuxDiag101RoSentFrameCntLsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of the number of sent streamer frames since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 9 }
+
+wrpcAuxDiag101RoSentFrameCntMsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MSB of the number of sent streamer frames since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 10 }
+
+wrpcAuxDiag101RoRcvdFrameCntLsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of the number of received streamers frames since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 11 }
+
+wrpcAuxDiag101RoRcvdFrameCntMsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MSB of the number of received streamers frames since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 12 }
+
+wrpcAuxDiag101RoLostFrameCntLsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of the number of lost streamer frames since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 13 }
+
+wrpcAuxDiag101RoLostFrameCntMsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MSB of the number of lost streamer frames since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 14 }
+
+wrpcAuxDiag101RoLostBlockCntLsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of the number or lost streamer blocks since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister.
+
+             Each streamer frame can have a number of blocks, each has its own
+             CRC, this blocks are counted separately (in the improbable case
+             that there is one block in the frame that is corrupted but
+             the frame's CRC is OK."
+    ::= { wrpcAuxDiag101RoEntry 15 }
+
+wrpcAuxDiag101RoLostBlockCntMsb   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MSB of the number or lost streamer blocks since reset. Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister.
+
+             Each streamer frame can have a number of blocks, each has its own
+             CRC, this blocks are counted separately (in the improbable case
+             that there is one block in the frame that is corrupted but
+             the frame's CRC is OK."
+    ::= { wrpcAuxDiag101RoEntry 16 }
+
+wrpcAuxDiag101RoLatencyCntLsb     OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of the number of latency values accumulated in the accumulator since
+             reset (avg_latency = latency_acc/latency_cnt). Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 17 }
+
+wrpcAuxDiag101RoLatencyCntMsb     OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of the number of latency values accumulated in the accumulator since
+             reset (avg_latency = latency_acc/latency_cnt). Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 18 }
+
+wrpcAuxDiag101RoLatencyAccLsb  OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "LSB of accumulated latency value. Snapshot-able by setting bit 1
+             in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 19 }
+
+wrpcAuxDiag101RoLatencyAccMsb  OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "MSB of accumulated latency value. Snapshot-able by setting bit 1
+             in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 20 }
+
+wrpcAuxDiag101RoInputWord      OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "DBG: one can read the input word to verify the operation
+             (i.e. the read-write register at address 0). Snapshot-able by
+             setting bit 1 in wrpcAuxDiag101RwControlRegister."
+    ::= { wrpcAuxDiag101RoEntry 21 }
+
+ wrpcAuxDiag101RoMagicNumber   OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "DBG: Magic number to for sanity checks, should read in hex 
+             0xDEADBEEF and in decimal 3735928559."
+    ::= { wrpcAuxDiag101RoEntry 22 }
+
+
+-- ****************************************************************************
+
+wrpcAuxDiag101RwTable          OBJECT-TYPE
+    SYNTAX                     SEQUENCE OF WrpcAuxDiag101RwEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Table with read-write registers"
+    ::= { wrpcAuxDiagVersion101 2 }
+
+wrpcAuxDiag101RwEntry          OBJECT-TYPE
+    SYNTAX                     WrpcAuxDiag101RwEntry
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "An entry for read-write registers"
+    INDEX   { wrpcAuxDiag101RwIndex }
+    ::= { wrpcAuxDiag101RwTable 1 }
+
+WrpcAuxDiag101RwEntry ::=
+    SEQUENCE {
+        wrpcAuxDiag101RwIndex            Unsigned32,
+        wrpcAuxDiag101RwRegCount         Unsigned32,
+        wrpcAuxDiag101RwControlRegister  Unsigned32
+    }
+
+wrpcAuxDiag101RwIndex          OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 not-accessible
+    STATUS                     current
+    DESCRIPTION
+            "Index for wrpcAuxDiag101RwTable"
+    ::= { wrpcAuxDiag101RwEntry 1 }
+
+wrpcAuxDiag101RwRegCount       OBJECT-TYPE
+    SYNTAX                     Unsigned32
+    MAX-ACCESS                 read-only
+    STATUS                     current
+    DESCRIPTION
+            "Number of registers available in the wrpcAuxDiag101RwTable"
+    ::= { wrpcAuxDiag101RwEntry 2 }
+
+wrpcAuxDiag101RwControlRegister OBJECT-TYPE
+    SYNTAX                       Unsigned32
+    MAX-ACCESS                   read-write
+    STATUS                       current
+    DESCRIPTION
+            "bit 0: setting to HIGH resets the counters
+             bit 1: setting to HIGH snapshots the statistics value
+
+             Timestamp is taken at the rising and falling edge of the input
+             reset value. This allows to:
+             1. read the timestamp of the start of statistics acquisition
+                (generated before)
+             2. set HIGH reset (this can be combine with snapshotting
+                the statistics at the same time)
+             3. read the timestamp of the end of statistics acquisition and
+                the stats values for as long as it takes
+             4. set LOW reset, this restart acquisition (a new timestamp will
+                indicate the start of the acquisition (you can restart before
+                point 3)
+
+             Snapshot allows to read coherent data, i.e. the values of the
+             counters are stored in separate registers at the same instant.
+             Even if reading is slow, they will not change, so one can read
+             coherent value of accumulator and the count of accumulated values,
+             and therefore calculate precise average. Note, the statistics are
+             still taken in the background. The snapshotted values are kept
+             coherent as long as snapshot value is HIGH"
+    ::= { wrpcAuxDiag101RwEntry 3 }
+
+-- ****************************************************************************
+
+END
