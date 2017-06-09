@@ -2,6 +2,7 @@ EB    ?= no
 SDBFS ?= no
 
 CFLAGS = -Wall -ggdb -I../include -I../liblinux -I../liblinux/extest
+CFLAGS += -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
 LDFLAGS = -lutil -L../liblinux -ldevmap -L../liblinux/extest -lextest
 LDFLAGS += -lreadline
 ALL    = genraminit genramvhd genrammif
@@ -50,7 +51,6 @@ wrpc-dump: wrpc-dump.c dump-info-host.o
 	$(CC) $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include -I.. \
 	-I ../softpll \
 	$^ -o $@ \
-	-D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
 
 wr-streamers: wr-streamers.c
 	$(CC) $(CFLAGS)  $^ $(LDFLAGS) -o $@

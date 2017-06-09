@@ -284,10 +284,17 @@ static int read_diags(struct cmd_desc *cmdd, struct atom *atoms)
 	return 1;
 }
 
+void print_version(void)
+{
+	fprintf(stderr, "Built in wrpc-sw repo ver:%s, by %s on %s %s\n",
+		__GIT_VER__, __GIT_USR__, __TIME__, __DATE__);
+}
+
 static void wrcdiag_help(char *prog)
 {
 	fprintf(stderr, "%s [options]\n", prog);
 	fprintf(stderr, "%s\n", dev_mapping_help());
+	print_version();
 }
 
 static void sig_hndl()
