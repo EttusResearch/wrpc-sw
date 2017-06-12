@@ -112,6 +112,7 @@ int syslog_poll(void)
 	extern struct pp_instance *ppi;
 	struct wr_servo_state *s;
 	static uint32_t prev_tics;
+	static int last_setp, worst_delta, bad_track_lost;
 	static int track_ok_count, prev_servo_state = -1;
 
 	if (IS_HOST_PROCESS)
@@ -148,9 +149,14 @@ int syslog_poll(void)
 		goto send;
 	}
 
-
+	/*
+	 * The following section is all about track-lost events
+	 */
 	if (!prev_tics)
 		prev_tics = now;
+
+	if (s && s->state == WR_TRACK_PHASE) /* monitor setpoint while ok */
+		last_setp = s->cur_setpoint;
 
 	if (s && s->state == WR_TRACK_PHASE &&
 	    prev_servo_state != WR_TRACK_PHASE) {
@@ -171,8 +177,33 @@ int syslog_poll(void)
 				  "%i-th re-rtrack after %i.%03i s",
 				  track_ok_count,
 				  prev_tics / 1000, prev_tics % 1000);
+		/* Report if we didn't really loose time */
+		if (!bad_track_lost)
+			len += pp_sprintf(buf + len, " (max delta %i ps)",
+					  worst_delta);
+
+		bad_track_lost = worst_delta = 0;
 		goto send;
 	}
+
+	if (s && s->state == WR_SYNC_PHASE && (s->flags & WR_FLAG_WAIT_HW)) {
+		/* 
+		 * Passing through SYNC_NSEC is a glimpse, and we won't notice.
+		 * Check, rather if we are waiting beofre sync_phase.
+		 */
+		bad_track_lost = 1;
+	}
+
+	if (s && s->state != WR_TRACK_PHASE) {
+		int delta = s->cur_setpoint - last_setp;
+
+		/* "abs(x - y)" is not working, unexpectedly) */
+		if (delta < 0)
+			delta = - delta;
+		if (delta > worst_delta)
+			worst_delta = delta;
+	}
+
 	if (s && s->state != WR_TRACK_PHASE &&
 	    prev_servo_state == WR_TRACK_PHASE) {
 		prev_servo_state = s->state;
@@ -182,6 +213,9 @@ int syslog_poll(void)
 		goto send;
 	}
 
+	/*
+	 * A section about temperature monitoring
+	 */
 
 	if (!next_temp_check) {
 		next_temp_check = now + 1000;
