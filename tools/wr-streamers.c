@@ -283,6 +283,87 @@ int get_set_latency(struct cmd_desc *cmdd, struct atom *atoms)
 	return 1;
 }
 
+int get_set_qtags_flag(struct cmd_desc *cmdd, struct atom *atoms)
+{
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t val, txcfg5;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	txcfg5 = iomemr32(wrstm->is_be, ptr->TX_CFG5);
+	if (atoms->type == Terminator) { //read current flag
+		// Check enable/disable QTag flag
+		val = txcfg5 & WR_STREAMERS_TX_CFG5_QTAG_ENA;
+	}
+	else { // set QTag flag
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = (atoms->val) ? 1 : 0; /* convert input into 0 or 1 */
+		if (val)
+			txcfg5 |= val;
+		else
+			txcfg5 &= ~(-1);
+		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
+	}
+	fprintf(stderr, "Tagging with QTag is %s\n",
+		(val) ? "Enabled" : "Disabled");
+	return 1;
+}
+
+int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
+{
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	int argc;
+	uint32_t vid, prio, txcfg5;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	txcfg5 = iomemr32(wrstm->is_be, ptr->TX_CFG5);
+	if (atoms->type == Terminator) { //read current flag
+		vid = (txcfg5 & WR_STREAMERS_TX_CFG5_QTAG_VID_MASK) >>
+		      WR_STREAMERS_TX_CFG5_QTAG_VID_SHIFT;
+		prio = (txcfg5 & WR_STREAMERS_TX_CFG5_QTAG_PRIO_MASK) >>
+		       WR_STREAMERS_TX_CFG5_QTAG_PRIO_SHIFT;
+	}
+	else { // writing new QTag settings
+		// first of all enable QTag just in case
+		txcfg5 |= 0x1;
+		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
+
+		argc = 0; //count provided arguments
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		/* first parameter is vid */
+		argc++;
+		vid = atoms->val;
+		++atoms;
+		if (atoms->type == Numeric) { // new prio is provided
+			prio = atoms->val;
+			argc++;
+		}
+		txcfg5 &= ~WR_STREAMERS_TX_CFG5_QTAG_VID_MASK; //reset vid bit field
+		txcfg5 |= (vid << WR_STREAMERS_TX_CFG5_QTAG_VID_SHIFT); // set new vid
+		if (argc == 2) {
+			txcfg5 &= ~WR_STREAMERS_TX_CFG5_QTAG_PRIO_MASK; // reset prio bit field
+			txcfg5 |= (prio << WR_STREAMERS_TX_CFG5_QTAG_PRIO_SHIFT); // set new prio
+		}
+		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
+	}
+	fprintf(stderr, "Tagging with QTag: VLAN ID: 0x%x prio: 0x%x\n",
+		vid, prio);
+	return 1;
+}
+
 enum wrstm_cmd_id{
 	WRSTM_CMD_STATS = CMD_USR,
 	WRSTM_CMD_RESET,
@@ -295,6 +376,8 @@ enum wrstm_cmd_id{
 	WRSTM_CMD_RX_LOC_MAC,
 	WRSTM_CMD_RX_REM_MAC,
 	WRSTM_CMD_LATENCY,
+	WRSTM_CMD_QTAG_ENB,
+	WRSTM_CMD_QTAG_VP,
 //	WRSTM_CMD_DBG_BYTE,
 //	WRSTM_CMD_DBG_MUX,
 //	WRSTM_CMD_DBG_VAL,
@@ -328,6 +411,12 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	{ 1, WRSTM_CMD_LATENCY, "lat",
 	  "get/set config of fixed latency in integer [us] (-1 to disable)",
 	  "[latency]", 0, get_set_latency},
+	{ 1, WRSTM_CMD_QTAG_ENB, "qtagf",
+	  "QTags flag on off",
+	  "[0/1]", 0, get_set_qtags_flag},
+	{ 1, WRSTM_CMD_QTAG_VP, "qtagvp",
+	  "QTags Get/Set VLAN ID and priority",
+	  "[VID,prio]", 0, get_set_qtags_param},
 //	{ 1, WRSTM_CMD_DBG_BYTE, "dbgbyte",
 //	  "set which byte of the rx or tx frame should be snooped", "byte", 1,},
 //	{ 1, WRSTM_CMD_DBG_MUX, "dbgdir",
