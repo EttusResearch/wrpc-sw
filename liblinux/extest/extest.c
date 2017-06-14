@@ -196,6 +196,22 @@ static int get_atoms(char *input, struct atom *atoms)
 			if (*buf == '-') {
 				char *c = buf + 1;
 
+				if (atomhash[(int)*c] == Alpha) {
+					/*
+					 * -[a--z]: it's an argument for the
+					 * command like : cmd -x val1 -y val2
+					 * Note: Argument name is limited to a
+					 * single letter
+					 */
+					atoms[cnt].pos = (unsigned int)(buf - input);
+					atoms[cnt].text[0] = *buf++;
+					atoms[cnt].text[1] = *buf++;
+					atoms[cnt].text[2] = '\0';
+					atoms[cnt].type    = String;
+					cnt++;
+					break;
+				}
+
 				if (*c && isdigit(*c)) {
 					atype = Numeric;
 					goto reeval;
