@@ -154,8 +154,7 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 	}
 
 	val = iomemr32(wrstm->is_be, ptr->SSCR2);
-	res_time_sec = (time_t)(WR_STREAMERS_SSCR2_RST_TS_TAI_LSB_R(val) +
-				LEAP_SECONDS);//to UTC
+	res_time_sec = (time_t)(val + LEAP_SECONDS);//to UTC
 
 	cur_time           = time(NULL);
 	reset_time_elapsed = difftime(cur_time,res_time_sec);
