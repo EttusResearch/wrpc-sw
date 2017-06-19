@@ -110,6 +110,54 @@ static void sighandler_init()
 	sigaction(SIGTERM, &act, 0);
 }
 
+static int check_named_parameter(char *buf)
+{
+	/*
+	 * we are here because *buf = '-'
+	 * check if next char is a letter or another '-' followed by many
+	 * letters like:
+	 * 	-[a-zA-Z]{1}
+	 * 	--[a-zA-Z]*
+	 */
+	if ( (atomhash[(int)*(buf + 1)] == Alpha) ||
+	     ( (*(buf + 1) == '-') &&
+	       (atomhash[(int)*(buf + 2)] == Alpha) ) )
+	       return 1;
+	return 0;
+}
+
+static char *get_named_parameter(char *input, char *buf, struct atom *atom)
+{
+	atom_t 	atype;	 /* atom type */
+	int 	i;
+
+	/*
+	 * parameter name and value can be 'Separator' separated or not.
+	 * A named parameter with its value can be specified in several ways:
+	 * "--arg1-1" or "--arg1 -1" or "-a-1" or "-a -1":
+	 * Too face this issue, named parameter is copied using two loops.
+	 * First loop copy '-' character(s)
+	 * Second loop copy the parameter name itself
+	 */
+	atom->pos = (unsigned int)(buf - input);
+	i = 0;
+	atype = atomhash[(int)(*buf)];
+	while (atype == Operator) {
+		atom->text[i++] = *buf++;
+		atype = atomhash[(int)*buf];
+	}
+	atype = atomhash[(int)(*buf)];
+	while (atype == Alpha) {
+		atom->text[i++] = *buf++;
+		if (i >= MAX_ARG_LENGTH)
+			break;
+		atype = atomhash[(int)*buf];
+	}
+	atom->text[i] = '\0';
+	atom->type    = String;
+	return buf;
+}
+
 /**
  * get_atoms - Split the command and its arguments into atoms
  *
@@ -195,26 +243,26 @@ static int get_atoms(char *input, struct atom *atoms)
 			}
 			break;
 		case Operator:
-			/* pick up negative Numerics */
+			/*
+			 * Two cases:
+			 * 	pick up negative Numerics
+			 * 	or named parameters of the command
+			 */
 			if (*buf == '-') {
-				char *c = buf + 1;
-
-				if (atomhash[(int)*c] == Alpha) {
-					/*
-					 * -[a--z]: it's an argument for the
-					 * command like : cmd -x val1 -y val2
-					 * Note: Argument name is limited to a
-					 * single letter
-					 */
-					atoms[cnt].pos = (unsigned int)(buf - input);
-					atoms[cnt].text[0] = *buf++;
-					atoms[cnt].text[1] = *buf++;
-					atoms[cnt].text[2] = '\0';
-					atoms[cnt].type    = String;
+				/*
+				 * Check if it is a named parameter
+				 * Two syntaxes are supported:
+				 * short one -[a-zA-Z]{1}
+				 * long one  --[a-zA-Z]*
+				 */
+				if (check_named_parameter(buf)) {
+					buf = get_named_parameter(input, buf,
+								  &(atoms[cnt]));
 					cnt++;
 					break;
 				}
-
+				/* It's negative Numerics */
+				char *c = buf + 1;
 				if (*c && isdigit(*c)) {
 					atype = Numeric;
 					goto reeval;
