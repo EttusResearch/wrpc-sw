@@ -68,6 +68,9 @@ static int _cmdlist_size = 0;
 static struct atom _args_copy[MAX_ARG_COUNT + 1]; /* +1 for the terminator */
 static void (*user_sig_hndl)() = NULL; // user sig handler
 
+static const char * const libextest_version_s = "libextest version: "
+	__GIT_VER__ ", by " __GIT_USR__ " " __TIME__ " " __DATE__;
+
 /**
  * sighandler - SIGNAL handler
  *
@@ -803,6 +806,11 @@ static struct cmd_desc _built_in_cmdlist[CMD_USR] = {
 /********************************************
  * extest's User's API
  *******************************************/
+
+const char * const extest_get_version()
+{
+	return libextest_version_s;
+}
 
 /**
  * do_yes_no - Get user answer (y/n)

@@ -139,6 +139,9 @@ int 	extest_register_user_cmd(struct cmd_desc user_cmdlist[],
 				 int user_cmd_nb);
 int 	extest_run(char* prg_name, void (*user_sighndl)());
 int	extest_is_last_atom(struct atom *atom);
+
+const char * const extest_get_version();
+
 //@}
 
 #endif /* _EXTEST_H_ */

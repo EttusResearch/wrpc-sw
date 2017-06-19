@@ -3,10 +3,14 @@
 # build a particular environment.
 -include Makefile.specific
 
+GIT_VER =? $(shell git describe --always --dirty)
+GIT_USR =? $(shell git config --get-all user.name)
+
 LIB = libextest.a
 LOBJ := extest.o
 
 CFLAGS = -Wall -ggdb -fPIC -Werror -I./
+CFLAGS += -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
 LDFLAGS = -L. -lextest
 
 %: %.c $(LIB)
