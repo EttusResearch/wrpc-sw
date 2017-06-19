@@ -7,7 +7,11 @@ SUPPORT_CERN_VMEBRIDGE ?= n
 LIB = libdevmap.a
 LOBJ := devmap.o
 
+GIT_VER ?= $(shell git describe --always --dirty)
+GIT_USR ?= $(shell git config --get-all user.name)
+
 CFLAGS = -Wall -ggdb -fPIC -Werror -I./ -I../include
+CFLAGS += -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
 LDFLAGS = -L.
 
 ifeq ($(SUPPORT_CERN_VMEBRIDGE), y)

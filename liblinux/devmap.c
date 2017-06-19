@@ -16,6 +16,9 @@
 
 #include "libdevmap.h"
 
+static const char * const libdevmap_version_s = "libdevmap version: "
+	__GIT_VER__ ", by " __GIT_USR__ " " __TIME__ " " __DATE__;
+
 #ifdef SUPPORT_CERN_VMEBRIDGE
 #include <libvmebus.h>
 
@@ -319,7 +322,7 @@ out:
 	return NULL;
 }
 
-char *dev_mapping_help()
+const char * const dev_mapping_help()
 {
 	static char help_msg[] =
 		"Device mapping options: \n"
@@ -333,4 +336,9 @@ char *dev_mapping_help()
 		;
 
 	return help_msg;
+}
+
+const char * const dev_get_version()
+{
+	return libdevmap_version_s;
 }
