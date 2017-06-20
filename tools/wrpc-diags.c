@@ -344,6 +344,20 @@ struct cmd_desc wrcdiag_cmd[WRCDIAG_CMD_NB + 1] = {
 	{0, },
 };
 
+static int verify_reg_version()
+{
+	volatile struct WRC_DIAGS_WB *ptr =
+		(volatile struct WRC_DIAGS_WB *)wrcdiag->base;
+	uint32_t ver = 0;
+	ver = iomemr32(wrcdiag->is_be, ptr->VER);
+	fprintf(stderr, "Wishbone register version: in FPGA = 0x%x |"
+		" in SW = 0x%x\n", ver, WBGEN2_WRC_DIAGS_VERSION);
+	if(ver != WBGEN2_WRC_DIAGS_VERSION)
+		return -1;
+	else
+		return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -363,6 +377,13 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	ret = verify_reg_version();
+	if (ret) {
+		fprintf(stderr, "Register version in FPGA and SW does not match\n");
+		dev_unmap(wrcdiag);
+		return -1;
+	}
+	
 	ret = extest_register_user_cmd(wrcdiag_cmd, WRCDIAG_CMD_NB);
 	if (ret) {
 		dev_unmap(wrcdiag);

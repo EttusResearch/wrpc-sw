@@ -446,6 +446,20 @@ static void sig_hndl()
 	exit(1);
 }
 
+static int verify_reg_version()
+{
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t ver = 0;
+	ver = iomemr32(wrstm->is_be, ptr->VER);
+	fprintf(stderr, "Wishbone register version: in FPGA = 0x%x |"
+		" in SW = 0x%x\n", ver, WBGEN2_WR_STREAMERS_VERSION);
+	if(ver != WBGEN2_WR_STREAMERS_VERSION)
+		return -1;
+	else
+		return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret;
@@ -465,6 +479,13 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	ret = verify_reg_version();
+	if (ret) {
+		fprintf(stderr, "Register version in FPGA and SW does not match\n");
+		dev_unmap(wrstm);
+		return -1;
+	}
+	
 	ret = extest_register_user_cmd(wrstm_cmd, WRSTM_CMD_NB);
 	if (ret) {
 		dev_unmap(wrstm);
