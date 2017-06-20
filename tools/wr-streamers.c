@@ -14,6 +14,9 @@
 
 static struct mapping_desc *wrstm = NULL;
 
+#define LEAP_SECONDS_DEFAULT 37
+static int leap_seconds = LEAP_SECONDS_DEFAULT;
+
 static char *stats_mesg[][2] = {
 	{"Number of sent wr streamer frames since reset", "tx_cnt"},
         {"Number of received wr streamer frames since reset", "rx_cnt"},
@@ -137,10 +140,10 @@ int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 	return 1;
 }
 
-#define LEAP_SECONDS 37
 int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	uint32_t val;
+	uint64_t tai, tai_msw;
+	uint32_t tai_lsw;
 	int days=0, hours=0, minutes=0, seconds;
 	double reset_time_elapsed=0;
 	time_t cur_time;
@@ -153,8 +156,10 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 		return 1;
 	}
 
-	val = iomemr32(wrstm->is_be, ptr->SSCR2);
-	res_time_sec = (time_t)(val + LEAP_SECONDS);//to UTC
+	tai_lsw = iomemr32(wrstm->is_be, ptr->SSCR2);
+	tai_msw = iomemr32(wrstm->is_be, ptr->SSCR3) & WR_STREAMERS_SSCR3_RST_TS_TAI_MSB_MASK;
+	tai = (tai_msw << 32) | tai_lsw;
+	res_time_sec = (time_t)(tai + leap_seconds);//to UTC
 
 	cur_time           = time(NULL);
 	reset_time_elapsed = difftime(cur_time,res_time_sec);
@@ -162,9 +167,9 @@ int read_reset_time(struct cmd_desc *cmdd, struct atom *atoms)
 	hours              = (reset_time_elapsed-days*60*60*24)/(60*60);
 	minutes            = (reset_time_elapsed-days*60*60*24-hours*60*60)/(60);
 	seconds            = (reset_time_elapsed-days*60*60*24-hours*60*60-minutes*60);
-	fprintf(stderr, "Time elapsed from reset: %d days, %d h, %d m, %d s; "
-		"Reseted on %s\n",
-		days, hours, minutes, seconds,
+	fprintf(stderr, "Time elapsed from reset (computed with %d leap seconds): "
+		"%d days, %d h, %d m, %d s; Reseted on %s\n",
+		leap_seconds, days, hours, minutes, seconds,
 		asctime(localtime(&res_time_sec)));
 	return 1;
 }
@@ -198,39 +203,169 @@ int reset_seqid(struct cmd_desc *cmdd, struct atom *atoms)
 	return 1;
 }
 
-int set_tx_ethertype(struct cmd_desc *cmdd, struct atom *atoms)
+int get_set_tx_ethertype(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	fprintf(stderr, "Not impleented\n");
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t val;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = atoms->val & WR_STREAMERS_TX_CFG0_ETHERTYPE_MASK;
+		ptr->TX_CFG0 = iomemw32(wrstm->is_be, val);
+	}
+	val = WR_STREAMERS_TX_CFG0_ETHERTYPE_R(iomemr32(wrstm->is_be,
+							ptr->TX_CFG0));
+	fprintf(stderr, "TX ethertype 0x%x\n", val);
 	return 1;
 }
 
-int set_tx_local_mac(struct cmd_desc *cmdd, struct atom *atoms)
+int get_set_tx_local_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	fprintf(stderr, "Not impleented\n");
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t lsw;
+	uint64_t val, msw;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = atoms->val & 0xFFFFFFFFFFFF;
+		lsw = val & 0xFFFFFFFF;
+		msw = (val >> 32) & WR_STREAMERS_TX_CFG2_MAC_LOCAL_MSB_MASK;
+		ptr->TX_CFG1 = iomemw32(wrstm->is_be, lsw);
+		ptr->TX_CFG2 = iomemw32(wrstm->is_be, msw);
+	}
+	lsw = iomemr32(wrstm->is_be, ptr->TX_CFG1);
+	msw = iomemr32(wrstm->is_be, ptr->TX_CFG2);
+	val = lsw | (msw << 32);
+	fprintf(stderr, "TX Local MAC address 0x%lx\n", val);
 	return 1;
 }
 
-int set_tx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
+int get_set_tx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	fprintf(stderr, "Not impleented\n");
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t lsw;
+	uint64_t val, msw;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = atoms->val & 0xFFFFFFFFFFFF;
+		lsw = val & 0xFFFFFFFF;
+		msw = (val >> 32) & WR_STREAMERS_TX_CFG4_MAC_TARGET_MSB_MASK;
+		ptr->TX_CFG3 = iomemw32(wrstm->is_be, lsw);
+		ptr->TX_CFG4 = iomemw32(wrstm->is_be, msw);
+	}
+	lsw = iomemr32(wrstm->is_be, ptr->TX_CFG3);
+	msw = iomemr32(wrstm->is_be, ptr->TX_CFG4);
+	val = lsw | (msw << 32);
+	fprintf(stderr, "TX Target MAC address 0x%lx\n", val);
 	return 1;
 }
 
-int set_rx_ethertype(struct cmd_desc *cmdd, struct atom *atoms)
+int get_set_rx_ethertype(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	fprintf(stderr, "Not impleented\n");
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t val;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = iomemr32(wrstm->is_be, ptr->RX_CFG0);
+		val &= ~WR_STREAMERS_RX_CFG0_ETHERTYPE_MASK;
+		val |= WR_STREAMERS_RX_CFG0_ETHERTYPE_W(atoms->val);
+		ptr->RX_CFG0 = iomemw32(wrstm->is_be, val);
+	}
+	val = WR_STREAMERS_RX_CFG0_ETHERTYPE_R(iomemr32(wrstm->is_be,
+							ptr->RX_CFG0));
+	fprintf(stderr, "RX ethertype 0x%x\n", val);
 	return 1;
 }
 
-int set_rx_local_mac(struct cmd_desc *cmdd, struct atom *atoms)
+int get_set_rx_local_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	fprintf(stderr, "Not impleented\n");
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t lsw;
+	uint64_t val, msw;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = atoms->val & 0xFFFFFFFFFFFF;
+		lsw = val & 0xFFFFFFFF;
+		msw = (val >> 32) & WR_STREAMERS_RX_CFG2_MAC_LOCAL_MSB_MASK;
+		ptr->RX_CFG1 = iomemw32(wrstm->is_be, lsw);
+		ptr->RX_CFG2 = iomemw32(wrstm->is_be, msw);
+	}
+	lsw = iomemr32(wrstm->is_be, ptr->RX_CFG1);
+	msw = iomemr32(wrstm->is_be, ptr->RX_CFG2);
+	val = lsw | (msw << 32);
+	fprintf(stderr, "RX Local MAC address 0x%lx\n", val);
 	return 1;
 }
 
-int set_rx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
+int get_set_rx_remote_mac(struct cmd_desc *cmdd, struct atom *atoms)
 {
-	fprintf(stderr, "Not impleented\n");
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t lsw;
+	uint64_t val, msw;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = atoms->val & 0xFFFFFFFFFFFF;
+		lsw = val & 0xFFFFFFFF;
+		msw = (val >> 32) & WR_STREAMERS_RX_CFG4_MAC_REMOTE_MSB_MASK;
+		ptr->RX_CFG3 = iomemw32(wrstm->is_be, lsw);
+		ptr->RX_CFG4 = iomemw32(wrstm->is_be, msw);
+	}
+	lsw = iomemr32(wrstm->is_be, ptr->RX_CFG3);
+	msw = iomemr32(wrstm->is_be, ptr->RX_CFG4);
+	val = lsw | (msw << 32);
+	fprintf(stderr, "RX Target MAC address 0x%lx\n", val);
 	return 1;
 }
 
@@ -363,6 +498,24 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 	return 1;
 }
 
+int get_set_leap_seconds(struct cmd_desc *cmdd, struct atom *atoms)
+{
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	if (atoms->type != Terminator) {
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		leap_seconds = atoms->val;
+	}
+	fprintf(stderr, "leap seconds: %d\n", leap_seconds);
+	return 1;
+
+}
+
 enum wrstm_cmd_id{
 	WRSTM_CMD_STATS = CMD_USR,
 	WRSTM_CMD_RESET,
@@ -377,6 +530,7 @@ enum wrstm_cmd_id{
 	WRSTM_CMD_LATENCY,
 	WRSTM_CMD_QTAG_ENB,
 	WRSTM_CMD_QTAG_VP,
+	WRSTM_CMD_LEAP_SEC,
 //	WRSTM_CMD_DBG_BYTE,
 //	WRSTM_CMD_DBG_MUX,
 //	WRSTM_CMD_DBG_VAL,
@@ -396,17 +550,17 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	{ 1, WRSTM_CMD_RESET_SEQID, "resetseqid",
 	  "reset sequence ID of the tx streamer", "", 0, reset_seqid},
 	{ 1, WRSTM_CMD_TX_ETHERTYPE, "txether",
-	  "set TX ethertype", "ethertype", 1, set_tx_ethertype},
+	  "get/set TX ethertype", "ethertype", 0, get_set_tx_ethertype},
 	{ 1, WRSTM_CMD_TX_LOC_MAC, "txlocmac",
-	  "set TX Local  MAC addres", "mac", 1, set_tx_local_mac},
+	  "get/set TX Local  MAC addres", "mac", 0, get_set_tx_local_mac},
 	{ 1, WRSTM_CMD_TX_REM_MAC, "txremmac",
-	  "set TX Target MAC address", "mac", 1, set_tx_remote_mac},
+	  "get/set TX Target MAC address", "mac", 0, get_set_tx_remote_mac},
 	{ 1, WRSTM_CMD_RX_ETHERTYPE, "rxether",
-	  "set RX ethertype", "ethertype", 1, set_rx_ethertype},
+	  "get/set RX ethertype", "ethertype", 0, get_set_rx_ethertype},
 	{ 1, WRSTM_CMD_RX_LOC_MAC, "rxlocmac",
-	  "set RX Local  MAC addres", "mac", 1, set_rx_local_mac},
+	  "get/set RX Local  MAC addres", "mac", 0, get_set_rx_local_mac},
 	{ 1, WRSTM_CMD_RX_REM_MAC, "rxremmac",
-	  "set RX Remote MAC address", "mac", 1, set_rx_remote_mac},
+	  "get/set RX Remote MAC address", "mac", 0, get_set_rx_remote_mac},
 	{ 1, WRSTM_CMD_LATENCY, "lat",
 	  "get/set config of fixed latency in integer [us] (-1 to disable)",
 	  "[latency]", 0, get_set_latency},
@@ -416,6 +570,9 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	{ 1, WRSTM_CMD_QTAG_VP, "qtagvp",
 	  "QTags Get/Set VLAN ID and priority",
 	  "[VID,prio]", 0, get_set_qtags_param},
+	{ 1, WRSTM_CMD_LEAP_SEC, "ls",
+	  "get/set leap seconds",
+	  "[leapseconds]", 0, get_set_leap_seconds},
 //	{ 1, WRSTM_CMD_DBG_BYTE, "dbgbyte",
 //	  "set which byte of the rx or tx frame should be snooped", "byte", 1,},
 //	{ 1, WRSTM_CMD_DBG_MUX, "dbgdir",
