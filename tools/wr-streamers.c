@@ -521,12 +521,14 @@ enum wrstm_cmd_id{
 	WRSTM_CMD_RESET,
 	WRSTM_CMD_RESET_CNTS,
 	WRSTM_CMD_RESET_SEQID,
+	/* FIXME: see below
 	WRSTM_CMD_TX_ETHERTYPE,
 	WRSTM_CMD_TX_LOC_MAC,
 	WRSTM_CMD_TX_REM_MAC,
 	WRSTM_CMD_RX_ETHERTYPE,
 	WRSTM_CMD_RX_LOC_MAC,
 	WRSTM_CMD_RX_REM_MAC,
+	*/
 	WRSTM_CMD_LATENCY,
 	WRSTM_CMD_QTAG_ENB,
 	WRSTM_CMD_QTAG_VP,
@@ -549,8 +551,16 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	  reset_counters},
 	{ 1, WRSTM_CMD_RESET_SEQID, "resetseqid",
 	  "reset sequence ID of the tx streamer", "", 0, reset_seqid},
-	{ 1, WRSTM_CMD_TX_ETHERTYPE, "txether",
-	  "get/set TX ethertype", "ethertype", 0, get_set_tx_ethertype},
+	/**  ****************************************************************
+	 * FIXME: 1:  MAC address is a long number and such a long number
+	 *            needs special handling, now when I write 0x28d2444c0e17,
+	 *            I read 0x444c0e17. indeed only the LSB is written to 
+	 *            the proper register.
+	 *         2: all this values require additional setting of correspinding
+	 *            override bits in CFG register
+	 *         3: all  these values require enable/disable override (maybe
+	 *            with 0x0 value?
+	 * 
 	{ 1, WRSTM_CMD_TX_LOC_MAC, "txlocmac",
 	  "get/set TX Local  MAC addres", "mac", 0, get_set_tx_local_mac},
 	{ 1, WRSTM_CMD_TX_REM_MAC, "txremmac",
@@ -561,6 +571,9 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	  "get/set RX Local  MAC addres", "mac", 0, get_set_rx_local_mac},
 	{ 1, WRSTM_CMD_RX_REM_MAC, "rxremmac",
 	  "get/set RX Remote MAC address", "mac", 0, get_set_rx_remote_mac},
+	{ 1, WRSTM_CMD_TX_ETHERTYPE, "txether",
+	  "get/set TX ethertype", "ethertype", 0, get_set_tx_ethertype},
+	  **************************************************************** */
 	{ 1, WRSTM_CMD_LATENCY, "lat",
 	  "get/set config of fixed latency in integer [us] (-1 to disable)",
 	  "[latency]", 0, get_set_latency},
