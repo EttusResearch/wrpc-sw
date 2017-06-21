@@ -499,7 +499,7 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 		cfg |= WR_STREAMERS_CFG_OR_TX_QTAG;
 		ptr->CFG = iomemw32(wrstm->is_be, cfg);
 	}
-	fprintf(stderr, "Tagging with QTag: VLAN ID: 0x%x prio: 0x%x\n",
+	fprintf(stderr, "Tagging with QTag: VLAN ID: %d prio: %d\n",
 		vid, prio);
 	return 1;
 }
