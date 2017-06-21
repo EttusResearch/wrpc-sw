@@ -25,12 +25,15 @@
 #include "shell.h"
 #include "revision.h"
 
+#define WRC_DIAG_REFRESH_PERIOD (1 * TICS_PER_SECOND)
+
 extern struct pp_servo servo;
 extern struct pp_instance ppi_static;
 struct pp_instance *ppi = &ppi_static;
 const char *ptp_unknown_str= "unknown";
 
 static void wrc_mon_std_servo(void);
+int wrc_wr_diags(void);
 
 #define PRINT64_FACTOR	1000000000LL
 static char* print64(uint64_t x, int align)
@@ -383,7 +386,120 @@ static int wrc_log_stats(void)
 
 	return 1;
 }
+
 DEFINE_WRC_TASK(stats) = {
 	.name = "stats",
 	.job = wrc_log_stats,
 };
+
+int wrc_wr_diags(void)
+{
+	struct hal_port_state ps;
+	static uint32_t last_jiffies;
+	int tx, rx;
+	uint64_t sec;
+	uint32_t nsec;
+	int n_out;
+	uint32_t aux_stat=0;
+	int temp=0, valid=0, snapshot=0,i;
+
+	valid    = wdiag_get_valid();
+	snapshot = wdiag_get_snapshot();
+
+	/* if the data is snapshot and there is already valid data, do not
+	 * refresh */
+	if(valid & snapshot)
+	      return 0;
+
+	/* ***************** lock data from reading by user **************** */
+	if (!last_jiffies)
+		last_jiffies = timer_get_tics() - 1 -  WRC_DIAG_REFRESH_PERIOD;
+	/* stats update condition */
+	if (time_before(timer_get_tics(), last_jiffies + WRC_DIAG_REFRESH_PERIOD))
+		return 0;
+	last_jiffies = timer_get_tics();
+	
+	/* ***************** lock data from reading by user **************** */
+	wdiag_set_valid(0);
+	
+	/* frame statistics */
+	minic_get_stats(&tx, &rx);
+	wdiags_write_cnts(tx,rx);
+
+	/* local time */
+	shw_pps_gen_get_time(&sec, &nsec);
+	wdiags_write_time(sec, nsec);
+	
+	/* port state (from hal) */
+	wrpc_get_port_state(&ps, NULL);
+	wdiags_write_port_state((ps.state  ? 1 : 0), (ps.locked ? 1 : 0));
+
+	/* port PTP State (from ppsi)
+	* see:
+		ppsi/proto-ext-whiterabbit/wr-constants.h
+		ppsi/include/ppsi/ieee1588_types.h
+	0  : none
+	1  : PPS_INITIALIZING
+	2  : PPS_FAULTY
+	3  : PPS_DISABLED
+	4  : PPS_LISTENING
+	5  : PPS_PRE_MASTER
+	6  : PPS_MASTER
+	7  : PPS_PASSIVE
+	8  : PPS_UNCALIBRATED
+	9  : PPS_SLAVE
+	100: WRS_PRESENT
+	101: WRS_S_LOCK
+	102: WRS_M_LOCK
+	103: WRS_LOCKED
+	104, 108-116:WRS_CALIBRATION
+	105: WRS_CALIBRATED
+	106: WRS_RESP_CALIB_REQ
+	107: WRS_WR_LINK_ON
+	*/
+	wdiags_write_ptp_state((uint8_t )ppi->state);
+
+	/* servo state (if slave)s */
+	if(ptp_mode == WRC_MODE_SLAVE){
+		struct wr_servo_state *ss =
+			&((struct wr_data *)ppi->ext_data)->servo_state;
+		int32_t asym   = (int32_t)(ss->picos_mu-2LL * ss->delta_ms);
+		int wr_mode    = (ss->flags & WR_FLAG_VALID) ? 1 : 0;
+		int servostate =  ss->state;
+		/* see ppsi/proto-ext-whiterabbit/wr-constants.c:
+		0: WR_UNINITIALIZED = 0,
+		1: WR_SYNC_NSEC,
+		2: WR_SYNC_TAI,
+		3: WR_SYNC_PHASE,
+		4: WR_TRACK_PHASE,
+		5: WR_WAIT_OFFSET_STABLE */
+		
+		wdiags_write_servo_state(wr_mode, servostate, ss->picos_mu,
+					 ss->delta_ms, asym, ss->offset,
+					 ss->cur_setpoint,ss->update_count);
+	}
+	
+	/* auxiliar channels (if any) */
+	spll_get_num_channels(NULL, &n_out);
+	if (n_out > 8) n_out = 8; /* hardware limit. */
+	for(i = 0; i < n_out; i++) {
+		aux_stat |= (0x1 & spll_get_aux_status(i)) << i;
+	}
+	wdiags_write_aux_state(aux_stat);
+	
+	/* temperature */
+	temp = wrc_temp_get("pcb");
+	wdiags_write_temp(temp);
+
+	/* **************** unlock data from reading by user  ************** */
+	wdiag_set_valid(1);
+	
+	return 1;
+}
+
+#ifdef CONFIG_WR_DIAG
+DEFINE_WRC_TASK(diags) = {
+	.name = "diags",
+	.job = wrc_wr_diags,
+};
+#endif

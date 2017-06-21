@@ -1,12 +1,17 @@
 EB    ?= no
 SDBFS ?= no
 
-CFLAGS = -Wall -ggdb -I../include
-LDFLAGS = -lutil
+CFLAGS = -Wall -ggdb -I../include -I../liblinux -I../liblinux/extest
+CFLAGS += -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
+LDFLAGS = -lutil -L../liblinux -ldevmap -L../liblinux/extest -lextest
+LDFLAGS += -lreadline
 ALL    = genraminit genramvhd genrammif
 ALL   += wrpc-w1-read wrpc-w1-write
 ALL   += pfilter-builder
 ALL   += wrpc-dump mapper
+ALL   += wrpc-vuart
+ALL   += wr-streamers
+ALL   += wrpc-diags
 
 ifneq ($(EB),no)
 ALL += eb-w1-write
@@ -46,7 +51,15 @@ wrpc-dump: wrpc-dump.c dump-info-host.o
 	$(CC) $(CFLAGS) -I../ppsi/include -I../ppsi/arch-wrpc/include -I.. \
 	-I ../softpll \
 	$^ -o $@ \
-	-D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
+
+wr-streamers: wr-streamers.c
+	$(CC) $(CFLAGS)  $^ $(LDFLAGS) -o $@
+
+wrpc-diags: wrpc-diags.c
+	$(CC) $(CFLAGS)  $^ $(LDFLAGS) -o $@
+
+wrpc-vuart: wrpc-vuart.c
+	$(CC) $(CFLAGS) -Werror  $^ $(LDFLAGS) -o $@
 
 pfilter-builder: pfilter-builder.c
 	$(CC) $(CFLAGS)  -include ../include/generated/autoconf.h \

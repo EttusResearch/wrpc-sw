@@ -246,6 +246,20 @@ config VLAN_FOR_CLASS6
 	depends on VLAN
 	int "Route this VLAN too to fabric class 6 (Streamer/NIC)"
 
+config WR_DIAG
+	depends on WR_NODE
+	boolean "Write of WRPC diagnostics to dedicated WB registers"
+	default n
+	help
+	  This is a software part of new (additional) diagnostics for WR PTP
+	  Core. It allows to access diagnostics values through WB registers
+	  (e.g. PCI bus). It allows the host machine (of SPEC/SVEC/etc.) to
+	  easily access information about the health of WR PTP Core.
+
+	  Please note that other option to access the status of WRPC, which
+	  is direct access to the WRPC's memory does not provide any mechanism
+	  to ensure the data consistency.
+
 config WR_NODE_SIM
 	depends on WR_NODE && !HOST_PROCESS
 	boolean "Build simple software for test of WR PTP Core in simulation"
@@ -257,7 +271,6 @@ config WR_NODE_SIM
 	  is avoided. The main function sends min-size frames to PTP
 	  MAC address destination and expects the simulation to return
 	  these frames.
-
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.

@@ -11,3 +11,6 @@ flash-write
 pfilter-builder
 wrpc-dump
 mapper
+wrpc-vuart
+wr-streamers
+wrpc-diags

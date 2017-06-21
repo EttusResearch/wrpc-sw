@@ -129,7 +129,7 @@ endif
 all: tools $(OUTPUT).elf $(arch-files-y)
 
 .PRECIOUS: %.elf %.bin
-.PHONY: all tools clean gitmodules $(PPSI)/ppsi.o
+.PHONY: all tools clean gitmodules $(PPSI)/ppsi.o extest liblinux
 
 # we need to remove "ptpdump" support for ppsi if RAM size is small and
 # we include etherbone
@@ -207,6 +207,8 @@ clean:
 	$(MAKE) -C $(PPSI) clean
 	$(MAKE) -C sdb-lib clean
 	$(MAKE) -C tools clean
+	$(MAKE) -C liblinux clean
+	$(MAKE) -C liblinux/extest clean
 
 distclean: clean
 	rm -rf include/config
@@ -217,8 +219,17 @@ distclean: clean
 %.o:		%.c
 	${CC} $(CFLAGS) $(PTPD_CFLAGS) $(INCLUDE_DIR) $(LIB_DIR) -c $*.c -o $@
 
-tools: .config gitmodules
+liblinux:
+	$(MAKE) -C liblinux
+
+extest:
+	$(MAKE) -C liblinux/extest
+
+tools: .config gitmodules liblinux extest
 	$(MAKE) -C tools
+
+tools-diag: liblinux extest
+	$(MAKE) -C tools wrpc-diags wrpc-vuart wr-streamers
 
 # if needed, check out the submodules (first time only), so users
 # who didn't read carefully the manual won't get confused
