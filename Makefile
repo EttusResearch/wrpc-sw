@@ -228,6 +228,9 @@ extest:
 tools: .config gitmodules liblinux extest
 	$(MAKE) -C tools
 
+tools-diag: liblinux extest
+	$(MAKE) -C tools wrpc-diags wrpc-vuart wr-streamers
+
 # if needed, check out the submodules (first time only), so users
 # who didn't read carefully the manual won't get confused
 gitmodules:
