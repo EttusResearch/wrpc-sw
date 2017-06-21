@@ -439,9 +439,9 @@ int get_set_qtags_flag(struct cmd_desc *cmdd, struct atom *atoms)
 			return -TST_ERR_WRONG_ARG;
 		val = (atoms->val) ? 1 : 0; /* convert input into 0 or 1 */
 		if (val)
-			txcfg5 |= val;
+			txcfg5 |= WR_STREAMERS_TX_CFG5_QTAG_ENA;
 		else
-			txcfg5 &= ~(-1);
+			txcfg5 &= ~WR_STREAMERS_TX_CFG5_QTAG_ENA;
 		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
 	}
 	fprintf(stderr, "Tagging with QTag is %s\n",
