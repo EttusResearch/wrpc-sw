@@ -504,6 +504,40 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 	return 1;
 }
 
+
+
+int get_set_qtags_or(struct cmd_desc *cmdd, struct atom *atoms)
+{
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t cfg, val;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	cfg = iomemr32(wrstm->is_be, ptr->CFG);
+	if (atoms->type == Terminator) { //read current flag
+		// Check enable/disable QTag flag
+		val = cfg & WR_STREAMERS_CFG_OR_TX_QTAG;
+	}
+	else { // set QTag flag
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = (atoms->val) ? 1 : 0; /* convert input into 0 or 1 */
+		if (val)
+			cfg |= WR_STREAMERS_CFG_OR_TX_QTAG;
+		else
+			cfg &= ~WR_STREAMERS_CFG_OR_TX_QTAG;
+		ptr->CFG = iomemw32(wrstm->is_be, cfg);
+	}
+	fprintf(stderr, "Overriding of the default QTag config with WB config is %s\n",
+		(val) ? "Enabled" : "Disabled");
+	return 1;
+}
+
 int get_set_leap_seconds(struct cmd_desc *cmdd, struct atom *atoms)
 {
 	if (atoms == (struct atom *)VERBOSE_HELP) {
@@ -538,12 +572,14 @@ enum wrstm_cmd_id{
 	WRSTM_CMD_LATENCY,
 	WRSTM_CMD_QTAG_ENB,
 	WRSTM_CMD_QTAG_VP,
+	WRSTM_CMD_QTAG_OR,
 	WRSTM_CMD_LEAP_SEC,
 //	WRSTM_CMD_DBG_BYTE,
 //	WRSTM_CMD_DBG_MUX,
 //	WRSTM_CMD_DBG_VAL,
 	WRSTM_CMD_LAST,
 };
+
 
 #define WRSTM_CMD_NB WRSTM_CMD_LAST - CMD_USR
 struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
@@ -589,6 +625,10 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	{ 1, WRSTM_CMD_QTAG_VP, "qtagvp",
 	  "QTags Get/Set VLAN ID and priority",
 	  "[VID,prio]", 0, get_set_qtags_param},
+	{ 1, WRSTM_CMD_QTAG_OR, "qtagor",
+	  "get/set overriding of default qtag config with WB config (set "
+	  "using qtagf, qtagvp)",
+	  "[0/1]", 0, get_set_qtags_or},
 	{ 1, WRSTM_CMD_LEAP_SEC, "ls",
 	  "get/set leap seconds",
 	  "[leapseconds]", 0, get_set_leap_seconds},
