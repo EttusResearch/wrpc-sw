@@ -454,7 +454,7 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 	volatile struct WR_STREAMERS_WB *ptr =
 		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 	int argc;
-	uint32_t vid, prio, txcfg5;
+	uint32_t vid, prio, txcfg5, cfg;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - %s\n", cmdd->name, cmdd->help);
@@ -470,9 +470,6 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 		       WR_STREAMERS_TX_CFG5_QTAG_PRIO_SHIFT;
 	}
 	else { // writing new QTag settings
-		// first of all enable QTag just in case
-		txcfg5 |= 0x1;
-		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
 
 		argc = 0; //count provided arguments
 		if (atoms->type != Numeric)
@@ -491,7 +488,16 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 			txcfg5 &= ~WR_STREAMERS_TX_CFG5_QTAG_PRIO_MASK; // reset prio bit field
 			txcfg5 |= (prio << WR_STREAMERS_TX_CFG5_QTAG_PRIO_SHIFT); // set new prio
 		}
+		// enable QTag just in case it's not yet enabled
+		txcfg5 |= 0x1;
 		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
+
+		/* read the override register and enable overriding of the
+		   default configuration (set with generics) with the WB
+		   configuration (written above) */
+		cfg = iomemr32(wrstm->is_be, ptr->CFG);
+		cfg |= WR_STREAMERS_CFG_OR_TX_QTAG;
+		ptr->CFG = iomemw32(wrstm->is_be, cfg);
 	}
 	fprintf(stderr, "Tagging with QTag: VLAN ID: 0x%x prio: 0x%x\n",
 		vid, prio);
