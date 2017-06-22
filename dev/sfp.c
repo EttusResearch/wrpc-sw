@@ -26,12 +26,12 @@ int32_t sfp_in_db = 0;
 
 char sfp_pn[SFP_PN_LEN];
 
-int sfp_present(void)
+static int sfp_present(void)
 {
 	return !gpio_in(GPIO_SFP_DET);
 }
 
-int sfp_read_part_id(char *part_id)
+static int sfp_read_part_id(char *part_id)
 {
 	int i;
 	uint8_t data, sum;

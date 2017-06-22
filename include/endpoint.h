@@ -6,9 +6,6 @@
 #ifndef __ENDPOINT_H
 #define __ENDPOINT_H
 
-#define DMTD_AVG_SAMPLES 256
-#define DMTD_MAX_PHASE 16384
-
 #include <stdint.h>
 
 typedef enum {

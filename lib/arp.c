@@ -6,15 +6,13 @@
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
+#include <wrc.h>
+#include <wrpc.h>
 #include <string.h>
 
 #include "endpoint.h"
 #include "ipv4.h"
 #include "ptpd_netif.h"
-
-#ifndef htons
-#define htons(x) x
-#endif
 
 static uint8_t __arp_queue[128];
 static struct wrpc_socket __static_arp_socket = {

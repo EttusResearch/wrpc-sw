@@ -15,6 +15,7 @@ void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr)
 {
 	unsigned short sum;
 	struct wr_udp_addr addr;
+	uint8_t oddb;
 
 	/* if there is no user-provided uaddr, we are replying */
 	if (!uaddr) {
@@ -40,9 +41,12 @@ void fill_udp(uint8_t * buf, int len, struct wr_udp_addr *uaddr)
 	buf[UDP_CHECKSUM] = 0;
 	buf[UDP_CHECKSUM + 1] = 0;
 
-	buf[len] = '\0'; /* pad, in case the payload is odd */
+	/* pad, in case the payload is odd, but we can avoid the if */
+	oddb = buf[len];
+	buf[len] = '\0';
 	sum = ipv4_checksum((unsigned short *)(buf + UDP_VIRT_SADDR),
 			    (len + 1 - UDP_VIRT_SADDR) / 2);
+	buf[len] = oddb;
 	if (sum == 0)
 		sum = 0xFFFF;
 

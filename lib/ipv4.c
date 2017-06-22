@@ -6,8 +6,9 @@
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
-#include <string.h>
+#include <wrc.h>
 #include <wrpc.h>
+#include <string.h>
 
 #include "endpoint.h"
 #include "ipv4.h"
@@ -15,10 +16,6 @@
 #include "pps_gen.h"
 #include "hw/memlayout.h"
 #include "hw/etherbone-config.h"
-
-#ifndef htons
-#define htons(x) x
-#endif
 
 enum ip_status ip_status = IP_TRAINING;
 static uint8_t myIP[4];

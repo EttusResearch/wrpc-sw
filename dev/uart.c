@@ -56,4 +56,4 @@ int uart_read_byte(void)
 }
 
 int puts(const char *s)
-	__attribute__((alias("uart_write_string")));
+	__attribute__((weak,alias("uart_write_string")));

@@ -31,10 +31,6 @@
 #define SPLL_AUX_ENABLED (1<<0) /* Locking the particular aux channel to the WR reference is enabled */
 #define SPLL_AUX_LOCKED (1<<1)  /* The particular aux clock is already locked to WR reference */
 
-/* Phase detector types */
-#define SPLL_PD_DDMTD 0
-#define SPLL_PD_BANGBANG 1
-
 /* Channels for spll_measure_frequency() */
 #define SPLL_OSC_REF 0
 #define SPLL_OSC_DMTD 1
@@ -131,7 +127,6 @@ struct softpll_state {
 	int mode;
 	int seq_state;
 	int dac_timeout;
-	int default_dac_main;
 	int delock_count;
 	unsigned irq_count;
 	int32_t mpll_shift_ps;

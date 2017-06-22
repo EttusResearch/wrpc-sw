@@ -36,6 +36,7 @@ void env_init(void);
 
 int shell_exec(const char *buf);
 int shell_interactive(void);
+extern int shell_is_interacting;
 
 void shell_boot_script(void);
 

@@ -23,12 +23,6 @@ extern int32_t sfp_alpha;
 extern int32_t sfp_deltaTx;
 extern int32_t sfp_deltaRx;
 
-/* Returns 1 if there's a SFP transceiver inserted in the socket. */
-int sfp_present(void);
-
-/* Reads the part ID of the SFP from its configuration EEPROM */
-int sfp_read_part_id(char *part_id);
-
 /* Match plugged SFP with a DB entry */
 int sfp_match(void);
 

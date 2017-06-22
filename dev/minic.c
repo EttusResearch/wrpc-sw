@@ -31,8 +31,6 @@
 
 #define RX_OOB_SIZE 3	/* as the number of FIFO data words */
 
-#define ETH_HEADER_SIZE 14
-
 // extracts the values of TS rising and falling edge counters from the descriptor header
 
 #define EXPLODE_WR_TIMESTAMP(raw, rc, fc) \

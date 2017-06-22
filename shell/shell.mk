@@ -5,6 +5,7 @@ obj-$(CONFIG_WR_NODE) += \
 	shell/cmd_help.o \
 	shell/cmd_mac.o \
 	shell/cmd_ps.o \
+	shell/cmd_uptime.o \
 	shell/cmd_refresh.o
 
 obj-$(CONFIG_EMBEDDED_NODE) += \
