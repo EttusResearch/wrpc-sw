@@ -278,6 +278,11 @@ static int build_init_readcmd(uint8_t *cmd, int maxlen)
 	p += i;
 	if (*p == ';')
 		p++;
+	if (i == 0) {
+		/* it's the last call, roll-back *p to be ready for the next
+		 * call */
+		p = shell_init_cmd;
+	}
 	return i;
 }
 
@@ -313,4 +318,21 @@ void shell_boot_script(void)
 	}
 
 	return;
+}
+
+void shell_show_build_init(void)
+{
+	uint8_t i = 0;
+
+	pp_printf("-- built-in script --\n");
+	while (CONFIG_HAS_BUILD_INIT) {
+		cmd_len = build_init_readcmd((uint8_t *)cmd_buf,
+					SH_MAX_LINE_LEN);
+		if (!cmd_len)
+			break;
+		pp_printf("%s\n", cmd_buf);
+		++i;
+	}
+	if (!i)
+		pp_printf("(empty)\n");
 }

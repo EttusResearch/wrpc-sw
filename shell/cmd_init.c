@@ -25,6 +25,7 @@ static int cmd_init(const char *args[])
 		else
 			pp_printf("OK.\n");
 	} else if (args[0] && !strcasecmp(args[0], "show")) {
+		shell_show_build_init();
 		storage_init_show();
 	} else if (args[0] && !strcasecmp(args[0], "boot")) {
 		shell_boot_script();

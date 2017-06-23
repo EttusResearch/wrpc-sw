@@ -694,6 +694,7 @@ int storage_init_show(void)
 	if (sdbfs_open_id(&wrc_sdb, SDB_VENDOR, SDB_DEV_INIT) < 0)
 		return -1;
 
+	pp_printf("-- user-defined script --\n");
 	used = 0;
 	do {
 		if (sdbfs_fread(&wrc_sdb, sizeof(used) + used, &byte, 1) != 1)
@@ -705,7 +706,7 @@ int storage_init_show(void)
 	} while (byte != 0xff);
 
 	if (used == 0)
-		pp_printf("Empty init script...\n");
+		pp_printf("(empty)\n");
 	ret = 0;
 out:
 	sdbfs_close(&wrc_sdb);
