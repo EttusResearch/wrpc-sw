@@ -105,7 +105,7 @@ static void print_aux_state(uint32_t val)
 	fprintf(stderr, "Aux state:\t\t");
 	for (i = 0; i < nch; i++) {
 		if (val & (1 << i))
-			fprintf(stderr, "ch%d:valid ", i);
+			fprintf(stderr, "ch%d:enabled ", i);
 	}
 	fprintf(stderr, "\n");
 }
@@ -207,7 +207,7 @@ static int read_diags(struct cmd_desc *cmdd, struct atom *atoms)
 		print_servo_status(iomemr32(wrcdiag->is_be, ptr->WDIAG_SSTAT));
 		print_port_status(iomemr32(wrcdiag->is_be, ptr->WDIAG_PSTAT));
 		print_ptp_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
-		print_aux_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
+		print_aux_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_ASTAT));
 		print_tx_frame_count(iomemr32(wrcdiag->is_be, ptr->WDIAG_TXFCNT));
 		print_rx_frame_count(iomemr32(wrcdiag->is_be, ptr->WDIAG_RXFCNT));
 		print_local_time(iomemr32(wrcdiag->is_be, ptr->WDIAG_SEC_MSB),
@@ -235,7 +235,7 @@ static int read_diags(struct cmd_desc *cmdd, struct atom *atoms)
 		print_ptp_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
 		break;
 	case WRCDIAG_CMD_ASTAT:
-		print_aux_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_PTPSTAT));
+		print_aux_state(iomemr32(wrcdiag->is_be, ptr->WDIAG_ASTAT));
 		break;
 	case WRCDIAG_CMD_TXFCNT:
 		print_tx_frame_count(iomemr32(wrcdiag->is_be,
