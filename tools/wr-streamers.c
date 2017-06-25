@@ -21,9 +21,12 @@ static char *stats_mesg[][2] = {
 	{"Number of sent wr streamer frames since reset", "tx_cnt"},
         {"Number of received wr streamer frames since reset", "rx_cnt"},
         {"Number of lost wr streamer frames since reset", "rx_cnt_lost_fr"},
-        {"Maximum latency of received frames since reset", "max_lat_raw"},
-        {"Minimum latency of received frames since reset", "min_lat_raw"},
-        {"Accumulated latency of received frames since reset", "acc_lat"},
+        {"Maximum latency [ref clk period] of received frames since reset",
+         "max_lat_raw"},
+        {"Minimum latency [ref clk period] of received frames since reset",
+         "min_lat_raw"},
+        {"Accumulated latency [ref clk period] of received frames since reset",
+         "acc_lat"},
         {"Counter of the accumulated frequency", "acc_freq_cnt"},
         {"Number of indications that one or more blocks in a"
 	 "frame were lost (probably CRC error) since reset", "rx_cnt_lost_blk"},
@@ -113,7 +116,7 @@ int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 			iomemr32(wrstm->is_be, ptr->RX_STAT0)));
 		break;
 	case 4:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[4][1],
+		fprintf(stderr, "%s: 0x%x\n", stats_mesg[4][1],
 			WR_STREAMERS_RX_STAT1_RX_LATENCY_MIN_R(
 				iomemr32(wrstm->is_be, ptr->RX_STAT1)));
 		break;
