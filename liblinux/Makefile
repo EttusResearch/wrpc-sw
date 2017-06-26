@@ -13,6 +13,7 @@ GIT_USR ?= $(shell git config --get-all user.name)
 CFLAGS = -Wall -ggdb -fPIC -Werror -I./ -I../include
 CFLAGS += -D__GIT_VER__="\"$(GIT_VER)\"" -D__GIT_USR__="\"$(GIT_USR)\""
 LDFLAGS = -L.
+ARFLAGS = rc
 
 ifeq ($(SUPPORT_CERN_VMEBRIDGE), y)
 LIBVME_A = $(VMEBRIDGE)/lib
@@ -28,12 +29,12 @@ endif
 
 $(LIB): $(LOBJ) $(LIB_DEP)
 ifeq ($(SUPPORT_CERN_VMEBRIDGE), y)
-	$(AR) r tmp$@ $(LOBJ)
+	$(AR) $(ARFLAGS) tmp$@ $(LOBJ)
 # transform a thin library into a normal one
 	echo -e "create $@\naddlib tmp$@\naddlib $(LIBVME_A)/libvmebus.a\nsave\nend" | $(AR) -M
 	$(RM) tmp$@
 else
-	$(AR) r $@ $^
+	$(AR) $(ARFLAGS) $@ $^
 endif
 
 clean:
