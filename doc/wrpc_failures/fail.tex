@@ -32,7 +32,25 @@ fail. The structure of each error description is the following:
 	\item [] \underline{Error/Warning condition}: condition that should be checked
 		at the SNMP manager's side to detect given problem.
   \item [] \underline{Action}: list of actions that should be performed in case
-    given error/warning is reported.
+    given error/warning is reported. There are some common remarks that apply to
+    all situations:
+    \begin{itemize}
+    \item If a procedure given for a specific SNMP object does not solve the
+      problem, please contact WR experts to perform a more in-depth analysis of
+      the network. For this, you should provide a complete dump of the WRPC
+      status generated in the first step of each procedure.
+    \item The first action in most of the procedures below named Dump state
+      requires simply calling a tool provided by WR developers that reads all
+      the detailed information from the node and writes it to a single file
+      that can be later analyzed by the experts.
+    \item If a problem solving procedure requires restarting or replacing a WR
+      Node working in the \emph{Grand Master} mode, please make sure that after
+      the repair, all other WR devices in the network are synchronized and do
+      not report any problems.
+    \item If a procedure requires replacing a WR ndoe with a new unit, the
+      broken one should be handled to WR experts or the switch manufacturer to
+      investigate the problem.
+    \end{itemize}
 \end{itemize}
 
 \subsection{Timing error}
@@ -63,9 +81,10 @@ master mode).
       \item [] \underline{Action}:
         \begin{pck_proc}
         \item Dump state
-        \item Check the status of the WR Switch which is the timing master for a
-          given WR node.
-        \item If the WR Switch did not report any problems, restart the WR Node.
+        \item Check the status of the WR Master - timing source. In case it has
+          reported some problems, please follow the diagnostics document for the
+          WR Switch.
+        \item If the Switch did not report any problems, restart the WR Node.
         \item If the problem persists replace the WR Node hardware with a new
           unit.
         \item If the problem persists, please notify WR experts.
@@ -88,7 +107,15 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				\texttt{wrpcPtpClockOffsetErrCnt != wrpcPtpClockOffsetErrCnt\_prev} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check the status of the WR Master - timing source. Normally the
+          time jumps should not happen and if they do, the problem should be
+          investigated on the WR Master side (e.g. \emph{Grand Master} unlocked
+          from the external reference).
+        \item Restart the WR Node and let it synchronize again.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf Detected jump in the RTT value calculated by \emph{PTP/PPSi}}
@@ -109,7 +136,14 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				\texttt{wrpcPtpRTTErrCnt != wrpcPtpRTTErrCnt\_prev} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check the status status of the WR Master - timing source.
+          Eventually proceed to investigate the problem on the WR Master side.
+        \item Restart the Node.
+        \item If the problem persists, replace the WR Node with a new unit.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf Wrong $\Delta_{TXM}$, $\Delta_{RXM}$, $\Delta_{TXS}$,
@@ -135,7 +169,16 @@ master mode).
 				\texttt{wrpcPtpDeltaTxM == 0 || wrpcPtpDeltaRxM == 0 ||}\\
 				\texttt{wrpcPtpDeltaTxS == 0 || wrpcPtpDeltaRxS == 0 ||}\\
 				\texttt{wrpcPtpAlpha == 0} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check if the correct calibration values are entered both for the WR
+          Node and WR Master. WR Switch will report this in its own SNMP status
+          objects.
+        \item Check the White Rabbit PTP Core User Manual
+          \footnote{\url{http://www.ohwr.org/projects/wr-cores/wiki/Current\_release}}
+          for the instructions how the calibration values can be configured
+          locally or remotely using SNMP SET objects.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf PTP servo is not updating}
@@ -155,7 +198,17 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				\texttt{wrpcPtpServoUpdates != wrpcPtpServoUpdates} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check if the PTP frames are flowing between the WR Node and its
+          timing master (error \ref{fail:timing:no_frames}).
+        \item Check the status of the WR Master - timing source.
+        \item Check if the SoftPLL did not unlock (error
+          \ref{fail:timing:spll_unlock}).
+        \item Restart the WR Node.
+        \item If the problem persists, replace the WR Node with a new unit.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf \emph{SoftPLL} became unlocked}
@@ -188,26 +241,26 @@ master mode).
         \texttt{[wrpcSpllMode != grandmaster\emph{(1)} \&\& wrpcSpllMode != master\emph{(2)} \&\& wrpcSpllMode != slave\emph{(3)}]}} % Spll in neither of the GM/Master/Slave modes
 			\item [] \underline{Warning condition}:\\
 				{\footnotesize
-        \texttt{[wrpcSpllMode == grandmaster\emph{(1)} \&\& wrpcSpllDelCnt > 0] ||}\\ % GrandMaster has unlocked from reference at some point
-        \texttt{[wrpcSpllMode == master\emph{(2)} \&\& wrpcSpllDelCnt != wrpcSpllDelCnt\_prev] ||}\\ % Master just got unlocked
-        \texttt{[wrpcSpllMode == slave\emph{(3)} \&\& wrpcSpllDelCnt != wrpcSpllDelCnt\_prev]} } % Slave just got unlocked
-      \item [] \underline{Action}:\\
-		\end{pck_descr}
-
-\subsubsection{\bf WR link is down or FPGA not programmed or FPGA programmed with incorrect bitstream}
-		\label{fail:timing:master_down}
-		\begin{pck_descr}
-			\item [] \underline{Severity}: ERROR
-			\item [] \underline{Mode}: \emph{all}
-			\item [] \underline{Description}:\\
-				We monitor the WRPC over the WR network. We can realize if this only
-				communication link is down by either SNMP requests timeouts or
-				periodically pinging the device.
-			\item [] \underline{SNMP objects}: \emph{(none)}
-			\item [] \underline{Error condition}:\\
-				{\footnotesize
-				SNMP request timeout or PING timeout}
-      \item [] \underline{Action}:\\
+        \texttt{[wrpcSpllMode == grandmaster\emph{(1)} \&\& wrpcSpllDelCnt > 0]}} % GrandMaster has unlocked from reference at some point
+      \item [] \underline{Action for \emph{Grand Master} WR Node}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check 1-PPS and 10MHz signals coming from an external source.
+          Verify if they are properly connected and, in case of a GPS receiver,
+          check if it is synchronized and locked.
+        \item Restart the WR Node
+        \item If the problem persists, replace the WR Node with a new unit
+        \end{pck_proc}
+      \item [] \underline{Action for \emph{Slave} WR Node}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check the status of the WR Master - timing source. Eventually
+          proceed to investigate the problem on the Master.
+        \item Verify if the WR link was not lost and re-initialized by checking
+          the SNMP manager software logs.
+        \item Restart the WR Node
+        \item If the problem persists, replace the WR Node with a new unit.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf PTP frames don't reach LM32}
@@ -222,8 +275,9 @@ master mode).
 				variations. To calculate these variations, it still needs timestamped
 				PTP frames flowing. There could be several causes of such fault:
 				\begin{itemize}
-					\item WR PTP Core HDL problem
+          \item WR Switch problem
 					\item wrong VLANs configuration
+					\item WR PTP Core HDL problem
 				\end{itemize}
 			\item [] \underline{SNMP objects}:\\
 				{\footnotesize
@@ -236,7 +290,20 @@ master mode).
 				\texttt{wrpcPtpTx == wrpcPtpTx\_prev || wrpcPtpRx == wrpcPtpRx\_prev ||}\\
 				\texttt{wrpcPortInternalTx == wrpcPortInternalTx\_prev ||}\\
 				\texttt{wrpcPortInternalRx == wrpcPortInternalRx\_prev} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check the status of the WR Master - timing source. Especially if
+          the PTP daemon is still running there.
+        \item Check if the VLANs configuration on the WR Node matches the
+          configuration of the WR Switch where this node is connected. Wrong
+          configuration (e.g. different VIDs) will cause the frames to be
+          dropped.
+        \item Restart the WR Node.
+        \item If possible, stop or reduce any additional (heavy) traffic that
+          might be sent through the WR network.
+        \item If the problem persists, please notify WR experts.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf Detected SFP not supported for WR timing}
@@ -257,7 +324,14 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
         \texttt{wrpcPortSfpInDB != inDataBase\emph{(2)}} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check if the SFP database is correctly defined by making sure if
+          error \ref{fail:timing:no_sfpdb} is not reported.
+        \item Change the optical SFP transceiver in the WR Node. Either it is
+          broken and its ID cannot be read correctly, or a non-supported
+          transceiver was plugged to the device.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf SFP database not configured}
@@ -280,12 +354,48 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				Error when trying to get \texttt{wrpcSfpDeltaTx.1} and \texttt{wrpcSfpDeltaRx.1} SNMP objects}
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check the White Rabbit PTP Core User
+          Manual\footnote{\url{http://www.ohwr.org/projects/wr-cores/wiki/Current\_release}}
+          for the instructions how the calibration values can be configured
+          locally or remotely using SNMP SET objects.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \newpage
 \subsection{Other errors}
 \label{sec:other_fail}
+
+\subsubsection{\bf WR link is down or FPGA not programmed or FPGA programmed with incorrect bitstream}
+		\label{fail:timing:master_down}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{all}
+			\item [] \underline{Description}:\\
+				We monitor the WRPC over the WR network. We can realize if this only
+				communication link is down by either SNMP requests timeouts or
+				periodically pinging the device.
+			\item [] \underline{SNMP objects}: \emph{(none)}
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				SNMP request timeout or PING timeout}
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Investigate on the computer/front-end where the WR Node card is
+          installed, if all the drivers are properly loaded and if the FPGA gets
+          programmed. You can take another WR Master device and connect it
+          locally to verify if the WR Node is programmed correctly.
+        \item Check the fiber link e.g. by connecting another WR Node, with a
+          different SFP transceiver to the same fiber.
+        \item If there is still no link on the new WR Node, try on the Master
+          side connecting the fiber to another port of the WR Switch (using
+          different SFP transceiver).
+        \item If there is still no link, the fiber connection is either dirty or
+          broken.
+        \end{pck_proc}
+		\end{pck_descr}
+
 
 \subsubsection{\bf WR PTP Core reset}
 		\label{fail:other:reset}
@@ -300,7 +410,14 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				\texttt{wrpcTimeSystemUpdate < wrpcTimeSystemUpdate\_prev} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check if there was a power cut e.g. by checking the uptime of the
+          computer/front-end where the WR Node card is installed.
+        \item If there was no power cut or intended machine restart, make a full
+          state dump and report problem to WR experts.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf WR PTP Core time reset}
@@ -319,7 +436,15 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				\texttt{wrpcTimeTAI == 0} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check the status of the WR Master - timing source.
+        \item Check in the SNMP manager software logs, if there were no
+          \emph{link down} errors for the WR Node or the WR Master Switch. In
+          that case, the SFP optical transceivers should be changed or the fiber
+          link should be investigated.
+        \end{pck_proc}
 		\end{pck_descr}
 
 \subsubsection{\bf Temperature of the node too high}
@@ -336,5 +461,9 @@ master mode).
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
 				\texttt{wrpcTemperatureValue.<n> > THRESHOLD} }
-      \item [] \underline{Action}:\\
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check the cooling for the computer/front-end/rack where the WR
+          Node is installed.
+        \end{pck_proc}
 		\end{pck_descr}
