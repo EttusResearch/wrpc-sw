@@ -21,9 +21,12 @@ static char *stats_mesg[][2] = {
 	{"Number of sent wr streamer frames since reset", "tx_cnt"},
         {"Number of received wr streamer frames since reset", "rx_cnt"},
         {"Number of lost wr streamer frames since reset", "rx_cnt_lost_fr"},
-        {"Maximum latency of received frames since reset", "max_lat_raw"},
-        {"Minimum latency of received frames since reset", "min_lat_raw"},
-        {"Accumulated latency of received frames since reset", "acc_lat"},
+        {"Maximum latency [ref clk period] of received frames since reset",
+         "max_lat_raw"},
+        {"Minimum latency [ref clk period] of received frames since reset",
+         "min_lat_raw"},
+        {"Accumulated latency [ref clk period] of received frames since reset",
+         "acc_lat"},
         {"Counter of the accumulated frequency", "acc_freq_cnt"},
         {"Number of indications that one or more blocks in a"
 	 "frame were lost (probably CRC error) since reset", "rx_cnt_lost_blk"},
@@ -113,7 +116,7 @@ int read_stats(struct cmd_desc *cmdd, struct atom *atoms)
 			iomemr32(wrstm->is_be, ptr->RX_STAT0)));
 		break;
 	case 4:
-		fprintf(stderr, "%s:%10u\n", stats_mesg[4][1],
+		fprintf(stderr, "%s: 0x%x\n", stats_mesg[4][1],
 			WR_STREAMERS_RX_STAT1_RX_LATENCY_MIN_R(
 				iomemr32(wrstm->is_be, ptr->RX_STAT1)));
 		break;
@@ -439,9 +442,9 @@ int get_set_qtags_flag(struct cmd_desc *cmdd, struct atom *atoms)
 			return -TST_ERR_WRONG_ARG;
 		val = (atoms->val) ? 1 : 0; /* convert input into 0 or 1 */
 		if (val)
-			txcfg5 |= val;
+			txcfg5 |= WR_STREAMERS_TX_CFG5_QTAG_ENA;
 		else
-			txcfg5 &= ~(-1);
+			txcfg5 &= ~WR_STREAMERS_TX_CFG5_QTAG_ENA;
 		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
 	}
 	fprintf(stderr, "Tagging with QTag is %s\n",
@@ -454,7 +457,7 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 	volatile struct WR_STREAMERS_WB *ptr =
 		(volatile struct WR_STREAMERS_WB *)wrstm->base;
 	int argc;
-	uint32_t vid, prio, txcfg5;
+	uint32_t vid, prio, txcfg5, cfg;
 
 	if (atoms == (struct atom *)VERBOSE_HELP) {
 		printf("%s - %s\n", cmdd->name, cmdd->help);
@@ -470,9 +473,6 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 		       WR_STREAMERS_TX_CFG5_QTAG_PRIO_SHIFT;
 	}
 	else { // writing new QTag settings
-		// first of all enable QTag just in case
-		txcfg5 |= 0x1;
-		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
 
 		argc = 0; //count provided arguments
 		if (atoms->type != Numeric)
@@ -491,10 +491,53 @@ int get_set_qtags_param(struct cmd_desc *cmdd, struct atom *atoms)
 			txcfg5 &= ~WR_STREAMERS_TX_CFG5_QTAG_PRIO_MASK; // reset prio bit field
 			txcfg5 |= (prio << WR_STREAMERS_TX_CFG5_QTAG_PRIO_SHIFT); // set new prio
 		}
+		// enable QTag just in case it's not yet enabled
+		txcfg5 |= 0x1;
 		ptr->TX_CFG5 = iomemw32(wrstm->is_be, txcfg5);
+
+		/* read the override register and enable overriding of the
+		   default configuration (set with generics) with the WB
+		   configuration (written above) */
+		cfg = iomemr32(wrstm->is_be, ptr->CFG);
+		cfg |= WR_STREAMERS_CFG_OR_TX_QTAG;
+		ptr->CFG = iomemw32(wrstm->is_be, cfg);
 	}
-	fprintf(stderr, "Tagging with QTag: VLAN ID: 0x%x prio: 0x%x\n",
+	fprintf(stderr, "Tagging with QTag: VLAN ID: %d prio: %d\n",
 		vid, prio);
+	return 1;
+}
+
+
+
+int get_set_qtags_or(struct cmd_desc *cmdd, struct atom *atoms)
+{
+	volatile struct WR_STREAMERS_WB *ptr =
+		(volatile struct WR_STREAMERS_WB *)wrstm->base;
+	uint32_t cfg, val;
+
+	if (atoms == (struct atom *)VERBOSE_HELP) {
+		printf("%s - %s\n", cmdd->name, cmdd->help);
+		return 1;
+	}
+
+	++atoms;
+	cfg = iomemr32(wrstm->is_be, ptr->CFG);
+	if (atoms->type == Terminator) { //read current flag
+		// Check enable/disable QTag flag
+		val = cfg & WR_STREAMERS_CFG_OR_TX_QTAG;
+	}
+	else { // set QTag flag
+		if (atoms->type != Numeric)
+			return -TST_ERR_WRONG_ARG;
+		val = (atoms->val) ? 1 : 0; /* convert input into 0 or 1 */
+		if (val)
+			cfg |= WR_STREAMERS_CFG_OR_TX_QTAG;
+		else
+			cfg &= ~WR_STREAMERS_CFG_OR_TX_QTAG;
+		ptr->CFG = iomemw32(wrstm->is_be, cfg);
+	}
+	fprintf(stderr, "Overriding of the default QTag config with WB config is %s\n",
+		(val) ? "Enabled" : "Disabled");
 	return 1;
 }
 
@@ -521,21 +564,25 @@ enum wrstm_cmd_id{
 	WRSTM_CMD_RESET,
 	WRSTM_CMD_RESET_CNTS,
 	WRSTM_CMD_RESET_SEQID,
+	/* FIXME: see below
 	WRSTM_CMD_TX_ETHERTYPE,
 	WRSTM_CMD_TX_LOC_MAC,
 	WRSTM_CMD_TX_REM_MAC,
 	WRSTM_CMD_RX_ETHERTYPE,
 	WRSTM_CMD_RX_LOC_MAC,
 	WRSTM_CMD_RX_REM_MAC,
+	*/
 	WRSTM_CMD_LATENCY,
 	WRSTM_CMD_QTAG_ENB,
 	WRSTM_CMD_QTAG_VP,
+	WRSTM_CMD_QTAG_OR,
 	WRSTM_CMD_LEAP_SEC,
 //	WRSTM_CMD_DBG_BYTE,
 //	WRSTM_CMD_DBG_MUX,
 //	WRSTM_CMD_DBG_VAL,
 	WRSTM_CMD_LAST,
 };
+
 
 #define WRSTM_CMD_NB WRSTM_CMD_LAST - CMD_USR
 struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
@@ -549,8 +596,16 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	  reset_counters},
 	{ 1, WRSTM_CMD_RESET_SEQID, "resetseqid",
 	  "reset sequence ID of the tx streamer", "", 0, reset_seqid},
-	{ 1, WRSTM_CMD_TX_ETHERTYPE, "txether",
-	  "get/set TX ethertype", "ethertype", 0, get_set_tx_ethertype},
+	/**  ****************************************************************
+	 * FIXME: 1:  MAC address is a long number and such a long number
+	 *            needs special handling, now when I write 0x28d2444c0e17,
+	 *            I read 0x444c0e17. indeed only the LSB is written to 
+	 *            the proper register.
+	 *         2: all this values require additional setting of correspinding
+	 *            override bits in CFG register
+	 *         3: all  these values require enable/disable override (maybe
+	 *            with 0x0 value?
+	 * 
 	{ 1, WRSTM_CMD_TX_LOC_MAC, "txlocmac",
 	  "get/set TX Local  MAC addres", "mac", 0, get_set_tx_local_mac},
 	{ 1, WRSTM_CMD_TX_REM_MAC, "txremmac",
@@ -561,6 +616,9 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	  "get/set RX Local  MAC addres", "mac", 0, get_set_rx_local_mac},
 	{ 1, WRSTM_CMD_RX_REM_MAC, "rxremmac",
 	  "get/set RX Remote MAC address", "mac", 0, get_set_rx_remote_mac},
+	{ 1, WRSTM_CMD_TX_ETHERTYPE, "txether",
+	  "get/set TX ethertype", "ethertype", 0, get_set_tx_ethertype},
+	  **************************************************************** */
 	{ 1, WRSTM_CMD_LATENCY, "lat",
 	  "get/set config of fixed latency in integer [us] (-1 to disable)",
 	  "[latency]", 0, get_set_latency},
@@ -570,6 +628,10 @@ struct cmd_desc wrstm_cmd[WRSTM_CMD_NB + 1] = {
 	{ 1, WRSTM_CMD_QTAG_VP, "qtagvp",
 	  "QTags Get/Set VLAN ID and priority",
 	  "[VID,prio]", 0, get_set_qtags_param},
+	{ 1, WRSTM_CMD_QTAG_OR, "qtagor",
+	  "get/set overriding of default qtag config with WB config (set "
+	  "using qtagf, qtagvp)",
+	  "[0/1]", 0, get_set_qtags_or},
 	{ 1, WRSTM_CMD_LEAP_SEC, "ls",
 	  "get/set leap seconds",
 	  "[leapseconds]", 0, get_set_leap_seconds},
