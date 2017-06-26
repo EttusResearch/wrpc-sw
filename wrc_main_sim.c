@@ -84,14 +84,14 @@ static void wrc_sim_initialize(void)
 	// uncomment the following line to perform a dynamic search
 	// at runtime.
 	//sdb_find_devices();
-	BASE_MINIC         = 0x20000;
-	BASE_EP            = 0x20100;
-	BASE_SOFTPLL       = 0x20200;
-	BASE_PPS_GEN       = 0x20300;
-	BASE_SYSCON        = 0x20400;
-	BASE_UART          = 0x20500;
-	BASE_ONEWIRE       = 0x20600;
-	BASE_ETHERBONE_CFG = 0x20700;
+	BASE_MINIC         = (void *)0x20000;
+	BASE_EP            = (void *)0x20100;
+	BASE_SOFTPLL       = (void *)0x20200;
+	BASE_PPS_GEN       = (void *)0x20300;
+	BASE_SYSCON        = (void *)0x20400;
+	BASE_UART          = (void *)0x20500;
+	BASE_ONEWIRE       = (void *)0x20600;
+	BASE_ETHERBONE_CFG = (void *)0x20700;
 
 	timer_init(1);
 
