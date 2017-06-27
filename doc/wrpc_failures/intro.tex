@@ -1,6 +1,6 @@
 \section{Introduction}
 
-This document provides information about the diagnostics of White Rabbit
+This document provides information about the diagnostics of the White Rabbit
 PTP Core (WRPC) - an HDL module present in every White Rabbit node. It is a
 complementary documentation to the official \emph{White Rabbit PTP Core User's
 Manual} published with every stable release. Please refer to this user manual
@@ -9,25 +9,12 @@ the official reference designs.\\
 
 White Rabbit PTP Core starting from \emph{v4.0} provides diagnostic mechanisms
 in the form of SNMP objects and optional Syslog messages (depending on the build
-time LM32 software configuration). The implementation of the SNMP agent in the
+time LM32 software configuration). The implementation of an SNMP agent in the
 WRPC is very basic comparing to the diagnostics offered by the White Rabbit
 Switch. Since we are very constraint on the code size running inside the WR PTP
 Core, almost all of the logic to detect and report errors has to be implemented
-on the SNMP Manager's side.
+on the SNMP Manager's side.\\
 
-%This document is
-%organized in two parts. It starts with a description of the SNMP objects and
-%procedures to be followed if various errors are reported (section
-%\ref{sec:snmp_exports}). This first part is meant for the operators and people
-%integrating a WR switch into a control system, without the deep knowledge about
-%the White Rabbit internals. These people usually have to perform a quick
-%diagnostics and decide on actions to restore a WR network.
-%Second part of the document tries to list all the possible failures
-%that may disturb synchronization and Ethernet switching (section
-%\ref{sec:failures}). It is meant for the WR experts to help them with in-depth
-%diagnosis of the problems reported by SNMP.
-
-This document has many internal hyperlinks that associate general SNMP status
-objects and expert SNMP objects with related problems' description and the other
-way round. These links can be easily used when reading the document on a
-computer.
+This document has many internal hyperlinks that associate SNMP objects with
+related problems description and the other way round. These links can be easily
+used when reading the document on a computer.

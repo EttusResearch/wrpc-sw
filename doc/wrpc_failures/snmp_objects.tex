@@ -6,10 +6,11 @@
     Type of the hardware of a given WR Node.}
   \snmpentrys{WR-WRPC-MIB}{wrpcVersionGroup}{wrpcVersionSwVersion}{
     \underline{Description:}
-    Version of the LM32 software running inside the WR PTP Core (WRPC) }
+    Version of the LM32 software running inside the WR PTP Core. }
   \snmpentrys{WR-WRPC-MIB}{wrpcVersionGroup}{wrpcVersionSwBuildBy}{
     \underline{Description:}
-    Information who has compiled the LM32 software running inside the WRPC }
+    Information who has compiled the LM32 software running inside the WR PTP
+    Core. }
   \snmpentrys{WR-WRPC-MIB}{wrpcVersionGroup}{wrpcVersionSwBuildDate}{
     \underline{Description:}
     Information when the LM32 software was compiled. }
@@ -47,43 +48,49 @@
 
   \snmpentrys{WR-WRPC-MIB}{wrpcSpllStatusGroup}{wrpcSpllMode}{
     \underline{Description:}
-    Mode of operation of the Soft PLL inside WR PTP Core. Possible values:\\
-    \texttt{grandmaster\emph{(1)}} -- Master synchronized to external reference (e.g. GPS or Cesium) \\
-    \texttt{master\emph{(2)}} -- Free-running Master\\
-    \texttt{slave\emph{(3)}}\\
-    \texttt{disabled\emph{(4)}}
+    Mode of operation of the Soft PLL inside WR PTP Core. Possible values:
+    \begin{packed_items_snmp_obj}
+    \item \texttt{grandmaster\emph{(1)}} -- Master synchronized to external reference (e.g. GPS or Cesium)
+    \item \texttt{master\emph{(2)}} -- Free-running Master
+    \item \texttt{slave\emph{(3)}}
+    \item \texttt{disabled\emph{(4)}}
+    \end{packed_items_snmp_obj}
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcSpllStatusGroup}{wrpcSpllIrqCnt}{
     \underline{Description:}
     Number of interrupts received by SoftPLL for DDMTD tags.}
   \snmpentrys{WR-WRPC-MIB}{wrpcSpllStatusGroup}{wrpcSpllSeqState}{
     \underline{Description:}
-    SoftPLL sequencer state. Possible values:\\
-    \texttt{startExt\emph{(1)}}\\
-    \texttt{waitExt\emph{(2)}}\\
-    \texttt{startHelper\emph{(3)}}\\
-    \texttt{waitHelper\emph{(4)}}\\
-    \texttt{startMain\emph{(5)}}\\
-    \texttt{waitMain\emph{(6)}}\\
-    \texttt{disabled\emph{(7)}}\\
-    \texttt{ready\emph{(8)}}\\
-    \texttt{clearDacs\emph{(9)}}\\
-    \texttt{waitClearDacs\emph{(10)}}
+    SoftPLL sequencer state. Possible values:
+    \begin{packed_items_snmp_obj}
+    \item \texttt{startExt\emph{(1)}}
+    \item \texttt{waitExt\emph{(2)}}
+    \item \texttt{startHelper\emph{(3)}}
+    \item \texttt{waitHelper\emph{(4)}}
+    \item \texttt{startMain\emph{(5)}}
+    \item \texttt{waitMain\emph{(6)}}
+    \item \texttt{disabled\emph{(7)}}
+    \item \texttt{ready\emph{(8)}}
+    \item \texttt{clearDacs\emph{(9)}}
+    \item \texttt{waitClearDacs\emph{(10)}}
+    \end{packed_items_snmp_obj}
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcSpllStatusGroup}{wrpcSpllAlignState}{
     \underline{Description:}
-    SoftPLL aligner state. Possible values:\\
-    \texttt{extOff\emph{(0)}}\\
-    \texttt{start\emph{(1)}}\\
-    \texttt{initCsync\emph{(2)}}\\
-    \texttt{waitCsync\emph{(3)}}\\
-    \texttt{waitSample\emph{(4)}}\\
-    \texttt{compensateDelay\emph{(5)}}\\
-    \texttt{locked\emph{(6)}}\\
-    \texttt{startAlignment\emph{(7)}}\\
-    \texttt{startMain\emph{(8)}}\\
-    \texttt{waitClkin\emph{(9)}}\\
-    \texttt{waitPlock\emph{(10)}}
+    SoftPLL aligner state. Possible values:
+    \begin{packed_items_snmp_obj}
+    \item \texttt{extOff\emph{(0)}}
+    \item \texttt{start\emph{(1)}}
+    \item \texttt{initCsync\emph{(2)}}
+    \item \texttt{waitCsync\emph{(3)}}
+    \item \texttt{waitSample\emph{(4)}}
+    \item \texttt{compensateDelay\emph{(5)}}
+    \item \texttt{locked\emph{(6)}}
+    \item \texttt{startAlignment\emph{(7)}}
+    \item \texttt{startMain\emph{(8)}}
+    \item \texttt{waitClkin\emph{(9)}}
+    \item \texttt{waitPlock\emph{(10)}}
+    \end{packed_items_snmp_obj}
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcSpllStatusGroup}{wrpcSpllHlock}{
     \underline{Description:}
@@ -101,8 +108,8 @@
     Main PLL DAC value (range 0-65535).}
   \snmpentrys{WR-WRPC-MIB}{wrpcSpllStatusGroup}{wrpcSpllDelCnt}{
     \underline{Description:}
-    Delock counter - how many times since the WRPC software has started, either
-the Helper of Main PLL lost lock.
+    Delock counter - how many times either Helper of Main PLL lost lock since
+    the WRPC software has started.
     \glspar \underline{Related problems:}}
 
 \snmpentrys{WR-WRPC-MIB}{}{wrpcPtpGroup}{
@@ -111,13 +118,15 @@ the Helper of Main PLL lost lock.
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpServoStateN}{
     \underline{Description:}
     Current state of WR synchronization servo running in the PTP. Possible
-values:\\
-    \texttt{uninitialized\emph{(0)}}\\
-    \texttt{syncNsec\emph{(1)}}\\
-    \texttt{syncSec\emph{(2)}}\\
-    \texttt{syncPhase\emph{(3)}}\\
-    \texttt{trackPhase\emph{(4)}}\\
-    \texttt{waitOffsetStable\emph{(5)}}
+values:
+    \begin{packed_items_snmp_obj}
+    \item \texttt{uninitialized\emph{(0)}}
+    \item \texttt{syncNsec\emph{(1)}}
+    \item \texttt{syncSec\emph{(2)}}
+    \item \texttt{syncPhase\emph{(3)}}
+    \item \texttt{trackPhase\emph{(4)}}
+    \item \texttt{waitOffsetStable\emph{(5)}}
+    \end{packed_items_snmp_obj}
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpClockOffsetPsHR}{
     \underline{Description:}
@@ -139,12 +148,21 @@ values:\\
     \underline{Description:}
     TAI nanoseconds when the WR PTP servo was last updated.
     \glspar \underline{Related problems:}}
-  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaTxM}{}
-  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaRxM}{}
-  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaTxS}{}
+  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaTxM}{
+    \underline{Description:}
+    Fixed Tx latency of the WR master.
+    \glspar \underline{Related problems:}}
+  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaRxM}{
+    \underline{Description:}
+    Fixed Rx latency of the WR master.
+    \glspar \underline{Related problems:}}
+  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaTxS}{
+    \underline{Description:}
+    Fixed Tx latency of the WR slave.
+    \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpDeltaRxS}{
     \underline{Description:}
-    Fixed Tx and Rx latencies of the WR master and slave.
+    Fixed Rx latency of the WR slave.
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpServoStateErrCnt}{
     \underline{Description:}
@@ -175,12 +193,12 @@ previously calculated value.
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpAlpha}{
     \underline{Description:}
-    Alpha value (fiber asymmetry coeficient) used for WR to estimate the one-way
-link delay.
+    Alpha value (fiber asymmetry coefficient) used for WR to estimate the
+    one-way link delay.
     \glspar \underline{Related problems:}}
 
 \snmpentrys{WR-WRPC-MIB}{}{wrpcPtpConfigGroup}{
-  The groups contains objects for configuring remotely the SFP databse with
+  The groups contains objects for configuring remotely the SFP database with
 calibration parameters}
 
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpConfigGroup}{wrpcPtpConfigRestart}{
@@ -189,7 +207,7 @@ calibration parameters}
 Possible values:
     \begin{packed_items_snmp_obj}
       \item write: \texttt{restartPtp\emph{(1)}} -- triggers PTP restart
-      \item read: \texttt{restartPtpSuccessful\emph{(100)}} -- PTP restart triggered succesfully
+      \item read: \texttt{restartPtpSuccessful\emph{(100)}} -- PTP restart triggered successfully
       \item read: \texttt{restartPtpFailed\emph{(200)}} -- failed to trigger PTP restart
     \end{packed_items_snmp_obj}
     }
@@ -229,7 +247,8 @@ Possible values:
     }
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpConfigGroup}{wrpcPtpConfigSfpPn}{
     \underline{Description:}
-    Read-write object. SFP product number identifying which entry in the Flash SFP databse to
+    Read-write object. SFP product number identifying which entry in the Flash
+    SFP database to
     update. }
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpConfigGroup}{wrpcPtpConfigDeltaTx}{
     \underline{Description:}

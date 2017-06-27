@@ -45,8 +45,9 @@
 	\setlength{\parsep}{0pt}
 }{\end{itemize}}
 
+%  \begin{itemize}[leftmargin=50pt] %,topsep=-12pt]
 \newenvironment{packed_items_snmp_obj}{
-\begin{itemize}[leftmargin=50pt,topsep=-12pt]
+  \begin{itemize}[leftmargin=50pt]
 	\setlength{\itemsep}{1pt}
 	\setlength{\parskip}{0pt}
 	\setlength{\parsep}{0pt}
@@ -268,18 +269,6 @@
 \input{fail.tex}
 \newpage
 \input{snmp_exports.tex}
-
-\appendix
-%\newpage
-%\section{Operator's diagnostic example}
-%\input{diamon_example.tex}
-
-%\newpage
-%\section{Sorted list of all MIB objects}
-%\label{sec:snmp_exports:sorted}
-%% print alphabetical list
-%\printnoidxglossary[type=snmp_all,style=tree,sort=letter]
-
 
 % add not used entries, but don't display their's section
 % based on:
