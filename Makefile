@@ -8,6 +8,7 @@ ifdef CONFIG_HOST_PROCESS
 endif
 
 export CROSS_COMPILE
+export CONFIG_ABSCAL
 
 CC =		$(CROSS_COMPILE)gcc
 LD =		$(CROSS_COMPILE)ld
