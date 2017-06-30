@@ -262,7 +262,9 @@ wrpcSpllAlignState             OBJECT-TYPE
                                    compensateDelay(5),
                                    locked(6),
                                    startAlignment(7),
-                                   startMain(8)
+                                   startMain(8),
+                                   waitClkin(9),
+                                   waitPlock(10)
                                }
     MAX-ACCESS                 read-only
     STATUS                     current
