@@ -1,0 +1,281 @@
+\def\us{\char`\_}
+
+\documentclass[a4paper, 12pt]{article}
+%\documentclass{article}
+
+\usepackage{fullpage}
+\usepackage{pgf}
+\usepackage{tikz}
+\usetikzlibrary{arrows,automata,shapes}
+\usepackage{multirow}
+\usepackage{color}
+\usepackage[latin1]{inputenc}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\usepackage{times,mathptmx}
+\usepackage{chngcntr}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{scrextend}
+%\usepackage[table]{xcolor}
+\usepackage{listings}
+\definecolor{light-gray}{gray}{0.95}
+%\usepackage[firstpage]{draftwatermark}
+
+% for glossary
+% nopostdot - no dot at the end of index entires
+\usepackage[nogroupskip,nopostdot,counter=subsubsection]{glossaries}
+\renewcommand{\glossarysection}[2][]{}
+\usepackage{listings}
+\usepackage{cancel}
+\graphicspath{ {../../../../figures/} }
+
+\newenvironment{packed_enum}{
+\begin{enumerate}[leftmargin=0pt,topsep=-12pt]
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{enumerate}}
+
+\newenvironment{packed_items}{
+\begin{itemize}[topsep=-12pt]
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+%  \begin{itemize}[leftmargin=50pt] %,topsep=-12pt]
+\newenvironment{packed_items_snmp_obj}{
+  \begin{itemize}[leftmargin=50pt]
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+  \renewcommand\labelitemi{--}
+}{\end{itemize}}
+
+\newenvironment{pck_descr}{
+\begin{itemize}[leftmargin=0pt,topsep=-12pt]
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+\newenvironment{pck_proc}{
+\begin{enumerate}[leftmargin=15pt,topsep=-12pt]
+	\setlength{\itemsep}{1pt}
+	\setlength{\parskip}{0pt}
+	\setlength{\parsep}{0pt}
+}{\end{enumerate}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% creating subsubsubsection notation
+% src: http://www.latex-community.org/forum/viewtopic.php?f=5&t=791
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setcounter{secnumdepth}{6}
+\renewcommand\theparagraph{\Alph{paragraph}}
+
+\makeatletter
+\renewcommand\paragraph{\@startsection{paragraph}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {0.0001pt \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\renewcommand\subparagraph{\@startsection{subparagraph}{5}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {0.0001pt \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\counterwithin{paragraph}{subsubsection}
+\counterwithin{subparagraph}{paragraph}
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\eqoffset}[1]{%
+  {\ensuremath{%
+      {\text{offset}}_{#1}}%
+  }%
+}
+\newcommand{\eqdelay}[1]{{\text{delay}}_{#1}}
+\newcommand{\eqasymm}{{\text{asymmetry}}}
+
+% for glossary, set way of sorting entries
+\makenoidxglossaries
+% don't bold entries, texttt them
+\renewcommand*{\glsnamefont}[1]{\texttt{\textmd{#1}}}
+
+\newglossary*{snmp_status}{SNMP's status objects}
+\newglossary*{snmp_expert}{SNMP's expert objects}
+\newglossary*{snmp_other}{Objects from other MIBs}
+% alphabetical list of all entries
+\newglossary*{snmp_all}{All SNMP objects}
+
+\defglsentryfmt[snmp_status]{\texttt{\glsentryfmt}}
+\defglsentryfmt[snmp_expert]{\texttt{\glsentryfmt}}
+\defglsentryfmt[snmp_other]{\texttt{\glsentryfmt}}
+% macro to add entires
+\newcommand{\snmpadd}[1]{
+  \glspl{#1}\glsadd{x#1}%
+}
+
+% helpers to add glossary entries
+% add newline to non empty strings. For descriptions.
+\newcommand{\descr}[1]{
+  \ifx&#1&%
+    %
+  \else% put fixed space
+    \\#1
+  \fi
+}
+
+% {MIB}{parent}{object}{comment}{glossary_name}
+\newcommand{\snmpentry}[5]{%
+  \ifx&#2&% if parameter 2 is empty don't add parent
+    \newglossaryentry{#1::#3}{%
+      type=#5,%
+      name={#3},%
+      plural={#1::#3},% used to display name not plural
+      user1={#1},% MIB
+      description={\descr{#4}}%
+      }%
+  \else
+      \newglossaryentry{#1::#3}{%
+      type=#5,%
+      name={#3},%
+      description={\descr{#4}},%
+      plural={#1::#3},% used to display name not plural
+      user1={#1},% MIB
+      parent={#1::#2}%
+      }%
+  \fi
+  % add entry to alphabetical list
+  \newglossaryentry{x#1::#3}{%
+      type=snmp_all,%
+      name={#1::#3},%
+      description={}
+      }%
+}
+
+% {MIB}{parent}{object}{comment}
+\newcommand{\snmpentrye}[4]{%
+  \snmpentry{#1}{#2}{#3}{#4}{snmp_expert}
+}
+
+% {MIB}{parent}{object}{comment}
+\newcommand{\snmpentrys}[4]{%
+  \snmpentry{#1}{#2}{#3}{#4}{snmp_status}
+}
+
+% command to add snmp objects from other MIBs
+% {MIB}{parent}{object}{comment}
+\newcommand{\snmpentryo}[4]{%
+  \snmpentry{#1}{#2}{#3}{#4}{snmp_other}
+}
+
+% extra indent for lists
+\newlength{\paraaindent}
+% indent for new paragraphs 
+\newlength{\snmpentryindent}
+
+% load glossary definitions from snmp_objects.tex
+\loadglsentries{snmp_objects}
+% use \kern 0.33em instead of \space to have fixed width space
+\newglossarystyle{objtree}{%
+  \renewenvironment{theglossary}%
+    {\setlength{\parindent}{0pt}%
+     \setlength{\parskip}{0pt plus 0.3pt}}%
+    {}%
+  \renewcommand*{\glossaryheader}{}%
+  \renewcommand*{\glsgroupheading}[1]{}%
+  \renewcommand{\glossentry}[2]{%
+    \hangindent30pt\relax
+    % save indent for other paragraphs
+    \setlength{\snmpentryindent}{\hangindent}
+    \parindent0pt\relax
+    % set indent for lists entries
+    \setlength{\paraaindent}{\hangindent}
+    \addtolength{\paraaindent}{14pt}
+    \setlist[enumerate]{leftmargin=\paraaindent}
+    $\bullet$\kern 0.33em\glsentryitem{##1}\glstreenamefmt{\glstarget{##1}{\texttt{\textmd{\glsentryuseri{##1}}::}\glossentryname{##1}}}%
+    \ifglshassymbol{##1}{\kern 0.33em(\glossentrysymbol{##1})}{}%
+    \glossentrydesc{##1}\glspostdescription\kern 0.33em##2\par\vspace{12pt}
+  }%
+  \renewcommand{\subglossentry}[3]{%
+    \hangindent##1\glstreeindent\relax
+    \addtolength{\hangindent}{30pt}
+    % save indent for other paragraphs
+    \setlength{\snmpentryindent}{\hangindent}
+    \parindent##1\glstreeindent\relax
+    % set indent for lists entries
+    \setlength{\paraaindent}{\hangindent}
+    \addtolength{\paraaindent}{14pt}
+    \setlist[enumerate]{leftmargin=\paraaindent}
+    \ifnum##1=1\relax
+      $\circ$%
+    \fi
+    \ifnum##1=2\relax
+      $\ast$%
+    \fi
+    \kern 0.33em%
+    \ifnum##1=1\relax
+      \glssubentryitem{##2}%
+    \fi
+    \glstreenamefmt{\glstarget{##2}{\glossentryname{##2}}}%
+    \ifglshassymbol{##2}{\kern 0.33em(\glossentrysymbol{##2})}{}%
+    \glossentrydesc{##2}\glspostdescription\kern 0.33em##3\par\vspace{12pt}
+  }%
+  %redefine \glspar to support indentation in many paragraphs
+  \renewcommand{\glspar}{%
+    \par
+    \parindent\snmpentryindent % restore first line in paragraph indent
+    \hangindent\snmpentryindent % restore other lines in paragraph indent
+    }%
+
+}
+
+\newcommand{\ignore}[1]{}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\setcounter{tocdepth}{2}
+\input{revinfo.tex}
+\title{White Rabbit PTP Core: Failures and Diagnostics}
+\author{Grzegorz Daniluk\\[.5cm] CERN BE-CO-HT\\ \small{\gitrevinfo}}
+\maketitle
+\thispagestyle{empty}
+
+\begin{figure}[ht!]
+  \centering
+  \vspace{1.3cm}
+  \includegraphics[width=0.50\textwidth]{img/WRlogo.pdf}
+\end{figure}
+
+\newpage
+
+\newpage
+
+\newpage
+
+\tableofcontents
+
+\newpage
+\input{intro.tex}
+
+\newpage
+\section{Possible Errors}
+\label{sec:failures}
+\input{fail.tex}
+\newpage
+\input{snmp_exports.tex}
+
+% add not used entries, but don't display their's section
+% based on:
+% http://tex.stackexchange.com/questions/115635/glossaries-suppress-pages-when-using-glsaddall
+\forallglsentries{\thislabel}%
+{%
+  \ifglsused{\thislabel}{}{\glsadd[format=ignore]{\thislabel}}%
+}
+
+\end{document}

@@ -1,0 +1,20 @@
+\section{Introduction}
+
+This document provides information about the diagnostics of the White Rabbit
+PTP Core (WRPC) - an HDL module present in every White Rabbit node. It is a
+complementary documentation to the official \emph{White Rabbit PTP Core User's
+Manual} published with every stable release. Please refer to this user manual
+for the information about the WRPC, its interfaces and building instructions for
+the official reference designs.\\
+
+White Rabbit PTP Core starting from \emph{v4.0} provides diagnostic mechanisms
+in the form of SNMP objects and optional Syslog messages (depending on the build
+time LM32 software configuration). The implementation of an SNMP agent in the
+WRPC is very basic comparing to the diagnostics offered by the White Rabbit
+Switch. Since we are very constraint on the code size running inside the WR PTP
+Core, almost all of the logic to detect and report errors has to be implemented
+on the SNMP Manager's side.\\
+
+This document has many internal hyperlinks that associate SNMP objects with
+related problems description and the other way round. These links can be easily
+used when reading the document on a computer.

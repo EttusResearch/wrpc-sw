@@ -1,0 +1,483 @@
+This section tries to identify all the possible ways the White Rabbit PTP Core can
+fail. The structure of each error description is the following:
+\begin{itemize}[leftmargin=0pt]
+	\item [] \underline{Severity}: describes how critical is the fault. Currently
+		we distinguish two severity levels:
+		\begin{packed_items}
+			\item WARNING - means that despite the fault the synchronization
+				functionality was not affected so the WRPC behaves correctly in the WR
+				network.
+			\item ERROR - means that the fault is critical and most probably WRPC
+        misbehaves.
+		\end{packed_items}
+	\item [] \underline{Mode}: for timing failures, it describes which modes are
+		affected. Possible values are:
+		\begin{packed_items}
+      \item \emph{Slave} - the WR Node (WR PTP Core) synchronizes to another WR
+        device.
+			\item \emph{Grand Master} - the WR Node (WR PTP Core) is at the top of the
+				synchronization hierarchy. It is synchronized to an external clock (e.g.
+				GPS, Cesium) and provides timing to other WR/PTP devices.
+			\item \emph{Master} - the WR Node (WR PTP Core) at the top of the
+				synchronization hierarchy. It provides timing to other WR/PTP devices
+				but runs from a local oscillator (not synchronized to an external
+				clock).
+			\item \emph{all} - any WR PTP Core can be affected regardless the timing
+				mode.
+		\end{packed_items}
+
+	\item [] \underline{Description}: What the problem is about, how important it
+		is and what are the effects if it occurs.
+	\item [] \underline{SNMP objects}: Which SNMP objects should be monitored to
+		detect the failure. These are objects from the \texttt{WR-WRPC-MIB}.
+	\item [] \underline{Error/Warning condition}: condition that should be checked
+		at the SNMP manager's side to detect given problem. Often you will see there
+    conditions like:\\
+    \texttt{[value] != [value]\_prev} or\\
+    \texttt{[value] - [value]\_prev > [threshold]}\\
+    where \text{[value]} and \text{[value]\_prev} are the current and previous
+    iteration readouts of an SNMP object. This way we check if the value of the
+    object has changed from the previous readout or if it has changed by more
+    than a safe threshold.
+  \item [] \underline{Action}: list of actions that should be performed in case
+    of an error/warning. Regardless of the detailed actions described for each
+    of the errors below, there are some common remarks that apply to all
+    situations:
+    \begin{itemize}
+    \item If a procedure given for a specific SNMP object does not solve the
+      problem, please contact WR experts to perform a more in-depth analysis of
+      the network. For this, you should provide a complete dump of the WRPC
+      status generated in the first step of each procedure.
+    \item The first action in most of the procedures, called \emph{Dump state}
+      requires simply calling a tool provided by WR developers that reads all
+      the detailed information from the node and writes it to a single file
+      that can be later analyzed by the experts.
+    \item If a problem solving procedure requires restarting or replacing a WR
+      Node working in the \emph{Grand Master} mode, please make sure that after
+      the repair, all other WR devices in the network are synchronized and do
+      not report any problems.
+    \item If a procedure requires replacing WR Node with a new unit, the
+      broken one should be handled to WR experts or the hardware manufacturer to
+      investigate the problem.
+    \end{itemize}
+\end{itemize}
+
+\newpage
+\subsection{Timing error}
+\label{sec:timing_fail}
+As a timing error we define the WR PTP Core not being able to synchronize its
+local time to the WR Master (if WRPC runs in the slave mode), or not being able
+to provide correct WR time to the rest of the WR network (if WRPC runs in the
+master mode). This section contains the list of faults leading to a timing error.
+
+\subsubsection{\bf PTP/PPSi went out of \texttt{TRACK\_PHASE}}
+		\label{fail:timing:ppsi_track_phase}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{Slave}
+			\item [] \underline{Description}:\\
+				If the \emph{PTP/PPSi} WR servo goes out of the \texttt{TRACK\_PHASE}
+				state, this means something bad has happened and the node lost
+        synchronization to its Master.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPtpServoStateN}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpServoStateErrCnt} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcPtpServoStateErrCnt != wrpcPtpServoStateErrCnt\_prev} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check if the WR Master - timing source, was not restarted. If it
+          was, Slave leaving \texttt{TRACK\_PHASE} state is a normal behavior
+          and it should automatically re-synchronize.
+        \item Dump state
+        \item Check the status of the WR Master - timing source. In case it has
+          reported some problems, please follow the diagnostics document for the
+          WR Switch.
+        \item If the switch did not report any problems, restart the WR Node.
+        \item If the problem persists replace the WR Node hardware with a new
+          unit.
+        \item If the problem persists, please notify WR experts.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf Offset jump not compensated by Slave}
+		\label{fail:timing:offset_jump}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{Slave}
+			\item [] \underline{Description}:\\
+				This may happen if the Master resets its WR time counters (e.g. because
+				it lost the link to its Master higher in the hierarchy or to external
+				clock), but the WR Slave does not follow the jump.
+				\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPtpClockOffsetPsHR}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpClockOffsetErrCnt} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcPtpClockOffsetErrCnt != wrpcPtpClockOffsetErrCnt\_prev} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check the status of the WR Master - timing source. Normally, time
+          jumps should not happen and if they do, the problem should be
+          investigated on the WR Master side (e.g. \emph{Grand Master} unlocked
+          from the external reference).
+        \item Restart the WR Node and let it synchronize again.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf Detected jump in the RTT value calculated by \emph{PTP/PPSi}}
+		\label{fail:timing:rtt_jump}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{Slave}
+			\item [] \underline{Description}:\\
+				Once a WR link is established the round-trip delay (RTT) can change
+				smoothly due to the temperature variations. However, if a sudden jump is
+				detected, that means that an erroneous timestamp was generated either on
+				the Master or the Slave side.
+				One cause of that could be the wrong value of the t24p transition point.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPtpRTT}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpRTTErrCnt} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcPtpRTTErrCnt != wrpcPtpRTTErrCnt\_prev} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check the status status of the WR Master - timing source.
+          Eventually proceed to investigate the problem on the WR Master side.
+        \item Restart the Node.
+        \item If the problem persists, replace the WR Node with a new unit.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf Wrong $\Delta_{TXM}$, $\Delta_{RXM}$, $\Delta_{TXS}$,
+		$\Delta_{RXS}$, $\alpha$ values are reported to the \emph{PTP/PPSi} daemon}
+		\label{fail:timing:deltas_report}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{Slave}
+			\item [] \underline{Description}:\\
+				If \emph{PTP/PPSi} doesn't get the correct values of fixed hardware delays,
+				it won't be able to calculate a proper Master-to-Slave delay. Although
+				the estimated offset in \emph{PTP/PPSi} is close to 0, the WRPC won't be
+				synchronized to the Master with sub-nanosecond accuracy.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPtpDeltaTxM}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpDeltaRxM}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpDeltaTxS}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpDeltaRxS}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpAlpha} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcPtpDeltaTxM == 0 || wrpcPtpDeltaRxM == 0 ||}\\
+				\texttt{wrpcPtpDeltaTxS == 0 || wrpcPtpDeltaRxS == 0 ||}\\
+				\texttt{wrpcPtpAlpha == 0} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check if the correct calibration values are entered both for the WR
+          Node and WR Master. WR Switch will report this in its own SNMP status
+          objects.
+        \item Check the White Rabbit PTP Core User Manual
+          \footnote{\url{http://www.ohwr.org/projects/wr-cores/wiki/Current\_release}}
+          for the instructions how the calibration values can be configured
+          locally or remotely using SET for SNMP objects.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf PTP servo is not updating}
+		\label{fail:timing:servo_not_updating}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{Slave}
+			\item [] \underline{Description}:\\
+				If PTP servo is not updating, we still increment the internal timing
+				counters, but don't have updated information on the Master time and link
+				delay. After some time the slave local time will drift away from the
+				master.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPtpServoUpdates}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpServoUpdateTime} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcPtpServoUpdates != wrpcPtpServoUpdates} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check if the PTP frames are flowing between the WR Node and its
+          timing master (error \ref{fail:timing:no_frames}).
+        \item Check the status of the WR Master - timing source.
+        \item Check if the SoftPLL did not unlock (error
+          \ref{fail:timing:spll_unlock}).
+        \item Restart the WR Node.
+        \item If the problem persists, replace the WR Node with a new unit.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf \emph{SoftPLL} became unlocked}
+		\label{fail:timing:spll_unlock}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR / WARNING
+			\item [] \underline{Mode}: \emph{all}
+			\item [] \underline{Description}:\\
+				If the \emph{SoftPLL} loses lock, for any reason, Slave, Master or Grand
+				Master node can no longer be syntonized and phase aligned with its time
+				source. WRPC in Master mode without properly locked Helper PLL is not
+				able to perform reliable phase measurements for enhancing Rx timestamps
+				resolution. For a Grand Master the reason of \emph{SoftPLL} going out of
+				lock might be disconnected 1-PPS/10MHz signals or that the external
+				clock is down.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcSpllMode}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSpllSeqState}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSpllAlignState}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSpllHlock}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSpllMlock}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSpllDelCnt} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+        \texttt{wrpcSpllSeqState != ready\emph{(3)} ||}\\
+        \texttt{[wrpcSpllMode == grandmaster\emph(1) \&\& wrpcAlignState != locked\emph{(6)}] ||}\\ % GrandMaster not locked
+        \texttt{[wrpcSpllMode == slave\emph{(3)} \&\& wrpcSpllHlock == 0] ||}\\ % Spll slave and Hpll unlocked
+				\texttt{[wrpcSpllMode == slave\emph{(3)} \&\& wrpcSpllMlock == 0] ||}\\ % Spll slave and Mpll unlocked
+        \texttt{[wrpcSpllMode != grandmaster\emph{(1)} \&\& wrpcSpllMode != master\emph{(2)} \&\& wrpcSpllMode != slave\emph{(3)}]}} % Spll in neither of the GM/Master/Slave modes
+			\item [] \underline{Warning condition}:\\
+				{\footnotesize
+        \texttt{[wrpcSpllMode == grandmaster\emph{(1)} \&\& wrpcSpllDelCnt > 0]}} % GrandMaster has unlocked from reference at some point
+      \item [] \underline{Action for \emph{Grand Master} WR Node}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check 1-PPS and 10MHz signals coming from an external source.
+          Verify if they are properly connected and, in case of a GPS receiver,
+          check if it is synchronized and locked.
+        \item Restart the WR Node
+        \item If the problem persists, replace the WR Node with a new unit
+        \end{pck_proc}
+      \item [] \underline{Action for \emph{Slave} WR Node}:
+        \begin{pck_proc}
+        \item Dump state
+        \item Check the status of the WR Master - timing source. Eventually
+          proceed to investigate the problem on the Master.
+        \item Verify if the WR link was not lost and re-initialized by checking
+          the SNMP manager software logs.
+        \item Restart the WR Node
+        \item If the problem persists, replace the WR Node with a new unit.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf PTP frames don't reach LM32}
+		\label{fail:timing:no_frames}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{all}
+			\item [] \underline{Description}:\\
+				In this case, \emph{PTP/PPSi} will fail to stay synchronized and provide
+				synchronization. Even if the WR servo is in the \texttt{TRACK\_PHASE}
+				state, it calculates a new phase shift based on the Master-to-Slave delay
+				variations. To calculate these variations, it still needs timestamped
+				PTP frames flowing. There could be several causes of such fault:
+				\begin{itemize}
+          \item WR Switch problem
+					\item wrong VLANs configuration
+					\item WR PTP Core HDL problem
+				\end{itemize}
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPtpTx}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPtpRx}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPortInternalTx}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPortInternalRx} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcPtpTx == wrpcPtpTx\_prev || wrpcPtpRx == wrpcPtpRx\_prev ||}\\
+				\texttt{wrpcPortInternalTx == wrpcPortInternalTx\_prev ||}\\
+				\texttt{wrpcPortInternalRx == wrpcPortInternalRx\_prev} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check the state of the WR Master - timing source. Especially, if
+          the PTP daemon is still running there.
+        \item Check if the VLANs configuration on the WR Node matches the
+          configuration of the WR Switch where this node is connected. Wrong
+          configuration (e.g. different VIDs) will cause the frames to be
+          dropped.
+        \item Restart the WR Node.
+        \item If possible, stop or reduce any additional (heavy) traffic that
+          might be sent through the WR network.
+        \item If the problem persists, please notify WR experts.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf Detected SFP not supported for WR timing}
+		\label{fail:timing:wrong_sfp}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{all}
+			\item [] \underline{Description}:\\
+				By not supported SFP for WR timing we mean a transceiver that doesn't
+				have the \emph{alpha} parameter and fixed hardware delays defined in the
+				SFP database. The consequence is \emph{PTP} not having the right
+				values to estimate the link asymmetry. Despite the \emph{PTP} offset
+        being close to \emph{0ps}, the device won't be properly synchronized.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcPortSfpPn}\\
+				\snmpadd{WR-WRPC-MIB::wrpcPortSfpInDB} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+        \texttt{wrpcPortSfpInDB != inDataBase\emph{(2)}} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check if the SFP database is correctly defined by making sure the
+          error \ref{fail:timing:no_sfpdb} is not reported.
+        \item Change the optical SFP transceiver in the WR Node. Either it is
+          broken and should be replaced since its ID cannot be read correctly,
+          or a non-supported transceiver was plugged to the device.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf SFP database not configured}
+		\label{fail:timing:no_sfpdb}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{all}
+			\item [] \underline{Description}:\\
+				If there are no SFP entries in the database, any (even WR-supported) SFP
+				cannot be matched with the calibration values for a given hardware and
+				fiber. Despite \emph{PTP/PPSi} offset being close to 0 \emph{ps}, the
+				device won't be properly synchronized.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcSfpPn.<n>}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSfpDeltaTx.<n>}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSfpDeltaRx.<n>}\\
+				\snmpadd{WR-WRPC-MIB::wrpcSfpAlpha.<n>} }
+			\item [] \underline{Note}: It's enough to try reading index 1 of the above
+				SNMP objects tables to make sure there is at least one entry in the
+				database.
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+        Error when trying to get any of the \texttt{wrpcSfpPn.1};
+        \texttt{wrpcSfpDeltaTx.1}; \texttt{wrpcSfpDeltaRx.1};
+        \texttt{wrpcSfpAlpha.1} SNMP objects}
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check the White Rabbit PTP Core User's
+          Manual\footnote{\url{http://www.ohwr.org/projects/wr-cores/wiki/Current\_release}}
+          for the instructions how the calibration values can be configured
+          locally or remotely using SET for SNMP objects.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\newpage
+\subsection{Other errors}
+\label{sec:other_fail}
+
+\subsubsection{\bf WR link is down or FPGA not programmed or FPGA programmed with incorrect bitstream}
+		\label{fail:timing:master_down}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Description}:\\
+        WRPC is monitored over the WR network. This means, to detect whether
+        the communication link is down we can either periodically ping the
+        device or monitor if there are no timeouts from SNMP requests. 
+			\item [] \underline{SNMP objects}: \emph{(none)}
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				SNMP request timeout or PING timeout}
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Investigate on the computer/front-end where the WR Node card is
+          installed, if all the drivers are properly loaded and if the FPGA gets
+          programmed. You can take another WR Master device and connect it
+          locally to verify if the WR Node is programmed correctly.
+        \item Check the fiber link e.g. by connecting another WR Node, with a
+          different SFP transceiver to the same fiber.
+        \item If there is still no link on the new WR Node, try connecting
+          fiber on the Master side to another port of the WR Switch (using
+          different SFP transceiver).
+        \item If there is still no link, the fiber connection is either dirty or
+          broken.
+        \end{pck_proc}
+		\end{pck_descr}
+
+
+\subsubsection{\bf WR PTP Core reset}
+		\label{fail:other:reset}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Description}:\\
+				If the WRPC was reset it might either mean that there was a power cut or
+				some not yet known bug caused the WRPC software to crash.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcTimeSystemUptime} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcTimeSystemUpdate < wrpcTimeSystemUpdate\_prev} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check if there was a power cut e.g. by checking the uptime of the
+          computer/front-end where the WR Node card is installed.
+        \item If there was no power cut or intended machine restart, make a full
+          state dump and report problem to WR experts.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf WR PTP Core time reset}
+		\label{fail:other:time_reset}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Description}:\\
+				If the WRPC internal time counters are reset, this might mean the WR
+				Master in the network has some problems and WRPC has followed the time
+				reset. If that's not the case, this might mean some not yet known bug
+				caused the WRPC time reset.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcTimeTAI}\\
+				\snmpadd{WR-WRPC-MIB::wrpcTimeTAIString} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcTimeTAI == 0} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Dump state.
+        \item Check the status of the WR Master - timing source.
+        \item Check in the SNMP manager software logs, if there were no
+          \emph{link down} errors for the WR Node or the WR Master Switch. In
+          that case, the SFP optical transceivers should be changed or the fiber
+          link should be investigated.
+        \end{pck_proc}
+		\end{pck_descr}
+
+\subsubsection{\bf Temperature of the node too high}
+		\label{fail:other:temp}
+		\begin{pck_descr}
+			\item [] \underline{Severity}: WARNING
+			\item [] \underline{Description}:\\
+				If the temperature raises too high we might break our electronics. It
+				also means that most probably something is wrong with the node cooling.
+			\item [] \underline{SNMP objects}:\\
+				{\footnotesize
+				\snmpadd{WR-WRPC-MIB::wrpcTemperatureName.<n>}\\
+				\snmpadd{WR-WRPC-MIB::wrpcTemperatureValue.<n>} }
+			\item [] \underline{Error condition}:\\
+				{\footnotesize
+				\texttt{wrpcTemperatureValue.<n> > THRESHOLD} }
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Check the cooling for the computer/front-end/rack where the WR
+          Node is installed.
+        \end{pck_proc}
+		\end{pck_descr}
