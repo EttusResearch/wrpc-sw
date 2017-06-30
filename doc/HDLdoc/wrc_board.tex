@@ -78,10 +78,17 @@ their own BSP, can find the board-common module under:
   \cline{1-3}
   g\_diag\_rw\_size & integer & 0 & \\
   \hline
-  g\_tx\_streamer\_width & integer & 32 & \multirowpar{2}{TX/RX
-    data width when \tts{g\_fabric\_iface = STREAMERS} (otherwise ignored)}\\
+  g\_streamers\_op\_mode & enum & TX\_AND\_RX & Selects whether both TX and RX
+  streamer modules should be instantiated or only one of them when
+  \tts{g\_fabric\_iface = STREAMERS} (otherwise ignored)\\
+  \hline
+  g\_tx\_streamer\_params & record & default record & \multirowpar{2}{various TX/RX
+    streamers parameters when \tts{g\_fabric\_iface = STREAMERS} (otherwise
+    ignored)\footnote{See Streamers wiki page for detailed description of the
+    configuration records:
+    \url{http://www.ohwr.org/projects/wr-cores/wiki/TxRx_Streamers}}}\\
   \cline{1-3}
-  g\_rx\_streamer\_width & integer & 32 & \\
+  g\_rx\_streamers\_params & record & default record & \\
   \hline
   g\_fabric\_iface & enum & PLAIN & optional module to be attached to the
   fabric interface of WRPC \tts{[PLAIN/STREAMERS/ETHERBONE]}\\
@@ -168,6 +175,13 @@ their own BSP, can find the board-common module under:
   wrs\_tx\_flush\_i & in &  1 & When asserted, the streamer will immediatly send
   out all the data that is stored in its TX buffer\\
   \hline
+  wrs\_tx\_cfg\_i & in & rec & \multirowpar{2}{Networking configuration of Tx/Rx
+  Streamers\footnote{See Streamers wiki page for detailed description of the
+    network configuration:
+    \url{http://www.ohwr.org/projects/wr-cores/wiki/TxRx_Streamers}}}\\
+  \cline{1-3}
+  wrs\_rx\_cfg\_i & in & rec & \\
+  \hline
   wrs\_rx\_first\_o & out & 1 & Indicates the first word of the data block on \tts{wrs\_rx\_data\_o}\\
   \hline
   wrs\_rx\_last\_o & out & 1 & Indicates the last word of the data block on \tts{wrs\_rx\_data\_o}\\
@@ -217,6 +231,11 @@ their own BSP, can find the board-common module under:
   txtsu\_ack\_i & in & 1 & acknowledge, indicating that user-defined module
   has received the timestamp\\
   \hline 
+  abscal\_txts\_o & out & 1 & \multirowpar{2}{[optional] Endpoint timestamping
+  triggers used in the absolute calibration procedure} \\
+  \cline{1-3}
+  abscal\_rxts\_o & out & 1 & \\
+  \hline
   \hdltablesection{Pause frame control}\\
   \hline
   fc\_tx\_pause\_req\_i   & in  &  1 & [optional] Ethernet flow control, request sending
@@ -294,6 +313,10 @@ Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters
   \hdltablesection{Clocks and resets}\\
   \hline
   areset\_n\_i & in & 1 & Reset input (active low, can be async)\\
+  \hline
+  areset\_edge\_n\_i & in & 1 & [optional] Reset input edge sensitive (active
+  rising-edge, can be async). Should be connected to PCIe reset if the board
+  should be able to operate both in hosted and standalone configuration.\\
   \hline
   clk\_20m\_vcxo\_i & in & 1 & 20MHz clock input from board VCXO\\
   \hline
@@ -388,6 +411,9 @@ Section~\ref{sec:hdl_board_common_param} for a the list of common BSP parameters
   \hdltablesection{Clocks and resets}\\
   \hline
   areset\_n\_i & in & 1 & Reset input (active low, can be async)\\
+  \hline
+  areset\_edge\_n\_i & in & 1 & [optional] Reset input edge sensitive (active
+  rising-edge, can be async).\\
   \hline
   clk\_20m\_vcxo\_i & in & 1 & 20MHz clock input from board VCXO\\
   \hline
@@ -489,6 +515,9 @@ Parameters and ports common to all BSPs are described in Section~\ref{sec:hdl_bo
   \hdltablesection{Clocks and resets}\\
   \hline
   areset\_n\_i & in & 1 & Reset input (active low, can be async)\\
+  \hline
+  areset\_edge\_n\_i & in & 1 & [optional] Reset input edge sensitive (active
+  rising-edge, can be async).\\
   \hline
   clk\_board\_20m\_i & in & 1 & 20MHz clock input from board\\
   \hline
