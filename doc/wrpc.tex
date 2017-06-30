@@ -571,7 +571,8 @@ is up and running on your SPEC card. Congratulations !
 
 Currently the driver packages for SVEC and VFC-HD boards depend on other CERN
 drivers and front-end infrastructure. We are working to make them exportable. If
-you are a CERN user of SVEC or VFC-HD board, please check
+you are a CERN user of SVEC, VFC-HD board or SPEC in a Front-end computer,
+please check
 \url{https://wikis.cern.ch/display/HT/WR+Nodes} (accessible \textbf{only} from
 CERN network) for more instructions. If you are outside CERN and would like to
 use one of these boards, please contact us.
@@ -671,33 +672,67 @@ Cesium clock). Depending on your board you should connect:
 \end{itemize*}
 
 \vspace{1em}
-One option is to type by hand all the commands needed to initialize the WRPC software to
-the required state every time the core starts. However, you can also write your
-own initialization script and save it to the Flash/EEPROM. It will be executed every time
-the WRPC software starts. A~simple script, that loads the calibration
-parameters, configures the WR mode to Slave, starts the PTP daemon and sets
-the IP address is presented below:
+WRPC has a possibility to load user-defined intialization script on every
+startup. If you run WRPC release v4.1 or higher, the default LM32 software
+comes with a built-in init script. The default script disables VLAN support,
+loads calibration values from the SFP database (provided that it was written
+earlier by the user) and starts PTP in slave mode. Here are the actual WRPC
+shell commands executed from the built-in init script:
+\begin{lstlisting}
+vlan off
+ptp stop
+sfp match
+mode slave
+ptp start
+\end{lstlisting}
 
+You can still define your own init script that will be saved in the
+Flash/EEPROM memory attached to the WRPC. In that case, user-defined set of
+commands is executed after the built-in script. For example, if you would
+like to expand the default configuration by your own script that assigns an IP
+address, you need to to execute the following WRPC shell commands:
 \begin{lstlisting}
 wrc# init erase
-wrc# init add ptp stop
-wrc# init add sfp match
-wrc# init add mode slave
+wrc# init add ip set 192.168.1.5
+\end{lstlisting}
+
+Another typical situation would be configuring the WRPC to run in GrandMaster or
+Master mode. In this case, assuming you also want to configure the IP address
+(like in the previous example) you would need to run the following WRPC shell
+commands:
+\begin{lstlisting}
+wrc# init erase
+wrc# init add mode master # for Free-running Master mode or
+wrc# init add mode gm     #for GrandMaster mode
 wrc# init add ptp start
 wrc# init add ip set 192.168.1.5
 \end{lstlisting}
 
-Almost exactly the same one can be used for running WRPC in the GrandMaster
-or Master mode. The only difference would be changing the
-\texttt{init add mode slave} line to \texttt{init add mode gm} or
-\texttt{init add mode master}.
+You can always check the content of the built-in and user-defined init scripts
+by calling \texttt{init show} command:
+\begin{lstlisting}
+wrc# init show
+-- built-in script --
+vlan off
+ptp stop
+sfp match
+mode slave
+ptp start
+-- user-defined script --
+ip set 192.168.1.5
+\end{lstlisting}
+
+\noindent\textbf{Note:} This simple configuration disables VLANs configuration
+in the WR PTP Core. If, for your network configuration you need to configure
+VLANs, please check the instructions in section \ref{VLAN Support}.
 
 % ==========================================================================
 \subsection{Running the Core}
 \label{Running the Core}
 
-Having the SFP calibration database, and the init script created in \ref{Writing
-configuration} you can now restart the WRPC by typing the shell command:
+Having the SFP calibration database, and eventually a user-defined init script
+created in \ref{Writing configuration} you can now restart the WRPC by typing
+the shell command:
 
 \begin{lstlisting}
 wrc# init boot
@@ -705,18 +740,19 @@ wrc# init boot
 
 You should see log messages that confirm the execution of the initialization
 script:
-
 \begin{minipage}{\textwidth}
 \begin{lstlisting}
-executing: ptp stop
+executing: vlan off
+current vlan: 0 (0x0)
+executing:  ptp stop
 PTP stop
-executing: sfp match
-AXGE-3454-0531
-SFP matched, dTx=180707 dRx=148323 alpha=-73685416
-executing: mode slave
+executing:  sfp match
+AXGE-3454-0531  
+SFP matched, dTx=180667 dRx=148735 alpha=-73685416
+executing:  mode slave
 PTP stop
 Locking PLL
-executing: ptp start
+executing:  ptp start
 PTP start
 Slave Only, clock class set to 255
 executing: ip set 192.168.1.5
@@ -724,7 +760,7 @@ IP-address: 192.168.1.5 (static assignment)
 \end{lstlisting}
 \end{minipage}
 
-Now you should have the WR PTP Core running in WR Slave mode.\\
+Now, your device runs as a WR Slave.\\
 
 \textbf{Important!!!} WRPC needs to make a calibration of t24p phase transition
 value. It has to be done only once for a new bitstream and is performed
@@ -1316,43 +1352,42 @@ udp-based network services, in addition to \textit{ptp}:
 \section{VLAN Support}
 \label{VLAN Support}
 
-The White Rabbit node can be configured to be vlan-aware, by setting
-\texttt{CONFIG\_VLAN} in \textit{Kconfig}.  The setting is disabled by default.
+If you are using the White Rabbit PTP Core version 4.1 or later, it comes by
+default with VLAN support enabled. You can always disable them in run time using
+a WRPC shell command:
+\begin{lstlisting}
+wrc# vlan off
+\end{lstlisting}
 
-If configured for \textit{vlan} support, the node selects packet-filter rules
-to receive frames in several \textit{vlan}s, all set at configuration time.
-
-At run time you can use \texttt{vlan off} in the shell to turn off all \textit{vlan}
-processing and get back to the ``standard'' packet-filter rules.
-
+Current implementation allows to configure up to 4 VLAN IDs (VIDs) at build
+time. The following Kconfig options are available in the LM32 software:
 \begin{longtable}{  p{6.5cm}  p{9cm} }
 
 \small{\textit{CONFIG\_VLAN}} &
 
 	This is the top-level choice. It can be enabled or disabled.
-        If disabled, the following values default to 0 and the
-        packet filter will discard all tagged frames.\\
+        If VLANs are disabled, all incoming tagged frames will be discarded.\\
 & \\
 \small{\textit{CONFIG\_VLAN\_NR}} &
 
-	The default \textit{vlan} number for the CPU.  All network traffic
-        directed to (and originating from) the \textit{lm32} processor will
-        belong to this \textit{vlan}.  The~value can be changed at run time
-        using the \texttt{vlan} shell command.\\
+  The default \textit{vlan} number for the CPU (class 0).  All network traffic
+        directed to (and originating from) the LM32 processor will
+        belong to this VLAN.  The~value can be changed at run time
+        using the \texttt{vlan set} shell command.\\
 & \\
 \small{\textit{CONFIG\_VLAN\_1\_FOR\_CLASS7}} & \\
 \small{\textit{CONFIG\_VLAN\_2\_FOR\_CLASS7}} &
 
 	The packet-filter rules are setup to deliver frames belonging
-        to two specific \textit{vlans} to class 7, usually \textit{etherbone}.
-        To deliver one \textit{vlan} only, set the two options to the same
-        number.\\
+        to two specific VLANs to class 7, usually Etherbone.
+        To deliver one VLAN only, set the two options to the same
+        number. These VIDs can be modified only at build time.\\
 & \\
 \small{\textit{CONFIG\_VLAN\_FOR\_CLASS6}} &
 
 	The packet-filter rules are setup to deliver frames belonging
-        to one specific \textit{vlan} to class 6, usually routed to the
-        \textit{streamer} or \textit{nic} logic blocks.\\
+        to one specific VLAN to class 6, usually routed to the
+        Streamer module. This VID can be modified only at build time.\\
 
 \end{longtable}
 
@@ -1363,6 +1398,25 @@ Fabric interface. Currently, class 0 is used for all frames that should be
 processed by the WRPC, class 6 is used for Streamers traffic, class 7 is used
 for Etherbone traffic (see HDL documentation for boards HDL modules and
 selection between Streamers, Etherbone and Plain modes).
+
+The default WR PTP Core v4.1 release firmware comes with the following VIDs:
+\begin{itemize}
+  \item \textbf{VID 1} - for class 0, traffic processed inside the WR PTP Core
+  \item \textbf{VID 10} and \textbf{VID 11} - for class 7, Etherbone traffic
+  \item \textbf{VID 20} - for class 6, Streamers traffic
+\end{itemize}
+This of course means that all the traffic from VIDs 10, 11, 20 is forwarded and
+available on the WR PTP Core external fabric interface. The user is free to use
+it for any other HDL module, not necessary Etherbone or Streamers.
+
+Currently, only VID for the traffic processed by the WRPC (class 0) can be
+modified in the run time. You can use the WRPC shell command
+\texttt{vlan set <vid>} to modify it. If, for example, your WR node is supposed
+to synchronize and respond to SNMP requests in VLAN 5, you should add this to
+the user-defined init script:
+\begin{lstlisting}
+wrc# init add vlan set 5
+\end{lstlisting}
 
 % ##########################################################################
 \newpage
