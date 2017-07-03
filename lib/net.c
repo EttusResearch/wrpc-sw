@@ -252,7 +252,7 @@ int ptpd_netif_recvfrom(struct wrpc_socket *s, struct wr_sockaddr *from, void *d
 		rx_timestamp->sec = hwts.sec;
 		rx_timestamp->nsec = hwts.nsec;
 		rx_timestamp->phase = 0;
-		rx_timestamp->correct = hwts.valid & (!spll_busy);
+		rx_timestamp->correct = hwts.valid && (!spll_busy);
 
 		ptpd_netif_linearize_rx_timestamp(rx_timestamp,
 						  rx_timestamp->raw_phase,
