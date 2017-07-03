@@ -115,16 +115,6 @@
 \snmpentrys{WR-WRPC-MIB}{}{wrpcPtpGroup}{
   Group with various information about PTP state}
 
-  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpMode}{
-    Current timing mode of the PTP. Possible values:
-    \begin{packed_items_snmp_obj}
-    \item \texttt{unknown\emph{(0)}}
-    \item \texttt{grandmaster\emph{(1)}}
-    \item \texttt{master\emph{(2)}}
-    \item \texttt{slave\emph{(3)}}
-    \end{packed_items_snmp_obj}
-  }
-
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpServoStateN}{
     \underline{Description:}
     Current state of WR synchronization servo running in the PTP. Possible
