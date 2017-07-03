@@ -70,6 +70,34 @@ local time to the WR Master (if WRPC runs in the slave mode), or not being able
 to provide correct WR time to the rest of the WR network (if WRPC runs in the
 master mode). This section contains the list of faults leading to a timing error.
 
+\subsubsection{\bf WR PTP Core operates in a wrong timing mode}
+    \label{fail:timing:ppsi_wrong_mode}
+    \begin{pck_descr}
+			\item [] \underline{Severity}: ERROR
+			\item [] \underline{Mode}: \emph{all}
+			\item [] \underline{Description}:\\
+        If the WRPC operates in a wrong timing mode (i.e. due to the
+        configuration error) it will be unable to provide a user application
+        with the correct WR time. For example, if the WRPC is supposed to
+        operate as Slave but is misconfigured to a Free-running Master mode, its
+        time would be different from other WR devices in the network, despite no
+        other errors being reported.\\
+        To be able to detect this problem, SNMP manager has to be fed with the
+        desired timing mode for the each monitored WR node.
+			\item [] \underline{SNMP objects}:\\
+        {\footnotesize
+        \snmpadd{WR-WRPC-MIB::wrpcPtpMode} }
+			\item [] \underline{Error condition}:\\
+        {\footnotesize
+        \texttt{wrpcPtpMode != <desired mode>}}
+      \item [] \underline{Action}:
+        \begin{pck_proc}
+        \item Modify the configuration of the WR PTP Core. Please check the
+          \emph{White Rabbit PTP Core User's Manual} for instructions how to
+          modify the init script to set the timing mode.
+        \end{pck_proc}
+    \end{pck_descr}
+
 \subsubsection{\bf PTP/PPSi went out of \texttt{TRACK\_PHASE}}
 		\label{fail:timing:ppsi_track_phase}
 		\begin{pck_descr}
@@ -331,7 +359,8 @@ master mode). This section contains the list of faults leading to a timing error
 			\item [] \underline{SNMP objects}:\\
 				{\footnotesize
 				\snmpadd{WR-WRPC-MIB::wrpcPortSfpPn}\\
-				\snmpadd{WR-WRPC-MIB::wrpcPortSfpInDB} }
+				\snmpadd{WR-WRPC-MIB::wrpcPortSfpInDB}\\
+        \snmpadd{WR-WRPC-MIB::wrpcSfpPn.<n>} }
 			\item [] \underline{Error condition}:\\
 				{\footnotesize
         \texttt{wrpcPortSfpInDB != inDataBase\emph{(2)}} }
@@ -339,6 +368,9 @@ master mode). This section contains the list of faults leading to a timing error
         \begin{pck_proc}
         \item Check if the SFP database is correctly defined by making sure the
           error \ref{fail:timing:no_sfpdb} is not reported.
+        \item If you have written calibration data to the SFP database, check if
+          there is no typing error in the SFP part number. You can do this over
+          SNMP by reading \snmpadd{WR-WRPC-MIB::wrpcSfpPn.<n>} objects.
         \item Change the optical SFP transceiver in the WR Node. Either it is
           broken and should be replaced since its ID cannot be read correctly,
           or a non-supported transceiver was plugged to the device.
@@ -400,6 +432,11 @@ master mode). This section contains the list of faults leading to a timing error
           installed, if all the drivers are properly loaded and if the FPGA gets
           programmed. You can take another WR Master device and connect it
           locally to verify if the WR Node is programmed correctly.
+        \item If you have access to the physical UART connected to the WRPC or
+          you have a Virtual-UART for your hosted environment, you may try
+          accessing the WRPC shell to make sure the FPGA is programmed. Please
+          see the official \emph{White Rabbit PTP Core User's Manual} for more
+          information.
         \item Check the fiber link e.g. by connecting another WR Node, with a
           different SFP transceiver to the same fiber.
         \item If there is still no link on the new WR Node, try connecting

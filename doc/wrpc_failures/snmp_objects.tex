@@ -115,6 +115,16 @@
 \snmpentrys{WR-WRPC-MIB}{}{wrpcPtpGroup}{
   Group with various information about PTP state}
 
+  \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpMode}{
+    Current timing mode of the PTP. Possible values:
+    \begin{packed_items_snmp_obj}
+    \item \texttt{unknown\emph{(0)}}
+    \item \texttt{grandmaster\emph{(1)}}
+    \item \texttt{master\emph{(2)}}
+    \item \texttt{slave\emph{(3)}}
+    \end{packed_items_snmp_obj}
+  }
+
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpServoStateN}{
     \underline{Description:}
     Current state of WR synchronization servo running in the PTP. Possible
@@ -167,7 +177,7 @@ values:
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpServoStateErrCnt}{
     \underline{Description:}
     Number of times when WR PTP servo has lost the synchronization, i.e. went
-ouf from the TRACK\_PHASE state.
+ouf from the \texttt{TRACK\_PHASE} state.
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcPtpGroup}{wrpcPtpClockOffsetErrCnt}{
     \underline{Description:}
