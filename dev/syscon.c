@@ -8,6 +8,7 @@
  */
 #include "syscon.h"
 #include <errno.h>
+#include <string.h>
 
 struct s_i2c_if i2c_if[2] = {
 	{SYSC_GPSR_FMC_SCL, SYSC_GPSR_FMC_SDA},
@@ -15,6 +16,17 @@ struct s_i2c_if i2c_if[2] = {
 };
 
 volatile struct SYSCON_WB *syscon;
+
+/****************************
+ *       BOARD NAME
+ ***************************/
+void get_hw_name(char *str)
+{
+	uint32_t val;
+
+	val = syscon->HWIR;
+	memcpy(str, &val, HW_NAME_LENGTH-1);
+}
 
 /****************************
  *        TIMER

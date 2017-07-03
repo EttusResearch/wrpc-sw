@@ -49,6 +49,7 @@ struct SYSCON_WB {
 	uint32_t GPSR;		/*GPIO Set/Readback Register */
 	uint32_t GPCR;		/*GPIO Clear Register */
 	uint32_t HWFR;		/*Hardware Feature Register */
+	uint32_t HWIR;		/*Hardware Info Register */
 	uint32_t TCR;		/*Timer Control Register */
 	uint32_t TVR;		/*Timer Counter Value Register */
 	uint32_t DIAG_INFO;
@@ -123,6 +124,9 @@ static inline int sysc_get_memsize(void)
 {
 	return (SYSC_HWFR_MEMSIZE_R(syscon->HWFR) + 1) * 16;
 }
+
+#define HW_NAME_LENGTH 5 /* 4 letters + '\0' */
+void get_hw_name(char *str);
 
 #define DIAG_RW_BANK 0
 #define DIAG_RO_BANK 1

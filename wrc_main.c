@@ -37,6 +37,7 @@
 int wrc_ui_mode = UI_SHELL_MODE;
 int wrc_ui_refperiod = TICS_PER_SECOND; /* 1 sec */
 int wrc_phase_tracking = 1;
+char wrc_hw_name[HW_NAME_LENGTH];
 
 uint32_t cal_phase_transition = 2389;
 
@@ -54,6 +55,7 @@ static void wrc_initialize(void)
 	pp_printf("WR Core: starting up...\n");
 
 	timer_init(1);
+	get_hw_name(wrc_hw_name);
 	wrpc_w1_init();
 	wrpc_w1_bus.detail = ONEWIRE_PORT;
 	w1_scan_bus(&wrpc_w1_bus);
