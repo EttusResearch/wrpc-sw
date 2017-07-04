@@ -1065,11 +1065,8 @@ To verify that database is empty:
 \end{lstlisting}
 
 % ==========================================================================
-\subsection{Other Diagnostic Tools}
-\label{Other Diagnostic Tools}
 
-% --------------------------------------------------------------------------
-\subsubsection{Syslog}
+\subsection{Syslog}
 \label{Syslog}
 
 \begin{sloppypar} % to prevent \texttt{} from going to the margine
@@ -1148,8 +1145,19 @@ situations:\\
         the current list of temperatures.\\
 \end{longtable}
 \end{sloppypar}
+% --------------------------------------------------------------------------
 
 % FIXME: syslog examples
+
+% ==========================================================================
+\newpage
+\subsection{Diagnostic Tools}
+\label{Diagnostic Tools}
+This section describes various diagnostics tools that come with the WR PTP Core.
+These tools are foreseen for the hosted environments as they access various WR
+PTP Core registers over the External Wishbone interface\footnote{Please check
+section \ref{sec:wrpc_hdl} for information about the WR PTP Core interfaces.}
+(through PCIe or VME bridge).
 
 % --------------------------------------------------------------------------
 \subsubsection{wrpc-diags}
@@ -1254,6 +1262,97 @@ In order to  call \texttt{temp} command every 1 second for 5 times:
 echo '5(temp, 1s)' | sudo <your_wrpc-sw_location>/tools/wrpc-diags -o 0x20800 \
     -f /sys/bus/pci/devices/0000:01:00.0/resource0
 \end{lstlisting}
+
+% --------------------------------------------------------------------------
+
+\subsubsection{wr-streamers}
+\label{sec:wr-streamers-tool}
+
+{\bf Note:} This tool can be used only if you've selected \tts{STREAMERS} mode
+for the external WRPC fabric interface or if you have manually instantiated
+WR Streamers module in your HDL design. See section \ref{sec:wrpc_hdl} for more
+details on WR PTP Core and Board Support Packages interfaces.\\
+
+The WR Streamers module provides information about transmitted and received
+frames, which can be useful for diagnostics and debugging. One way of accessing
+this information is by using the \texttt{diag} command of the WR PTP Core Shell.
+An alternative is to use the \texttt{wr-streamers} tool described in this
+section. You will find it in the \textit{wrpc-sw} repository. If
+you have not yet cloned it, please see section \ref{LM32 software compilation}
+for more instructions how this should be done, as well as how to compile it.\\
+
+The available statistical information is identical to the one that can be
+accessed via the \texttt{diag} command of WR PTP Core's Shell. It includes
+statistics collected since the most recent reset: max/min latency, number of
+transmitted/received frames, number of lost frames/blocks, number of latency
+values accumulated, accumulated latency, and the time of the last reset. The
+wishbone registers can also be used to override the default network
+configuration of the WR Streamers.\\
+
+The \texttt{wr-streamers} tool is self documented in the sense that a help
+\texttt{h} command lists you all the currently supported commands, and to get
+detailed information for a given command, one can type \texttt{h cmd}. 
+
+To use the \texttt{wr-streamers} tool interactively, call the tool with appropriate
+parameters, depending on your hardware type. For example for a SPEC board at
+address 01:00.0:
+\begin{lstlisting}
+$ sudo <your_wrpc-sw_location>/tools/wr-streamers -o 0x20700 \
+   -f /sys/bus/pci/devices/0000:01:00.0/resource0
+\end{lstlisting}
+
+The prompt \texttt{wrstm[00] >} will appear and you will be able to input commands.
+All the available commands are listed with \texttt{h}:
+\begin{lstlisting}[basicstyle=\scriptsize\ttfamily]
+cfv-774-cbt:wrstm[00] > h
+Valid COMMANDS:
+Idx  Name       Params                   Description
+# 1: q          [                   ] -> Quit test program
+# 2: h          [ o c               ] -> Help on commands
+# 3: a          [                   ] -> Atom list commands
+# 4: his        [                   ] -> History
+# 5: s          [ Seconds           ] -> Sleep seconds
+# 6: ms         [ MilliSecs         ] -> Sleep milliseconds
+# 7: sh         [ Unix Cmd          ] -> Shell command
+# 8: stats      [ [0/1/2/3/4/5/6/7] ] -> show streamers statistics
+# 9: reset      [                   ] -> show time of the latest reset / time elapsed since then
+#10: resetcnt   [                   ] -> reset tx/rx/lost counters and avg/min/max latency values
+#11: resetseqid [                   ] -> reset sequence ID of the tx streamer
+#12: lat        [ [latency]         ] -> get/set config of fixed latency in integer [us] (-1 to disable)
+#13: qtagf      [ [0/1]             ] -> QTags flag on off
+#14: qtagvp     [ [VID,prio]        ] -> QTags Get/Set VLAN ID and priority
+#15: qtagor     [ [0/1]             ] -> get/set overriding of default qtag config with WB config (set
+                                         using qtagf, qtagvp)
+#16: ls         [ [leapseconds]     ] -> get/set leap seconds
+
+Type "h name" to get complete command help
+\end{lstlisting}
+In order to see all the WR Streamers statistics, the \texttt{stats} command
+inside the prompt should be executed as follows:
+\begin{lstlisting}
+cfc-774-cbt:wrstm[01] > stats
+Latency [us]    : min=     3.736 max=     8.216 avg =   3.88176 
+Frames  [number]: tx =0 rx =61897834620 lost=0 (lost blocks =0)
+\end{lstlisting}
+
+The commands that are available from the interactive prompt can be also executed directly
+from the host's shell prompt and via ssh. Both cases can be useful when writing shell 
+scripts using the tool. To call one of the commands from the host shell prompt, use
+\texttt{echo cmd | wr-streamers}. For example, to execute \texttt{stats} command for SPEC:
+\begin{lstlisting}
+echo 'stats' | sudo <your_wrpc-sw_location>/tools/wr-streamers -o 0x20700 \
+    -f /sys/bus/pci/devices/0000:01:00.0/resource0
+\end{lstlisting}
+In order see the number of received frames every 1 second for 5 times, call:
+\begin{lstlisting}
+echo '5(stats 1, 1s)' | sudo <your_wrpc-sw_location/tools/wr-streamers -o 0x20700 \
+    -f /sys/bus/pci/devices/0000:01:00.0/resource0
+\end{lstlisting}
+
+% ==========================================================================
+\newpage
+\subsection{Other Diagnostic Methods}
+\label{Other Diagnostic Tools}
 
 % --------------------------------------------------------------------------
 \subsubsection{Latency Test}
