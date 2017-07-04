@@ -1,0 +1,1577 @@
+\subsection{WR Streamers, status and debug}
+\label{subsec:wbgen:wr_streamers}
+[version 0x00000001]\\
+-----------------------------------------------------------------\\  This WB registers allow to diagnose transmission and reception of\\  data using WR streamers.                                         \\  In particular, these registers provide access to streamer's      \\  statistics that can be also access from SNMP, if supported.      \\  -----------------------------------------------------------------\\  Copyright (c) 2016 CERN/BE-CO-HT and CERN/TE-MS-MM               \\                                                                   \\  This source file is free software; you can redistribute it       \\  and/or modify it under the terms of the GNU Lesser General       \\  Public License as published by the Free Software Foundation;     \\  either version 2.1 of the License, or (at your option) any       \\  later version.                                                   \\                                                                   \\  This source is distributed in the hope that it will be           \\  useful, but WITHOUT ANY WARRANTY; without even the implied       \\  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR          \\  PURPOSE.  See the GNU Lesser General Public License for more     \\  details                                                          \\                                                                   \\  You should have received a copy of the GNU Lesser General        \\  Public License along with this source; if not, download it       \\  from http://www.gnu.org/licenses/lgpl-2.1.html                   \\  -----------------------------------------------------------------
+\subsubsection{Memory map summary}
+\rowcolors{2}{gray!25}{white}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|l|}
+\rowcolor{RoyalPurple}
+\color{white} SW Offset & \color{white} Type & \color{white} Name &
+\color{white} HW prefix & \color{white} C prefix\\
+0x0& REG & Version register & wr\_streamers\_ver & VER\\
+0x4& REG & Statistics status and ctrl register & wr\_streamers\_sscr1 & SSCR1\\
+0x8& REG & Statistics status and ctrl register & wr\_streamers\_sscr2 & SSCR2\\
+0xc& REG & Statistics status and ctrl register & wr\_streamers\_sscr3 & SSCR3\\
+0x10& REG & Rx statistics & wr\_streamers\_rx\_stat0 & RX\_STAT0\\
+0x14& REG & Rx statistics & wr\_streamers\_rx\_stat1 & RX\_STAT1\\
+0x18& REG & Tx statistics & wr\_streamers\_tx\_stat2 & TX\_STAT2\\
+0x1c& REG & Tx statistics & wr\_streamers\_tx\_stat3 & TX\_STAT3\\
+0x20& REG & Rx statistics & wr\_streamers\_rx\_stat4 & RX\_STAT4\\
+0x24& REG & Rx statistics & wr\_streamers\_rx\_stat5 & RX\_STAT5\\
+0x28& REG & Rx statistics & wr\_streamers\_rx\_stat6 & RX\_STAT6\\
+0x2c& REG & Rx statistics & wr\_streamers\_rx\_stat7 & RX\_STAT7\\
+0x30& REG & Rx statistics & wr\_streamers\_rx\_stat8 & RX\_STAT8\\
+0x34& REG & Rx statistics & wr\_streamers\_rx\_stat9 & RX\_STAT9\\
+0x38& REG & Rx statistics & wr\_streamers\_rx\_stat10 & RX\_STAT10\\
+0x3c& REG & Rx statistics & wr\_streamers\_rx\_stat11 & RX\_STAT11\\
+0x40& REG & Rx statistics & wr\_streamers\_rx\_stat12 & RX\_STAT12\\
+0x44& REG & Rx statistics & wr\_streamers\_rx\_stat13 & RX\_STAT13\\
+0x48& REG & Tx Config Reg 0 & wr\_streamers\_tx\_cfg0 & TX\_CFG0\\
+0x4c& REG & Tx Config Reg 1 & wr\_streamers\_tx\_cfg1 & TX\_CFG1\\
+0x50& REG & Tx Config Reg 2 & wr\_streamers\_tx\_cfg2 & TX\_CFG2\\
+0x54& REG & Tx Config Reg 3 & wr\_streamers\_tx\_cfg3 & TX\_CFG3\\
+0x58& REG & Tx Config Reg 4 & wr\_streamers\_tx\_cfg4 & TX\_CFG4\\
+0x5c& REG & Tx Config Reg 4 & wr\_streamers\_tx\_cfg5 & TX\_CFG5\\
+0x60& REG & Rx Config Reg 0 & wr\_streamers\_rx\_cfg0 & RX\_CFG0\\
+0x64& REG & Rx Config Reg 1 & wr\_streamers\_rx\_cfg1 & RX\_CFG1\\
+0x68& REG & Rx Config Reg 2 & wr\_streamers\_rx\_cfg2 & RX\_CFG2\\
+0x6c& REG & Rx Config Reg 3 & wr\_streamers\_rx\_cfg3 & RX\_CFG3\\
+0x70& REG & Rx Config Reg 4 & wr\_streamers\_rx\_cfg4 & RX\_CFG4\\
+0x74& REG & Rx Config Reg 5 & wr\_streamers\_rx\_cfg5 & RX\_CFG5\\
+0x78& REG & TxRx Config Override & wr\_streamers\_cfg & CFG\\
+0x7c& REG & DBG Control register & wr\_streamers\_dbg\_ctrl & DBG\_CTRL\\
+0x80& REG & DBG Data & wr\_streamers\_dbg\_data & DBG\_DATA\\
+0x84& REG & Test value & wr\_streamers\_dummy & DUMMY\\
+\hline
+\end{tabular}
+}
+
+\subsubsection{Register description}
+\paragraph*{Version register}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_ver\\
+{\bf HW address:}  & 0x0\\
+{\bf SW prefix:}  & VER\\
+{\bf SW offset:}  & 0x0\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+ID
+} [\emph{read/write}]: Version identifier
+\\
+Version identifier for the peripheral
+\end{small}
+\end{itemize}
+\paragraph*{Statistics status and ctrl register}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_sscr1\\
+{\bf HW address:}  & 0x1\\
+{\bf SW prefix:}  & SSCR1\\
+{\bf SW offset:}  & 0x4\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_CYC[27:20]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_CYC[19:12]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_CYC[11:4]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{4}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_CYC[3:0]} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_OVERFLOW} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}SNAPSHOT\_STATS} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}RST\_SEQ\_ID} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}RST\_STATS}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RST\_STATS
+} [\emph{write-only}]: Reset statistics
+\\
+Writing 1 reset counters, latency acc/max/min. This reset is timestamped
+\end{small}
+\item \begin{small}
+{\bf 
+RST\_SEQ\_ID
+} [\emph{write-only}]: Reset tx seq id
+\\
+Writing 1 reset sequence ID of transmitted frames
+\end{small}
+\item \begin{small}
+{\bf 
+SNAPSHOT\_STATS
+} [\emph{read/write}]: Snapshot statistics
+\\
+Writing 1 snapshots statistics for reading, it means that all the counters \\                    are copied at the same instant to registers and this registers can be read\\                    via wishbone/snmp while the counters are still running in the background. \\                    this allows to read coherent data
+\end{small}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_ACC\_OVERFLOW
+} [\emph{read-only}]: Latency accumulator overflow
+\\
+Latency accumulator overflow - the lateny accumulator value is invalid
+\end{small}
+\item \begin{small}
+{\bf 
+RST\_TS\_CYC
+} [\emph{read-only}]: Reset timestamp cycles
+\\
+Timestamp of the last reset of stats (RST\_STAT) -- count of clock cycles
+\end{small}
+\end{itemize}
+\paragraph*{Statistics status and ctrl register}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_sscr2\\
+{\bf HW address:}  & 0x2\\
+{\bf SW prefix:}  & SSCR2\\
+{\bf SW offset:}  & 0x8\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_TAI\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_TAI\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_TAI\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_TAI\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RST\_TS\_TAI\_LSB
+} [\emph{read-only}]: Reset timestamp 32 LSB of TAI
+\\
+Timestamp of the last reset of stats (RST\_STAT)  -- LSB 32 bits of TAI
+\end{small}
+\end{itemize}
+\paragraph*{Statistics status and ctrl register}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_sscr3\\
+{\bf HW address:}  & 0x3\\
+{\bf SW prefix:}  & SSCR3\\
+{\bf SW offset:}  & 0xc\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RST\_TS\_TAI\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RST\_TS\_TAI\_MSB
+} [\emph{read-only}]: Reset timestamp 8 MSB of TAI
+\\
+Timestamp of the last reset of stats (RST\_STAT)  -- MSB 8 bits of TAI
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat0\\
+{\bf HW address:}  & 0x4\\
+{\bf SW prefix:}  & RX\_STAT0\\
+{\bf SW offset:}  & 0x10\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & \multicolumn{4}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MAX[27:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MAX[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MAX[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MAX[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_MAX
+} [\emph{read-only}]: WR Streamer frame latency
+\\
+Maximum latency of received frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat1\\
+{\bf HW address:}  & 0x5\\
+{\bf SW prefix:}  & RX\_STAT1\\
+{\bf SW offset:}  & 0x14\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & \multicolumn{4}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MIN[27:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MIN[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MIN[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_MIN[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_MIN
+} [\emph{read-only}]: WR Streamer frame latency
+\\
+Minimum latency of received frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Tx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_stat2\\
+{\bf HW address:}  & 0x6\\
+{\bf SW prefix:}  & TX\_STAT2\\
+{\bf SW offset:}  & 0x18\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+TX\_SENT\_CNT\_LSB
+} [\emph{read-only}]: WR Streamer frame sent count (LSB)
+\\
+Number of sent wr streamer frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Tx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_stat3\\
+{\bf HW address:}  & 0x7\\
+{\bf SW prefix:}  & TX\_STAT3\\
+{\bf SW offset:}  & 0x1c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}TX\_SENT\_CNT\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+TX\_SENT\_CNT\_MSB
+} [\emph{read-only}]: WR Streamer frame sent count (MSB)
+\\
+Number of sent wr streamer frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat4\\
+{\bf HW address:}  & 0x8\\
+{\bf SW prefix:}  & RX\_STAT4\\
+{\bf SW offset:}  & 0x20\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_RCVD\_CNT\_LSB
+} [\emph{read-only}]: WR Streamer frame received count (LSB)
+\\
+Number of received wr streamer frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat5\\
+{\bf HW address:}  & 0x9\\
+{\bf SW prefix:}  & RX\_STAT5\\
+{\bf SW offset:}  & 0x24\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_RCVD\_CNT\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_RCVD\_CNT\_MSB
+} [\emph{read-only}]: WR Streamer frame received count (MSB)
+\\
+Number of received wr streamer frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat6\\
+{\bf HW address:}  & 0xa\\
+{\bf SW prefix:}  & RX\_STAT6\\
+{\bf SW offset:}  & 0x28\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LOSS\_CNT\_LSB
+} [\emph{read-only}]: WR Streamer frame loss count (LSB)
+\\
+Number of lost wr streamer frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat7\\
+{\bf HW address:}  & 0xb\\
+{\bf SW prefix:}  & RX\_STAT7\\
+{\bf SW offset:}  & 0x2c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOSS\_CNT\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LOSS\_CNT\_MSB
+} [\emph{read-only}]: WR Streamer frame loss count (MSB)
+\\
+Number of lost wr streamer frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat8\\
+{\bf HW address:}  & 0xc\\
+{\bf SW prefix:}  & RX\_STAT8\\
+{\bf SW offset:}  & 0x30\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LOST\_BLOCK\_CNT\_LSB
+} [\emph{read-only}]: WR Streamer block loss count (LSB)
+\\
+Number of indications that one or more blocks in a frame were lost (probably CRC\\                     error) since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat9\\
+{\bf HW address:}  & 0xd\\
+{\bf SW prefix:}  & RX\_STAT9\\
+{\bf SW offset:}  & 0x34\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LOST\_BLOCK\_CNT\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LOST\_BLOCK\_CNT\_MSB
+} [\emph{read-only}]: WR Streamer block loss count (MSB)
+\\
+Number of indications that one or more blocks in a frame were lost (probably CRC\\                     error) since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat10\\
+{\bf HW address:}  & 0xe\\
+{\bf SW prefix:}  & RX\_STAT10\\
+{\bf SW offset:}  & 0x38\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_ACC\_LSB
+} [\emph{read-only}]: WR Streamer frame latency (LSB)
+\\
+Accumulated latency of received frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat11\\
+{\bf HW address:}  & 0xf\\
+{\bf SW prefix:}  & RX\_STAT11\\
+{\bf SW offset:}  & 0x3c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_ACC\_MSB
+} [\emph{read-only}]: WR Streamer frame latency (MSB)
+\\
+Accumulated latency of received frames since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat12\\
+{\bf HW address:}  & 0x10\\
+{\bf SW prefix:}  & RX\_STAT12\\
+{\bf SW offset:}  & 0x40\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_ACC\_CNT\_LSB
+} [\emph{read-only}]: WR Streamer frame latency counter (LSB)
+\\
+Counter of the accumulated frequency (so avg can be calculated in SW) since reset
+\end{small}
+\end{itemize}
+\paragraph*{Rx statistics}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_stat13\\
+{\bf HW address:}  & 0x11\\
+{\bf SW prefix:}  & RX\_STAT13\\
+{\bf SW offset:}  & 0x44\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}RX\_LATENCY\_ACC\_CNT\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+RX\_LATENCY\_ACC\_CNT\_MSB
+} [\emph{read-only}]: WR Streamer frame latency counter (MSB)
+\\
+Counter of the accumulated frequency (so avg can be calculated in SW) since reset
+\end{small}
+\end{itemize}
+\paragraph*{Tx Config Reg 0}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_cfg0\\
+{\bf HW address:}  & 0x12\\
+{\bf SW prefix:}  & TX\_CFG0\\
+{\bf SW offset:}  & 0x48\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ETHERTYPE[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ETHERTYPE[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+ETHERTYPE
+} [\emph{read/write}]: Ethertype
+\end{small}
+\end{itemize}
+\paragraph*{Tx Config Reg 1}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_cfg1\\
+{\bf HW address:}  & 0x13\\
+{\bf SW prefix:}  & TX\_CFG1\\
+{\bf SW offset:}  & 0x4c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_LOCAL\_LSB
+} [\emph{read/write}]: MAC Local LSB
+\end{small}
+\end{itemize}
+\paragraph*{Tx Config Reg 2}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_cfg2\\
+{\bf HW address:}  & 0x14\\
+{\bf SW prefix:}  & TX\_CFG2\\
+{\bf SW offset:}  & 0x50\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_LOCAL\_MSB
+} [\emph{read/write}]: MAC Local MSB
+\end{small}
+\end{itemize}
+\paragraph*{Tx Config Reg 3}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_cfg3\\
+{\bf HW address:}  & 0x15\\
+{\bf SW prefix:}  & TX\_CFG3\\
+{\bf SW offset:}  & 0x54\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_TARGET\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_TARGET\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_TARGET\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_TARGET\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_TARGET\_LSB
+} [\emph{read/write}]: MAC Target LSB
+\end{small}
+\end{itemize}
+\paragraph*{Tx Config Reg 4}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_cfg4\\
+{\bf HW address:}  & 0x16\\
+{\bf SW prefix:}  & TX\_CFG4\\
+{\bf SW offset:}  & 0x58\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_TARGET\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_TARGET\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_TARGET\_MSB
+} [\emph{read/write}]: MAC Target MSB
+\end{small}
+\end{itemize}
+\paragraph*{Tx Config Reg 4}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_tx\_cfg5\\
+{\bf HW address:}  & 0x17\\
+{\bf SW prefix:}  & TX\_CFG5\\
+{\bf SW offset:}  & 0x5c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & \multicolumn{3}{|c|}{\cellcolor{RoyalPurple!25}QTAG\_PRIO[2:0]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & \multicolumn{4}{|c|}{\cellcolor{RoyalPurple!25}QTAG\_VID[11:8]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}QTAG\_VID[7:0]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}QTAG\_ENA}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+QTAG\_ENA
+} [\emph{read/write}]: Enable tagging with Qtags
+\end{small}
+\item \begin{small}
+{\bf 
+QTAG\_VID
+} [\emph{read/write}]: VLAN ID
+\end{small}
+\item \begin{small}
+{\bf 
+QTAG\_PRIO
+} [\emph{read/write}]: Priority
+\end{small}
+\end{itemize}
+\paragraph*{Rx Config Reg 0}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_cfg0\\
+{\bf HW address:}  & 0x18\\
+{\bf SW prefix:}  & RX\_CFG0\\
+{\bf SW offset:}  & 0x60\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}FILTER\_REMOTE} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}ACCEPT\_BROADCAST}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ETHERTYPE[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ETHERTYPE[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+ETHERTYPE
+} [\emph{read/write}]: Ethertype
+\end{small}
+\item \begin{small}
+{\bf 
+ACCEPT\_BROADCAST
+} [\emph{read/write}]: Accept Broadcast
+\\
+0: accept only unicasts; \\      1: accept all broadcast packets
+\end{small}
+\item \begin{small}
+{\bf 
+FILTER\_REMOTE
+} [\emph{read/write}]: Filter Remote
+\\
+0: accept streamer frames with any source MAC address; \\      1: accept streamer frames only with the source MAC address defined in mac\_remote
+\end{small}
+\end{itemize}
+\paragraph*{Rx Config Reg 1}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_cfg1\\
+{\bf HW address:}  & 0x19\\
+{\bf SW prefix:}  & RX\_CFG1\\
+{\bf SW offset:}  & 0x64\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_LOCAL\_LSB
+} [\emph{read/write}]: MAC Local LSB
+\end{small}
+\end{itemize}
+\paragraph*{Rx Config Reg 2}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_cfg2\\
+{\bf HW address:}  & 0x1a\\
+{\bf SW prefix:}  & RX\_CFG2\\
+{\bf SW offset:}  & 0x68\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_LOCAL\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_LOCAL\_MSB
+} [\emph{read/write}]: MAC Local MSB
+\end{small}
+\end{itemize}
+\paragraph*{Rx Config Reg 3}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_cfg3\\
+{\bf HW address:}  & 0x1b\\
+{\bf SW prefix:}  & RX\_CFG3\\
+{\bf SW offset:}  & 0x6c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_REMOTE\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_REMOTE\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_REMOTE\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_REMOTE\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_REMOTE\_LSB
+} [\emph{read/write}]: MAC Remote LSB
+\end{small}
+\end{itemize}
+\paragraph*{Rx Config Reg 4}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_cfg4\\
+{\bf HW address:}  & 0x1c\\
+{\bf SW prefix:}  & RX\_CFG4\\
+{\bf SW offset:}  & 0x70\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_REMOTE\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}MAC\_REMOTE\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MAC\_REMOTE\_MSB
+} [\emph{read/write}]: MAC Remote MSB
+\end{small}
+\end{itemize}
+\paragraph*{Rx Config Reg 5}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_rx\_cfg5\\
+{\bf HW address:}  & 0x1d\\
+{\bf SW prefix:}  & RX\_CFG5\\
+{\bf SW offset:}  & 0x74\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & \multicolumn{4}{|c|}{\cellcolor{RoyalPurple!25}FIXED\_LATENCY[27:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}FIXED\_LATENCY[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}FIXED\_LATENCY[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}FIXED\_LATENCY[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+FIXED\_LATENCY
+} [\emph{read/write}]: Fixed Latency
+\\
+This register allows to configure fixed-latency. If the value is other than zero, the instant of outputing the received data from the rx streamer to the user application is delayed, so that the time-difference between the transmission fo the data and the output to the user matches the provided value. If the configured latency value is smaller than the network latency, the data is provided to the user instantly. The configuration value is expressed in clock cycles (16ns) 
+\end{small}
+\end{itemize}
+\paragraph*{TxRx Config Override}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_cfg\\
+{\bf HW address:}  & 0x1e\\
+{\bf SW prefix:}  & CFG\\
+{\bf SW offset:}  & 0x78\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_RX\_FIX\_LAT} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_RX\_FTR\_REMOTE} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_RX\_ACC\_BROADCAST} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_RX\_MAC\_REM} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_RX\_MAC\_LOC} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_RX\_ETHERTYPE}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_TX\_QTAG} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_TX\_MAC\_TAR} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_TX\_MAC\_LOC} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}OR\_TX\_ETHTYPE}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+OR\_TX\_ETHTYPE
+} [\emph{read/write}]: Tx Ethertype
+\\
+Overrides default/application Tx Ethertype configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_TX\_MAC\_LOC
+} [\emph{read/write}]: Tx MAC Local
+\\
+Overrides default/application Tx local MAC configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_TX\_MAC\_TAR
+} [\emph{read/write}]: Tx MAC Target
+\\
+Overrides default/application Tx target MAC configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_TX\_QTAG
+} [\emph{read/write}]: QTAG
+\\
+Overrides default/application QTAG values with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_RX\_ETHERTYPE
+} [\emph{read/write}]: Rx Ethertype
+\\
+Overrides default/application Rx Ethertype configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_RX\_MAC\_LOC
+} [\emph{read/write}]: Rx MAC Local
+\\
+Overrides default/application Rx MAC Local configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_RX\_MAC\_REM
+} [\emph{read/write}]: Rx MAC Remote
+\\
+Overrides default/application Rx MAC Remote configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_RX\_ACC\_BROADCAST
+} [\emph{read/write}]: Rx Accept Broadcast
+\\
+Overrides default/application Rx Accept Broardcast configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_RX\_FTR\_REMOTE
+} [\emph{read/write}]: Rx Filter Remote
+\\
+Overrides default/application Rx Filter Remote configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\item \begin{small}
+{\bf 
+OR\_RX\_FIX\_LAT
+} [\emph{read/write}]: Rx Fixed Latency 
+\\
+Overrides default/application Rx fixed latency configuration with configuration in the proper register:\\      0: Default/set by application; \\      1: Value from WB register
+\end{small}
+\end{itemize}
+\paragraph*{DBG Control register}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_dbg\_ctrl\\
+{\bf HW address:}  & 0x1f\\
+{\bf SW prefix:}  & DBG\_CTRL\\
+{\bf SW offset:}  & 0x7c\\
+\end{tabular}
+
+\vspace{12pt}
+This register is meant to control simple debugging of transmitted or received data.\\    It allows to sniff a 32-bit word at a configurable offset from received or transmitted data.
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}START\_BYTE[7:0]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}MUX}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+MUX
+} [\emph{read/write}]: Debug Tx (0) or Rx (1)
+\end{small}
+\item \begin{small}
+{\bf 
+START\_BYTE
+} [\emph{read/write}]: Debug Start byte
+\\
+The offset, in bytes, from which the 32-bit word is read.
+\end{small}
+\end{itemize}
+\paragraph*{DBG Data}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_dbg\_data\\
+{\bf HW address:}  & 0x20\\
+{\bf SW prefix:}  & DBG\_DATA\\
+{\bf SW offset:}  & 0x80\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DBG\_DATA[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DBG\_DATA[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DBG\_DATA[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DBG\_DATA[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+DBG\_DATA
+} [\emph{read-only}]: Debug content
+\end{small}
+\end{itemize}
+\paragraph*{Test value}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wr\_streamers\_dummy\\
+{\bf HW address:}  & 0x21\\
+{\bf SW prefix:}  & DUMMY\\
+{\bf SW offset:}  & 0x84\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DUMMY[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DUMMY[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DUMMY[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}DUMMY[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+DUMMY
+} [\emph{read-only}]: DUMMY value to read
+\end{small}
+\end{itemize}
+
+
+

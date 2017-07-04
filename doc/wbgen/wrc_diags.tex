@@ -1,0 +1,882 @@
+\subsection{WR Core Diagnostics}
+\label{subsec:wbgen:wrc_diags}
+[version 0x00000001]\\
+Diagnostics information accessible via WR
+\subsubsection{Memory map summary}
+\rowcolors{2}{gray!25}{white}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|l|}
+\rowcolor{RoyalPurple}
+\color{white} SW Offset & \color{white} Type & \color{white} Name &
+\color{white} HW prefix & \color{white} C prefix\\
+0x0& REG & Version register & wrc\_diags\_ver & VER\\
+0x4& REG & Ctrl & wrc\_diags\_ctrl & CTRL\\
+0x8& REG & WRPC Diag: servo status & wrc\_diags\_wdiag\_sstat & WDIAG\_SSTAT\\
+0xc& REG & WRPC Diag: Port status & wrc\_diags\_wdiag\_pstat & WDIAG\_PSTAT\\
+0x10& REG & WRPC Diag: PTP state & wrc\_diags\_wdiag\_ptpstat & WDIAG\_PTPSTAT\\
+0x14& REG & WRPC Diag: AUX state & wrc\_diags\_wdiag\_astat & WDIAG\_ASTAT\\
+0x18& REG & WRPC Diag: Tx PTP Frame cnts & wrc\_diags\_wdiag\_txfcnt & WDIAG\_TXFCNT\\
+0x1c& REG & WRPC Diag: Rx PTP Frame cnts & wrc\_diags\_wdiag\_rxfcnt & WDIAG\_RXFCNT\\
+0x20& REG & WRPC Diag:local time [msb of s] & wrc\_diags\_wdiag\_sec\_msb & WDIAG\_SEC\_MSB\\
+0x24& REG & WRPC Diag: local time [lsb of s] & wrc\_diags\_wdiag\_sec\_lsb & WDIAG\_SEC\_LSB\\
+0x28& REG & WRPC Diag: local time [ns] & wrc\_diags\_wdiag\_ns & WDIAG\_NS\\
+0x2c& REG & WRPC Diag: Round trip (mu) [msb of ps] & wrc\_diags\_wdiag\_mu\_msb & WDIAG\_MU\_MSB\\
+0x30& REG & WRPC Diag: Round trip (mu) [lsb of ps] & wrc\_diags\_wdiag\_mu\_lsb & WDIAG\_MU\_LSB\\
+0x34& REG & WRPC Diag: Master-slave delay (dms) [msb of ps] & wrc\_diags\_wdiag\_dms\_msb & WDIAG\_DMS\_MSB\\
+0x38& REG & WRPC Diag: Master-slave delay (dms) [lsb of ps] & wrc\_diags\_wdiag\_dms\_lsb & WDIAG\_DMS\_LSB\\
+0x3c& REG & WRPC Diag: Total link asymmetry [ps] & wrc\_diags\_wdiag\_asym & WDIAG\_ASYM\\
+0x40& REG & WRPC Diag: Clock offset (cko) [ps] & wrc\_diags\_wdiag\_cko & WDIAG\_CKO\\
+0x44& REG & WRPC Diag: Phase setpoint (setp) [ps] & wrc\_diags\_wdiag\_setp & WDIAG\_SETP\\
+0x48& REG & WRPC Diag: Update counter (ucnt) & wrc\_diags\_wdiag\_ucnt & WDIAG\_UCNT\\
+0x4c& REG & WRPC Diag: Board temperature [C degree] & wrc\_diags\_wdiag\_temp & WDIAG\_TEMP\\
+\hline
+\end{tabular}
+}
+
+\subsubsection{Register description}
+\paragraph*{Version register}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_ver\\
+{\bf HW address:}  & 0x0\\
+{\bf SW prefix:}  & VER\\
+{\bf SW offset:}  & 0x0\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}ID[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+ID
+} [\emph{read/write}]: Version identifier
+\\
+Version identifier for the peripheral
+\end{small}
+\end{itemize}
+\paragraph*{Ctrl}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_ctrl\\
+{\bf HW address:}  & 0x1\\
+{\bf SW prefix:}  & CTRL\\
+{\bf SW offset:}  & 0x4\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}DATA\_SNAPSHOT}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}DATA\_VALID}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+DATA\_VALID
+} [\emph{read-only}]: WR DIAG data valid
+\\
+0: valid\\                     1:transcient
+\end{small}
+\item \begin{small}
+{\bf 
+DATA\_SNAPSHOT
+} [\emph{read/write}]: WR DIAG data snapshot
+\\
+1: snapshot data (data in registers will not change aveter VALID becomes true)
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: servo status}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_sstat\\
+{\bf HW address:}  & 0x2\\
+{\bf SW prefix:}  & WDIAG\_SSTAT\\
+{\bf SW offset:}  & 0x8\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & \multicolumn{4}{|c|}{\cellcolor{RoyalPurple!25}SERVOSTATE[3:0]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}WR\_MODE}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WR\_MODE
+} [\emph{read-only}]: WR valid
+\\
+0: not valid\\                     1:valid
+\end{small}
+\item \begin{small}
+{\bf 
+SERVOSTATE
+} [\emph{read-only}]: Servo State
+\\
+0: Uninitialized\\                     1: SYNC\_NSEC\\                     2: SYNC\_TAI\\                     3: SYNC\_PHASE\\                     4: TRACK\_PHASE\\                     5: WAIT\_OFFSET\_STABLE
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Port status}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_pstat\\
+{\bf HW address:}  & 0x3\\
+{\bf SW prefix:}  & WDIAG\_PSTAT\\
+{\bf SW offset:}  & 0xc\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}LOCKED} & \multicolumn{1}{|c|}{\cellcolor{RoyalPurple!25}LINK}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+LINK
+} [\emph{read-only}]: Link Status
+\\
+0: link down\\                     1: link up
+\end{small}
+\item \begin{small}
+{\bf 
+LOCKED
+} [\emph{read-only}]: PLL Locked
+\\
+0: not locked\\                     1: locked
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: PTP state}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_ptpstat\\
+{\bf HW address:}  & 0x4\\
+{\bf SW prefix:}  & WDIAG\_PTPSTAT\\
+{\bf SW offset:}  & 0x10\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}PTPSTATE[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+PTPSTATE
+} [\emph{read-only}]: PTP State
+\\
+0: NONE\\                     1: PPS\_INITIALIZING\\                     2: PPS\_FAULTY\\                     3: disabled\\                     4: PPS\_LISTENING\\                     5: PPS\_PRE\_MASTER\\                     6: PPS\_MASTER\\                     7: PPS\_PASSIVE\\                     8: PPS\_UNCALIBRATED\\                     9: PPS\_SLAVE\\                     100-116: WR STATES\\                     see: ppsi/proto-ext-whiterabbit/wr-constants.h\\                          ppsi/include/ppsi/ieee1588\_types.h
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: AUX state}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_astat\\
+{\bf HW address:}  & 0x5\\
+{\bf SW prefix:}  & WDIAG\_ASTAT\\
+{\bf SW offset:}  & 0x14\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{1}{|c}{-} & - & - & - & - & - & - & \multicolumn{1}{c|}{-}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}AUX[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+AUX
+} [\emph{read-only}]: AUX channel
+\\
+A vector of bits, one bit per channel\\                     0: not valid\\                     1:valid
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Tx PTP Frame cnts}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_txfcnt\\
+{\bf HW address:}  & 0x6\\
+{\bf SW prefix:}  & WDIAG\_TXFCNT\\
+{\bf SW offset:}  & 0x18\\
+\end{tabular}
+
+\vspace{12pt}
+Number of transmitted PTP Frames
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TXFCNT[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TXFCNT[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TXFCNT[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TXFCNT[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_TXFCNT
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Rx PTP Frame cnts}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_rxfcnt\\
+{\bf HW address:}  & 0x7\\
+{\bf SW prefix:}  & WDIAG\_RXFCNT\\
+{\bf SW offset:}  & 0x1c\\
+\end{tabular}
+
+\vspace{12pt}
+Number of received PTP Frames
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_RXFCNT[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_RXFCNT[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_RXFCNT[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_RXFCNT[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_RXFCNT
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag:local time [msb of s]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_sec\_msb\\
+{\bf HW address:}  & 0x8\\
+{\bf SW prefix:}  & WDIAG\_SEC\_MSB\\
+{\bf SW offset:}  & 0x20\\
+\end{tabular}
+
+\vspace{12pt}
+Local Time expressed in seconds since epoch (TAI)
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_SEC\_MSB
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: local time [lsb of s]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_sec\_lsb\\
+{\bf HW address:}  & 0x9\\
+{\bf SW prefix:}  & WDIAG\_SEC\_LSB\\
+{\bf SW offset:}  & 0x24\\
+\end{tabular}
+
+\vspace{12pt}
+Local Time expressed in seconds since epoch (TAI)
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SEC\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_SEC\_LSB
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: local time [ns]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_ns\\
+{\bf HW address:}  & 0xa\\
+{\bf SW prefix:}  & WDIAG\_NS\\
+{\bf SW offset:}  & 0x28\\
+\end{tabular}
+
+\vspace{12pt}
+Nanoseconds part of the Local Time expressed in seconds since epoch (TAI)
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_NS[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_NS[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_NS[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_NS[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_NS
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Round trip (mu) [msb of ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_mu\_msb\\
+{\bf HW address:}  & 0xb\\
+{\bf SW prefix:}  & WDIAG\_MU\_MSB\\
+{\bf SW offset:}  & 0x2c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_MU\_MSB
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Round trip (mu) [lsb of ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_mu\_lsb\\
+{\bf HW address:}  & 0xc\\
+{\bf SW prefix:}  & WDIAG\_MU\_LSB\\
+{\bf SW offset:}  & 0x30\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_MU\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_MU\_LSB
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Master-slave delay (dms) [msb of ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_dms\_msb\\
+{\bf HW address:}  & 0xd\\
+{\bf SW prefix:}  & WDIAG\_DMS\_MSB\\
+{\bf SW offset:}  & 0x34\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_MSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_MSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_MSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_MSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_DMS\_MSB
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Master-slave delay (dms) [lsb of ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_dms\_lsb\\
+{\bf HW address:}  & 0xe\\
+{\bf SW prefix:}  & WDIAG\_DMS\_LSB\\
+{\bf SW offset:}  & 0x38\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_LSB[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_LSB[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_LSB[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_DMS\_LSB[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_DMS\_LSB
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Total link asymmetry [ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_asym\\
+{\bf HW address:}  & 0xf\\
+{\bf SW prefix:}  & WDIAG\_ASYM\\
+{\bf SW offset:}  & 0x3c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_ASYM[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_ASYM[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_ASYM[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_ASYM[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_ASYM
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Clock offset (cko) [ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_cko\\
+{\bf HW address:}  & 0x10\\
+{\bf SW prefix:}  & WDIAG\_CKO\\
+{\bf SW offset:}  & 0x40\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_CKO[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_CKO[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_CKO[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_CKO[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_CKO
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Phase setpoint (setp) [ps]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_setp\\
+{\bf HW address:}  & 0x11\\
+{\bf SW prefix:}  & WDIAG\_SETP\\
+{\bf SW offset:}  & 0x44\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SETP[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SETP[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SETP[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_SETP[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_SETP
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Update counter (ucnt)}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_ucnt\\
+{\bf HW address:}  & 0x12\\
+{\bf SW prefix:}  & WDIAG\_UCNT\\
+{\bf SW offset:}  & 0x48\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_UCNT[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_UCNT[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_UCNT[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_UCNT[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_UCNT
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+\paragraph*{WRPC Diag: Board temperature [C degree]}\mbox{}\\\vskip 6pt
+\rowcolors{1}{white}{white}
+\begin{tabular}{l l }
+{\bf HW prefix:}  & wrc\_diags\_wdiag\_temp\\
+{\bf HW address:}  & 0x13\\
+{\bf SW prefix:}  & WDIAG\_TEMP\\
+{\bf SW offset:}  & 0x4c\\
+\end{tabular}
+
+
+\vspace{12pt}
+\noindent
+\resizebox{\textwidth}{!}{
+\begin{tabular}{>{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} >{\centering\arraybackslash}p{1.5cm} }
+31 & 30 & 29 & 28 & 27 & 26 & 25 & 24\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TEMP[31:24]}\\
+\hline
+23 & 22 & 21 & 20 & 19 & 18 & 17 & 16\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TEMP[23:16]}\\
+\hline
+15 & 14 & 13 & 12 & 11 & 10 & 9 & 8\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TEMP[15:8]}\\
+\hline
+7 & 6 & 5 & 4 & 3 & 2 & 1 & 0\\
+\hline
+\multicolumn{8}{|c|}{\cellcolor{RoyalPurple!25}WDIAG\_TEMP[7:0]}\\
+\hline
+\end{tabular}
+}
+
+\begin{itemize}
+\item \begin{small}
+{\bf 
+WDIAG\_TEMP
+} [\emph{read-only}]: Data
+\end{small}
+\end{itemize}
+
+
+
