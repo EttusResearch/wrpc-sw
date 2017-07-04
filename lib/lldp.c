@@ -159,7 +159,7 @@ static void lldp_init(void)
 	lldp_add_tlv(END_LLDP);
 }
 
-static void lldp_poll(void)
+static int lldp_poll(void)
 {
         static int ticks;
 
@@ -174,8 +174,10 @@ static void lldp_poll(void)
 		ptpd_netif_sendto(lldp_socket, &addr, lldpdu, LLDP_PKT_LEN, 0);
 
 		ticks = 0;
+		return 1;
 	} else {
 		ticks += 1;
+		return 0;
 	}
 }
 
