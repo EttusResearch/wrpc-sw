@@ -149,6 +149,11 @@ their own BSP, can find the board-common module under:
   \cline{1-3}
   wb\_slave\_i & in & rec & \\
   \hline
+  aux\_master\_o & out & rec & \multirowpar{2}{Mapped to WRPC auxiliary WB
+  master interface (see also Section~\ref{sec:wrpc_wb})}\\
+  \cline{1-3}
+  aux\_master\_i & in & rec & \\
+  \hline
   \hdltablesection{WR fabric interface (when \tts{g\_fabric\_iface = plain})}\\
   \hline
   wrf\_src\_o & out & rec & \multirowpar{4}{Mapped to WRPC fabric interface
