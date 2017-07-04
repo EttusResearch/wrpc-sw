@@ -1,6 +1,7 @@
 \documentclass[a4paper, 12pt]{article}
 \usepackage[english]{babel}
 \usepackage{fullpage}
+\usepackage[table,x11names,dvipsnames,table]{xcolor}
 \usepackage{pgf}
 \usepackage{tikz}
 \usepackage[pdftex]{hyperref}  % makes cross references and URLs clickable
@@ -2199,5 +2200,30 @@ in file \texttt{snmp\_test\_config.bash}.
 
 These tests have to be executed after any changes are made to the \textit{Mini SNMP
 responder}.
+
+% --------------------------------------------------------------------------
+\newpage
+\section{Wishbone Memory Maps}
+\label{sec:wb_mem_maps}
+
+This appendix provides a register map of Wishbone modules that are exposed to
+external applications/HDL core. In the table below you can see the list of
+modules available on the External Wishbone interface of the WR PTP Core. Please
+bare in mind that WR Streamers Diagnostics module is available only when
+\tts{STREAMERS} external fabric mode is selected.
+\begin{center}
+\begin{tabular}{|l|l|}
+  \hline
+  module name & base address\\
+  \hline \hline
+  WR Core Diagnostics & 0x20800\\
+  WR Streamers Diagnostics & 0x20700\\
+  \hline
+\end{tabular}
+\end{center}
+
+\input{wbgen/wrc_diags.tex}
+\newpage
+\input{wbgen/wr_streamers_wb.tex}
 
 \end{document}
