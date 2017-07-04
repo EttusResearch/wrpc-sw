@@ -22,6 +22,8 @@
 #define IF_SUBTYPE	0x6
 #define IF_NUM		0x10
 
+#define LLDP_ID_SUBTYPE_MAC	3
+
 #define LLDP_TX_FQ	1000
 
 enum TLV_TYPE { END_LLDP = 0, 	/* mandatory TLVs */
@@ -38,24 +40,13 @@ enum TLV_TYPE { END_LLDP = 0, 	/* mandatory TLVs */
 
 uint16_t tlv_type_len[TLV_MAX] = {	0x0,	/* LEN_LLDP_END */
 					0x7,	/* LEN_CHASSIS_ID */
-					0x14,	/* LEN_PORT_ID */
+					0x7,	/* LEN_PORT_ID */
 					0x2,	/* LEN_TTL */
 					0x14,	/* LEN_PORT */
 					0x14,	/* LEN_SYS_NAME */
 					0x14,	/* LEN_SYS_DESCR */
 					0x4,	/* LEN_SYS_CAPLTY */
 					0xC	/* LEN_MNG_ADD */
-					};
-
-uint16_t tlv_offset[TLV_MAX] = {	0x79,	/* LEN_LLDP_END */
-					0x0,	/* LEN_CHASSIS_ID */
-					0x9,	/* LEN_PORT_ID */
-					0x1F,	/* LEN_TTL */
-					0x23,	/* LEN_PORT */
-					0x39,	/* LEN_SYS_NAME */
-					0x4F,	/* LEN_SYS_DESCR */
-					0x65,	/* LEN_SYS_CAPLTY */
-					0x6B	/* LEN_MNG_ADD */
 					};
 
 #endif /* __LLDP_H */

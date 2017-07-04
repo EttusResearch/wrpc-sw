@@ -33,10 +33,10 @@ static struct wr_sockaddr addr;
 
 static void lldp_header_tlv(int tlv_type) {
 
-	lldpdu_len = tlv_offset[tlv_type];
-	lldpdu[lldpdu_len] = tlv_type * 2;
+	//lldpdu_len = tlv_offset[tlv_type];
+	lldpdu[lldpdu_len] = tlv_type << 1;
 	lldpdu[lldpdu_len + LLDP_SUBTYPE] = tlv_type_len[tlv_type];
-	lldpdu_len += LLDP_HEADER;
+	lldpdu_len += 2;
 }
 
 static void lldp_add_tlv(int tlv_type) {
@@ -66,8 +66,9 @@ static void lldp_add_tlv(int tlv_type) {
 			lldp_header_tlv(tlv_type);
 
 			/* TLV Interce Alias */
-			lldpdu[lldpdu_len] = 7;
-			strcpy(lldpdu + (lldpdu_len + LLDP_SUBTYPE), "WR Port");
+			lldpdu[lldpdu_len] = LLDP_ID_SUBTYPE_MAC;
+			get_mac_addr(mac);
+			memcpy(lldpdu + (lldpdu_len + LLDP_SUBTYPE), mac, 6);
 			break;
 		case TTL:
 			/* header */
@@ -132,27 +133,18 @@ static void lldp_add_tlv(int tlv_type) {
 			break;
 		case USER_DEF:
 			/* TODO define WR TLV */
+			return;
 			break;
 		default:
+			return;
 			break;
 	}
+	lldpdu_len += tlv_type_len[tlv_type];
 }
 
-static void lldp_init(void)
+static void lldp_update(void)
 {
-	struct wr_sockaddr saddr;
         int i;
-
-	/* LLDP: raw ethernet*/
-	memset(&saddr, 0x0, sizeof(saddr));
-	saddr.ethertype = htons(LLDP_ETH_TYP);
-
-	lldp_socket = ptpd_netif_create_socket(&__static_lldp_socket, &saddr,
-					       PTPD_SOCK_RAW_ETHERNET, 0);
-
-	memset(&addr, 0x0, sizeof(struct wr_sockaddr));
-	memcpy(addr.mac, LLDP_MCAST_MAC, 6);
-
 	/* add mandatory LLDP TLVs */
 	memset(lldpdu, 0x0, LLDP_PKT_LEN);
 	lldpdu_len = 0;
@@ -167,6 +159,23 @@ static void lldp_init(void)
 	lldp_add_tlv(END_LLDP);
 }
 
+static void lldp_init(void)
+{
+	struct wr_sockaddr saddr;
+
+	/* LLDP: raw ethernet*/
+	memset(&saddr, 0x0, sizeof(saddr));
+	saddr.ethertype = htons(LLDP_ETH_TYP);
+
+	lldp_socket = ptpd_netif_create_socket(&__static_lldp_socket, &saddr,
+					       PTPD_SOCK_RAW_ETHERNET, 0);
+
+	memset(&addr, 0x0, sizeof(struct wr_sockaddr));
+	memcpy(addr.mac, LLDP_MCAST_MAC, 6);
+
+	lldp_update();
+}
+
 static int lldp_poll(void)
 {
         static int ticks;
@@ -175,8 +184,9 @@ static int lldp_poll(void)
 	if (ticks > LLDP_TX_FQ) {
 
 		if (HAS_IP && (ip_status != IP_TRAINING)) {
-			lldp_add_tlv(PORT);
+			//lldp_add_tlv(PORT);
 			lldp_add_tlv(MNG_ADD);
+			lldp_update();
 			/* update other dynamic TLVs */
 		}
 
