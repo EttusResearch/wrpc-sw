@@ -1152,6 +1152,110 @@ situations:\\
 % FIXME: syslog examples
 
 % --------------------------------------------------------------------------
+\subsubsection{wrpc-diags}
+\label{wrpc-diags}
+
+A direct access to synchronization status of the WR PTP Core is possible via WB registers.
+Such access can be used by the application-specific logic or by any software running on the 
+host machine, provided the PCIe/VME bridge is instantiated in your design and
+lets you access the WR PTP Core external Wishbone Slave interface (see
+\ref{sec:hdl_wrpc}. Every reference design contains appropriate bridge, so you
+can use one of them to access conveniently the Wishbone registers for WRPC
+diagnostics using the \texttt{wrpc-diags} tool.
+
+You will find \texttt{wrpc-diags} tool in the \textit{wrpc-sw} repository. If
+you have not yet cloned it, please see section \ref{LM32 software compilation}
+for more instructions how this should be done, as well as how to compile it.
+
+The tool is self documented in the sense that a help \texttt{h} command lists
+all the currently supported commands, and to get detailed information for a
+given command, one can type \texttt{h cmd}.
+
+To use the \texttt{wrpc-diags} tool interactively, call it with appropriate
+parameters, depending on your hardware type. For example for a SPEC board at
+address 01:00.0:
+\begin{lstlisting}
+$ sudo <your_wrpc-sw_location>/tools/wrpc-diags -o 0x20800 \
+   -f /sys/bus/pci/devices/0000:01:00.0/resource0
+\end{lstlisting}
+
+The prompt \texttt{wrcdiag[00] >} will appear and you will be able to input commands.
+All the available commands are listed with \texttt{h}:
+\begin{lstlisting}[basicstyle=\scriptsize\ttfamily]
+cfv-774-cbt:wrcdiag[00] > h
+Valid COMMANDS:
+Idx  Name    Params           Description
+# 1: q       [           ] -> Quit test program
+# 2: h       [ o c       ] -> Help on commands
+# 3: a       [           ] -> Atom list commands
+# 4: his     [           ] -> History
+# 5: s       [ Seconds   ] -> Sleep seconds
+# 6: ms      [ MilliSecs ] -> Sleep milliseconds
+# 7: sh      [ Unix Cmd  ] -> Shell command
+# 8: diags   [           ] -> show all wrc diags
+# 9: sstat   [           ] -> get servo status
+#10: ptpstat [           ] -> get PTP state
+#11: pstat   [           ] -> get port status
+#12: astat   [           ] -> get auxiliare state
+#13: txfcnt  [           ] -> get TX PTP frame count
+#14: rxfcnt  [           ] -> get RX frame count
+#15: ltime   [           ] -> Local Time expressed in sec since epoch
+#16: rttime  [           ] -> Round trip time in picoseconds
+#17: msdelay [           ] -> Master slave link delay in picoseconds
+#18: asym    [           ] -> Total link asymmetry in picoseonds
+#19: cko     [           ] -> Clock offset in picoseonds
+#20: setp    [           ] -> Current slave's clock phase shift value
+#21: ucnt    [           ] -> Update counter
+#22: temp    [           ] -> get board temperature
+
+Type "h name" to get complete command help
+\end{lstlisting}
+In order to see all the wrc diagnostics, the \texttt{diags} command inside the prompt should
+be executed as follows:
+\begin{lstlisting}
+cfc-774-cbt:wrcdiag[00] > diags
+servo status:		Track phase
+Port status:		Link up, PLL locked, 
+PTP state:		PPS slave
+Aux state:		ch0:enabled
+TX frame count:		1593970
+RX frame count:		6883447
+TAI time:		Wed May 31 15:31:56 2017
+Round trip time:	848002 ps
+Master slave delay:	417483 ps
+Total Link asymmetry:	13036 ps
+Clock offset:		2 ps
+Phase setpoint:		7883 ps
+Update counter:		812977
+temp:			47.3750 C
+\end{lstlisting}
+Some advanced commands can be also executed. For example, one can call
+\texttt{temp} command every 1 second for 5 times:
+\begin{lstlisting}
+cfc-774-cbt:wrcdiag[00] > 5(temp, s 1)
+temp:			47.3750 C
+temp:			47.3750 C
+temp:			47.3750 C
+temp:			47.3750 C
+temp:			47.3750 C
+\end{lstlisting}
+
+The commands that are available from the interactive prompt can be also executed directly
+from the host's shell prompt and via ssh. Both cases can be useful when writing shell 
+scripts using the tool. To call one of the commands from the host shell prompt,
+use \texttt{echo cmd | wrpc-diags} format. For example, to execute
+\texttt{diags} command for SPEC:
+\begin{lstlisting}
+echo 'diags' | sudo <your_wrpc-sw_location>/tools/wrpc-diags -o 0x20800 \
+    -f /sys/bus/pci/devices/0000:01:00.0/resource0
+\end{lstlisting}
+In order to  call \texttt{temp} command every 1 second for 5 times:
+\begin{lstlisting}
+echo '5(temp, 1s)' | sudo <your_wrpc-sw_location>/tools/wrpc-diags -o 0x20800 \
+    -f /sys/bus/pci/devices/0000:01:00.0/resource0
+\end{lstlisting}
+
+% --------------------------------------------------------------------------
 \subsubsection{Latency Test}
 \label{Latency Test}
 
