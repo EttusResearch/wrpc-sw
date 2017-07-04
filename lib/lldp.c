@@ -17,6 +17,7 @@
 #include "endpoint.h"
 #include "ipv4.h"
 #include "shell.h"
+#include <wrpc.h> /*needed for htons()*/
 
 static char lldpdu[LLDP_PKT_LEN];
 static uint16_t lldpdu_len;
@@ -37,10 +38,6 @@ static void lldp_header_tlv(int tlv_type) {
 	lldpdu[lldpdu_len + LLDP_SUBTYPE] = tlv_type_len[tlv_type];
 	lldpdu_len += LLDP_HEADER;
 }
-
-#ifndef htons
-#define htons(x) x
-#endif
 
 static void lldp_add_tlv(int tlv_type) {
 
@@ -138,7 +135,7 @@ static void lldp_init(void)
 	struct wr_sockaddr saddr;
         int i;
 
-        /* LLDP: raw ethernet*/
+	/* LLDP: raw ethernet*/
 	memset(&saddr, 0x0, sizeof(saddr));
 	saddr.ethertype = htons(LLDP_ETH_TYP);
 
@@ -158,7 +155,7 @@ static void lldp_init(void)
 	/* add optional TLVs */
 	lldp_add_tlv(MNG_ADD);
 
-        /* end TLVs */
+	/* end TLVs */
 	lldp_add_tlv(END_LLDP);
 }
 
@@ -167,19 +164,19 @@ static void lldp_poll(void)
         static int ticks;
 
 	/* periodic tasks */
-        if (ticks > LLDP_TX_FQ) {
+	if (ticks > LLDP_TX_FQ) {
 
-                if (HAS_IP & (ip_status != IP_TRAINING)) {
-                        lldp_add_tlv(PORT);
-                        /* update other dynamic TLVs */
-                }
+		if (HAS_IP && (ip_status != IP_TRAINING)) {
+			lldp_add_tlv(PORT);
+			/* update other dynamic TLVs */
+		}
 
 		ptpd_netif_sendto(lldp_socket, &addr, lldpdu, LLDP_PKT_LEN, 0);
 
-                ticks = 0;
-        }
-        else
-                ticks += 1;
+		ticks = 0;
+	} else {
+		ticks += 1;
+	}
 }
 
 DEFINE_WRC_TASK(lldp) = {
