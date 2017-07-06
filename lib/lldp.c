@@ -94,7 +94,7 @@ static void lldp_add_tlv(int tlv_type) {
 
 			/* TLV Info srting */
 			/* TODO get host system name from wr-core outer world  */
-			strcpy(lldpdu + lldpdu_len, "WR Timing Receiver");
+			strcpy(lldpdu + lldpdu_len, "WR PTP Core");
 
 			break;
 		case SYS_DESCR:
