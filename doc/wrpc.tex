@@ -83,7 +83,7 @@ basicstyle=\footnotesize\ttfamily, backgroundcolor=\color{light-gray}, label=lst
   \end{center}
 }
 
-\def \wrpcrelease {wrpc-v4.0}
+\def \wrpcrelease {wrpc-v4.1}
 
 \newcommand{\code}[1]{\texttt{#1}}
 
@@ -188,7 +188,7 @@ following locations:
 
   \end{itemize*}
 Repositories containing the WRPC gateware and software (\textit{wr-cores},
-\textit{wrpc-sw}) are tagged with \texttt{wrpc-v4.0} tag. Other tools used to
+\textit{wrpc-sw}) are tagged with \texttt{wrpc-v4.1} tag. Other tools used to
 build the core and load it into the FPGA should be used in their newest stable
 releases, unless otherwise stated.
 
@@ -308,13 +308,13 @@ $ chmod a+x /usr/bin/hdlmake
 \end{lstlisting}
 
 Having all the tools in place, you can now clone the main WR PTP Core git
-repository for the v4.0 release. The set of commands below clones the WR PTP Core
+repository for the v4.1 release. The set of commands below clones the WR PTP Core
 repository, checks out the release tag, and downloads other HDL repositories
 (submodules) needed to synthesize the core:
 \begin{lstlisting}
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores.git <your_location>/wr-cores
 $ cd <your_location>/wr-cores
-$ git checkout wrpc-v4.0
+$ git checkout wrpc-v4.1
 $ git submodule init
 $ git submodule update
 \end{lstlisting}
@@ -410,13 +410,13 @@ $ export CROSS_COMPILE="<your_location>/lm32/bin/lm32-elf-"
 \end{lstlisting}
 
 To get the sources of the WRPC software, please clone the \textit{wrpc-sw} git
-repository tagged with \texttt{wrpc-v4.0} tag. The commands in the listing below
+repository tagged with \texttt{wrpc-v4.1} tag. The commands in the listing below
 clone the \textit{wrpc-sw} repository together with submodules needed for this software.\\
 \begin{lstlisting}
 $ git clone git://ohwr.org/hdl-core-lib/wr-cores/wrpc-sw.git \
 <your_location>/wrpc-sw
 $ cd <your_location>/wrpc-sw
-$ git checkout wrpc-v4.0
+$ git checkout wrpc-v4.1
 \end{lstlisting}
 
 \textbf{Note:} If you use WRPC within another project, you may need to checkout
@@ -429,7 +429,7 @@ run one of the following commands (the first two are text-mode, the third uses
 a KDE GUI and the fourth uses a Gnome GUI):
 \begin{lstlisting}
 $ make menuconfig
-$ make nonfig
+$ make config
 $ make xconfig
 $ make gconfig
 \end{lstlisting}
@@ -633,15 +633,15 @@ $\Delta_{TX}$, $\Delta_{RX}$ and $\alpha$ parameters associated with them.
 
 \begin{lstlisting}
 wrc# sfp erase
-wrc# sfp add AXGE-1254-0531 180667 148735 72169888
-wrc# sfp add AXGE-3454-0531 180667 148735 -73685416
+wrc# sfp add AXGE-1254-0531 180774 148774 72169888
+wrc# sfp add AXGE-3454-0531 180774 148774 -73685416
 \end{lstlisting}
 
 To check the content of the SFP database you can execute the \textit{sfp show}
 shell command.\\
 
 \noindent\textbf{Note:} The $\Delta_{TX}$ and $\Delta_{RX}$ parameters above are
-the defaults for wrpc-v4.0 release bitstream available on \textit{ohwr.org},
+the defaults for wrpc-v4.1 release bitstream available on \textit{ohwr.org},
 running on the SPEC v4 board and calibrated to port 1 of a~WR Switch
 v3.3. These values as well as the default parameters for other boards are
 available on the calibration wiki page
@@ -754,7 +754,7 @@ executing:  ptp stop
 PTP stop
 executing:  sfp match
 AXGE-3454-0531  
-SFP matched, dTx=180667 dRx=148735 alpha=-73685416
+SFP matched, dTx=180774 dRx=148774 alpha=-73685416
 executing:  mode slave
 PTP stop
 Locking PLL
@@ -925,8 +925,8 @@ Part of the \texttt{snmpwalk}'s output:
  WR-WRPC-MIB::wrpcPortInternalTx.0 = Counter32: 452
  WR-WRPC-MIB::wrpcPortInternalRx.0 = Counter32: 869
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
- WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180667
- WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148735
+ WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180774
+ WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148774
  WR-WRPC-MIB::wrpcSfpAlpha.1 = INTEGER: 72169888
  End of MIB
 \end{lstlisting}
@@ -944,8 +944,8 @@ The SFPs database can be displayed using the \texttt{sfp show} command from
 the WRPC's console:
 \begin{lstlisting}
  wrc# sfp show
- 1: PN:AXGE-1254-0531   dTx:   180667 dRx:   148735 alpha: 72169888
- 2: PN:AXGE-3454-0531   dTx:   180667 dRx:   148735 alpha: -73685416
+ 1: PN:AXGE-1254-0531   dTx:   180774 dRx:   148774 alpha: 72169888
+ 2: PN:AXGE-3454-0531   dTx:   180774 dRx:   148774 alpha: -73685416
 \end{lstlisting}
 The same data is exported by the \textit{Mini SNMP responder} via the table
 \texttt{wrpcSfpTable}:
@@ -954,10 +954,10 @@ The same data is exported by the \textit{Mini SNMP responder} via the table
  $ snmpwalk $SNMP_OPT wrpcSfpTable
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
  WR-WRPC-MIB::wrpcSfpPn.2 = STRING: AXGE-3454-0531
- WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180667
- WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180667
- WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148735
- WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148735
+ WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180774
+ WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180774
+ WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148774
+ WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148774
  WR-WRPC-MIB::wrpcSfpAlpha.1 = INTEGER: 72169888
  WR-WRPC-MIB::wrpcSfpAlpha.2 = INTEGER: -73685416
  End of MIB
@@ -1025,8 +1025,8 @@ Simple verification of performed actions:\\
 \begin{minipage}{\textwidth}
 \begin{lstlisting}
  wrc# sfp show
- 1: PN:AXGE-1254-0531   dTx:   180667 dRx:   148735 alpha: 72169888
- 2: PN:AXGE-3454-0531   dTx:   180667 dRx:   148735 alpha: -73685416
+ 1: PN:AXGE-1254-0531   dTx:   180774 dRx:   148774 alpha: 72169888
+ 2: PN:AXGE-3454-0531   dTx:   180774 dRx:   148774 alpha: -73685416
  3: PN:NEW-SFP          dTx:     1111 dRx:     2222 alpha:     3333
 \end{lstlisting}
 \end{minipage}
@@ -1045,11 +1045,11 @@ Verify the result via SNMP:
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
  WR-WRPC-MIB::wrpcSfpPn.2 = STRING: AXGE-3454-0531
  WR-WRPC-MIB::wrpcSfpPn.3 = STRING: NEW-SFP
- WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180667
- WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180667
+ WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180774
+ WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180774
  WR-WRPC-MIB::wrpcSfpDeltaTx.3 = INTEGER: 1111
- WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148735
- WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148735
+ WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148774
+ WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148774
  WR-WRPC-MIB::wrpcSfpDeltaRx.3 = INTEGER: 2222
  WR-WRPC-MIB::wrpcSfpAlpha.1 = INTEGER: 72169888
  WR-WRPC-MIB::wrpcSfpAlpha.2 = INTEGER: -73685416
