@@ -220,9 +220,11 @@ int shell_interactive()
 	return 0;
 }
 
-const char *fromhex(const char *hex, int *v)
+
+const char *fromhex64(const char *hex, int64_t *v)
 {
-	int o = 0, sign = 1;
+	int64_t o = 0;
+	int sign = 1;
 
 	if (hex && *hex == '-') {
 		sign = -1;
@@ -242,6 +244,16 @@ const char *fromhex(const char *hex, int *v)
 
 	*v = o * sign;
 	return hex;
+}
+
+const char *fromhex(const char *hex, int *v)
+{
+	const char *ret;
+	int64_t v64;
+
+	ret = fromhex64(hex, &v64);
+	*v = (int)v64;
+	return ret;
 }
 
 const char *fromdec(const char *dec, int *v)
