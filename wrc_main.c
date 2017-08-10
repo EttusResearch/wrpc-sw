@@ -44,6 +44,8 @@ uint32_t cal_phase_transition = 2389;
 int wrc_vlan_number = CONFIG_VLAN_NR;
 
 static uint32_t prev_nanos_for_profile;
+#define DEFAULT_PRINT_TASK_TIME_THRESHOLD 0
+uint32_t print_task_time_threshold = DEFAULT_PRINT_TASK_TIME_THRESHOLD;
 
 static void wrc_initialize(void)
 {
@@ -214,6 +216,14 @@ DEFINE_WRC_TASK(spll) = {
 	.job = spll_update,
 };
 
+static void task_time_normalize(struct wrc_task *t)
+{
+	if (t->nanos > 1000 * 1000 * 1000) {
+		t->nanos -= 1000 * 1000 * 1000;
+		t->seconds++;
+	}
+}
+
 /* Account the time to either this task or task 0 */
 static void account_task(struct wrc_task *t, int done_sth)
 {
@@ -228,10 +238,18 @@ static void account_task(struct wrc_task *t, int done_sth)
 		delta += 1000 * 1000 * 1000;
 
 	t->nanos += delta;
-	if (t->nanos > 1000 * 1000 * 1000) {
-		t->nanos -= 1000 * 1000 * 1000;
-		t->seconds++;
+	task_time_normalize(t);
+        if (t->max_run < delta) {/* update max_run */
+		if (print_task_time_threshold
+		    && delta > print_task_time_threshold) {
+			pp_printf("New max run time for a task %s, old %ld, "
+				  "new %d\n",
+				  t->name, t->max_run, delta);
+		}
+		t->max_run = delta;
 	}
+	if (print_task_time_threshold && delta > print_task_time_threshold)
+		pp_printf("task %s, run for %d\n", t->name, delta);
 	prev_nanos_for_profile = nanos;
 }
 

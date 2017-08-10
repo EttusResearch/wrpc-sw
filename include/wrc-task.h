@@ -21,6 +21,7 @@ struct wrc_task {
 	unsigned long nrun;
 	unsigned long seconds;
 	unsigned long nanos;
+	unsigned long max_run; /* in nanos */
 };
 
 /* An helper for periodic tasks, relying on a static varible */
