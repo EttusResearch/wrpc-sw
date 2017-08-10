@@ -117,10 +117,18 @@ static void lldp_add_tlv(int tlv_type) {
 
 			/* TLV Info string */
                         /* TODO get host system name from wr-core outer world  */
-			lldpdu[lldpdu_len] = 0x4; /* len */
+			lldpdu[lldpdu_len] = 0x5; /* len */
 			lldpdu[lldpdu_len + LLDP_SUBTYPE] = 0x1; /* mngt add subtype */
 			lldpdu[lldpdu_len + IF_SUBTYPE] = 0x1; /* if subtype */
 			lldpdu[lldpdu_len + IF_NUM] = 0x1; /* if number */
+
+			/* TLV Info srting */
+                        if (HAS_IP) {
+                                getIP(ipWR);
+				char buf[32];
+                                format_ip(buf, ipWR);
+			        memcpy(&lldpdu[lldpdu_len + LLDP_SUBTYPE + 1], ipWR,4);
+                        }
 			break;
 		case USER_DEF:
 			/* TODO define WR TLV */
@@ -168,6 +176,7 @@ static int lldp_poll(void)
 
 		if (HAS_IP && (ip_status != IP_TRAINING)) {
 			lldp_add_tlv(PORT);
+			lldp_add_tlv(MNG_ADD);
 			/* update other dynamic TLVs */
 		}
 
