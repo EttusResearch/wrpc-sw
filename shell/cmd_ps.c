@@ -21,7 +21,7 @@ static int cmd_ps(const char *args[])
 	if (args[0]) {
 		if(!strcasecmp(args[0], "reset")) {
 			for_each_task(t)
-			    t->nrun = t->seconds = t->nanos = t->max_run = 0;
+			    t->nrun = t->seconds = t->nanos = t->max_run_ticks = 0;
 			return 0;
 		} else if (!strcasecmp(args[0], "max")) {
 			if (args[1])
@@ -31,10 +31,10 @@ static int cmd_ps(const char *args[])
 			return 0;
 		}
 	}
-	pp_printf(" iterations     seconds.micros   max     name\n");
+	pp_printf(" iterations     seconds.micros    max_ms name\n");
 		for_each_task(t)
 		pp_printf("  %9li   %9li.%06li %9ld %s\n", t->nrun,
-			  t->seconds, t->nanos/1000, t->max_run, t->name);
+			  t->seconds, t->nanos/1000, t->max_run_ticks, t->name);
 	return 0;
 }
 

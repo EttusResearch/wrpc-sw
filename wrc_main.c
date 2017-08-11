@@ -44,6 +44,7 @@ uint32_t cal_phase_transition = 2389;
 int wrc_vlan_number = CONFIG_VLAN_NR;
 
 static uint32_t prev_nanos_for_profile;
+static uint32_t prev_ticks_for_profile;
 #define DEFAULT_PRINT_TASK_TIME_THRESHOLD 0
 uint32_t print_task_time_threshold = DEFAULT_PRINT_TASK_TIME_THRESHOLD;
 
@@ -106,6 +107,8 @@ static void wrc_initialize(void)
 	wrc_ptp_set_mode(WRC_MODE_SLAVE);
 	wrc_ptp_start();
 	shw_pps_gen_get_time(NULL, &prev_nanos_for_profile);
+	/* get tics */
+	prev_ticks_for_profile = timer_get_tics();
 }
 
 DEFINE_WRC_TASK0(idle) = {
@@ -229,28 +232,41 @@ static void account_task(struct wrc_task *t, int done_sth)
 {
 	uint32_t nanos;
 	signed int delta;
+	uint32_t ticks;
+	signed int delta_ticks;
 
 	if (!done_sth)
 		t = __task_begin; /* task 0 is special */
 	shw_pps_gen_get_time(NULL, &nanos);
+	/* get monotonic number of ticks */
+	ticks = timer_get_tics();
+
 	delta = nanos - prev_nanos_for_profile;
 	if (delta < 0)
 		delta += 1000 * 1000 * 1000;
 
 	t->nanos += delta;
 	task_time_normalize(t);
-        if (t->max_run < delta) {/* update max_run */
-		if (print_task_time_threshold
-		    && delta > print_task_time_threshold) {
+	prev_nanos_for_profile = nanos;
+
+	delta_ticks = ticks - prev_ticks_for_profile;
+	if (delta_ticks < 0)
+		delta_ticks += TICS_PER_SECOND;
+
+	if (t->max_run_ticks < delta_ticks) {/* update max_run_ticks */
+		if (print_task_time_threshold) {
+			/* Print only if threshold is set */
 			pp_printf("New max run time for a task %s, old %ld, "
 				  "new %d\n",
-				  t->name, t->max_run, delta);
+				  t->name, t->max_run_ticks, delta_ticks);
 		}
-		t->max_run = delta;
+		t->max_run_ticks = delta_ticks;
 	}
-	if (print_task_time_threshold && delta > print_task_time_threshold)
-		pp_printf("task %s, run for %d\n", t->name, delta);
-	prev_nanos_for_profile = nanos;
+	if (print_task_time_threshold
+            && delta_ticks > print_task_time_threshold)
+		pp_printf("task %s, run for %d ms\n", t->name, delta_ticks);
+
+	prev_ticks_for_profile = ticks;
 }
 
 /* Run a task with profiling */
