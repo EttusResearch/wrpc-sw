@@ -297,6 +297,15 @@ config ABSCAL
 	  using a loop-back SFP adapter, according to the procedure
 	  described and documented by Peter Jansweijer.
 
+config LLDP
+	depends on WR_NODE
+	boolean "Include LLDP protocol transmit-only"
+	default n
+	help
+	  This enable LLDP support. LLDP is a vendor-neutral link layer protocol 
+	  used by network devices for advertising their identity, capabilities, 
+	  and neighbors on local area network.
+
 #
 # This is a set of configuration options that should not be changed by
 # normal users. If the "developer" menu is used, the binary is tainted.
@@ -576,11 +585,3 @@ config PPSI
 	boolean
 	help
 	  Select this option for the ppsi engine (now only option)
-
-config LLDP
-	depends on DEVELOPER
-  boolean "Include LLDP protocol transmit-only"
-  help
-    This enable LLDP support. LLDP is a vendor-neutral link layer protocol 
-    used by network devices for advertising their identity, capabilities, 
-    and neighbors on local area network.
