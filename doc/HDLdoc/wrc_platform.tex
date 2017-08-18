@@ -165,18 +165,19 @@ PSP. Parameters and ports common to all PSPs are described in Section~\ref{sec:h
 \subsubsection{Xilinx}
 \label{sec:hdl_platform_xilinx}
 
-The Xilinx PSP currently supports the Spartan 6 family of FPGAs.
+The Xilinx PSP currently supports the Spartan 6 and Kintex 7 (also inside Zynq) family of FPGAs.
 
 The top-level VHDL module is located under:\\ \hrefwrpc{platform/xilinx/xwrc\_platform\_xilinx.vhd}
 
 A VHDL package with the definition of the module can be found
 under:\\ \hrefwrpc{platform/wr\_xilinx\_pkg.vhd}
 
-Examples of (VHDL) instantiation of this module can be found in the SPEC and SVEC board support
-packages (see also Sections~\ref{sec:hdl_board_spec}
+Examples of (VHDL) instantiation of this module can be found in the SPEC, SVEC
+and FASEC board support packages (see also Sections~\ref{sec:hdl_board_spec}
 and~\ref{sec:hdl_board_svec}):\\
 \hrefwrpc{board/spec/xwrc\_board\_spec.vhd}\\
-\hrefwrpc{board/svec/xwrc\_board\_svec.vhd}
+\hrefwrpc{board/svec/xwrc\_board\_svec.vhd}\\
+\hrefwrpc{board/fasec/xwrc\_board\_fasec.vhd}\\
 
 This section describes the generic parameters and ports which are
 specific to the Xilinx PSP. Parameters and ports common to all PSPs

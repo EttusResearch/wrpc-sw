@@ -209,6 +209,8 @@ can be chosen:
 \item \href{http://www.ohwr.org/projects/vfc-hd}{VFC-HD VME board} +
   \href{http://www.ohwr.org/projects/fmc-dio-5chttla}{FMC DIO card} +
   VME crate with a single board computer running Linux\footref{note_a20}
+\item \href{http://www.ohwr.org/projects/fasec}{FASEC board} +
+  \href{http://www.ohwr.org/projects/fmc-dio-5chttla}{FMC DIO card}
 \end{itemize}
 
 To be able to test White Rabbit synchronization you would also need
@@ -278,7 +280,7 @@ following command should be executed:
 $ export PATH=/opt/altera/16.0/quartus/bin:$PATH
 \end{lstlisting}
 
-\subsubsection{Downloading the sources and running the synthesis}
+\subsubsection{Downloading the sources}
 Thanks to the \textit{hdlmake} tool, the synthesis process for the reference
 designs does not differ between Xilinx and Altera/Intel based boards. The tool creates
 synthesis Makefile as well as ISE/Quartus project file based on a set of
@@ -329,7 +331,7 @@ The local copies of the submodules are stored to:
 repository. Please refer to the project's documentation to find out which
 version of this package you need to build.
 
-\vspace{1em}
+\subsubsection{Running the synthesis (ISE, Quartus)}
 The subdirectory you should enter to run the synthesis depends on the hardware
 platform you use:
 \begin{itemize*}
@@ -378,6 +380,41 @@ scratch you can use the following commands:
 \item \texttt{\$ make mrproper} - removes \texttt{*.bin}, \texttt{*.bit} and
   \texttt{*.sof} files;
 \end{itemize*}
+
+\subsubsection{Running the synthesis (Vivado)}
+The workflow in Xilinx Vivado is different than for ISE and Quartus. It is
+heavily based on packed IP cores and schematic entry. Therefore, if you would
+like to synthesize the reference design for Zynq (FASEC board), you
+need to go through two Vivado projects:
+\begin{itemize*}
+  \item \texttt{<your\_location>/wr-cores/syn/wrc\_board\_fasec\_ip} - is a
+    project created with \textit{hdlmake} from all HDL files necessary to
+    synthesize the WR PTP Core with all its peripherals for Zynq (Kintex-7 FPGA).
+    The project contains also IP-XACT module description to generate Vivado IP
+    Core for further synthesis with a complete FASEC reference design.
+  \item \texttt{<your\_location>/wr-cores/syn/fasec\_ref\_design} - is a main
+    reference design project for FASEC board. It is made with the Vivado Block
+    Design instantiating Processing System, reset circuits, AXI interconnects
+    and WR PTP Core IP generated from \texttt{wrc\_board\_fasec\_ip} project.
+\end{itemize*}
+
+First, please execute the \texttt{build.tcl} script in Vivado batch mode
+\footnote{You can also use Tools->Run Tcl Script... from Vivado gui} to create
+WR PTP Core IP:
+\begin{lstlisting}
+$ cd <your\_location>/wr-cores/syn/wrc\_board\_fasec\_ip
+$ vivado -mode batch -source build.tcl
+\end{lstlisting}
+
+After this step, you can generate the main reference design Vivado project,
+using Tcl scripts in the repository:
+\begin{lstlisting}
+$ cd <your\_location>/wr-cores/syn/fasec\_ref\_design
+$ vivado -mode batch -source build.tcl
+\end{lstlisting}
+
+Open the project file \texttt{fasec\_ref\_design.xpr} and continue with regular
+Vivado flow to synthesize the bitstream.
 
 % ==========================================================================
 \subsection{LM32 software compilation}
