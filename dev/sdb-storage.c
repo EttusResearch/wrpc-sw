@@ -7,6 +7,7 @@
  *
  * Released according to the GNU GPL, version 2 or any later version.
  */
+#include <errno.h>
 #include <wrc.h>
 #include <w1.h>
 #include <storage.h>
@@ -737,4 +738,125 @@ int storage_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next)
 out:
 	sdbfs_close(&wrc_sdb);
 	return ret;
+}
+
+extern uint32_t _binary_tools_sdbfs_default_bin_start[];
+extern uint32_t _binary_tools_sdbfs_default_bin_end[];
+
+static inline unsigned long SDB_ALIGN(unsigned long x, int blocksize)
+{
+	return (x + (blocksize - 1)) & ~(blocksize - 1); 
+}
+
+int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
+{
+	if (mem_type == MEM_FLASH) {
+		pp_printf("Erasing Flash(0x%x)...\n", base_adr);
+		sdb_flash_erase(NULL, base_adr, SDBFS_REC * FLASH_BLOCKSIZE);
+	}
+	else if (mem_type == MEM_EEPROM) {
+		pp_printf("Erasing EEPROM %d (0x%x)...\n", i2c_adr, base_adr);
+		i2c_params.ifnum = WRPC_FMC_I2C;
+		i2c_params.addr  = i2c_adr;
+		wrc_sdb.drvdata = &i2c_params;
+		sdb_i2c_erase(&wrc_sdb, base_adr, SDBFS_REC * sizeof(struct sdb_device));
+	}
+	else if (mem_type == MEM_1W_EEPROM) {
+		pp_printf("Erasing 1-W EEPROM (0x%x)...\n", base_adr);
+		wrc_sdb.drvdata = &wrpc_w1_bus;
+		sdb_w1_erase(&wrc_sdb, base_adr, SDBFS_REC * sizeof(struct sdb_device));
+	}
+	return 0;
+}
+
+int storage_gensdbfs(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
+{
+	struct sdb_device *sdbfs = (struct sdb_device*) _binary_tools_sdbfs_default_bin_start;
+	struct sdb_interconnect *sdbfs_dir = (struct sdb_interconnect*) _binary_tools_sdbfs_default_bin_start;
+	//struct sdb_device sdbfs_buf[SDBFS_REC];
+	int i;
+	char buf[19] = {0};
+	int cur_adr, size;
+	int blocksize = 1;
+	uint32_t val;
+
+	if (mem_type == MEM_FLASH && base_adr == 0)
+		return -EINVAL;
+
+	if (mem_type == MEM_FLASH)
+		blocksize = FLASH_BLOCKSIZE;
+
+	/* first file starts after the SDBFS description */
+	cur_adr = base_adr + SDB_ALIGN(SDBFS_REC*sizeof(struct sdb_device), blocksize);
+	/* scan through files */
+	for (i=1; i<SDBFS_REC; ++i) {
+		/* relocate each file depending on base address and block size */
+		size = sdbfs[i].sdb_component.addr_last - sdbfs[i].sdb_component.addr_first;
+		sdbfs[i].sdb_component.addr_first = cur_adr;
+		sdbfs[i].sdb_component.addr_last  = cur_adr + size;
+		cur_adr = SDB_ALIGN(cur_adr + (size + 1), blocksize);
+	}
+	/* update the directory */
+	sdbfs_dir->sdb_component.addr_first = base_adr;
+	sdbfs_dir->sdb_component.addr_last  = sdbfs[SDBFS_REC-1].sdb_component.addr_last;
+
+	for (i=0; i<SDBFS_REC; ++i) {
+		strncpy(buf, (char *)sdbfs[i].sdb_component.product.name, 18);
+		pp_printf("filename: %s; first: %x; last: %x\n", buf,
+				(int)sdbfs[i].sdb_component.addr_first,
+				(int)sdbfs[i].sdb_component.addr_last);
+	}
+
+	size = sizeof(struct sdb_device);
+	if (mem_type == MEM_FLASH) {
+		pp_printf("Formatting SDBFS in Flash(0x%x)...\n", base_adr);
+		/* each file is in a separate block, therefore erase SDBFS_REC
+		 * number of blocks */
+		sdb_flash_erase(NULL, base_adr, SDBFS_REC * FLASH_BLOCKSIZE);
+		for (i=0; i<SDBFS_REC; ++i) {
+			sdb_flash_write(NULL, base_adr + i*size, &sdbfs[i], size);
+		}
+		//pp_printf("Verification...");
+		//sdb_flash_read(NULL, base_adr, sdbfs_buf, SDBFS_REC * sizeof(struct sdb_device));
+		//if(memcmp(sdbfs, sdbfs_buf, SDBFS_REC * sizeof(struct sdb_device)))
+		//	pp_printf("Error.\n");
+		//else
+		//	pp_printf("OK.\n");
+	}
+	else if (mem_type == MEM_EEPROM) {
+		/* First, check if EEPROM is really there */
+	        if (!mi2c_devprobe(WRPC_FMC_I2C, i2c_adr)) {
+			pp_printf("I2C EEPROM not found\n");
+			return -EINVAL;
+		}
+		i2c_params.ifnum = WRPC_FMC_I2C;
+		i2c_params.addr  = i2c_adr;
+		pp_printf("Formatting SDBFS in I2C EEPROM %d (0x%x)...\n", i2c_params.addr,
+				base_adr);
+		wrc_sdb.drvdata = &i2c_params;
+		sdb_i2c_erase(&wrc_sdb, base_adr, SDBFS_REC * size);
+		for (i=0; i<SDBFS_REC; ++i) {
+			sdb_i2c_write(&wrc_sdb, base_adr + i*size, &sdbfs[i], size);
+		}
+		//pp_printf("Verification...");
+		//sdb_i2c_read(&wrc_sdb, base_adr, sdbfs_buf, SDBFS_REC * sizeof(struct sdb_device));
+		//if(memcmp(sdbfs, sdbfs_buf, SDBFS_REC * sizeof(struct sdb_device)))
+		//	pp_printf("Error.\n");
+		//else
+		//	pp_printf("OK.\n");
+	}
+	else if (mem_type == MEM_1W_EEPROM) {
+		wrc_sdb.drvdata = &wrpc_w1_bus;
+		if (sdb_w1_read(&wrc_sdb, 0, &val, sizeof(val)) != sizeof(val)) {
+			pp_printf("1-Wire EEPROM not found\n");
+			return -EINVAL;
+		}
+		pp_printf("Formatting SDBFS in 1-W EEPROM (0x%x)...\n", base_adr);
+		sdb_w1_erase(&wrc_sdb, base_adr, SDBFS_REC * size);
+		for (i=0; i<SDBFS_REC; ++i) {
+			sdb_w1_write(&wrc_sdb, base_adr + i*size, &sdbfs[i], size);
+		}
+	}
+
+	return mem_type;
 }

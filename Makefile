@@ -76,6 +76,10 @@ pfilter-y                     := rules-novlan.bin
 pfilter-$(CONFIG_VLAN)        += rules-vlan.bin
 export pfilter-y
 
+# sdbfs image
+sdbfsimg-y	:=	sdbfs-default.bin
+export sdbfsimg-y
+
 all:
 
 include shell/shell.mk
