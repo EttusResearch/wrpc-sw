@@ -40,6 +40,8 @@ CONFIG_SDB_STORAGE=y
 # CONFIG_LEGACY_EEPROM is not set
 CONFIG_WR_DIAG=y
 # CONFIG_WR_NODE_SIM is not set
+CONFIG_GENSDBFS=y
+CONFIG_ABSCAL=y
 
 #
 # wrpc-sw is tainted if you change the following options

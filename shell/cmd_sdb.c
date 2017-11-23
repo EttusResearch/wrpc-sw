@@ -19,12 +19,15 @@
 
 static int cmd_sdb(const char *args[])
 {
+#ifdef CONFIG_GENSDBFS
 	uint8_t i2c_adr;
+#endif
 
 	if (!args[0]) {
 		sdb_print_devices();
 		return 0;
 	}
+#ifdef CONFIG_GENSDBFS
 	if (args[3])
 		i2c_adr = atoi(args[3]);
 	else
@@ -37,6 +40,7 @@ static int cmd_sdb(const char *args[])
 		storage_sdbfs_erase(atoi(args[1]), atoi(args[2]), i2c_adr);
 		return 0;
 	}
+#endif
 	return -EINVAL;
 }
 

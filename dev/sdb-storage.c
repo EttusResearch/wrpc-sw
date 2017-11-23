@@ -740,6 +740,8 @@ out:
 	return ret;
 }
 
+#ifdef CONFIG_GENSDBFS
+
 extern uint32_t _binary_tools_sdbfs_default_bin_start[];
 extern uint32_t _binary_tools_sdbfs_default_bin_end[];
 
@@ -860,3 +862,5 @@ int storage_gensdbfs(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
 
 	return mem_type;
 }
+
+#endif

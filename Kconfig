@@ -279,6 +279,14 @@ config WR_NODE_SIM
 	  MAC address destination and expects the simulation to return
 	  these frames.
 
+config GENSDBFS
+  depends on WR_NODE
+  default y
+  boolean "Shell command for SDBFS generation"
+  help
+    This option adds _sdb fs_ command to write empty SDBFS filesystem
+    image in Flash/EEPROM.
+
 config ABSCAL
 	default y
 	boolean "Support absolute calibration"
