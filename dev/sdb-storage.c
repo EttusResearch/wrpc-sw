@@ -16,6 +16,7 @@
 #include "i2c.h"
 #include "onewire.h"
 #include "endpoint.h"
+#include "syscon.h"
 #include <sdb.h>
 
 #define SDBFS_BIG_ENDIAN
@@ -35,6 +36,8 @@
 /* constants for scanning I2C EEPROMs */
 #define EEPROM_START_ADR 0
 #define EEPROM_STOP_ADR  127
+
+struct storage_config storage_cfg;
 
 /* Functions for Flash access */
 static int sdb_flash_read(struct sdbfs *fs, int offset, void *buf, int count)
@@ -221,7 +224,7 @@ void storage_init(int chosen_i2cif, int chosen_i2c_addr)
 		pp_printf("sdbfs: found at %i in Flash\n",
 				entry_points_flash[i]);
 		wrc_sdb.drvdata = NULL;
-		wrc_sdb.blocksize = FLASH_BLOCKSIZE;
+		wrc_sdb.blocksize = storage_cfg.blocksize;
 		wrc_sdb.entrypoint = entry_points_flash[i];
 		wrc_sdb.read = sdb_flash_read;
 		wrc_sdb.write = sdb_flash_write;
@@ -742,6 +745,19 @@ out:
 
 #ifdef CONFIG_GENSDBFS
 
+int storage_read_hdl_cfg(void)
+{
+	get_storage_info(&storage_cfg.memtype, &storage_cfg.baseadr, &storage_cfg.blocksize);
+	if (storage_cfg.memtype == MEM_FLASH && storage_cfg.blocksize == 0) {
+		storage_cfg.valid = 0;
+		/* keep default blocksize for backwards compatibility */
+		storage_cfg.blocksize = FLASH_BLOCKSIZE;
+	}
+	else
+		storage_cfg.valid = 1;
+	return 0;
+}
+
 extern uint32_t _binary_tools_sdbfs_default_bin_start[];
 extern uint32_t _binary_tools_sdbfs_default_bin_end[];
 
@@ -750,11 +766,14 @@ static inline unsigned long SDB_ALIGN(unsigned long x, int blocksize)
 	return (x + (blocksize - 1)) & ~(blocksize - 1); 
 }
 
-int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
+int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint32_t blocksize, uint8_t i2c_adr)
 {
+	if (mem_type == MEM_FLASH && blocksize == 0)
+		return -EINVAL;
+
 	if (mem_type == MEM_FLASH) {
 		pp_printf("Erasing Flash(0x%x)...\n", base_adr);
-		sdb_flash_erase(NULL, base_adr, SDBFS_REC * FLASH_BLOCKSIZE);
+		sdb_flash_erase(NULL, base_adr, SDBFS_REC * blocksize);
 	}
 	else if (mem_type == MEM_EEPROM) {
 		pp_printf("Erasing EEPROM %d (0x%x)...\n", i2c_adr, base_adr);
@@ -771,7 +790,7 @@ int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
 	return 0;
 }
 
-int storage_gensdbfs(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
+int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize, uint8_t i2c_adr)
 {
 	struct sdb_device *sdbfs = (struct sdb_device*) _binary_tools_sdbfs_default_bin_start;
 	struct sdb_interconnect *sdbfs_dir = (struct sdb_interconnect*) _binary_tools_sdbfs_default_bin_start;
@@ -779,14 +798,13 @@ int storage_gensdbfs(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
 	int i;
 	char buf[19] = {0};
 	int cur_adr, size;
-	int blocksize = 1;
 	uint32_t val;
 
 	if (mem_type == MEM_FLASH && base_adr == 0)
 		return -EINVAL;
 
-	if (mem_type == MEM_FLASH)
-		blocksize = FLASH_BLOCKSIZE;
+	if (mem_type == MEM_FLASH && blocksize == 0)
+		return -EINVAL;
 
 	/* first file starts after the SDBFS description */
 	cur_adr = base_adr + SDB_ALIGN(SDBFS_REC*sizeof(struct sdb_device), blocksize);
@@ -814,7 +832,7 @@ int storage_gensdbfs(int mem_type, uint32_t base_adr, uint8_t i2c_adr)
 		pp_printf("Formatting SDBFS in Flash(0x%x)...\n", base_adr);
 		/* each file is in a separate block, therefore erase SDBFS_REC
 		 * number of blocks */
-		sdb_flash_erase(NULL, base_adr, SDBFS_REC * FLASH_BLOCKSIZE);
+		sdb_flash_erase(NULL, base_adr, SDBFS_REC * blocksize);
 		for (i=0; i<SDBFS_REC; ++i) {
 			sdb_flash_write(NULL, base_adr + i*size, &sdbfs[i], size);
 		}

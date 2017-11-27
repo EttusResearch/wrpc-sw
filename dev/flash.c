@@ -9,6 +9,7 @@
 #include <wrc.h>
 #include <flash.h>
 #include <types.h>
+#include <storage.h>
 
 #define SDBFS_BIG_ENDIAN
 #include <libsdbfs.h>
@@ -114,14 +115,14 @@ int flash_erase(uint32_t addr, int count)
 	int sectors;
 
 	/*calc number of sectors to be removed*/
-	if(count % FLASH_BLOCKSIZE > 0)
+	if(count % storage_cfg.blocksize > 0)
 		sectors = 1;
 	else
 		sectors = 0;
-	sectors += (count / FLASH_BLOCKSIZE);
+	sectors += (count / storage_cfg.blocksize);
 
 	for(i=0; i<sectors; ++i) {
-		flash_serase(addr + i*FLASH_BLOCKSIZE);
+		flash_serase(addr + i*storage_cfg.blocksize);
 		while(flash_rsr() & 0x01);
 	}
 
