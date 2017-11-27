@@ -29,6 +29,17 @@ void get_hw_name(char *str)
 }
 
 /****************************
+ *       Flash info
+ ***************************/
+void get_storage_info(int *memtype, uint32_t *sdbfs_baddr, uint32_t *blocksize)
+{
+	/* convert sector size from KB to bytes */
+	*blocksize = SYSC_HWFR_STORAGE_SEC_R(syscon->HWFR) * 1024;
+	*sdbfs_baddr = syscon->SDBFS;
+	*memtype = SYSC_HWFR_STORAGE_TYPE_R(syscon->HWFR);
+}
+
+/****************************
  *        TIMER
  ***************************/
 void timer_init(uint32_t enable)

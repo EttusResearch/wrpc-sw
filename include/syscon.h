@@ -50,6 +50,7 @@ struct SYSCON_WB {
 	uint32_t GPCR;		/*GPIO Clear Register */
 	uint32_t HWFR;		/*Hardware Feature Register */
 	uint32_t HWIR;		/*Hardware Info Register */
+	uint32_t SDBFS;		/*Flash SDBFS Info Register */
 	uint32_t TCR;		/*Timer Control Register */
 	uint32_t TVR;		/*Timer Counter Value Register */
 	uint32_t DIAG_INFO;
@@ -127,6 +128,7 @@ static inline int sysc_get_memsize(void)
 
 #define HW_NAME_LENGTH 5 /* 4 letters + '\0' */
 void get_hw_name(char *str);
+void get_storage_info(int *memtype, uint32_t *sdbfs_baddr, uint32_t *blocksize);
 
 #define DIAG_RW_BANK 0
 #define DIAG_RO_BANK 1
