@@ -142,8 +142,8 @@ int wdiag_set_valid(int enable);
 int wdiag_get_valid(void);
 int wdiag_get_snapshot(void);
 void wdiags_write_servo_state(int wr_mode, uint8_t servostate, uint64_t mu,
-			      uint64_t dms, int32_t asym, int32_t cko, int32_t setp,
-			      int32_t ucnt);
+			      uint64_t dms, int32_t asym, int32_t cko,
+			      int32_t setp, int32_t ucnt);
 void wdiags_write_port_state(int link, int locked);
 void wdiags_write_ptp_state(uint8_t ptpstate);
 void wdiags_write_aux_state(uint32_t aux_states);

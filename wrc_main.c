@@ -70,12 +70,12 @@ static void wrc_initialize(void)
 
 	if (get_persistent_mac(ONEWIRE_PORT, mac_addr) == -1) {
 		pp_printf("Unable to determine MAC address\n");
-		mac_addr[0] = 0x22;	//
-		mac_addr[1] = 0x33;	//
-		mac_addr[2] = 0x44;	// fallback MAC if get_persistent_mac fails
-		mac_addr[3] = 0x55;	//
-		mac_addr[4] = 0x66;	//
-		mac_addr[5] = 0x77;	//
+		mac_addr[0] = 0x22;	/*
+		mac_addr[1] = 0x33;	*
+		mac_addr[2] = 0x44;	* fallback MAC if get_persistent_mac fails
+		mac_addr[3] = 0x55;	*
+		mac_addr[4] = 0x66;	*
+		mac_addr[5] = 0x77;	*/
 	}
 
 	pp_printf("Local MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n",
@@ -92,7 +92,7 @@ static void wrc_initialize(void)
 	minic_init();
 	shw_pps_gen_init();
 	wrc_ptp_init();
-	//try reading t24 phase transition from EEPROM
+	/* try reading t24 phase transition from EEPROM */
 	calib_t24p(WRC_MODE_MASTER, &cal_phase_transition);
 	spll_very_init();
 	usleep_init();
@@ -228,7 +228,7 @@ static void account_task(struct wrc_task *t, int done_sth)
 		delta += 1000 * 1000 * 1000;
 
 	t->nanos += delta;
-	if (t-> nanos > 1000 * 1000 * 1000) {
+	if (t->nanos > 1000 * 1000 * 1000) {
 		t->nanos -= 1000 * 1000 * 1000;
 		t->seconds++;
 	}
