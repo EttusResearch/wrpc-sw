@@ -72,8 +72,6 @@ int storage_init_add(const char *args[]);
 int storage_init_show(void);
 int storage_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next);
 
-#ifdef CONFIG_GENSDBFS
-
 struct storage_config{
 	int memtype;
 	int valid;
@@ -83,15 +81,16 @@ struct storage_config{
 
 extern struct storage_config storage_cfg;
 
-
 #define MEM_FLASH     0
 #define MEM_EEPROM    1
 #define MEM_1W_EEPROM 2
 #define SDBFS_REC 5
+
 int storage_read_hdl_cfg(void);
+
+#ifdef CONFIG_GENSDBFS
 int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint32_t blocksize, uint8_t i2c_adr);
 int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize, uint8_t i2c_adr);
-
 #endif
 
 #endif

@@ -743,8 +743,6 @@ out:
 	return ret;
 }
 
-#ifdef CONFIG_GENSDBFS
-
 int storage_read_hdl_cfg(void)
 {
 	get_storage_info(&storage_cfg.memtype, &storage_cfg.baseadr, &storage_cfg.blocksize);
@@ -757,6 +755,8 @@ int storage_read_hdl_cfg(void)
 		storage_cfg.valid = 1;
 	return 0;
 }
+
+#ifdef CONFIG_GENSDBFS
 
 extern uint32_t _binary_tools_sdbfs_default_bin_start[];
 extern uint32_t _binary_tools_sdbfs_default_bin_end[];
