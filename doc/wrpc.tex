@@ -1849,6 +1849,34 @@ tools used to build and run it, you can write to our mailing list
 
   \code{sdb} & prints devices connected to the Wishbone bus inside WRPC \\
 
+  \code{sdb fs <memtype> <baseadr> <param>} & creates SDBFS image under
+    specified \code{<baseadr>} in selected storage depending on \code{<memtype>}
+    ({\bf 0} - Flash, {\bf 1} - I2C EEPROM, {\bf 2} - 1-Wire EEPROM). The meaning
+    of last parameter \code{<param>} depends on the type of selected storage. It
+    is either the sector size in kilobytes (for Flash) or I2C chip address (for
+    I2C EEPROM). Command \code{sdb} is available if \texttt{CONFIG\_GENSDBFS}
+    is set.\\
+
+  \code{sdb fs 0} & creates SDBFS image in Flash memory. Base address and sector
+    size are taken from HDL Syscon registers for SPEC/SVEC boards. If you want
+    to use it for custom board, base address and sector size must be specified
+    as VHDL generic parameters of the WR PTP Core. Command \code{sdb} is
+    available if \texttt{CONFIG\_GENSDBFS} is set.\\
+
+  \code{sdb fse <memtype> <baseadr> <param>} & erases SDBFS image under
+    specified \code{<baseadr>} from selected storage depending on
+    \code{<memtype>} ({\bf 0} - Flash, {\bf 1} - I2C EEPROM, {\bf 2} - 1-Wire
+    EEPROM). The meaning of last parameter \code{<param>} depends on the type
+    of selected storage. It is either the sector size in kilobytes (for Flash)
+    or I2C chip address (for I2C EEPROM). Command \code{sdb} is available
+    if \texttt{CONFIG\_GENSDBFS} is set.\\
+
+  \code{sdb fse 0} & erases SDBFS image from Flash memory. Base address and sector
+    size are taken from HDL Syscon registers for SPEC/SVEC boards. If you want
+    to use it for custom board, base address and sector size must be specified
+    as VHDL generic parameters of the WR PTP Core. Command \code{sdb} is
+    available if \texttt{CONFIG\_GENSDBFS} is set.\\
+
   \code{sfp add <PN> <deltaTx> <deltaRx> <alpha>} & stores calibration
     parameters for SFP to a file in Flash/EEPROM \\
 

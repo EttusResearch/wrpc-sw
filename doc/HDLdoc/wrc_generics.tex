@@ -8,6 +8,17 @@
   g\_with\_external\_clock\_input & boolean & false &
   enable external clock and 1-PPS inputs. The PLL inside WRPC will lock to
   external 10 MHz and 1-PPS signal when operating in GrandMaster mode\\
+  \hline
+  g\_board\_name & string & "NA  " & board name, exported by WRPC software as
+  SNMP object for diagnostics\\
+  \hline
+  g\_flash\_secsz\_kb & integer & 256 & Flash memory sector size in kilobytes.
+  Available through a Wishbone register, used by WRPC software to read/write
+  SDBFS image\\
+  \hline
+  g\_flash\_sdbfs\_baddr & integer & 0x600000 & Default base address in Flash
+  memory where \code{sdb fs} command should store an empty SDBFS image\\
+  \hline
   g\_phys\_uart & boolean & true & enable physical UART interface\\
   \hline
   g\_virtual\_uart & boolean & false & enable virtual UART interface\\
