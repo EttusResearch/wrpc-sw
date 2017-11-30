@@ -9,6 +9,7 @@
 #include <wrc.h>
 #include <flash.h>
 #include <types.h>
+#include <storage.h>
 
 #define SDBFS_BIG_ENDIAN
 #include <libsdbfs.h>
@@ -19,6 +20,7 @@
 static void delay(void)
 {
 	int i;
+
 	for (i = 0; i < (int)(CPU_CLOCK/10000000); i++)
 		asm volatile ("nop");
 }
@@ -54,7 +56,7 @@ static uint8_t bbspi_transfer(int cspin, uint8_t val)
 /*
  * Init function (just set the SPI pins for idle)
  */
-void flash_init()
+void flash_init(void)
 {
 	gpio_out(GPIO_SPI_NCS, 1);
 	gpio_out(GPIO_SPI_SCLK, 0);
@@ -68,17 +70,17 @@ int flash_write(uint32_t addr, uint8_t *buf, int count)
 {
 	int i;
 
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0x06);
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0x02);
-	bbspi_transfer(0,(addr & 0xFF0000) >> 16);
-	bbspi_transfer(0,(addr & 0xFF00) >> 8);
-	bbspi_transfer(0,(addr & 0xFF));
-	for ( i = 0; i < count; i++ ) {
-		bbspi_transfer(0,buf[i]);
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0x06);
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0x02);
+	bbspi_transfer(0, (addr & 0xFF0000) >> 16);
+	bbspi_transfer(0, (addr & 0xFF00) >> 8);
+	bbspi_transfer(0, (addr & 0xFF));
+	for (i = 0; i < count; i++) {
+		bbspi_transfer(0, buf[i]);
 	}
-	bbspi_transfer(1,0);
+	bbspi_transfer(1, 0);
 
 	/* make sure the write is complete */
 	while (flash_rsr() & 0x01) {
@@ -94,16 +96,17 @@ int flash_write(uint32_t addr, uint8_t *buf, int count)
 int flash_read(uint32_t addr, uint8_t *buf, int count)
 {
 	int i;
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0x0b);
-	bbspi_transfer(0,(addr & 0xFF0000) >> 16);
-	bbspi_transfer(0,(addr & 0xFF00) >> 8);
-	bbspi_transfer(0,(addr & 0xFF));
-	bbspi_transfer(0,0);
-	for ( i = 0; i < count; i++ ) {
+
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0x0b);
+	bbspi_transfer(0, (addr & 0xFF0000) >> 16);
+	bbspi_transfer(0, (addr & 0xFF00) >> 8);
+	bbspi_transfer(0, (addr & 0xFF));
+	bbspi_transfer(0, 0);
+	for (i = 0; i < count; i++) {
 		buf[i] = bbspi_transfer(0, 0);
 	}
-	bbspi_transfer(1,0);
+	bbspi_transfer(1, 0);
 
 	return count;
 }
@@ -114,15 +117,16 @@ int flash_erase(uint32_t addr, int count)
 	int sectors;
 
 	/*calc number of sectors to be removed*/
-	if(count % FLASH_BLOCKSIZE > 0)
+	if (count % storage_cfg.blocksize > 0)
 		sectors = 1;
 	else
 		sectors = 0;
-	sectors += (count / FLASH_BLOCKSIZE);
+	sectors += (count / storage_cfg.blocksize);
 
-	for(i=0; i<sectors; ++i) {
-		flash_serase(addr + i*FLASH_BLOCKSIZE);
-		while(flash_rsr() & 0x01);
+	for (i = 0; i < sectors; ++i) {
+		flash_serase(addr + i*storage_cfg.blocksize);
+		while (flash_rsr() & 0x01)
+			;
 	}
 
 	return count;
@@ -133,45 +137,46 @@ int flash_erase(uint32_t addr, int count)
  */
 void flash_serase(uint32_t addr)
 {
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0x06);
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0xD8);
-	bbspi_transfer(0,(addr & 0xFF0000) >> 16);
-	bbspi_transfer(0,(addr & 0xFF00) >> 8);
-	bbspi_transfer(0,(addr & 0xFF));
-	bbspi_transfer(1,0);
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0x06);
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0xD8);
+	bbspi_transfer(0, (addr & 0xFF0000) >> 16);
+	bbspi_transfer(0, (addr & 0xFF00) >> 8);
+	bbspi_transfer(0, (addr & 0xFF));
+	bbspi_transfer(1, 0);
 }
 
 /*
  * Bulk erase
  */
 void
-flash_berase()
+flash_berase(void)
 {
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0x06);
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0xc7);
-	bbspi_transfer(1,0);
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0x06);
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0xc7);
+	bbspi_transfer(1, 0);
 }
 
 /*
  * Read status register
  */
-uint8_t flash_rsr()
+uint8_t flash_rsr(void)
 {
 	uint8_t retval;
-	bbspi_transfer(1,0);
-	bbspi_transfer(0,0x05);
-	retval = bbspi_transfer(0,0);
-	bbspi_transfer(1,0);
+
+	bbspi_transfer(1, 0);
+	bbspi_transfer(0, 0x05);
+	retval = bbspi_transfer(0, 0);
+	bbspi_transfer(1, 0);
 	return retval;
 }
 
 
 /*****************************************************************************/
-/* 			SDB						     */
+/*			SDB						     */
 /*****************************************************************************/
 
 /* The sdb filesystem itself */
@@ -202,7 +207,8 @@ static void flash_sdb_list(struct sdbfs *fs)
 {
 	struct sdb_device *d;
 	int new = 1;
-	while ( (d = sdbfs_scan(fs, new)) != NULL) {
+
+	while ((d = sdbfs_scan(fs, new)) != NULL) {
 		d->sdb_component.product.record_type = '\0';
 		pp_printf("file 0x%08x @ %4i, name %19s\n",
 			  (int)(d->sdb_component.product.device_id),
@@ -215,19 +221,19 @@ static void flash_sdb_list(struct sdbfs *fs)
 /*
  * Check for SDB presence on flash
  */
-int flash_sdb_check()
+int flash_sdb_check(void)
 {
 	uint32_t magic = 0;
 	int i;
 
 	uint32_t entry_point[] = {
-				0x000000,	// flash base
-				0x100,		// second page in flash
-				0x200,		// IPMI with MultiRecord
-				0x300,		// IPMI with larger MultiRecord
-				0x170000,	// after first FPGA bitstream
-				0x2e0000	// after MultiBoot bitstream
-				};
+			0x000000,	/* flash base */
+			0x100,		/* second page in flash */
+			0x200,		/* IPMI with MultiRecord */
+			0x300,		/* IPMI with larger MultiRecord */
+			0x170000,	/* after first FPGA bitstream */
+			0x2e0000	/* after MultiBoot bitstream */
+			};
 
 	for (i = 0; i < ARRAY_SIZE(entry_point); i++) {
 		flash_read(entry_point[i], (uint8_t *)&magic, 4);

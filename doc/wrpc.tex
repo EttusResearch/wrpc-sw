@@ -555,35 +555,6 @@ Among plenty of messages you should be able to find something very similar to:
 [1275527.296757]       Product name: FmcDio5cha
 \end{lstlisting}
 
-
-By default, when loading the \textit{spec.ko} driver, FPGA gets programmed with
-the "golden" bitstream. Starting from version 3.0, WR PTP Core uses a flash
-memory chip on the carrier as a default place for storing the calibration
-parameters and the init script. Also the storage format of this information is
-now better organized in the files of the SDBFS filesystem. Therefore, starting
-from v3.0 you have to write the SDBFS filesystem image to the flash
-before running the WRPC. You can download the image from \textit{ohwr.org}:
-\begin{lstlisting}
-$ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
-\end{lstlisting}
-
-It contains all the files required by the core. They are empty, but have to
-exist in the SDBFS structure to be written later as described in section
-\ref{Writing configuration}. To write the filesystem image to flash, please
-execute the following command:
-\begin{lstlisting}
-$ sudo tools/flash-write -c 0x0 0 1507712 < <your_location>/sdbfs-flash.bin
-\end{lstlisting}
-
-\noindent\textbf{Note:} If you have more than one SPEC board in your computer,
-you can use \code{-b} parameter which takes the PCI bus address of the card you
-want to program. This can be found in the list of the PCI devices installed in
-the system (\code{lspci}).
-
-\noindent\textbf{Note:} Please refer to section \ref{Writing SDBFS image in
-standalone configuration} for instructions on how to write the SDBFS image to a
-standalone SPEC or custom hardware.\\
-
 Now, you are ready to program the FPGA with your synthesized bitstream from
 \texttt{<your\_location>/wr-cores/syn/spec\_ref\_design/spec\_wr\_ref\_top.bin}
 \begin{lstlisting}
@@ -605,9 +576,31 @@ WRPC shell:
 \begin{lstlisting}
 $ sudo tools/spec-vuart
 \end{lstlisting}
-
 If you are able to see the shell prompt \textit{wrc\#} this means the Core
-is up and running on your SPEC card. Congratulations !
+is up and running on your SPEC card. Congratulations !\\
+
+Starting from version 3.0, WR PTP Core uses a flash memory chip on the carrier
+as a default place for storing calibration parameters and an init script.
+The storage format of this information is organized in SDBFS filesystem.
+Therefore, starting from v3.0 you have to write the empty
+SDBFS filesystem image to the flash before running the WRPC. The simplest way of
+doing this is by calling a WR PTP Core shell command:
+\begin{lstlisting}
+wrc# sdb fs 0
+\end{lstlisting}
+You should see the output similar to:
+\begin{lstlisting}[basicstyle=\scriptsize\ttfamily]
+filename: .                 ; first: 2e0000; last: 32007f
+filename: wr-init           ; first: 2f0000; last: 2f00ff
+filename: calibration       ; first: 300000; last: 30007f
+filename: mac-address       ; first: 310000; last: 310005
+filename: sfp-database      ; first: 320000; last: 32007f
+Formatting SDBFS in Flash(0x2e0000)...
+\end{lstlisting}
+
+The other two methods: through the PCIe bus and using a Xilinx JTAG cable are
+described in appendix \ref{appendix:writing_sdbfs}.
+
 
 % ==========================================================================
 \subsection{Programming FPGA on other boards}
@@ -1849,6 +1842,34 @@ tools used to build and run it, you can write to our mailing list
 
   \code{sdb} & prints devices connected to the Wishbone bus inside WRPC \\
 
+  \code{sdb fs <memtype> <baseadr> <param>} & creates SDBFS image under
+    specified \code{<baseadr>} in selected storage depending on \code{<memtype>}
+    ({\bf 0} - Flash, {\bf 1} - I2C EEPROM, {\bf 2} - 1-Wire EEPROM). The meaning
+    of last parameter \code{<param>} depends on the type of selected storage. It
+    is either the sector size in kilobytes (for Flash) or I2C chip address (for
+    I2C EEPROM). Command \code{sdb} is available if \texttt{CONFIG\_GENSDBFS}
+    is set.\\
+
+  \code{sdb fs 0} & creates SDBFS image in Flash memory. Base address and sector
+    size are taken from HDL Syscon registers for SPEC/SVEC boards. If you want
+    to use it for custom board, base address and sector size must be specified
+    as VHDL generic parameters of the WR PTP Core. Command \code{sdb} is
+    available if \texttt{CONFIG\_GENSDBFS} is set.\\
+
+  \code{sdb fse <memtype> <baseadr> <param>} & erases SDBFS image under
+    specified \code{<baseadr>} from selected storage depending on
+    \code{<memtype>} ({\bf 0} - Flash, {\bf 1} - I2C EEPROM, {\bf 2} - 1-Wire
+    EEPROM). The meaning of last parameter \code{<param>} depends on the type
+    of selected storage. It is either the sector size in kilobytes (for Flash)
+    or I2C chip address (for I2C EEPROM). Command \code{sdb} is available
+    if \texttt{CONFIG\_GENSDBFS} is set.\\
+
+  \code{sdb fse 0} & erases SDBFS image from Flash memory. Base address and sector
+    size are taken from HDL Syscon registers for SPEC/SVEC boards. If you want
+    to use it for custom board, base address and sector size must be specified
+    as VHDL generic parameters of the WR PTP Core. Command \code{sdb} is
+    available if \texttt{CONFIG\_GENSDBFS} is set.\\
+
   \code{sfp add <PN> <deltaTx> <deltaRx> <alpha>} & stores calibration
     parameters for SFP to a file in Flash/EEPROM \\
 
@@ -1982,8 +2003,41 @@ tools used to build and run it, you can write to our mailing list
 
 % ##########################################################################
 \clearpage
-\section{Writing SDBFS image in standalone configuration}
-\label{Writing SDBFS image in standalone configuration}
+\section{Other ways to write SDBFS image to your Flash memory}
+\label{appendix:writing_sdbfs}
+
+\subsection{Writing SDBFS image through PCIe bus}
+To write SDBFS filesystem image to the Flash memory of a hosted SPEC card, you
+can use the \texttt{flash-write} tool available in the \emph{spec-sw} drivers
+package.
+
+First, please download the SDBFS image from \textit{ohwr.org}:
+\begin{lstlisting}
+$ wget http://www.ohwr.org/attachments/download/4060/sdbfs-flash.bin
+\end{lstlisting}
+It contains all the files required by the core. They are empty, but have to
+exist in the SDBFS structure to be filled later from the WR PTP Core shell or
+SNMP.\\
+
+Before calling the tool, you need to have SPEC drivers loaded in your system:
+\begin{lstlisting}
+$ cd <your_location>/spec-sw
+$ sudo insmod fmc-bus/kernel/fmc.ko
+$ sudo insmod kernel/spec.ko
+\end{lstlisting}
+
+To write the filesystem image to flash, please execute the following
+command:
+\begin{lstlisting}
+$ sudo tools/flash-write -c 0x0 0 1507712 < <your_location>/sdbfs-flash.bin
+\end{lstlisting}
+
+\noindent\textbf{Note:} If you have more than one SPEC board in your computer,
+you can use \code{-b} parameter which takes the PCI bus address of the card you
+want to program. This can be found in the list of the PCI devices installed in
+the system (\code{lspci}).
+
+\subsection{Writing SDBFS image in standalone configuration}
 
 If you use SPEC board in a host-less environment, or you use custom
 hardware and SPEC drivers/tools cannot be used, there is still a

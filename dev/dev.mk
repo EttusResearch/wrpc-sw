@@ -39,5 +39,11 @@ obj-y += $(pfilter-y:.bin=.o)
 rules-%.o: rules-%.bin
 	$(OBJCOPY) -I binary  $(OBJCOPY-TARGET-y) $< $@
 
+# sdbfs image
+obj-y += $(sdbfsimg-y:.bin=.o)
+
+sdbfs-default.o: tools/sdbfs-default.bin
+	$(OBJCOPY) -I binary  $(OBJCOPY-TARGET-y) $< $@
+
 $(pfilter-y): tools
 	tools/pfilter-builder

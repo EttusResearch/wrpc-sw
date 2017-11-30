@@ -29,6 +29,17 @@ void get_hw_name(char *str)
 }
 
 /****************************
+ *       Flash info
+ ***************************/
+void get_storage_info(int *memtype, uint32_t *sdbfs_baddr, uint32_t *blocksize)
+{
+	/* convert sector size from KB to bytes */
+	*blocksize = SYSC_HWFR_STORAGE_SEC_R(syscon->HWFR) * 1024;
+	*sdbfs_baddr = syscon->SDBFS;
+	*memtype = SYSC_HWFR_STORAGE_TYPE_R(syscon->HWFR);
+}
+
+/****************************
  *        TIMER
  ***************************/
 void timer_init(uint32_t enable)
@@ -50,7 +61,9 @@ void timer_delay(uint32_t tics)
 {
 	uint32_t t_end;
 
-//  timer_init(1);
+	/*
+	timer_init(1);
+	*/
 
 	t_end = timer_get_tics() + tics;
 	while (time_before(timer_get_tics(), t_end))
@@ -124,16 +137,16 @@ void net_rst(void)
 
 int wdiag_set_valid(int enable)
 {
-	if(enable)
+	if (enable)
 		syscon->WDIAG_CTRL |= SYSC_WDIAG_CTRL_DATA_VALID;
-	if(!enable)
+	if (!enable)
 		syscon->WDIAG_CTRL &= ~SYSC_WDIAG_CTRL_DATA_VALID;
 	return (int)(syscon->WDIAG_CTRL & SYSC_WDIAG_CTRL_DATA_VALID);
 }
 
 int wdiag_get_valid(void)
 {
-	if(syscon->WDIAG_CTRL & SYSC_WDIAG_CTRL_DATA_VALID)
+	if (syscon->WDIAG_CTRL & SYSC_WDIAG_CTRL_DATA_VALID)
 		return 1;
 	else
 		return 0;
@@ -141,15 +154,15 @@ int wdiag_get_valid(void)
 
 int wdiag_get_snapshot(void)
 {
-	if(syscon->WDIAG_CTRL & SYSC_WDIAG_CTRL_DATA_SNAPSHOT)
+	if (syscon->WDIAG_CTRL & SYSC_WDIAG_CTRL_DATA_SNAPSHOT)
 		return 1;
 	else
 		return 0;
 }
 
 void wdiags_write_servo_state(int wr_mode, uint8_t servostate, uint64_t mu,
-			      uint64_t dms, int32_t asym, int32_t cko, int32_t setp,
-			      int32_t ucnt)
+			      uint64_t dms, int32_t asym, int32_t cko,
+			      int32_t setp, int32_t ucnt)
 {
 	syscon->WDIAG_SSTAT   = wr_mode ? SYSC_WDIAG_SSTAT_WR_MODE:0;
 	syscon->WDIAG_SSTAT  |= SYSC_WDIAG_SSTAT_SERVOSTATE_W(servostate);
@@ -166,6 +179,7 @@ void wdiags_write_servo_state(int wr_mode, uint8_t servostate, uint64_t mu,
 void wdiags_write_port_state(int link, int locked)
 {
 	uint32_t val = 0;
+
 	val  = link   ? SYSC_WDIAG_PSTAT_LINK   : 0;
 	val |= locked ? SYSC_WDIAG_PSTAT_LOCKED : 0;
 	syscon->WDIAG_PSTAT = val;
@@ -196,5 +210,5 @@ void wdiags_write_time(uint64_t sec, uint32_t nsec)
 
 void wdiags_write_temp(uint32_t temp)
 {
-	syscon->WDIAG_TEMP=temp;
+	syscon->WDIAG_TEMP = temp;
 }

@@ -61,15 +61,36 @@ void storage_init(int i2cif, int i2c_addr);
 
 int storage_sfpdb_erase(void);
 int storage_match_sfp(struct s_sfpinfo *sfp);
-int storage_get_sfp(struct s_sfpinfo * sfp,
-                       uint8_t add, uint8_t pos);
+int storage_get_sfp(struct s_sfpinfo *sfp, uint8_t add, uint8_t pos);
 
-int storage_phtrans(uint32_t * val,
-		      uint8_t write);
+int storage_phtrans(uint32_t *val, uint8_t write);
 
 int storage_init_erase(void);
 int storage_init_add(const char *args[]);
 int storage_init_show(void);
 int storage_init_readcmd(uint8_t *buf, uint8_t bufsize, uint8_t next);
+
+struct storage_config {
+	int memtype;
+	int valid;
+	uint32_t blocksize;
+	uint32_t baseadr;
+};
+
+extern struct storage_config storage_cfg;
+
+#define MEM_FLASH     0
+#define MEM_EEPROM    1
+#define MEM_1W_EEPROM 2
+#define SDBFS_REC 5
+
+int storage_read_hdl_cfg(void);
+
+#ifdef CONFIG_GENSDBFS
+int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint32_t blocksize,
+	uint8_t i2c_adr);
+int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize,
+	uint8_t i2c_adr);
+#endif
 
 #endif

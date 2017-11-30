@@ -29,7 +29,7 @@
   \hline
   rst\_n\_i & in & 1 & main reset input, active-low (hold for at least 5
   \tts{clk\_sys\_i} cycles)\\
-  \hline
+  \hline\pagebreak
   \hdltablesection{Timing system}\\
   \hline
   dac\_hpll\_load\_p1\_o & out & 1 & validates DAC value on data port \\
@@ -89,7 +89,7 @@
     when \tts{g\_pcs\_16bit = true}}\\
   \cline{1-3}
   phy16\_i & in & rec & \\
-  \hline
+  \hline\pagebreak
   \hdltablesection{GPIO}\\
   \hline
   led\_act\_o & out & 1 & signal for driving Ethernet activity LED\\
@@ -103,7 +103,7 @@
   scl\_i & in  & 1 & \\
   \cline{1-3}
   scl\_o & out & 1 & \\
-  \hline\pagebreak
+  \hline
   sfp\_sda\_i & in  & 1 & \multirowpar{4}{I2C interface for EEPROM inside SFP module}\\
   \cline{1-3}
   sfp\_sda\_o & out & 1 & \\

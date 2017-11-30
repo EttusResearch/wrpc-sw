@@ -229,12 +229,21 @@ config SDB_STORAGE
 	  Use SDB to manage flash and eeproms (both W1 and I2C). If not, legacy code
 	  (eeprom only) will be selected.
 
+config GENSDBFS
+  depends on SDB_STORAGE
+  default y
+  boolean "Shell command for SDBFS generation"
+  help
+    This option adds _sdb fs_ command to write empty SDBFS filesystem
+    image in Flash/EEPROM.
+
 config LEGACY_EEPROM
 	depends on WR_NODE
 	boolean
 	default !SDB_STORAGE
 
 config VLAN
+  depends on WR_NODE
 	boolean "Filter and rx/tx frames in a VLAN (as opposed to untagged)"
 
 config VLAN_NR
@@ -280,6 +289,7 @@ config WR_NODE_SIM
 	  these frames.
 
 config ABSCAL
+  depends on WR_NODE
 	default y
 	boolean "Support absolute calibration"
 	help
