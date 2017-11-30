@@ -531,6 +531,18 @@ config LATENCY_SYSLOG
 	bool "Report latency problems to syslog"
 	default y
 
+config DEFAULT_PRINT_TASK_TIME_THRESHOLD
+        depends on DEVELOPER
+        default 0
+        int "Default threshold of printing task execution time"
+        help
+          If a task executes longer than a given number, its name and
+          an execution time will be printed to the console. Additionally,
+          setting this value triggers printing messages if particular task
+          runs longer than ever before. Setting to 0 disabled this
+          functionality. This value can be changed in run-time by the command
+          "ps max <msecs>".
+
 
 # This is needed to size the pp_instance data strucuture. Instead of
 # including the ppsi autoconf.h, with duplicate definitions, define it

@@ -34,6 +34,10 @@
 #include "wrc_ptp.h"
 #include "system_checks.h"
 
+#ifndef CONFIG_DEFAULT_PRINT_TASK_TIME_THRESHOLD
+#define CONFIG_DEFAULT_PRINT_TASK_TIME_THRESHOLD 0
+#endif
+
 int wrc_ui_mode = UI_SHELL_MODE;
 int wrc_ui_refperiod = TICS_PER_SECOND; /* 1 sec */
 int wrc_phase_tracking = 1;
@@ -45,8 +49,7 @@ int wrc_vlan_number = CONFIG_VLAN_NR;
 
 static uint32_t prev_nanos_for_profile;
 static uint32_t prev_ticks_for_profile;
-#define DEFAULT_PRINT_TASK_TIME_THRESHOLD 0
-uint32_t print_task_time_threshold = DEFAULT_PRINT_TASK_TIME_THRESHOLD;
+uint32_t print_task_time_threshold = CONFIG_DEFAULT_PRINT_TASK_TIME_THRESHOLD;
 
 static void wrc_initialize(void)
 {
