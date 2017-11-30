@@ -897,6 +897,9 @@ int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize,
 		}
 	}
 
+	/* re-initialize storage after writing sdbfs image */
+	storage_init(WRPC_FMC_I2C, FMC_EEPROM_ADR);
+
 	return mem_type;
 }
 
