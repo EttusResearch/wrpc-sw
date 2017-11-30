@@ -275,7 +275,11 @@ Possible values:
   \snmpentrys{WR-WRPC-MIB}{wrpcPortGroup}{wrpcPortSfpInDB}{
     \underline{Description:}
     Information whether the currently plugged SFP was matched with the
-    calibration values stored in the database.
+    calibration values stored in the database. Possible values:
+    \begin{packed_items_snmp_obj}
+    \item \texttt{notInDataBase\emph{(1)}} -- currently plugged SFP could not be matched with any database entry
+    \item \texttt{inDataBase\emph{(2)}} -- currently plugged SFP was matched with database entry
+    \end{packed_items_snmp_obj}
     \glspar \underline{Related problems:}}
   \snmpentrys{WR-WRPC-MIB}{wrpcPortGroup}{wrpcPortInternalTx}{
     \underline{Description:}
