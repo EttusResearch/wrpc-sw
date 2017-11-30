@@ -1523,24 +1523,46 @@ The node now has a \textit{ps} command, that shows the number of iterations
 and time spent in each \textit{task}. Each task reports when it did
 something (as opposed to just polling the clock or network socket and
 seeing that nothing is there to do); the \textit{iterations} count shows how many
-times the task did something.
+times the task did something. The \textit{max\_ms} show the longest execution
+time of a particular task.
 
 \begin{lstlisting}
-   wrc# ps
-    iterations     seconds.micros    name
-      44288501        4242.816329  idle
-             0           0.000000  spll-bh
-            37           0.016549  shell+gui
-          8992           1.158969  ptp
-          4252           0.037005  uptime
-             1           0.001035  check-link
-             0           0.000000  stats
-             0           0.000000  net-bh
-           568           5.068343  temperature
+wrc# ps
+ iterations     seconds.micros    max_ms name
+     145560          29.007144        75 idle
+          0           0.000000         0 spll-bh
+          6           0.001630         1 shell+gui
+        642           2.540416         8 ptp
+         31           0.000361         1 uptime
+          1           0.050424        51 check-link
+         32           0.011172         9 diags
+          0           0.000000         0 stats
+        235           0.023562         1 net-bh
+         32           0.029157         2 ipv4
+          0           0.000000         0 arp
+          0           0.000000         0 snmp
+          6           0.054566        12 temperature
 \end{lstlisting}
 
 By using ``\texttt{ps reset}'' you can zero all counters to start a new
 test run.
+
+It is possible to configure \texttt{ps} in such way that it prints information
+when any task runs longer than any run before since reset
+(or \texttt{ps reset}) and when it runs longer than a specified value
+in miliseconds.
+For this please use command ``\texttt{ps max <msecs>}'', where
+\texttt{<msecs>} is a number of miliseconds triggering printouts.
+\begin{lstlisting}
+wrc# ps max 10
+task temperature, run for 11 ms
+task temperature, run for 12 ms
+task temperature, run for 11 ms
+wrc# ps
+[...]
+New max run time for a task shell+gui, old 1, new 75
+task shell+gui, run for 75 ms
+\end{lstlisting}
 
 % --------------------------------------------------------------------------
 \subsubsection{Pfilter rules}
@@ -1813,11 +1835,17 @@ tools used to build and run it, you can write to our mailing list
   \code{pll stop <channel>} & stops SoftPLL for the channel \\
 
   \code{ps} & prints the list of running tasks (processes) in the CPU. For
-    each task you get the number of iterations and the CPU time consumed since
-    boot or last reset of values \\
+    each task you get the number of iterations, the maximum execution time
+    (measured with the monotonic clock) and the CPU time consumed (using
+    the RT clock) since boot or last reset of values \\
 
   \code{ps reset} & zeroes the profiling information reported by the \code{ps}
     command \\
+
+  \code{ps max <msecs>} & starts printing all tasks executing longer than
+    a given number of miliseconds. Additionally, it triggers printing messages
+    if particular task runs longer than ever before. Passing ``\code{0}'' as
+    a parameter stops the further printouts. \\
 
   \code{ptp <e2e|p2p>} & selects PTP delay mechanism: end-to-end or peer-to-peer.
     If configured, you can set \texttt{p2p} mode. Alternatively you can use also
