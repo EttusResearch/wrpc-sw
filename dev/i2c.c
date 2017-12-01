@@ -12,17 +12,15 @@
 #include "syscon.h"
 #include "i2c.h"
 
-#define I2C_DELAY 300
-
-void mi2c_delay(void)
+void mi2c_delay(uint32_t delay)
 {
 	int i;
-	for (i = 0; i < I2C_DELAY; i++)
+	for (i = 0; i < delay; i++)
 		asm volatile ("nop");
 }
 
-#define M_SDA_OUT(i, x) { gpio_out(i2c_if[i].sda, x); mi2c_delay(); }
-#define M_SCL_OUT(i, x) { gpio_out(i2c_if[i].scl, x); mi2c_delay(); }
+#define M_SDA_OUT(i, x) { gpio_out(i2c_if[i].sda, x); mi2c_delay(i2c_if[i].loop_delay); }
+#define M_SCL_OUT(i, x) { gpio_out(i2c_if[i].scl, x); mi2c_delay(i2c_if[i].loop_delay); }
 #define M_SDA_IN(i) gpio_in(i2c_if[i].sda)
 
 void mi2c_start(uint8_t i2cif)

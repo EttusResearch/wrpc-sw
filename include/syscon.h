@@ -91,10 +91,13 @@ struct SYSCON_WB {
 
 #define WRPC_FMC_I2C  0
 #define WRPC_SFP_I2C  1
+#define FMC_I2C_DELAY 15
+#define SFP_I2C_DELAY 300
 
 struct s_i2c_if {
 	uint32_t scl;
 	uint32_t sda;
+	uint32_t loop_delay;
 };
 
 extern struct s_i2c_if i2c_if[2];

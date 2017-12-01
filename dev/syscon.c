@@ -11,8 +11,8 @@
 #include <string.h>
 
 struct s_i2c_if i2c_if[2] = {
-	{SYSC_GPSR_FMC_SCL, SYSC_GPSR_FMC_SDA},
-	{SYSC_GPSR_SFP_SCL, SYSC_GPSR_SFP_SDA}
+	{SYSC_GPSR_FMC_SCL, SYSC_GPSR_FMC_SDA, FMC_I2C_DELAY},
+	{SYSC_GPSR_SFP_SCL, SYSC_GPSR_SFP_SDA, SFP_I2C_DELAY}
 };
 
 volatile struct SYSCON_WB *syscon;
