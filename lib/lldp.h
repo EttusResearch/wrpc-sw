@@ -11,51 +11,46 @@
 
 #ifndef __LLDP_H
 #define __LLDP_H
+#include "minic.h"
+#define LLDP_MCAST_MAC	"\x01\x80\xC2\x00\x00\x0E" /* 802.1AB-2005,
+						      Table 8-1 */
+#define LLDP_ETH_TYP	0x88CC	/* 802.1AB-2005, Table 8-2 */
 
-#define LLDP_MCAST_MAC 	"\x01\x80\xC2\x00\x00\x0E"
-#define LLDP_ETH_TYP 	0x88CC
+#define LLDP_MAX_PKT_LEN	0x9E /* 158 bytes */
+#define TLV_MAX			0xA
+#define LLDP_HEADER		0x2
+#define LLDP_SUBTYPE		0x1
+#define MNT_IF_SUBTYPE		0x6
+#define MNT_IF_NUM		10
 
-#define LLDP_PKT_LEN	0x9E /* 158 bytes */
-#define TLV_MAX		0xA
-#define LLDP_HEADER 	0x2
-#define LLDP_SUBTYPE	0x1
-#define IF_SUBTYPE	0x6
-#define IF_NUM		0x10
+#define LLDP_TX_TICK_INTERVAL	1000
 
-#define LLDP_TX_FQ	1000
-
-enum TLV_TYPE { END_LLDP = 0, 	/* mandatory TLVs */
+#define CHASSIS_ID_TLV_LEN	(1 + ETH_ALEN) /* chassis ID subtype byte
+						* + MAC Len */
+#define CHASSIS_ID_TYPE_MAC	4	/* 802.1AB-2005, table 9-2 */
+#define PORT_ID_TLV_LEN		(1 + ETH_ALEN) /* port ID subtype byte
+						* + MAC Len */
+#define PORT_ID_SUBTYPE_MAC	3	/* 802.1AB-2005, table 9-3 */
+#define TTL_ID_TLV_LEN		2	/* 802.1AB-2005, Figure 9-6 */
+#define TTL_BYTE_MSB		0
+#define TTL_BYTE_LSB		1
+#define PORT_NAME		"wr0"
+#define IPLEN			4	/* len of IP address in bytes */
+#define MNG_ADDR_LEN		(1 + IPLEN) /* MNT addr subtype + IPLEN */
+#define MNG_ADDR_SUBTYPE_IPv4	1	/* ianaAddressFamilyNumbers MIB */
+#define MNG_ADDR_SUBTYPE_MAC	6	/* ianaAddressFamilyNumbers MIB */
+#define MNG_IF_NUM_SUBTYPE_IFINDEX	2 /* 802.1AB-2005, 9.5.9.5 */
+enum TLV_TYPE {
+		END_LLDP = 0,	/* mandatory TLVs */
 		CHASSIS_ID,
 		PORT_ID,
 		TTL,
-		PORT,      	/* optional TLVs */
+		PORT,		/* optional TLVs */
 		SYS_NAME,
 		SYS_DESCR,
 		SYS_CAPLTY,
 		MNG_ADD,
 		USER_DEF
 		};
-
-uint16_t tlv_type_len[TLV_MAX] = {	0x0,	/* LEN_LLDP_END */
-					0x7,	/* LEN_CHASSIS_ID */
-					0x14,	/* LEN_PORT_ID */
-					0x2,	/* LEN_TTL */
-					0x14,	/* LEN_PORT */
-					0x14,	/* LEN_SYS_NAME */
-					0x14,	/* LEN_SYS_DESCR */
-					0x4,	/* LEN_SYS_CAPLTY */
-					0xC	/* LEN_MNG_ADD */
-					};
-
-uint16_t tlv_offset[TLV_MAX] = {	0x79,	/* LEN_LLDP_END */
-					0x0,	/* LEN_CHASSIS_ID */
-					0x9,	/* LEN_PORT_ID */
-					0x1F,	/* LEN_TTL */
-					0x23,	/* LEN_PORT */
-					0x39,	/* LEN_SYS_NAME */
-					0x4F,	/* LEN_SYS_DESCR */
-					0x65,	/* LEN_SYS_CAPLTY */
-					0x6B	/* LEN_MNG_ADD */
-					};
 
 #endif /* __LLDP_H */
