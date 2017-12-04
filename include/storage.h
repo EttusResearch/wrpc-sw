@@ -46,6 +46,12 @@
 #define EE_RET_CORRPT -3
 #define EE_RET_POSERR -4
 
+#ifdef CONFIG_GENSDBFS
+#define HAS_GENSDBFS 1
+#else
+#define HAS_GENSDBFS 0
+#endif
+
 extern uint32_t cal_phase_transition;
 extern uint8_t has_eeprom;
 
@@ -86,11 +92,9 @@ extern struct storage_config storage_cfg;
 
 int storage_read_hdl_cfg(void);
 
-#ifdef CONFIG_GENSDBFS
 int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint32_t blocksize,
 	uint8_t i2c_adr);
 int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize,
 	uint8_t i2c_adr);
-#endif
 
 #endif

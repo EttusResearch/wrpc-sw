@@ -20,17 +20,14 @@
 
 static int cmd_sdb(const char *args[])
 {
-#ifdef CONFIG_GENSDBFS
 	uint8_t i2c_adr = FMC_EEPROM_ADR;
 	int blocksize	= 1;
-#endif
 
 	if (!args[0]) {
 		sdb_print_devices();
 		return 0;
 	}
-#ifdef CONFIG_GENSDBFS
-	if (!args[1])
+	if (!args[1] || !HAS_GENSDBFS)
 		return -EINVAL;
 
 	/* interpret args[3] as i2c adr or blocksize depending on memory type */
@@ -67,7 +64,7 @@ static int cmd_sdb(const char *args[])
 				storage_cfg.blocksize, 0);
 		return 0;
 	}
-#endif
+
 	return -EINVAL;
 }
 

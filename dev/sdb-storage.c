@@ -757,8 +757,6 @@ int storage_read_hdl_cfg(void)
 	return 0;
 }
 
-#ifdef CONFIG_GENSDBFS
-
 extern uint32_t _binary_tools_sdbfs_default_bin_start[];
 extern uint32_t _binary_tools_sdbfs_default_bin_end[];
 
@@ -770,7 +768,7 @@ static inline unsigned long SDB_ALIGN(unsigned long x, int blocksize)
 int storage_sdbfs_erase(int mem_type, uint32_t base_adr, uint32_t blocksize,
 		uint8_t i2c_adr)
 {
-	if (mem_type == MEM_FLASH && blocksize == 0)
+	if (!HAS_GENSDBFS || (mem_type == MEM_FLASH && blocksize == 0))
 		return -EINVAL;
 
 	if (mem_type == MEM_FLASH) {
@@ -805,7 +803,7 @@ int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize,
 	int cur_adr, size;
 	uint32_t val;
 
-	if (mem_type == MEM_FLASH && base_adr == 0)
+	if (!HAS_GENSDBFS || (mem_type == MEM_FLASH && base_adr == 0))
 		return -EINVAL;
 
 	if (mem_type == MEM_FLASH && blocksize == 0)
@@ -902,5 +900,3 @@ int storage_gensdbfs(int mem_type, uint32_t base_adr, uint32_t blocksize,
 
 	return mem_type;
 }
-
-#endif
