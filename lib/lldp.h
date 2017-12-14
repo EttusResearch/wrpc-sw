@@ -23,7 +23,7 @@
 #define MNT_IF_SUBTYPE		0x6
 #define MNT_IF_NUM		10
 
-#define LLDP_TX_TICK_INTERVAL	1000
+#define LLDP_TX_TICK_INTERVAL	10000
 
 #define CHASSIS_ID_TLV_LEN	(1 + ETH_ALEN) /* chassis ID subtype byte
 						* + MAC Len */
