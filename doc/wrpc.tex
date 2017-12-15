@@ -663,8 +663,8 @@ $\Delta_{TX}$, $\Delta_{RX}$ and $\alpha$ parameters associated with them.
 
 \begin{lstlisting}
 wrc# sfp erase
-wrc# sfp add AXGE-1254-0531 180774 148774 72169888
-wrc# sfp add AXGE-3454-0531 180774 148774 -73685416
+wrc# sfp add AXGE-1254-0531 180750 148326 72169888
+wrc# sfp add AXGE-3454-0531 180750 148326 -73685416
 \end{lstlisting}
 
 To check the content of the SFP database you can execute the \textit{sfp show}
@@ -784,7 +784,7 @@ executing:  ptp stop
 PTP stop
 executing:  sfp match
 AXGE-3454-0531  
-SFP matched, dTx=180774 dRx=148774 alpha=-73685416
+SFP matched, dTx=180750 dRx=148326 alpha=-73685416
 executing:  mode slave
 PTP stop
 Locking PLL
@@ -955,8 +955,8 @@ Part of the \texttt{snmpwalk}'s output:
  WR-WRPC-MIB::wrpcPortInternalTx.0 = Counter32: 452
  WR-WRPC-MIB::wrpcPortInternalRx.0 = Counter32: 869
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
- WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180774
- WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148774
+ WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180750
+ WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148326
  WR-WRPC-MIB::wrpcSfpAlpha.1 = INTEGER: 72169888
  End of MIB
 \end{lstlisting}
@@ -974,8 +974,8 @@ The SFPs database can be displayed using the \texttt{sfp show} command from
 the WRPC's console:
 \begin{lstlisting}
  wrc# sfp show
- 1: PN:AXGE-1254-0531   dTx:   180774 dRx:   148774 alpha: 72169888
- 2: PN:AXGE-3454-0531   dTx:   180774 dRx:   148774 alpha: -73685416
+ 1: PN:AXGE-1254-0531   dTx:   180750 dRx:   148326 alpha: 72169888
+ 2: PN:AXGE-3454-0531   dTx:   180750 dRx:   148326 alpha: -73685416
 \end{lstlisting}
 The same data is exported by the \textit{Mini SNMP responder} via the table
 \texttt{wrpcSfpTable}:
@@ -984,10 +984,10 @@ The same data is exported by the \textit{Mini SNMP responder} via the table
  $ snmpwalk $SNMP_OPT wrpcSfpTable
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
  WR-WRPC-MIB::wrpcSfpPn.2 = STRING: AXGE-3454-0531
- WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180774
- WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180774
- WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148774
- WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148774
+ WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180750
+ WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180750
+ WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148326
+ WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148326
  WR-WRPC-MIB::wrpcSfpAlpha.1 = INTEGER: 72169888
  WR-WRPC-MIB::wrpcSfpAlpha.2 = INTEGER: -73685416
  End of MIB
@@ -1055,8 +1055,8 @@ Simple verification of performed actions:\\
 \begin{minipage}{\textwidth}
 \begin{lstlisting}
  wrc# sfp show
- 1: PN:AXGE-1254-0531   dTx:   180774 dRx:   148774 alpha: 72169888
- 2: PN:AXGE-3454-0531   dTx:   180774 dRx:   148774 alpha: -73685416
+ 1: PN:AXGE-1254-0531   dTx:   180750 dRx:   148326 alpha: 72169888
+ 2: PN:AXGE-3454-0531   dTx:   180750 dRx:   148326 alpha: -73685416
  3: PN:NEW-SFP          dTx:     1111 dRx:     2222 alpha:     3333
 \end{lstlisting}
 \end{minipage}
@@ -1075,11 +1075,11 @@ Verify the result via SNMP:
  WR-WRPC-MIB::wrpcSfpPn.1 = STRING: AXGE-1254-0531
  WR-WRPC-MIB::wrpcSfpPn.2 = STRING: AXGE-3454-0531
  WR-WRPC-MIB::wrpcSfpPn.3 = STRING: NEW-SFP
- WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180774
- WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180774
+ WR-WRPC-MIB::wrpcSfpDeltaTx.1 = INTEGER: 180750
+ WR-WRPC-MIB::wrpcSfpDeltaTx.2 = INTEGER: 180750
  WR-WRPC-MIB::wrpcSfpDeltaTx.3 = INTEGER: 1111
- WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148774
- WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148774
+ WR-WRPC-MIB::wrpcSfpDeltaRx.1 = INTEGER: 148326
+ WR-WRPC-MIB::wrpcSfpDeltaRx.2 = INTEGER: 148326
  WR-WRPC-MIB::wrpcSfpDeltaRx.3 = INTEGER: 2222
  WR-WRPC-MIB::wrpcSfpAlpha.1 = INTEGER: 72169888
  WR-WRPC-MIB::wrpcSfpAlpha.2 = INTEGER: -73685416
