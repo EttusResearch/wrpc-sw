@@ -43,6 +43,7 @@ CONFIG_WR_DIAG=y
 # CONFIG_WR_NODE_SIM is not set
 CONFIG_ABSCAL=y
 CONFIG_LLDP=y
+CONFIG_N3XX_WORKAROUND=y
 
 #
 # wrpc-sw is tainted if you change the following options

@@ -92,6 +92,13 @@ config WR_NODE_PCS16
 	  This allows to compile the WR PTP Core software for 16-bit PCS platforms
 	  (e.g. Kintex-7).
 
+config N3XX_WORKAROUND
+	boolean "Compile with workaround for NI USRP N3xx series"
+	default n
+	help
+	  This allows the firmware to not bootloop on the NI USRP N3xx series,
+	  by not driving the helper DAC all the way out to the max.
+
 config STACKSIZE
 	depends on WR_NODE
 	int

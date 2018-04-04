@@ -99,7 +99,11 @@ static inline void sequencing_fsm(struct softpll_state *s, int tag_value, int ta
 		case SEQ_CLEAR_DACS:
 		{
 			/* Helper always starts at the maximum value (to make sure it locks on positive offset */
+#if defined(CONFIG_N3XX_WORKAROUND)
+			SPLL->DAC_HPLL = (s->helper.pi.y_max / 3) * 2;
+#else
 			SPLL->DAC_HPLL = s->helper.pi.y_max;
+#endif
 
 			/* Main starts at midscale */
 			SPLL->DAC_MAIN = (s->mpll.pi.y_max + s->mpll.pi.y_min) / 2;
